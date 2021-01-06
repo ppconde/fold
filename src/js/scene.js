@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { RGB_ETC1_Format } from "three";
 
 export const main = () => {
   // these need to be accessed inside more than one function so we'll declare them first
@@ -33,7 +34,7 @@ export const main = () => {
     const geometry = new THREE.BoxBufferGeometry(2, 2, 2);
 
     // create a purple Standard material
-    const material = new THREE.MeshStandardMaterial({ color: 0x800080 });
+    const material = new THREE.MeshStandardMaterial({ color: new THREE.Color("rgb(255,0,0)") });
 
     // create a Mesh containing the geometry and material
     mesh = new THREE.Mesh(geometry, material);
