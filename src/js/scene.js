@@ -34,7 +34,7 @@ export const main = () => {
     const geometry = new THREE.BoxBufferGeometry(2, 2, 2);
 
     // create a purple Standard material
-    const material = new THREE.MeshStandardMaterial({ color: 0xFFF000 });
+    const material = new THREE.MeshStandardMaterial({ color: new THREE.Color("rgb(100,0,0)") });
 
     // create a Mesh containing the geometry and material
     mesh = new THREE.Mesh(geometry, material);
