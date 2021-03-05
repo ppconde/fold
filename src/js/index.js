@@ -1,3 +1,4 @@
 import "../css/main.css";
-import { main } from "../../conde/demos/tank-simulator/scene.js";
+import { main } from "../../guta/shadows";
+
 main();
