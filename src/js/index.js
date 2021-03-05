@@ -1,4 +1,4 @@
 import "../css/main.css";
-import { main } from "./scene";
+import { main } from "../../conde/demos/tank-simulator/scene";
 
 main();
