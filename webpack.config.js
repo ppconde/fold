@@ -23,7 +23,7 @@ module.exports = {
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       title: "Threejs Tutorial",
-      filename: "./index.ejs",
+      filename: "./index.html",  
     }),
   ],
   output: {
