@@ -1,4 +1,4 @@
 import "../css/main.css";
-import { main } from "../../guta/shadows";
+import { main } from "../../conde/demos/shadows/shadows";
 
 main();
