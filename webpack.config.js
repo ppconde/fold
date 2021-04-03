@@ -31,7 +31,7 @@ module.exports = {
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       title: "Threejs Tutorial",
-      filename: "./index.html",  
+      template: "./index.html",
     }),
   ],
   output: {
