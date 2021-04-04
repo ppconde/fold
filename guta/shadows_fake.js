@@ -2,8 +2,6 @@ import * as THREE from "three";
 import { Object3D, ShapeBufferGeometry } from "three";
 import img1 from './img/chess2.png';
 import img2 from './img/roundshadow.png';
-//const img1 = require('./img/chess1.png'); 
-console.log(img1);
 const OrbitControls = require('three-orbit-controls')(THREE);
 
 export const main = () => {
@@ -31,7 +29,6 @@ export const main = () => {
         // Texture loader
         const loader = new THREE.TextureLoader();
 
-        // console.log(img1);
         const texture = loader.load(img1);
 
         texture.wrapS = THREE.RepeatWrapping;

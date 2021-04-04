@@ -12,7 +12,7 @@ export const main = () => {
     let camera;
     let ballMesh;
     let cubeMesh;
-    const canvas = document.querySelector("#c");
+    const canvas = document.querySelector(".main-canvas");
 
     function init() {
         // Scene and plane mesh
@@ -109,15 +109,19 @@ export const main = () => {
             light.shadow.bias = -0.001;
             light.target.position.set(10,10,0);
             light.target.updateMatrixWorld();
-            const helper = new THREE.DirectionalLightHelper(light);
+            
+            // Helpers
+            const lightHelper = new THREE.DirectionalLightHelper(light);
+            const camhelper = new THREE.CameraHelper(light.shadow.camera);
+            const axesHelper = new THREE.AxesHelper( 20 );
             scene.add(light);
-            scene.add(helper);
+            scene.add(lightHelper, camhelper);
 
             const gui = new CustomGUI();
-            gui.addColor(new ColorGUIHelper(light, 'color'), 'value').name('color');
             gui.add(light, 'intensity', 0, 2, 0.01);
-            gui.makeXYZGUI(gui, light.position, 'position', light, helper);
-            gui.makeXYZGUI(gui, light.target.position, 'target', light, helper);
+            gui.make('color',  light, [lightHelper]);
+            gui.make('position',  light, [lightHelper, camhelper]);
+            gui.make('target',  light, [lightHelper, camhelper]);
         }
 
         renderer = new THREE.WebGLRenderer({ antialias: true, canvas });

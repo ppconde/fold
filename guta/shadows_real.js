@@ -22,7 +22,7 @@ export const main = () => {
     function init() {
 
         {// Renderer
-            canvas = document.querySelector("#c");
+            canvas = document.querySelector(".main-canvas");
             renderer = new THREE.WebGLRenderer({ antialias: true, canvas });
             renderer.shadowMap.enabled = true;
         }
