@@ -1,4 +1,5 @@
 import { GUI } from 'dat.gui';
+import { ColorGUIHelper } from './gui.helper';
 
 
 export class CustomGUI extends GUI {
@@ -6,16 +7,35 @@ export class CustomGUI extends GUI {
     super(option);
   }
 
-  makeXYZGUI(gui, vector3, name, light, helper) {
-    const folder = gui.addFolder(name);
-    folder.add(vector3, 'x', -10, 10).onChange(this.onChangeHandler.bind(null, light, helper));
-    folder.add(vector3, 'y', 0, 10).onChange(this.onChangeHandler.bind(null, light, helper));
-    folder.add(vector3, 'z', -10, 10).onChange(this.onChangeHandler.bind(null, light, helper));
-    folder.open();
-  }
+  make(prop_name, obj, helpers) {
 
-  onChangeHandler (light, helper) {
-    light.target.updateMatrixWorld();
-    helper.update();
-  };
+    // Name folder after object and attribute
+    const obj_name = obj.constructor.name;
+    const folder = this.addFolder(obj_name + ' ' + prop_name);
+    console.log(helpers)
+
+    switch (prop_name) {
+      case 'position': {
+        // Update helpers
+        const onChange = () => helpers?.forEach((helper=> helper.update()));
+        folder.add(obj.position, 'x', -10, 10).onChange(onChange);
+        folder.add(obj.position, 'y', -10, 10).onChange(onChange);
+        folder.add(obj.position, 'z', -10, 10).onChange(onChange);
+        break;
+      }
+      case 'target': {
+        // Update helpers and MatrixWorld
+        const onChange = () =>{helpers?.forEach((helper=> helper.update())); obj.target.updateMatrixWorld();};
+        folder.add(obj.target.position, 'x', -10, 10).onChange(onChange);
+        folder.add(obj.target.position, 'y', -10, 10).onChange(onChange);
+        folder.add(obj.target.position, 'z', -10, 10).onChange(onChange);
+        break;
+      }
+      case 'color':
+        folder.addColor(new ColorGUIHelper(obj, 'color', helpers), 'value').name('color');
+        folder.add(obj, 'intensity', 0, 4, 0.01);
+        break;
+    }
+
+  }
 }
