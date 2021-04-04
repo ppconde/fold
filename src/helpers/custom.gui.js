@@ -48,9 +48,14 @@ export class CustomGUI extends GUI {
 
   }
 
+  /**
+   * Updates all objects passed as argument. Camera, lights and helpers
+   * @param {*} helpers 
+   * @param {*} obj 
+   */
   onChange (helpers, obj) {
     helpers?.forEach((helper) => helper.update());
-    obj?.target?.updateMatrixWorld();
-    obj?.updateProjectionMatrix();
+    obj.target.updateMatrixWorld && obj.target.updateMatrixWorld();
+    obj.updateProjectionMatrix && obj.updateProjectionMatrix();
   }
 }
