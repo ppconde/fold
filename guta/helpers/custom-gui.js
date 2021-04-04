@@ -1,0 +1,43 @@
+import { GUI } from 'dat.gui';
+import { ColorGUIHelper } from './gui-helper.js';
+
+
+export class CustomGUI extends GUI {
+  constructor(option) {
+    super(option);
+  }
+
+  make(prop_name, obj, helpers) {
+
+    // Name folder after object and attribute
+    const obj_name = obj.constructor.name;
+    const folder = this.addFolder(obj_name + ' ' + prop_name);
+    console.log(helpers)
+
+    switch (prop_name) {
+
+      case 'position':
+        // Update helpers
+        const onChange1 = () => {if (helpers !== undefined) {for (const helper of helpers){helper.update();}}}
+        folder.add(obj.position, 'x', -10, 10).onChange(onChange1);
+        folder.add(obj.position, 'y', -10, 10).onChange(onChange1);
+        folder.add(obj.position, 'z', -10, 10).onChange(onChange1);
+        break;
+
+      case 'target':
+        // Update helpers and MatrixWorld
+        const onChange2 = () => {if (helpers !== undefined) {for (const helper of helpers){helper.update();}} obj.target.updateMatrixWorld();}
+        folder.add(obj.target.position, 'x', -10, 10).onChange(onChange2);
+        folder.add(obj.target.position, 'y', -10, 10).onChange(onChange2);
+        folder.add(obj.target.position, 'z', -10, 10).onChange(onChange2);
+        break;
+
+      case 'color':
+
+        folder.addColor(new ColorGUIHelper(obj, 'color', helpers), 'value').name('color');
+        folder.add(obj, 'intensity', 0, 4, 0.01);
+        break;
+    }
+
+  }
+}

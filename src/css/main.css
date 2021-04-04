@@ -8,8 +8,8 @@ body {
   height: 100%;
 }
 
-canvas {
-  display: block;
-  height: 100%;
+#c {
   width: 100%;
+  height: 100%;
+  display: block;
 }
