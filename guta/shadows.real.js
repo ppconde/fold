@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GUI } from 'dat.gui';
-import { CustomGUI } from '../src/helpers/custom-gui.js'
+import { CustomGUI } from '../src/helpers/custom.gui.js'
 import { CameraHelper } from "three";
 
 const OrbitControls = require('three-orbit-controls')(THREE);

@@ -1,6 +1,6 @@
 import "../assets/scss/main.scss";
-import { main } from "../../conde/demos/shadows/shadows-real";
-import React, { useEffect } from 'react';
+import { main } from "../../guta/shadows.real";
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
 const App = () => {

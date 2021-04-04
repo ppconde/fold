@@ -1,5 +1,5 @@
 import { GUI } from 'dat.gui';
-import { ColorGUIHelper } from './gui.helper';
+import { ColorGUIHelper } from './color.gui.helper';
 
 
 export class CustomGUI extends GUI {
@@ -34,6 +34,11 @@ export class CustomGUI extends GUI {
       case 'color':
         folder.addColor(new ColorGUIHelper(obj, 'color', helpers), 'value').name('color');
         folder.add(obj, 'intensity', 0, 4, 0.01);
+        break;
+
+      case 'frostum':
+
+        
         break;
     }
 
