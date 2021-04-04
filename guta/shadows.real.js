@@ -83,13 +83,13 @@ export const main = () => {
 
         {// Scene
             scene = new THREE.Scene();
-            scene.add(plane_mesh, sphere_mesh, light, light_ambi, camera, axes_help, light_help, cam_help);
+            scene.add(plane_mesh, sphere_mesh, light, light_ambi, camera, axes_help, cam_help);
         }
 
         const gui = new CustomGUI();
-        gui.make('color',  light, [light_help]);
-        gui.make('position',  light, [light_help, cam_help]);
-        gui.make('target',  light, [light_help, cam_help]);
+        gui.make('color',  light);
+        gui.make('position',  light, [cam_help]);
+        gui.make('target',  light, [cam_help]);
         gui.make('frostum', light_shadow_camera, [cam_help])
 
         animate();

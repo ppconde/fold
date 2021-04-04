@@ -55,7 +55,7 @@ export class CustomGUI extends GUI {
    */
   onChange (helpers, obj) {
     helpers?.forEach((helper) => helper.update());
-    obj.target.updateMatrixWorld && obj.target.updateMatrixWorld();
+    obj.target?.updateMatrixWorld && obj.target.updateMatrixWorld();
     obj.updateProjectionMatrix && obj.updateProjectionMatrix();
   }
 }
