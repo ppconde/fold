@@ -15,6 +15,7 @@ export const main = () => {
     let light;
     let light_ambi;
     let light_help;
+    let light_shadow_camera;
     let canvas;
     let axes_help;
     let cam_help;
@@ -38,6 +39,8 @@ export const main = () => {
             light.target.updateMatrixWorld();
 
             light_ambi = new THREE.AmbientLight(0xffffff,0.6);
+
+            light_shadow_camera = light.shadow.camera
         }
 
         {// Plane
@@ -74,7 +77,7 @@ export const main = () => {
 
         {// Helpers
             light_help = new THREE.DirectionalLightHelper(light);
-            cam_help = new THREE.CameraHelper(light.shadow.camera);
+            cam_help = new THREE.CameraHelper(light_shadow_camera);
             axes_help = new THREE.AxesHelper( 20 )
         }
 
@@ -87,6 +90,7 @@ export const main = () => {
         gui.make('color',  light, [light_help]);
         gui.make('position',  light, [light_help, cam_help]);
         gui.make('target',  light, [light_help, cam_help]);
+        gui.make('frostum', light_shadow_camera)
 
         animate();
 

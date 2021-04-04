@@ -1,6 +1,7 @@
 import { GUI } from 'dat.gui';
 import { ColorGUIHelper } from './color.gui.helper';
-
+import { MinMaxGUIHelper } from './min.max.gui.helper';
+import { DimensionGUIHelper } from './dim.gui.helper';
 
 export class CustomGUI extends GUI {
   constructor(option) {
@@ -37,10 +38,23 @@ export class CustomGUI extends GUI {
         break;
 
       case 'frostum':
-
-        
+        folder.add(new DimensionGUIHelper(obj, 'left', 'right'), 'value', 1, 100)
+          .name('width')
+          .onChange(updateCamera);
+        folder.add(new DimensionGUIHelper(obj, 'bottom', 'top'), 'value', 1, 100)
+          .name('height')
+          .onChange(updateCamera);
+        const minMaxGUIHelper = new MinMaxGUIHelper(obj, 'near', 'far', 0.1);
+        folder.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updateCamera);
+        folder.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updateCamera);
+        folder.add(obj, 'zoom', 0.01, 1.5, 0.01).onChange(updateCamera);
         break;
     }
+
+  }
+
+  refresh(prop_name, obj, helpers) {
+    
 
   }
 }
