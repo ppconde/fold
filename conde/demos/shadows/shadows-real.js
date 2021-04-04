@@ -1,7 +1,6 @@
 import * as THREE from "three";
 import threeOrbitControls from "three-orbit-controls";
-import { CustomGUI } from '../../../src/helpers/custom-gui';
-import { ColorGUIHelper } from '../../../src/helpers/gui.helper';
+import { CustomGUI } from '../../../src/helpers/custom.gui';
 const OrbitControls = require('three-orbit-controls')(THREE);
 
 export const main = () => {
@@ -69,7 +68,7 @@ export const main = () => {
             const near = 0.1;
             const far = 50;
             camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-            camera.position.set(4, -10, 5);
+            camera.position.set(4, -10, 6);
             const controls = new OrbitControls(camera, canvas);
             const lookAtVec = new THREE.Vector3(4,0,0)
             controls.target = lookAtVec;

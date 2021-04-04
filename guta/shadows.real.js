@@ -90,7 +90,7 @@ export const main = () => {
         gui.make('color',  light, [light_help]);
         gui.make('position',  light, [light_help, cam_help]);
         gui.make('target',  light, [light_help, cam_help]);
-        gui.make('frostum', light_shadow_camera)
+        gui.make('frostum', light_shadow_camera, [cam_help])
 
         animate();
 
