@@ -1,5 +1,5 @@
 import "../assets/scss/main.scss";
-import { main } from "../../guta/shadows.real";
+import { main } from "../../guta/custom.geo1";
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
