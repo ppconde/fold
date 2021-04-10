@@ -1,5 +1,5 @@
 import "../assets/scss/main.scss";
-import { main } from "../../guta/custom.geo1";
+import { main } from "../../conde/demos/custom-buffer-geometry/custom-buffer-geometry";
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 
