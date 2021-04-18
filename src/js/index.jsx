@@ -1,16 +1,17 @@
 import "../assets/scss/main.scss";
-import { main } from "../../conde/demos/custom-buffer-geometry/custom-buffer-geometry";
-import React, { useState, useEffect } from 'react';
+import React, {  useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { Canvas } from '../js/Canvas';
 
 const App = () => {
     useEffect(() => {
-      main();
+      const canvas = document.getElementById('canvas');
+      new Canvas(canvas);
     });
 
     return (
       <main className="main">
-        <canvas className="main-canvas"></canvas>
+        <canvas id="canvas"></canvas>
       </main>
     );
 }
