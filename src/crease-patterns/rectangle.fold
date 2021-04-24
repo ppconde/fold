@@ -8,10 +8,10 @@
     "frame_attributes": ["3D"],
   
     "vertices_coords": [
-      [0,0,0],
-      [1,0,0],
-      [0,1,0],
-      [1,1,0]
+      [0,0],
+      [1,0],
+      [1,1],
+      [0,1]
     ],
   
     "faces_vertices": [

@@ -1,7 +1,8 @@
 import * as THREE from "three";
-import fold from './rectangle.fold';
+import fold from '../../../crease-patterns/rectangle.fold';
+import {foldToThreeConverter} from '../helper-functions/fold-to-three-converter';
 
-export class OrigamiModel {
+export class Origami {
 	constructor(scene) {
 		// Temporary geo and material
 		this.geometry = new THREE.BoxBufferGeometry(2, 2, 2);
@@ -9,6 +10,7 @@ export class OrigamiModel {
 		this.mesh = new THREE.Mesh(this.geometry, this.material);
 		scene.add(this.mesh);
 		this.init();
+
 	}
 
 	init = () => {
@@ -19,7 +21,9 @@ export class OrigamiModel {
 	 * Loads fold object and parses it into a json object
 	 */
 	loadFoldObject = () => {
-		console.log(fold);
+		// console.log(fold);
+		foldToThreeConverter(fold)
+
 	}
 
 	update = () => {

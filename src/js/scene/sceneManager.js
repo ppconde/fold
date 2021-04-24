@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { GeneralLights } from'./lights/generalLights';
-import { OrigamiModel } from './origami-model/origamiModel';
+import { Origami } from './models/origami';
 import { CamerasConfig } from'./cameras/cameras-config';
 const OrbitControls = require('three-orbit-controls')(THREE);
 
@@ -82,7 +82,7 @@ export class SceneManager {
 	setSceneObjects = () => {
 		const sceneSubjects = [ 
 			new GeneralLights(this.scene),
-			new OrigamiModel(this.scene)
+			new Origami(this.scene)
 		];
 
 		sceneSubjects.forEach((sceneSubject) => this.sceneSubjects.push(sceneSubject));
