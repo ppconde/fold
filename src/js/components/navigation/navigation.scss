@@ -1,0 +1,29 @@
+.navigation {
+    display: flex;
+
+    .drop-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .drop-btn {
+        border: none;
+        border-radius: 8px;
+        width: 100px;
+        height: 30px;
+
+
+        &:hover + .drop-content {
+            display: flex;
+        }
+    }
+
+    .drop-content {
+        display: none;
+        
+
+        &:hover {
+            
+        }
+    }
+}

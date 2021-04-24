@@ -1,7 +1,8 @@
 import "../assets/scss/main.scss";
 import React, {  useEffect } from 'react';
 import ReactDOM from 'react-dom';
-import { Canvas } from '../js/Canvas';
+import { Canvas } from '../js/threejs/canvas';
+import { NavigationComponent } from "./components/navigation/navigation";
 
 const App = () => {
     useEffect(() => {
@@ -11,6 +12,7 @@ const App = () => {
 
     return (
       <main className="main">
+        <NavigationComponent />
         <canvas id="canvas"></canvas>
       </main>
     );

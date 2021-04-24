@@ -29,7 +29,7 @@ module.exports = {
         test: /.(fold)$/i,
         use: [
           {
-            loader: 'raw-loader',
+            loader: 'json-loader'
           },
         ],
       },
