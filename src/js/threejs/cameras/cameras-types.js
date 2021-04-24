@@ -1,3 +1,3 @@
 export const CamerasTypes = {
-    PERSPECTIVE_CAMERAS: 'PerspectiveCamera',
+	PERSPECTIVE_CAMERAS: 'PerspectiveCamera',
 }
