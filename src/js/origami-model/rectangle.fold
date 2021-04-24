@@ -1,0 +1,28 @@
+{
+    "file_spec": 1,
+    "file_creator": "Conde and Gus",
+    "file_author": "Conde and Gus",
+    "file_classes": ["singleModel"],
+    "frame_title": "3D rectangle",
+    "frame_classes": ["foldedForm"],
+    "frame_attributes": ["3D"],
+  
+    "vertices_coords": [
+      [0,0,0],
+      [1,0,0],
+      [0,1,0],
+      [1,1,0]
+    ],
+  
+    "faces_vertices": [
+      [1,2,3,4]
+    ],
+
+    "edges_vertices": [
+        [1,4]
+    ],
+
+    "edges_assignment": [
+        "V"
+    ]
+}
