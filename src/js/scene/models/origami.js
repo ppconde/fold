@@ -1,4 +1,4 @@
-import * as THREE from "three";
+import * as THREE from 'three';
 import fold from '../../../crease-patterns/rectangle.fold';
 import {foldToThreeConverter} from '../helper-functions/fold-to-three-converter';
 
@@ -6,7 +6,7 @@ export class Origami {
 	constructor(scene) {
 		// Temporary geo and material
 		this.geometry = new THREE.BoxBufferGeometry(2, 2, 2);
-		this.material = new THREE.MeshStandardMaterial({ color: new THREE.Color("rgb(100,0,0)") });
+		this.material = new THREE.MeshStandardMaterial({ color: new THREE.Color('rgb(100,0,0)') });
 		this.mesh = new THREE.Mesh(this.geometry, this.material);
 		scene.add(this.mesh);
 		this.init();

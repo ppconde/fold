@@ -2,7 +2,7 @@ import '../assets/scss/main.scss';
 import React, {  useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Canvas } from '../js/scene/canvas';
-import { NavigationComponent } from "./interface/navigation/navigation";
+import { NavigationComponent } from './interface/navigation/navigation';
 
 const App = () => {
 	useEffect(() => {
