@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import rectangle from './rectangle.fold';
 
 export class OrigamiModel {
 	constructor(scene) {
@@ -13,5 +14,6 @@ export class OrigamiModel {
 		// Do something
 		const scale = Math.sin(Date.now()*0.001) + 3;
 		this.mesh.scale.set(scale, scale, scale);
+		const str = JSON.parse(rectangle);
 	}
 }

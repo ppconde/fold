@@ -26,6 +26,14 @@ module.exports = {
         ],
       },
       {
+        test: /.(fold)$/i,
+        use: [
+          {
+            loader: 'raw-loader',
+          },
+        ],
+      },
+      {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: ['babel-loader'],
