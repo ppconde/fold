@@ -6,9 +6,16 @@ export class FoldToThreeConverter {
 		this.fold = fold;
 		this.dimensions = fold.vertices_coords?.[0].length;
 		// Triangulated values of the fold object. It returns an array of triplets of indexes
-		const trianglesIndexes = earcut(fold.vertices_coords.flat(), null, this.dimensions);
-		this.numVertices = trianglesIndexes.length;
-		this.geometry = this.convertPointsToPlane(trianglesIndexes);
+		this.trianglesIndexes = earcut(fold.vertices_coords.flat(), null, this.dimensions);
+		this.numVertices = this.trianglesIndexes.length;
+		this.geometry = this.convertPointsToPlane(this.trianglesIndexes);
+		console.log(this.trianglesIndexes)
+		// Two triplets that define the (for now, first) crease: [[x1,y1,z1],[x2,y2,z2]]
+		this.crease = [fold.vertices_coords[fold.edges_vertices[0][0]],fold.vertices_coords[fold.edges_vertices[0][1]]]; 
+
+/* 		console.log(fold.edges_vertices)
+		console.log(fold.vertices_coords)
+		console.log(this.crease) */
 	}
 
 	/**
@@ -68,6 +75,7 @@ export class FoldToThreeConverter {
 		//const uvs = this.getUvs(planeGeo);
 		
 		planeGeo.computeVertexNormals();
+		
 		
 		return planeGeo;
 	}

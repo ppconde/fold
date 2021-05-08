@@ -36,8 +36,8 @@ export class Canvas {
   /**
    * Recursively calls render for each frame update
    */
-  render = () => {
+  render = (time) => {
   	requestAnimationFrame(this.render);
-  	this.sceneManager.update();
+  	this.sceneManager.update(time);
   };
 }

@@ -66,7 +66,7 @@ export class SceneManager {
 	    const { fov, aspect, near, far } = config.props;
 	    this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 	    this.camera.aspect = ratio;
-	    this.camera.position.set(0, 10, 10);
+	    this.camera.position.set(0, 0, 2);
 
 	    // Creates orbit controls object with same view direction vector as the camera
 	    const controls = new OrbitControls(this.camera, this.canvas);
@@ -91,8 +91,8 @@ export class SceneManager {
 	/**
 	 * Calls update for each existing scene in a sceneManager
 	 */
-	update = () => {
-	    this.sceneSubjects.forEach((sceneSubject) => sceneSubject.update());
+	update = (time) => {
+	    this.sceneSubjects.forEach((sceneSubject) => sceneSubject.update(time));
 	    this.renderer.render(this.scene, this.camera);
 	};
 
