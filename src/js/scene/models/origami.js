@@ -9,17 +9,14 @@ export class Origami {
 		this.foldInfo = new FoldToThreeConverter(fold);
 		this.crease = this.foldInfo.crease;
 		this.trianglesIndexes = this.foldInfo.trianglesIndexes;
+		// eslint-disable-next-line camelcase
 		this.vertices_coords = this.foldInfo.fold.vertices_coords;
 
 		this.geometry = this.foldInfo.geometry;
-		// console.log(this.geometry.getAttribute('position').array)
-		// console.log(this.trianglesIndexes)
-
-		// this.material = new THREE.MeshStandardMaterial({ color: new THREE.Color('rgb(100,0,0)') });
 		const color = 0x8888FF;
 		const loader = new THREE.TextureLoader();
 		const texture = loader.load(img1);
-		this.material = new THREE.MeshPhongMaterial({color, map: texture});
+		this.material = new THREE.MeshPhongMaterial({color, map: texture, wireframe: true });
 		//this.material = new THREE.MeshStandardMaterial({ color: new THREE.Color('rgb(100,0,0)') });
 		this.material.side = THREE.DoubleSide;
 		this.mesh = new THREE.Mesh(this.geometry, this.material);
@@ -46,8 +43,6 @@ export class Origami {
 		creaseLine.closestPointToPoint(foldPnt,false,foldProjPnt);
 		const foldPntFromCrease = foldPnt.clone().sub(foldProjPnt);
 
-		console.log(creaseVec)
-
 		// Folding parameters
 		const foldAngle = Math.PI;
 		const foldDur = 4; // s
@@ -62,37 +57,9 @@ export class Origami {
 		// this.positions = positions;
 		this.foldPntIdx = foldPntIdx;
 
-
 		const x = 2;
 		this.x = x;
-
 		this.x.set
-
-
-/* 		const posAttribute = this.geometry.getAttribute('position');
-		let positions = posAttribute.array;
-		posAttribute.needsUpdate = true;
-		//const time = Date.now()*0.001;
-		const time1 = 4;
-
-		this.foldPntFromCrease.applyAxisAngle(this.creaseVec,(this.foldAngle/this.foldDur)*time1);
-		this.foldPnt = this.foldProjPnt.add(this.foldPntFromCrease);
-
-		// Update triangle vertices
-		for(let i = 0; i < this.trianglesIndexes.length; i++)
-			if (this.trianglesIndexes[i] === this.foldPntIdx)
-				positions.set([this.foldPnt.x, this.foldPnt.y, this.foldPnt.z], i*3);  */
-
-
-
-
-/* 		for (const id of foldTriangleIdxs) {
-			positions.set([foldPnt.x, foldPnt.y, foldPnt.z], id*3); 
-			console.log([foldPnt.x, foldPnt.y, foldPnt.z])
-			console.log(positions)
-		}  */
-		
-
 	}
 
 	init = () => {
@@ -108,10 +75,6 @@ export class Origami {
 	}
 
 	update = (time) => {
-		// Do something
-		// const scale = Math.sin(Date.now()*0.001) + 3;
-		// this.mesh.scale.set(scale, scale, scale);
-
 		const posAttribute = this.geometry.getAttribute('position');
 		let positions = posAttribute.array;
 		posAttribute.needsUpdate = true;
@@ -124,8 +87,6 @@ export class Origami {
 		if (time <= this.foldDur) {
 			const foldPntFromCrease2 = this.foldPntFromCrease.clone().applyAxisAngle(this.creaseVec,(this.foldAngle/this.foldDur)*time);
 			this.foldPnt = this.foldProjPnt.clone().add(foldPntFromCrease2);
-
-			console.log((this.foldAngle/this.foldDur)*time);
 
 			// Update triangle vertices
 			for(let i = 0; i < this.trianglesIndexes.length; i++) {
