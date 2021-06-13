@@ -7,11 +7,32 @@ export class FoldToThreeConverter {
 		this.dimensions = fold.vertices_coords?.[0].length;
 		this.uvDimensions = 2;
 		// Triangulated values of the fold object. It returns an array of triplets of indexes
-		this.trianglesIndexes = earcut(fold.vertices_coords.flat(), null, this.dimensions);
+		this.trianglesIndexes = this.triangulateFold();
 		this.numVertices = this.trianglesIndexes.length;
 		this.geometry = this.convertPointsToPlane(this.trianglesIndexes);
 		// Two triplets that define the (for now, first) crease: [[x1,y1,z1],[x2,y2,z2]]
 		this.crease = [fold.vertices_coords[fold.edges_vertices[0][0]],fold.vertices_coords[fold.edges_vertices[0][1]]];
+	}
+
+	/**
+	 * Triangulates a fold object and returns an array of indexes of the triangulated object
+	 */
+	triangulateFold = () => {
+		if (this.fold?.faces_vertices) {
+			return this.fold.faces_vertices.reduce((acc, face) => {
+				const vertices = face.map((val) => this.fold.vertices_coords[val - 1]);
+				const earcutIndexes = earcut(vertices.flat(), null, this.dimensions);
+				const faceIndexes = earcutIndexes.reduce((acc, li) => {
+					acc.push(face[li] - 1);
+					return acc;
+				}, []);
+				acc.push(...faceIndexes);
+				return acc;
+			}, []);
+		}
+
+		// add triangulation for edges vertices later
+		
 	}
 	
 	/**
