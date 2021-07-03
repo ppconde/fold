@@ -1,0 +1,67 @@
+{
+    "file_spec": 1,
+    "file_creator": "Conde and Gus",
+    "file_author": "Conde and Gus",
+    "file_classes": ["singleModel"],
+    "frame_title": "Paper plane",
+    "frame_classes": ["foldedForm"],
+    "frame_attributes": ["3D"],
+  
+    "vertices_coords": [
+      [0,0,0],
+      [A/2,0,0],
+      [A,0,0],
+      [A,A/2*tan(pi/8),0],
+      [A,A/2*tan(pi/4),0],
+      [A,A/2*tan(pi*3/8),0],
+      [A,A/2*tan(pi/2),0],
+      [A,A/2*tan(pi*5/8),0],
+      [A,A/2*tan(pi*3/4),0],
+      [A,B,0],
+      [A/2+B*tan(pi/8),B,0],
+      [A/2,B,0],
+      [A/2-B*tan(pi/8),B,0],
+      [0,B,0],
+      [0,A/2*tan(pi*3/4),0],  
+      [0,A/2*tan(pi*5/8),0],
+      [0,A/2*tan(pi/2),0],
+      [0,A/2*tan(pi*3/8),0],
+      [0,A/2*tan(pi/4),0],
+      [0,A/2*tan(pi/8),0]
+    ],
+
+    "edges_vertices": [
+        [1,12],
+        [1,7],
+        [1,19],
+        [1,9],
+        [1,15],
+        [1,11],
+        [1,13]
+    ],
+
+    "edges_assignment": [
+        "M",
+        "V",
+        "V",
+        "V",
+        "V",
+        "V",
+        "V"
+    ],
+
+    "instructions": [
+      [1,pi],
+      [1,-pi],
+      [2,pi],
+      [3,pi],
+      [4,pi],
+      [5,pi],
+      [1,pi],
+      [6,pi],
+      [7,pi],
+      [6,-pi/2],
+      [7,-pi/2],
+    ]
+
+}

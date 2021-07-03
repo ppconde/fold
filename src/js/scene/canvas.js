@@ -1,4 +1,4 @@
-import { SceneManager } from './sceneManager';
+import { SceneManager } from './scene-manager';
 
 export class Canvas {
 	constructor(canvas) {

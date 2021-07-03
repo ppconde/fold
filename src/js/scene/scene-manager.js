@@ -1,7 +1,10 @@
 import * as THREE from 'three';
-import { GeneralLights } from'./lights/generalLights';
+import { GeneralLights } from'./lights/general-lights';
 import { Origami } from './models/origami';
 import { CamerasConfig } from'./cameras/cameras-config';
+import { GeneralHelpers } from './helpers/general-helpers';
+import { GeneralGUI } from './gui/general-gui';
+//import { GUI } from 'dat.gui';
 const OrbitControls = require('three-orbit-controls')(THREE);
 
 /**
@@ -10,7 +13,7 @@ const OrbitControls = require('three-orbit-controls')(THREE);
  * Update everything at every frame
  */
 export class SceneManager {
-	sceneSubjects = [];
+	sceneObjects = [];
 	scene;
 	renderer;
 	camera;
@@ -32,6 +35,8 @@ export class SceneManager {
 	    this.setRenderer();
 	    this.setCamera();
 	    this.setSceneObjects();
+		this.setSceneHelpers();
+		this.setGUI();
 	}
 
 	/**
@@ -75,24 +80,28 @@ export class SceneManager {
 	    this.camera.lookAt(lookAtVec);
 	}
 
-
 	/**
 	 * Sets each scene object in the scene
 	 */
 	setSceneObjects = () => {
-		const sceneSubjects = [ 
-			new GeneralLights(this.scene),
-			new Origami(this.scene)
-		];
+		this.sceneObjects = new Map();
+		this.sceneObjects.set('GeneralLights', new GeneralLights(this.scene) );
+		this.sceneObjects.set('Origami', new Origami(this.scene) );
+	}
 
-	    sceneSubjects.forEach((sceneSubject) => this.sceneSubjects.push(sceneSubject));
+	setSceneHelpers = () => {
+		this.sceneObjects.set('GeneralHelpers',new GeneralHelpers(this.scene, this.sceneObjects));
+	}
+
+	setGUI = () => {
+		new GeneralGUI(this.scene, this.sceneObjects);
 	}
 
 	/**
 	 * Calls update for each existing scene in a sceneManager
 	 */
 	update = (time) => {
-	    this.sceneSubjects.forEach((sceneSubject) => sceneSubject.update(time));
+	    this.sceneObjects.forEach((sceneObject) => sceneObject.update(time));
 	    this.renderer.render(this.scene, this.camera);
 	};
 
@@ -108,4 +117,15 @@ export class SceneManager {
 	    this.camera.updateProjectionMatrix();
 	    this.renderer.setSize(width, height);
 	};
+
+	/**
+   * Updates all objects passed as argument. Camera, lights and helpers
+   * @param {*} helpers 
+   * @param {*} obj 
+   */
+	 onChange (helpers, obj) {
+		helpers?.forEach((helper) => helper.update());
+		obj.target?.updateMatrixWorld && obj.target.updateMatrixWorld();
+		obj.updateProjectionMatrix && obj.updateProjectionMatrix();
+	}
 }

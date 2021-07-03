@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { GUI } from 'dat.gui';
-import { ColorGUIHelper } from './color.gui.helper';
-import { MinMaxGUIHelper } from './min.max.gui.helper';
-import { DimensionGUIHelper } from './dim.gui.helper';
+import { ColorGUIHelper } from './color-gui-helper';
+import { MinMaxGUIHelper } from './min-max-gui-helper';
+import { DimensionGUIHelper } from './dim-gui-helper';
 
-export class CustomGUI extends GUI {
+class CustomGUI extends GUI {
 	constructor(option) {
 		super(option);
 	}
@@ -59,4 +59,7 @@ export class CustomGUI extends GUI {
 		obj.target?.updateMatrixWorld && obj.target.updateMatrixWorld();
 		obj.updateProjectionMatrix && obj.updateProjectionMatrix();
 	}
+
 }
+
+export const gui = new CustomGUI();

@@ -78,6 +78,9 @@ export const main = () => {
 			// Geometry
 			paper_geo = new THREE.BufferGeometry();
 			pos_attrib = new THREE.BufferAttribute(positions, positionNumComponents);
+
+			
+
 			const uv_attrib = new THREE.BufferAttribute(uvs, uvNumComponents);
 			pos_attrib.setUsage(THREE.DynamicDrawUsage);
 			paper_geo.setAttribute('position', pos_attrib);
