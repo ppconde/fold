@@ -46,7 +46,7 @@ module.exports = {
 	plugins: [
 		new CleanWebpackPlugin(),
 		new HtmlWebpackPlugin({
-			title: 'Threejs Tutorial',
+			title: 'Fold',
 			template: './index.html',
 		}),
 	],

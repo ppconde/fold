@@ -1,0 +1,14 @@
+.navigation {
+    display: flex;
+    justify-content: center;
+    
+    .list {
+        display: flex;
+        width: 50%;
+    }
+
+    .link {
+        flex: 1;
+        list-style-type: none;
+    }
+}

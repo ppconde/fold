@@ -1,2 +1,5 @@
 @use './app.scss';
-@use '../../js/interface/navigation/navigation.scss';
+@use './fonts.scss';
+@use '../../js/interface/navigation/navigation.component.scss';
+@use '../../js/interface/header/header.component.scss';
+@use '../../js/interface/side-menu/side-menu.component.scss';
