@@ -3,7 +3,7 @@ import React, {  useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { Canvas } from '../js/scene/canvas';
 import { SideMenuComponent } from './interface/side-menu/side-menu.component';
-import { NavigationComponent } from './interface/navigation/navigation.component';
+import { HeaderComponent } from './interface/header/header.component';
 
 const App = () => {
 	const [showSideMenu, setShowSideMenu] = useState(false);
@@ -19,11 +19,8 @@ const App = () => {
 
 	return (
 		<main className="main">
-			<header className="header">
-				<h1 className="title">Fold</h1>
-				<NavigationComponent onClickLink={toggleSideMenu}/>
-			</header>
-			<SideMenuComponent type='settings' state={showSideMenu} />
+			<HeaderComponent toggleSideMenu={toggleSideMenu} />
+			<SideMenuComponent type='settings' showSideMenu={showSideMenu} />
 			<canvas id="canvas"></canvas>
 		</main>
 	);

@@ -1,5 +1,120 @@
 .side-menu {
     .settings {
-        
+        position: absolute;
+        background-color: #EDEDED;
+        right: 0;
+        height: 100%;
+        top: 0;
+        padding-top: 10%;
+        width: 20vw;
+
+        h2 {
+            margin-bottom: 30px;
+        }
+
+        .resizer {
+            position: relative;
+        }
+
+        .boxes {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .row {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .a4 {
+            width: 98px;
+            height: 139px;
+            border: 1px solid #707070;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            margin-right: 5px;
+        }
+
+        .custom {
+            width: 86px;
+            height: 48px;
+            border: 1px solid #707070;
+            background-color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .square {
+            height: 86px;
+            width: 86px;
+            border: 1px solid #707070;
+            background-color: #ADADAD;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .a4,
+        .custom,
+        .square {
+            font-family: 'Roboto', sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .a4,
+        .custom {
+            color: #898989;
+        }
+
+        .square {
+            color: white;
+        }
+
+        .label-W {
+            position: absolute;
+            right: 95px;
+            top: 235px;
+        }
+
+        .label-H {
+            position: absolute;
+            right: 10px;
+            top: 275px;
+        }
+     
+        .label-W,
+        .label-H {
+            display: flex;
+            color: #898989;
+            width: 70px;
+            
+            .text {
+                font-weight: bold;
+                font-size: 14px;
+            }
+
+            input {
+                color: #898989;
+                border: none;
+                border-bottom: 2px solid white;
+                background-color: unset;
+                width: 100%;
+            }
+        }
     }
 }

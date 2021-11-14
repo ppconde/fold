@@ -1,38 +1,64 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
-export const SideMenuComponent = (props, state) => {
-	switch (props.type) {
-	case 'settings':
-		return renderSettings();
-	case 'library':
-		// return this.renderLibrary();
-		return;
-	default:
-		return;
+export const SideMenuComponent = (props) => {
+	return (
+		<aside className="side-menu">
+			{renderSideMenu()}
+		</aside>
+	);
+
+	function renderSideMenu() {
+		switch (props.type) {
+		case 'settings':
+			return renderSettings();
+		case 'library':
+			// return this.renderLibrary();
+			return;
+		default:
+			return;
+		}
 	}
 
 	function renderSettings() {
-		return state.showSideMenu ? (
-			<aside className="settings">
+		return props.showSideMenu ? (
+			<div className="settings">
 				<h2>Settings</h2>
 				<div className="resizer">
 					{label('width')}
 					{label('height')}
-					<div className="a4">A4</div>
-					<div className="custom">Custom</div>
-					<div className="square">Square</div>
+					<div className="boxes">
+						{renderBox('A4')}
+						<div className="col">
+							{renderBox('Custom')}
+							{renderBox('Square')}
+						</div>
+					</div>
 				</div>
-			</aside>
+			</div>
 		) : null;
 	}
 
 	function label(name) {
 		const text = name === 'width' ? 'W' : 'H';
 		return (
-			<>
-				<label htmlFor={name}>{text}: </label>
+			<div className={`label-${text}`}>
+				<label className="text" htmlFor={name}>{text}: </label>
 				<input type="number" name={name}></input>
-			</>
+			</div>
+		);
+	}
+
+	function renderBox(name) {
+		return (
+			<div className={name.toLowerCase()}>
+				<span className="text">{name}</span>
+			</div>
 		);
 	}
 }
+
+SideMenuComponent.propTypes = {
+	showSideMenu: PropTypes.boolean,
+	type: PropTypes.string,
+};

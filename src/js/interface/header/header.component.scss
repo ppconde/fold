@@ -1,9 +1,14 @@
-.header {
-    .title {
-        letter-spacing: 10px;
-        font-weight: bold;
-        font-size: 40px;
-        text-align: center;
-        margin-top: 20px;
+.navigation {
+    display: flex;
+    justify-content: center;
+    
+    .list {
+        display: flex;
+        width: 50%;
+    }
+
+    .link {
+        flex: 1;
+        list-style-type: none;
     }
 }
