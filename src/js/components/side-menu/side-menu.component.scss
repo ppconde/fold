@@ -1,18 +1,12 @@
+@use '../../../assets/scss/colors.scss' as colors;
+
 .side-menu {
     .settings {
-        position: absolute;
-        background-color: #EDEDED;
-        right: 0;
-        height: 100%;
-        top: 0;
-        padding-top: 10%;
-        width: 20vw;
-
         h2 {
             margin-bottom: 30px;
         }
 
-        .resizer {
+        .resizer {
             position: relative;
         }
 
@@ -37,7 +31,7 @@
         .a4 {
             width: 98px;
             height: 139px;
-            border: 1px solid #707070;
+            border: 1px solid colors.$secondary-color;
             background-color: white;
             display: flex;
             justify-content: center;
@@ -49,7 +43,7 @@
         .custom {
             width: 86px;
             height: 48px;
-            border: 1px solid #707070;
+            border: 1px solid colors.$secondary-color;
             background-color: white;
             display: flex;
             justify-content: center;
@@ -60,7 +54,7 @@
         .square {
             height: 86px;
             width: 86px;
-            border: 1px solid #707070;
+            border: 1px solid colors.$secondary-color;
             background-color: #ADADAD;
             display: flex;
             justify-content: center;
@@ -78,7 +72,7 @@
 
         .a4,
         .custom {
-            color: #898989;
+            color: colors.$quartiary-color;
         }
 
         .square {
@@ -87,21 +81,21 @@
 
         .label-W {
             position: absolute;
-            right: 95px;
-            top: 235px;
+            right: 22%;
+            bottom: 145px;
         }
 
         .label-H {
             position: absolute;
-            right: 10px;
-            top: 275px;
+            right: 3%;
+            bottom: 105px;
         }
      
         .label-W,
         .label-H {
             display: flex;
-            color: #898989;
-            width: 70px;
+            color: colors.$quartiary-color;
+            width: 80px;
             
             .text {
                 font-weight: bold;
@@ -109,12 +103,39 @@
             }
 
             input {
-                color: #898989;
+                color: colors.$quartiary-color;
                 border: none;
                 border-bottom: 2px solid white;
                 background-color: unset;
-                width: 100%;
+                width: 40px;
             }
         }
+    }
+
+    .settings {
+        top: 0;
+        right: 0;
+    }
+
+    .library {
+        top: 0;
+        left: 0;
+
+        .origami-previews {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+        }
+    }
+
+    .settings,
+    .library,
+    .instructions,
+    .share {
+        position: absolute;
+        background-color: colors.$tertiary-color;
+        height: 100%;
+        padding-top: 10%;
+        min-width: 400px;
     }
 }

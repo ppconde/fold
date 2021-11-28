@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { NavigationComponent } from '../navigation/navigation.component';
 
-
 export const HeaderComponent = (props) => {
 
 	const { toggleSideMenu } = props;

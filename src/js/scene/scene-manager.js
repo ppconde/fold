@@ -36,7 +36,7 @@ export class SceneManager {
 	    this.setCamera();
 	    this.setSceneObjects();
 		this.setSceneHelpers();
-		this.setGUI();
+		// this.setGUI();
 	}
 
 	/**
