@@ -8,7 +8,7 @@ export const OrigamiPreviewComponent = (props) => {
 	console.log(image)
 	return (
 		<div className="origami-preview">
-			<img /* src={img} */ className="image" />
+			<img src={img} className="image" />
 			<span className="text">{text}</span>
 		</div>
 	);

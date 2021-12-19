@@ -1,5 +1,31 @@
+@use '../../../assets/scss/colors.scss' as colors;
+
 .search-bar {
-    .search-icon {
-        content: 'e8b6';
+    display: flex;
+    justify-content: center;
+
+    .wrapper {
+        border-bottom: 1px solid #aaa;
+        display: flex;
+        width: 180px;
+
+        .icon {
+            fill: colors.$secondary-color;
+        }        
+
+        .search {
+            border: none;
+            background-color: unset;
+            color: colors.$secondary-color;
+            
+            &::placeholder {
+                color: colors.$quinary-color;
+            }
+
+            &:focus {
+                outline: none;
+                box-shadow: none;
+            }
+        }
     }
 }
