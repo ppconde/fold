@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { OrigamiPreviewComponent } from '../origami-preview/origami-preview.component';
@@ -41,6 +41,7 @@ const data = {
 }
 
 export const SideMenuComponent = (props) => {
+	const [searchText, setSearchText] = useState('');
 	return (
 		<aside className="side-menu">
 			{renderSideMenu()}
@@ -52,7 +53,7 @@ export const SideMenuComponent = (props) => {
 		case 'settings':
 			return renderSettings();
 		case 'library':
-			return renderLibrary();
+			return renderLibrary(setSearchText);
 		default:
 			return;
 		}
@@ -78,12 +79,11 @@ export const SideMenuComponent = (props) => {
 		) : null;
 	}
 
-	function renderLibrary() {
+	function renderLibrary(setSearchText) {
 		return props.showSideMenu && props.menuType === 'library' ? (
 			<div className="library">
 				<button className="close" onClick={props.toggleSideMenu} />
-				<h2>Library</h2>
-				<SearchBarComponent />
+				<SearchBarComponent setSearchText={setSearchText} />
 				{renderOrigamiPreviews()}
 			</div>
 		) : null;
@@ -92,7 +92,13 @@ export const SideMenuComponent = (props) => {
 	function renderOrigamiPreviews() {
 		return (
 			<div className="origami-previews">
-				{data.library.map((v) => <OrigamiPreviewComponent key={v.key} image={v.img} text={v.text}/>)}
+				{data.library.reduce((acc, v) => {
+					if(v.text.match(new RegExp(searchText, 'i'))) {
+						acc.push(<OrigamiPreviewComponent key={v.key} image={v.img} text={v.text}/>);
+					}
+
+					return acc;
+				}, [])}
 			</div>
 		);
 	}

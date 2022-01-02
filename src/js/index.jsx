@@ -8,7 +8,6 @@ import { HeaderComponent } from './components/header/header.component';
 const App = () => {
 	const [{ showSideMenu, menuType }, setShowSideMenu] = useState({ showSideMenu: false, menuType: 'library' });
 	const toggleSideMenu = (e) => {
-		console.log('eee: ', e.target.innerText);
 		e.stopPropagation();
 		setShowSideMenu({ showSideMenu: !showSideMenu, menuType: e.target.innerText.toLowerCase() });
 	}
