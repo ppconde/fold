@@ -1,0 +1,18 @@
+[a,c] to [b,d]
+crease making e f
+[a,c] around [e,f]
+[e,a] to [e,f]
+crease making g
+[e,b] to [e,f]
+crease making h
+[e,g] to [e,f]
+crease making i
+[e,h] to [e,f]
+crease making j
+[e,j] around [e,f]
+[e,i] to [e,f]
+crease making k
+[e,j] to [e,f]
+crease making l
+[i,c] around [e,k] 80 degrees
+[j,d] around [e,l] 80 degrees

@@ -1,0 +1,12 @@
+a to d
+crease
+a around [b,c]
+b to c
+crease
+a to a + 0.5 * up + 0.3 * right with up = [a,b]
+crease making e f
+d to d + 0.5 * up + 0.3 * left with up = [d,c]
+crease making h g
+b to b + 0.1 * up + 0.1 * right with up = [b,e]
+crease making i j
+i j around [b, b + [i, j]]
