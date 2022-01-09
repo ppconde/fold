@@ -1,5 +1,8 @@
 @use './app.scss';
 @use './fonts.scss';
-@use '../../js/interface/navigation/navigation.component.scss';
-@use '../../js/interface/header/header.component.scss';
-@use '../../js/interface/side-menu/side-menu.component.scss';
+@use './close-btn.scss';
+@use '../../js/components/navigation/navigation.component.scss';
+@use '../../js/components/header/header.component.scss';
+@use '../../js/components/side-menu/side-menu.component.scss';
+@use '../../js/components/search-bar/search-bar.component.scss';
+@use '../../js/components/origami-preview/origami-preview.component.scss';

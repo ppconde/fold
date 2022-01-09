@@ -19,11 +19,22 @@ module.exports = {
 			},
 			{
 				test: /.(png|jpe?g|gif)$/i,
+				type: 'asset/resource'
+			},
+			{
+				test: /\.svg$/,
 				use: [
 					{
-						loader: 'file-loader',
+						loader: '@svgr/webpack'
 					},
+					{
+						loader: 'file-loader'
+					}
 				],
+				type: 'javascript/auto',
+				issuer: {
+					and: [/\.(ts|tsx|js|jsx|md|mdx)$/]
+				}
 			},
 			{
 				test: /.(fold)$/i,

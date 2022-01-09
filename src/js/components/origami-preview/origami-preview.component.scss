@@ -1,0 +1,21 @@
+@use '../../../assets/scss/colors.scss' as colors;
+
+.origami-preview {
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .image {
+        height: auto;
+        width: 94px;
+    }
+
+    .text {
+        font-family: 'Roboto', sans-serif;
+        font-size: 18px;
+        width: 94px;
+        color: colors.$secondary-color;
+        padding-top: 3px;
+    }
+}

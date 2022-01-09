@@ -1,29 +1,49 @@
 import '../assets/scss/main.scss';
-import React, {  useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { Canvas } from '../js/scene/canvas';
-import { SideMenuComponent } from './interface/side-menu/side-menu.component';
-import { HeaderComponent } from './interface/header/header.component';
+import { SideMenuComponent } from './components/side-menu/side-menu.component';
+import { HeaderComponent } from './components/header/header.component';
 
 const App = () => {
-	const [showSideMenu, setShowSideMenu] = useState(false);
-	const toggleSideMenu = (e) => {
-		console.log('eee: ', e);
-		e.stopPropagation();
-		setShowSideMenu(!showSideMenu);
-	}
+	const [{ showSideMenu, menuType }, setShowSideMenu] = useState({ showSideMenu: false, menuType: '' });
+
 	useEffect(() => {
 		const canvas = document.getElementById('canvas');
 		new Canvas(canvas);
-	});
+		addClickEventListener();
+	}, () => removeClickEventListener());
 
 	return (
 		<main className="main">
-			<HeaderComponent toggleSideMenu={toggleSideMenu} />
-			<SideMenuComponent type='settings' showSideMenu={showSideMenu} />
+			<HeaderComponent activateSideMenu={activateSideMenu} />
+			<SideMenuComponent key={menuType} menuType={menuType} showSideMenu={showSideMenu} activateSideMenu={activateSideMenu.bind(this)} />
 			<canvas id="canvas"></canvas>
 		</main>
 	);
+
+	/**
+	 * Toggles side menu and se
+	 */
+	function activateSideMenu(e) {
+		e.stopPropagation();
+		setShowSideMenu({ showSideMenu: true, menuType: e.target.innerText.toLowerCase() });
+	}
+
+	function addClickEventListener() {
+		window.addEventListener('click', function (e) {
+			const element = document.querySelector('.side-menu');
+			const isClickedInsideSideMenu = element !== e.target && element?.contains(e.target);
+
+			if (!isClickedInsideSideMenu) {
+				setShowSideMenu({ showSideMenu: false });
+			}
+		});
+	}
+
+	function removeClickEventListener() {
+		window.removeEventListener('click');
+	}
 }
 
-ReactDOM.render(<App/>, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'));
