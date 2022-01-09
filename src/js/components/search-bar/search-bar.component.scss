@@ -5,12 +5,12 @@
     justify-content: center;
 
     .wrapper {
-        border-bottom: 1px solid #aaa;
+        border-bottom: 2px solid #aaa;
         display: flex;
         width: 180px;
 
         .icon {
-            fill: colors.$secondary-color;
+            fill: colors.$sextinary-color;
         }        
 
         .search {

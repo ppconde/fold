@@ -4,15 +4,15 @@ import { NavigationComponent } from '../navigation/navigation.component';
 
 export const HeaderComponent = (props) => {
 
-	const { toggleSideMenu } = props;
+	const { activateSideMenu } = props;
 	return (
 		<header className="header">
 			<h1 className="title">Fold</h1>
-			<NavigationComponent onClickLink={toggleSideMenu}/>
+			<NavigationComponent onClickLink={activateSideMenu}/>
 		</header>
 	);
 }
 
 HeaderComponent.propTypes = {
-	toggleSideMenu: PropTypes.function,
+	activateSideMenu: PropTypes.function,
 };

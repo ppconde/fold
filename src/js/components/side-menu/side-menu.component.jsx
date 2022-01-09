@@ -42,65 +42,98 @@ const data = {
 
 export const SideMenuComponent = (props) => {
 	const [searchText, setSearchText] = useState('');
-	return (
-		<aside className="side-menu">
-			{renderSideMenu()}
-		</aside>
-	);
+	return renderSideMenu();
 
 	function renderSideMenu() {
-		switch (props.type) {
+		switch (props.menuType) {
 		case 'settings':
 			return renderSettings();
 		case 'library':
 			return renderLibrary(setSearchText);
+		case 'instructions':
+			return renderInstructions();
+		case 'share':
+			return renderShare();
 		default:
-			return;
+			return null;
 		}
 	}
 
 	function renderSettings() {
 		return props.showSideMenu && props.menuType === 'settings' ? (
-			<div className="settings">
-				<button className="close" onClick={props.toggleSideMenu} />
-				<h2>Settings</h2>
-				<div className="resizer">
-					{label('width')}
-					{label('height')}
-					<div className="boxes">
-						{renderBox('A4')}
-						<div className="col">
-							{renderBox('Custom')}
-							{renderBox('Square')}
+			<aside className="side-menu">
+				<div className="settings">
+					<button className="close" onClick={props.activateSideMenu} />
+					<h2>Settings</h2>
+					<div className="resizer">
+						{label('width')}
+						{label('height')}
+						<div className="boxes">
+							{renderBox('A4')}
+							<div className="col">
+								{renderBox('Custom')}
+								{renderBox('Square')}
+							</div>
 						</div>
 					</div>
 				</div>
-			</div>
+			</aside>
 		) : null;
 	}
 
 	function renderLibrary(setSearchText) {
-		return props.showSideMenu && props.menuType === 'library' ? (
-			<div className="library">
-				<button className="close" onClick={props.toggleSideMenu} />
-				<SearchBarComponent setSearchText={setSearchText} />
-				{renderOrigamiPreviews()}
-			</div>
+		return props.showSideMenu  && props.menuType === 'library' ? (
+			<aside className="side-menu">
+				<div className="library">
+					<h2 className="title">Library</h2>
+					<button className="close" onClick={props.activateSideMenu} />
+					<SearchBarComponent setSearchText={setSearchText} />
+					{renderOrigamiPreviews()}
+				</div>
+			</aside>
+		) : null;
+	}
+
+	function renderInstructions() {
+		return props.showSideMenu  && props.menuType === 'instructions' ? (
+			<aside className="side-menu">
+				<div className="instructions">
+					<h2 className="title">Instructions</h2>
+					<button className="close" onClick={props.activateSideMenu} />
+					<p className="content">
+						Lorem ipsum dolor sit amet consectetur adipisicing elit. Consectetur aut placeat sed reiciendis
+						quis cum quasi architecto, quibusdam, ea non excepturi maxime libero dolores aspernatur nihil?
+						Porro, nulla expedita. Eos?
+					</p>
+				</div>
+			</aside>
+		) : null;
+	}
+
+	function renderShare() {
+		return props.showSideMenu  && props.menuType === 'share' ? (
+			<aside className="side-menu">
+				<div className="share">
+					Share your origamis
+				</div>
+			</aside>
 		) : null;
 	}
 
 	function renderOrigamiPreviews() {
-		return (
-			<div className="origami-previews">
-				{data.library.reduce((acc, v) => {
-					if(v.text.match(new RegExp(searchText, 'i'))) {
-						acc.push(<OrigamiPreviewComponent key={v.key} image={v.img} text={v.text}/>);
-					}
+		const origamis = data.library.reduce((acc, v) => {
+			if (v.text.match(new RegExp(searchText, 'i'))) {
+				acc.push(<OrigamiPreviewComponent key={v.key} image={v.img} text={v.text} />);
+			}
 
-					return acc;
-				}, [])}
+			return acc;
+		}, []);
+
+		return origamis.length ? (
+			<div className="origami-previews">
+				{origamis}
 			</div>
-		);
+		) : <p className="no-origami">We couldn't find your origami 😞</p>;
 	}
 
 	function label(name) {
@@ -124,7 +157,6 @@ export const SideMenuComponent = (props) => {
 
 SideMenuComponent.propTypes = {
 	showSideMenu: PropTypes.boolean,
-	toggleSideMenu: PropTypes.func,
-	type: PropTypes.string,
+	activateSideMenu: PropTypes.func,
 	menuType: PropTypes.string,
 };

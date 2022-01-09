@@ -5,7 +5,6 @@ import img from '../../../assets/img/dummy-origami.jpg';
 export const OrigamiPreviewComponent = (props) => {
 
 	const { image, text } = props;
-	console.log(image)
 	return (
 		<div className="origami-preview">
 			<img src={img} className="image" />
