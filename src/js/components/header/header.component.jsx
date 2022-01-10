@@ -14,5 +14,5 @@ export const HeaderComponent = (props) => {
 }
 
 HeaderComponent.propTypes = {
-	activateSideMenu: PropTypes.function,
+	activateSideMenu: PropTypes.func,
 };

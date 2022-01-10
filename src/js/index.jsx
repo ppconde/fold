@@ -17,14 +17,11 @@ const App = () => {
 	return (
 		<main className="main">
 			<HeaderComponent activateSideMenu={activateSideMenu} />
-			<SideMenuComponent key={menuType} menuType={menuType} showSideMenu={showSideMenu} activateSideMenu={activateSideMenu.bind(this)} />
+			<SideMenuComponent key={menuType} menuType={menuType} showSideMenu={showSideMenu} activateSideMenu={activateSideMenu} />
 			<canvas id="canvas"></canvas>
 		</main>
 	);
 
-	/**
-	 * Toggles side menu and se
-	 */
 	function activateSideMenu(e) {
 		e.stopPropagation();
 		setShowSideMenu({ showSideMenu: true, menuType: e.target.innerText.toLowerCase() });
