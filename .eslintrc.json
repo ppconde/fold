@@ -1,34 +1,59 @@
 {
     "env": {
         "browser": true,
-		"node": true,
+        "node": true,
         "es2021": true
     },
     "extends": [
         "eslint:recommended",
         "plugin:react/recommended"
     ],
-	"parser": "babel-eslint",
+    "parser": "@babel/eslint-parser",
     "parserOptions": {
         "ecmaFeatures": {
             "jsx": true
         },
         "ecmaVersion": 12,
-        "sourceType": "module"
+        "sourceType": "module",
+        "requireConfigFile": false,
+        "babelOptions": {
+            "presets": [
+                "@babel/preset-react"
+            ]
+        }
     },
     "plugins": [
         "react"
     ],
     "rules": {
-        "quotes": [2, "single", {
-            "avoidEscape": true,
-            "allowTemplateLiterals": true
-        }],
-        "indent": ["error", "tab"],
+        "quotes": [
+            2,
+            "single",
+            {
+                "avoidEscape": true,
+                "allowTemplateLiterals": true
+            }
+        ],
+        "indent": [
+            "error",
+            "tab"
+        ],
         "no-tabs": 0,
         "no-mixed-spaces-and-tabs": 0, // disable rule
-        "camelcase": [2, {"properties": "always"}],
+        "camelcase": [
+            2,
+            {
+                "properties": "always"
+            }
+        ],
         "no-case-declarations": 0,
-        "no-unused-vars": ["error", { "vars": "all", "args": "after-used", "ignoreRestSiblings": false }]
+        "no-unused-vars": [
+            "error",
+            {
+                "vars": "all",
+                "args": "after-used",
+                "ignoreRestSiblings": false
+            }
+        ]
     }
 }
