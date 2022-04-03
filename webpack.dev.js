@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
 	mode: 'development',
@@ -9,7 +10,7 @@ module.exports = {
 	},
 	devtool: 'inline-source-map',
 	devServer: {
-		contentBase: './dist',
+		static: './dist',
 	},
 	module: {
 		rules: [
@@ -53,11 +54,16 @@ module.exports = {
 						presets: ['@babel/preset-env', '@babel/preset-react']
 					}
 				}
-			}
+			},
+			{
+				test: /\.tsx?$/,
+				use: 'ts-loader',
+				exclude: /node_modules/,
+			},
 		],
 	},
 	resolve: {
-		extensions: ['*', '.js', '.jsx'],
+		extensions: ['*', '.js', '.jsx', 'ts', 'tsx'],
 	},
 	plugins: [
 		new CleanWebpackPlugin(),
@@ -65,6 +71,7 @@ module.exports = {
 			title: 'Fold',
 			template: './index.html',
 		}),
+		new Dotenv(),
 	],
 	output: {
 		filename: '[name].bundle.js',
