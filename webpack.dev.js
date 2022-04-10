@@ -34,7 +34,7 @@ module.exports = {
 				],
 				type: 'javascript/auto',
 				issuer: {
-					and: [/\.(ts|tsx|js|jsx|md|mdx)$/]
+					and: [/\.(js|jsx|md|mdx)$/]
 				}
 			},
 			{
@@ -55,15 +55,10 @@ module.exports = {
 					}
 				}
 			},
-			{
-				test: /\.tsx?$/,
-				use: 'ts-loader',
-				exclude: /node_modules/,
-			},
 		],
 	},
 	resolve: {
-		extensions: ['*', '.js', '.jsx', 'ts', 'tsx'],
+		extensions: ['*', '.js', '.jsx'],
 	},
 	plugins: [
 		new CleanWebpackPlugin(),

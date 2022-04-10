@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { OrigamiPreviewComponent } from '../origami-preview/origami-preview.component';
+import { supabase } from '../../services/db-service';
 
 const data = {
 	library: [
@@ -42,20 +43,28 @@ const data = {
 
 export const SideMenuComponent = (props) => {
 	const [searchText, setSearchText] = useState('');
+
+	useEffect(async () => {
+		let { data } = await supabase
+			.from('Origami')
+			.select('id')
+		console.log('data: ', data);
+	})
+
 	return renderSideMenu();
 
 	function renderSideMenu() {
 		switch (props.menuType) {
-		case 'settings':
-			return renderSettings();
-		case 'library':
-			return renderLibrary(setSearchText);
-		case 'instructions':
-			return renderInstructions();
-		case 'share':
-			return renderShare();
-		default:
-			return null;
+			case 'settings':
+				return renderSettings();
+			case 'library':
+				return renderLibrary(setSearchText);
+			case 'instructions':
+				return renderInstructions();
+			case 'share':
+				return renderShare();
+			default:
+				return null;
 		}
 	}
 
@@ -82,7 +91,7 @@ export const SideMenuComponent = (props) => {
 	}
 
 	function renderLibrary(setSearchText) {
-		return props.showSideMenu  && props.menuType === 'library' ? (
+		return props.showSideMenu && props.menuType === 'library' ? (
 			<aside className="side-menu">
 				<div className="library">
 					<h2 className="title">Library</h2>
@@ -95,7 +104,7 @@ export const SideMenuComponent = (props) => {
 	}
 
 	function renderInstructions() {
-		return props.showSideMenu  && props.menuType === 'instructions' ? (
+		return props.showSideMenu && props.menuType === 'instructions' ? (
 			<aside className="side-menu">
 				<div className="instructions">
 					<h2 className="title">Instructions</h2>
@@ -111,7 +120,7 @@ export const SideMenuComponent = (props) => {
 	}
 
 	function renderShare() {
-		return props.showSideMenu  && props.menuType === 'share' ? (
+		return props.showSideMenu && props.menuType === 'share' ? (
 			<aside className="side-menu">
 				<div className="share">
 					Share your origamis
