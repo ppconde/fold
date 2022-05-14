@@ -46,7 +46,15 @@ module.exports = {
 				],
 			},
 			{
-				test: /\.m?js|jsx$/,
+				test: /\.txt$/i,
+				use: 'raw-loader',
+			},
+			// {
+			// 	test: /.txt/,
+			// 	type: 'asset/source',
+			// },
+			{
+				test: /\.(js|jsx)$/,
 				exclude: /node_modules/,
 				use: {
 					loader: 'babel-loader',
