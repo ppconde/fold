@@ -2,20 +2,28 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { OrigamiPreviewComponent } from '../origami-preview/origami-preview.component';
-import { supabaseService } from '../../services/db-service';
+import { cacheService } from '../../services/cache-service';
+import { CACHE } from '../../constants/cache-constants';
 
 export const SideMenuComponent = (props) => {
-	const [origamiLibrary, setOrigamiLibrary] = useState([]);
-	const [searchText, setSearchText,] = useState('');
-	const [loading, setLoading] = useState(true);
+	const [searchText, setSearchText] = useState('');
+	const [library, setLibrary] = useState([]);
+	const [origami, setOrigami] = useState({ instructions: [] });
 
-	useEffect(async () => {
-		const origamiLibraryResponse = await supabaseService.getOrigamiLibrary();
-		if (origamiLibraryResponse.length) {
-			setOrigamiLibrary(origamiLibraryResponse);
+	useEffect(() => getLibrary(), []);
+
+	const getLibrary = () => {
+		const library = cacheService.getItem(CACHE.library);
+		setLibrary(JSON.parse(library));
+	}
+
+	const getInstructions = () => {
+		if (library.length) {
+			const index = library.map((lib) => lib.name).indexOf('Paperplane');
+			const entries = Object.values(library[index].instructions);
+			return index ? entries.map((instruction, i) => <p key={i}>{instruction}</p>) : null;
 		}
-		setLoading(false);
-	}, []);
+	}
 
 	const renderSettings = () => {
 		return props.menuType === 'settings' ? (
@@ -58,11 +66,9 @@ export const SideMenuComponent = (props) => {
 				<div className="instructions">
 					<h2 className="title">Instructions</h2>
 					<button className="close" onClick={props.activateSideMenu} />
-					<p className="content">
-						Lorem ipsum dolor sit amet consectetur adipisicing elit. Consectetur aut placeat sed reiciendis
-						quis cum quasi architecto, quibusdam, ea non excepturi maxime libero dolores aspernatur nihil?
-						Porro, nulla expedita. Eos?
-					</p>
+					<div className="content">
+						{getInstructions()}
+					</div>
 				</div>
 			</aside>
 		) : null;
@@ -79,8 +85,9 @@ export const SideMenuComponent = (props) => {
 	}
 
 	const renderOrigamiPreviews = () => {
-		const origamis = origamiLibrary.reduce((acc, v) => {
-			if (v.name.match(new RegExp(searchText, 'i'))) {
+		const { loading } = props;
+		const origamis = library.reduce((acc, v) => {
+			if (v?.name.match(new RegExp(searchText, 'i'))) {
 				acc.push(<OrigamiPreviewComponent key={v.id} image={v.img} name={v.name} />);
 			}
 
@@ -128,4 +135,5 @@ export const SideMenuComponent = (props) => {
 SideMenuComponent.propTypes = {
 	activateSideMenu: PropTypes.func,
 	menuType: PropTypes.string,
+	loading: PropTypes.bool,
 };
