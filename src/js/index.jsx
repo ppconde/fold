@@ -12,7 +12,7 @@ const App = () => {
 	const [{ showSideMenu, menuType }, setShowSideMenu] = useState({ showSideMenu: false, menuType: '' });
 	const [loading, setLoading] = useState(true);
 
-	useEffect(init, () => removeClickEventListener());
+	useEffect(init, []);
 
 	return (
 		<main className="main">
@@ -32,7 +32,7 @@ const App = () => {
 
 		const library = await supabaseService.getOrigamiLibrary();
 		if (library.length) {
-			cacheService.setItem(CACHE.library, library);
+			cacheService.setItem(CACHE.ORIGAMI, library);
 		}
 		setLoading(false);
 	}
@@ -71,13 +71,6 @@ const App = () => {
 				setShowSideMenu({ showSideMenu: false });
 			}
 		});
-	}
-
-	/**
-	 * Removes the click event listener
-	 */
-	function removeClickEventListener() {
-		window.removeEventListener('click');
 	}
 }
 

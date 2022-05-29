@@ -8,22 +8,19 @@ import { CACHE } from '../../constants/cache-constants';
 export const SideMenuComponent = (props) => {
 	const [searchText, setSearchText] = useState('');
 	const [library, setLibrary] = useState([]);
-	const [origami, setOrigami] = useState({ instructions: [] });
+	const [instructions, setInstructions] = useState([]);
 
-	useEffect(() => getLibrary(), []);
+	useEffect(() => getOrigamiFromCache(), []);
 
-	const getLibrary = () => {
-		const library = cacheService.getItem(CACHE.library);
-		setLibrary(JSON.parse(library));
+	const getOrigamiFromCache = () => {
+		const library = cacheService.getItem(CACHE.ORIGAMI);
+		const origamis = JSON.parse(library);
+		setLibrary(origamis);
+		setInstructions(origamis.map((o) => o.instructions));
+
 	}
 
-	const getInstructions = () => {
-		if (library.length) {
-			const index = library.map((lib) => lib.name).indexOf('Paperplane');
-			const entries = Object.values(library[index].instructions);
-			return index ? entries.map((instruction, i) => <p key={i}>{instruction}</p>) : null;
-		}
-	}
+	const getInstructions = () => [...instructions?.map((m, i) => <p key={i}>{m[i + 1]}</p>)]
 
 	const renderSettings = () => {
 		return props.menuType === 'settings' ? (

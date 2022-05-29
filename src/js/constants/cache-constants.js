@@ -1,3 +1,3 @@
 export const CACHE = {
-	library: 'library'
+	ORIGAMI: 'origami'
 }
