@@ -33,6 +33,7 @@ const App = () => {
 		const library = await supabaseService.getOrigamiLibrary();
 		if (library.length) {
 			cacheService.setItem(CACHE.ORIGAMI, library);
+			setOrigamiImages(library);
 		}
 		setLoading(false);
 	}
@@ -70,6 +71,18 @@ const App = () => {
 			if (!isClickedInsideSideMenu) {
 				setShowSideMenu({ showSideMenu: false });
 			}
+		});
+	}
+
+	/**
+	 * Load origami images from supabase storage and sets them into cache
+	 * @param library 
+	 */
+	function setOrigamiImages(library) {
+		library.forEach(async (origami) => {
+			const origameName = origami.name.toLowerCase();
+			const img = await supabaseService.getOrigamiImage(origameName);
+			cacheService.setItem(origameName, img);
 		});
 	}
 }

@@ -1,19 +1,24 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import img from '../../../assets/img/dummy-origami.jpg';
+import { cacheService } from '../../services/cache-service';
 
 export const OrigamiPreviewComponent = (props) => {
 
-	const { image, name } = props;
+	const [image, setImage] = useState('');
+
+	useEffect(async () => {
+		const image = cacheService.getItem(props.name.toLowerCase());
+		setImage(JSON.parse(image));
+	}, '')
+
 	return (
 		<div className="origami-preview">
-			<img src={img} className="image" />
-			<span className="text">{name}</span>
+			<img src={image} alt="Some Origami 🧻" className="image" />
+			<span className="text">{props.name}</span>
 		</div>
 	);
 }
 
 OrigamiPreviewComponent.propTypes = {
-	image: PropTypes.string,
 	name: PropTypes.string,
 };

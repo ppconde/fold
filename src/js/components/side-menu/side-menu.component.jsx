@@ -85,7 +85,7 @@ export const SideMenuComponent = (props) => {
 		const { loading } = props;
 		const origamis = library.reduce((acc, v) => {
 			if (v?.name.match(new RegExp(searchText, 'i'))) {
-				acc.push(<OrigamiPreviewComponent key={v.id} image={v.img} name={v.name} />);
+				acc.push(<OrigamiPreviewComponent key={v.id} name={v.name} />);
 			}
 
 			return acc;
