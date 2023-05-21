@@ -71,7 +71,7 @@ export class SceneManager {
 	    const { fov, aspect, near, far } = config.props;
 	    this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 	    this.camera.aspect = ratio;
-	    this.camera.position.set(0, 0, 2);
+	    this.camera.position.set(0, 5, 5);
 
 	    // Creates orbit controls object with same view direction vector as the camera
 	    const controls = new OrbitControls(this.camera, this.canvas);

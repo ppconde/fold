@@ -8,7 +8,6 @@ export class GeneralGUI {
 	constructor(scene, sceneObjects) {
 		this.scene = scene;
 		this.sceneObjects = sceneObjects;
-		//this.gui = new GUI;
 		this.gui = new dat.GUI();
 		this.setGUI();
 	}

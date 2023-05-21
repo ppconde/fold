@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import fold from '../../../crease-patterns/rectangle.fold';
 import { FoldToThreeConverter } from '../converters/fold-to-three-converter';
-import img1 from '../../../../demos/guta/img/star.png';
+import { COLORS } from '../../constants/colors-constants'
 
 export class Origami {
 	constructor(scene) {
@@ -12,15 +12,7 @@ export class Origami {
 		// eslint-disable-next-line camelcase
 		this.vertices_coords = this.foldInfo.fold.vertices_coords;
 
-		this.geometry = this.foldInfo.geometry;
-		const color = 0x8888FF;
-		const loader = new THREE.TextureLoader();
-		const texture = loader.load(img1);
-		this.material = new THREE.MeshPhongMaterial({ color, map: texture, wireframe: true });
-		//this.material = new THREE.MeshStandardMaterial({ color: new THREE.Color('rgb(100,0,0)') });
-		this.material.side = THREE.DoubleSide;
-		this.mesh = new THREE.Mesh(this.geometry, this.material);
-		scene.add(this.mesh);
+		this.addOrigamiMesh(scene)
 		this.init();
 
 
@@ -64,6 +56,29 @@ export class Origami {
 
 	init = () => {
 		this.loadFoldObject();
+	}
+
+	/**
+	 * Loads the origami mesh with it's material and geometry
+	 */
+	addOrigamiMesh = (scene) => {
+		this.geometry = this.foldInfo.geometry;
+		// Paper material
+		this.material = new THREE.MeshBasicMaterial({
+			color: COLORS.PAPER,
+			transparent: false,
+			side: THREE.DoubleSide,
+		});
+
+		// Material for the paper borders (wireframe)
+		const wireframeMaterial = new THREE.MeshBasicMaterial({
+			color: COLORS.WIREFRAME,
+			wireframe: true,
+			wireframeLinewidth: 10,
+		});
+		this.mesh = new THREE.Mesh(this.geometry, this.material);
+		scene.add(this.mesh);
+		scene.add(new THREE.Mesh(this.geometry, wireframeMaterial));
 	}
 
 	/**
