@@ -3,26 +3,24 @@ import fold from '../../../crease-patterns/rectangle.fold';
 import { FoldToThreeConverter } from '../converters/fold-to-three-converter';
 import img1 from '../../../../demos/guta/img/star.png';
 import txt from '../../../instructions/test-1.txt';
-// import txt from '../../../instructions/paper-plane.txt';
 import {MathHelpers} from '../helpers/math-helpers'
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-
 
 export class Origami {
 	constructor(scene) {
 
-		this.scene = scene;
-		this.dbug_material = new THREE.LineBasicMaterial({ color: 0x0000ff });
-		this.c = 0;
-		this.last_time = 0;
-
- 		const width = 5;
+/* 		const width = 5;
 		const length = 10;
 
-		// this.points = {'a': [0,0,0], 'b': [length,0,0], 'c':[length,width,0], 'd':[0,width,0]};
-		// this.faces = [['a','b','c','d']];
-		// this.pattern = Object.fromEntries(Object.keys(this.points).map((key) => [key,this.points[key].slice(0,2)]));
+		this.points = {'a': [0,0,0], 'b': [length,0,0], 'c':[length,width,0], 'd':[0,width,0], 'e':[length/4,0,0], 'f': [length/8,width/2,0], 'g': [length/4,width,0]};
+		this.faces = [['a','e','f','d'], ['e','b','c','f'],['c','g','f'],['g','d','f']];
+		this.pattern = {'a': [0,0], 'b': [length,0], 'c':[length,width], 'd': [0,width], 'e':[length/4,0], 'f': [length/8,width/2], 'g': [length/4,width]}; */
+
+		const width = 5;
+		const length = 10;
+
+		// this.points = {'a': [0,0,0], 'b': [length,0,0], 'c':[length,width,0], 'd':[0,width,0], 'e':[length/4,0,0], 'f': [length/8,width/2,0], 'g': [length/4,width,0]};
+		// this.faces = [['a','e','f','d'], ['e','b','c','f'],['c','g','f'],['g','d','f']];
+		// this.pattern = {'a': [0,0], 'b': [length,0], 'c':[length,width], 'd': [0,width], 'e':[length/4,0], 'f': [length/8,width/2], 'g': [length/4,width]};
 
 		this.points = {'a':[0,0,0],'b': [length,0,0],'c':[length,width,0],'d':[0,width,0],'e':[0,width*2/5,0], 'f':[length*5/10,0,0],'g':[length*5/10,width*1/5,0],'h':[length*8/10,width*1/5,0],'i':[length*8/10,width*4/5,0], 'j':[length*5/10,width*4/5,0],'k':[length*5/10,width*3/5,0],'l':[length*7/10,width*3/5,0],'m':[length*7/10,width*2/5,0]}
 		this.faces = [['a','f','g','h','i','j','k','l','m','e'], ['f','b','c','d','e','m','l','k','j','i','h','g']];
@@ -34,17 +32,15 @@ export class Origami {
 		let steps = txt.split('\n');
 		const tolerance = width / 100;
 
-		this.mesh_history = [{lines: this.createLineMesh(), texts: this.createTextMesh()}];  // text: [group(mesh_a, mesh_b), group_] // lines: mesh_abcdefg // lines: [mesh_abcd, mesh_defg]
+		let rotation_info;  // Rotation object that will be used later, to rotate meshes
 
 		for (let i = 0; i < steps.length; i++){ 
 			const step = steps[i];
-			let rotation_info;  // Rotation object that will be used later, to rotate meshes
 
 			if (step.match(translation.regex) !== null){
 
 				// Get rotation start and end vertices
-				let {from, to, sense} = this.getFromStep(['from','to', 'sense'], translation, step);
-				sense = sense[0];
+				const {from, to, sense} = this.getFromStep(['from','to', 'sense'], translation, step);
 
 				// Make plane containing rotation axis
 				const plane = MathHelpers.makePlaneBetween(this.points, from, to);
@@ -57,91 +53,65 @@ export class Origami {
 
 				// Rotate faces before axis
 				([this.points, rotation_info] = MathHelpers.rotateFaces(this.points, this.faces, labels, from, to, plane, sense));
+
+				debugger;
 				
 				// O objeto rotação será algo deste género:
 				// rotation = {outline: ['a','i','j','d'], axis: ['i','j'], angle: 30}
 				// Depois, será só necessário fazer os face meshes a partir do pattern e faces, e para cada rotação, fazer um grupo de meshes contido no outline, e rodar segundo o axis
 
 
+
+				
+				// let face_selected = new Array(this.faces.length).fill(0);
+				// let face_side = new Array(this.faces.length).fill(null);
+				// let face_points_side = Array.from(Array(this.faces.length), () => []);
+
+				// let faceIds = MathHelpers.findFacesContainingPoints(from, this.faces);
+				// [, face_side, face_points_side] = MathHelpers.selectFacesUntilPlane(faceIds, this.faces, this.points, plane, tolerance, face_selected, face_side, face_points_side);
+				// faceIds = MathHelpers.divideFacesIntersectingPlane(this.points, this.faces, face_side, plane, tolerance, face_points_side);
+				// const points_to_rotate = MathHelpers.rotateFaces(from, plane, this.points, this.faces, this.pattern, tolerance);
+
+				// const {axis, points, faces, pattern} = MathHelpers.intersectPlaneWithOrigami(plane, this.points, this.faces, this.pattern, tolerance);
+				// const points_to_rotate = MathHelpers.selectPointsToRotate(plane, points, tolerance);
+
+				// const angle = MathHelpers.calculateRotationAngle(points, from, to, axis);
+				// const rotated_points = MathHelpers.rotate(points, points_to_rotate, axis, angle);
+
+				// this.setPoints(rotated_points);
+				// this.setPattern(pattern);
+				// this.setFaces(faces);
+				// debugger;
+
 			}  else if (step.match(rotation.regex) !== null){
-				let {from, axis, sense, angle} = this.getFromStep(['from','axis','sense','angle'], rotation, step);
+				const {from, axis} = this.getFromStep(['from','axis'], rotation, step);
 
-				sense = sense[0];
-				angle = angle[0];
-
-				if (angle === ""){
-					angle = 180;
-				}
-
-				const from_point = this.points[from[from.length-1]];
-
-				const closest_point_in_axis = MathHelpers.findClosestPointinLine(this.points[axis[0]],this.points[axis[1]],from_point);
-				const plane_vector = closest_point_in_axis.map((element, k) => element - from_point[k]);
+				const closest_point_in_axis = MathHelpers.findClosestPointinLine(points[axis[0]],points[axis[1]],points[from[0]]);
+				const plane_vector = points[from[0]].map((element, k) => element - closest_point_in_axis[k]);
 				const plane_vector_norm = Math.sqrt(plane_vector.reduce((acc, element) => acc + Math.pow(element, 2), 0));
-				const plane_versor = plane_vector.map((element, k) => element / plane_vector_norm);
+				const plane_versor = vector_1.map((element, k) => element / plane_vector_norm);
 
-				const plane = {plane_point: this.points[axis[0]], plane_versor: plane_versor};
+				const plane = {plane_point: axis[0], plane_versor: plane_versor};
 
 				// Label faces relative to rotation axis: before, intersecting and after
 				let labels = MathHelpers.labelFaces(this.points, this.faces, from, plane, tolerance);
 
-				// Find points to rotate
-				const points_to_rotate = MathHelpers.findPointsToRotate(this.faces, labels);
+				// Rotate faces before axis
+				([this.points, rotation_info] = MathHelpers.rotateFaces(this.points, this.faces, labels, from, to, plane, sense));
 
-				// Rotate
-				this.points = MathHelpers.rotatePoints(this.points, points_to_rotate, axis, angle);
+				
+				// const plane = MathHelpers.makePlaneOnAxis(points_to_rotate, axis, this.points);
+				// TODO:
+				// const {axis, points, faces, pattern} = MathHelpers.intersectPlaneWithOrigami2(plane, this.points, this.faces, this.pattern, tolerance);
 
-				// Find outline of points to rotate. RIGHT NOW IT'S GIVING FACES TO ROTATE. MAYBE FIX:
-				const outline = MathHelpers.findOutlineOfFaces(this.faces, labels);
 
-				// Pack rotation instruction for when meshes are built (in THREE.js)
-				rotation_info = {outline: outline, axis: axis, angle: angle};
-
+				// const axis_values = axis.map((element) => this.points[element]);
+				// const angle = Math.PI;
+				// const rotated_points = MathHelpers.rotate(this.points, points_to_rotate, axis_values, angle);
+				// this.setPoints(rotated_points);
 			}
-			this.mesh_history.push({lines:this.createLineMesh(), texts:this.createTextMesh()});
 		}
-
-
-		
-	}
-
-	createLineMesh = () => {
-
-		const dbug_lines = [];
-
-		for (let face of this.faces) {
-			const dbug_points = [];
-			for (let letter of face) {
-				const coord = this.points[letter];
-				dbug_points.push(new THREE.Vector3(...coord));
-			}
-			dbug_points.push(new THREE.Vector3(...this.points[face[0]]));
-			const dbug_geometry = new THREE.BufferGeometry().setFromPoints(dbug_points);
-			dbug_lines.push(new THREE.Line(dbug_geometry, this.dbug_material));
-		}
-		return dbug_lines;
-	}
-
-
-
-	createTextMesh = () => {
-		const dbug_texts = [];
-		let loader = new FontLoader();
-		for (let face of this.faces) {
-			const letter_group = new THREE.Group();
-			for (let letter of face) {
-				const coord = this.points[letter];
-				loader.load('https://unpkg.com/three@0.77.0/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-					const dbug_material = new THREE.LineBasicMaterial({ color: 0x0000ff });  // Istp podia estar fora mas não parece dar!
-					const dbug_text_geometry = new TextGeometry(letter, { font: font, size: 0.5, height: 0 });
-					const letter_mesh = new THREE.Mesh(dbug_text_geometry, dbug_material);
-					letter_mesh.position.set(...coord);
-					letter_group.add(letter_mesh);
-				});
-			}
-			dbug_texts.push(letter_group);
-		}
-		return dbug_texts;
+		// MathHelpers.debugPlot(this.faces, this.points, scene);
 	}
 
 	setFaces = (faces) => {
@@ -216,29 +186,6 @@ export class Origami {
 	}
 
 	/**
-	 * Loads the origami mesh with it's material and geometry
-	 */
-	addOrigamiMesh = (scene) => {
-		this.geometry = this.foldInfo.geometry;
-		// Paper material
-		this.material = new THREE.MeshBasicMaterial({
-			color: COLORS.PAPER,
-			transparent: false,
-			side: THREE.DoubleSide,
-		});
-
-		// Material for the paper borders (wireframe)
-		const wireframeMaterial = new THREE.MeshBasicMaterial({
-			color: COLORS.WIREFRAME,
-			wireframe: true,
-			wireframeLinewidth: 10,
-		});
-		this.mesh = new THREE.Mesh(this.geometry, this.material);
-		scene.add(this.mesh);
-		scene.add(new THREE.Mesh(this.geometry, wireframeMaterial));
-	}
-
-	/**
 	 * Loads fold object and parses it into a json object
 	 */
 	loadFoldObject = () => {
@@ -257,26 +204,6 @@ export class Origami {
 	}
 
 	update = (time) => {
-
-		const delta_time = time - this.last_time;
-
-		if (delta_time >= 2000 && this.c < this.mesh_history.length){
-			this.scene.clear();
-			this.mesh_history[this.c].lines.forEach((line,k) => {
-				this.scene.add(line);
-				this.scene.add(this.mesh_history[this.c].texts[k])
-			})
-			this.last_time = time;
-			this.c++;
-		}
-
-
-
-		// this.mesh_history
-
-		// console.log(this.scene);
-
-
 		// const posAttribute = this.geometry.getAttribute('position');
 		// let positions = posAttribute.array;
 		// posAttribute.needsUpdate = true;

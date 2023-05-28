@@ -4,8 +4,7 @@ import { Origami } from './models/origami';
 import { CamerasConfig } from'./cameras/cameras-config';
 import { GeneralHelpers } from './helpers/general-helpers';
 import { GeneralGUI } from './gui/general-gui';
-//import { GUI } from 'dat.gui';
-const OrbitControls = require('three-orbit-controls')(THREE);
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 /**
  * Create scene, rendererer, camera
@@ -71,11 +70,11 @@ export class SceneManager {
 	    const { fov, aspect, near, far } = config.props;
 	    this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 	    this.camera.aspect = ratio;
-	    this.camera.position.set(0, 5, 5);
+	    this.camera.position.set(5, 0, 10);
 
 	    // Creates orbit controls object with same view direction vector as the camera
 	    const controls = new OrbitControls(this.camera, this.canvas);
-	    const lookAtVec = new THREE.Vector3(0, 0, 0)
+	    const lookAtVec = new THREE.Vector3(5, 0, 0)
 	    controls.target = lookAtVec;
 	    this.camera.lookAt(lookAtVec);
 	}
@@ -86,7 +85,8 @@ export class SceneManager {
 	setSceneObjects = () => {
 		this.sceneObjects = new Map();
 		this.sceneObjects.set('GeneralLights', new GeneralLights(this.scene) );
-		this.sceneObjects.set('Origami', new Origami(this.scene) );
+		// this.sceneObjects.set('Origami', new Origami(this.scene) );  //  this.camera and this.renderer for debugg
+		this.sceneObjects.set('Origami', new Origami(this.scene, this.camera, this.renderer));
 	}
 
 	setSceneHelpers = () => {
@@ -98,7 +98,7 @@ export class SceneManager {
 	}
 
 	/**
-	 * Calls update for each existing scene in a sceneManager
+	 * Calls update for each existing scene in a sceneManager 
 	 */
 	update = (time) => {
 	    this.sceneObjects.forEach((sceneObject) => sceneObject.update(time));

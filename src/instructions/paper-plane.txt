@@ -1,18 +1,11 @@
-[a,b] to [d,c]
-crease making e f
-[a,b] around [f,e]
-[f,a] to [f,e]
-crease making g
-[f,d] to [f,e]
-crease making h
-[f,g] to [f,e]
-crease making i
-[f,h] to [f,e]
-crease making j
-[f,j] around [f,e]
-[f,i] to [f,e]
-crease making k
-[f,j] to [f,e]
-crease making l
-[f,i] around [f,k] 80 degrees
-[f,j] around [f,l] 80 degrees
+[a,b] to [d,c] V
+[a,b] around [f,e] V
+[f,a] to [f,e] V
+[f,d] to [f,e] V
+[f,g] to [f,e] V
+[f,h] to [f,e] V
+[f,j] around [f,e] M
+[f,i] to [f,e] M
+[f,k] to [f,e] M
+[f,i] around [f,k] V 80
+[f,j] around [f,l] V 80

@@ -4,6 +4,8 @@ import * as earcut from 'earcut'
 export class FoldToThreeConverter {
 	constructor(fold) {
 		this.fold = fold;
+		// this.info = nossa_funcao(fold);
+
 		this.dimensions = fold.vertices_coords?.[0].length;
 		this.uvDimensions = 2;
 		// Triangulated values of the fold object. It returns an array of triplets of indexes

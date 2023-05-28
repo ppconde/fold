@@ -1,0 +1,23 @@
+// OPTIONS:
+
+[a,b] to [d,c] V
+[a,b] to [d,c] M
+[a,b] around [d,c] V 30
+[a,b] around [d,c] M 30
+
+[a,b] up to [d,c]
+[a,b] down to [d,c]
+[a,b] around [d,c] 30
+
+[a,b] T [d,c] V
+[a,b] T [d,c] M
+[a,b] R [d,c] V 30
+[a,b] R [d,c] M 30
+
+[a,b] onto [d,c]
+[a,b] unto [d,c]
+[a,b] over [d,c] 30
+[a,b] under [d,c] 30
+
+[a,b] on to [d,c]
+[a,b] un to [d,c]

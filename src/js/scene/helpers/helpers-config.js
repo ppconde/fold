@@ -2,7 +2,7 @@ import { HelpersTypes } from './helpers-types';
 
 export const HelpersConfig = [
 	{
-		enabled: true,
+		enabled: false,
 		key: 'Dir-1',
 		type: HelpersTypes.DIRECTIONAL_LIGHT,
 		// gui: {
@@ -13,7 +13,7 @@ export const HelpersConfig = [
 		// }
 	},
 	{
-		enabled: true,
+		enabled: false,
 		key: 'Dir-1',
 		type: HelpersTypes.SHADOW_CAMERA,
 		// props: {
