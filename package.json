@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "webpack --config webpack.js --env=production",
+    "build": "webpack --config webpack-config.js --env=production",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
     "start": "webpack serve --open --config webpack-config.js --env=development",
