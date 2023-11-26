@@ -9,7 +9,7 @@ export class BaseModel {
 			currentFrame: 0,
 			totalFrames: 0,
 		}
-		this.mesh_history = [];
+		this.mesh_instructions = [];
 	}
 
 	/**
@@ -71,8 +71,9 @@ export class BaseModel {
 	 * Used to determine if animation should play
 	 */
 	shouldPlayAnimation = (time, currentFrame) => {
-		const delta_time = time - this.previousTime;
-		return delta_time >= BaseModel.STEP_TIME && currentFrame < this.mesh_history.length
+		return true;
+		// const delta_time = time - this.previousTime;
+		// return delta_time >= BaseModel.STEP_TIME && currentFrame <= this.mesh_instructions.length
 	}
 
 }
