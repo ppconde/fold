@@ -7,6 +7,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { supabaseService } from './services/db-service';
 import { cacheService } from './services/cache-service';
 import { CACHE } from './constants/cache-constants';
+import { ControlsComponent } from './components/controls/controls-component';
 
 const App = () => {
 	const [{ showSideMenu, menuType }, setShowSideMenu] = useState({ showSideMenu: false, menuType: '' });
@@ -19,6 +20,7 @@ const App = () => {
 			<HeaderComponent activateSideMenu={activateSideMenu} />
 			{renderSideMenu()}
 			<canvas id="canvas"></canvas>
+			<ControlsComponent />
 		</main>
 	);
 

@@ -36,16 +36,14 @@
         ],
         "indent": [
             "error",
+            4,
+            {
+                "SwitchCase": 1
+            },
             "tab"
         ],
         "no-tabs": 0,
         "no-mixed-spaces-and-tabs": 0, // disable rule
-        "camelcase": [
-            2,
-            {
-                "properties": "always"
-            }
-        ],
         "no-case-declarations": 0,
         "no-unused-vars": [
             "error",
