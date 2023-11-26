@@ -34,6 +34,8 @@ export class Origami {
 
 		let rotation_info;  // Rotation object that will be used later, to rotate meshes
 
+		//  let planes = [{'faces':[0,1], 'face_order':[0,1]}];  // TODO: Update this in (the end of?) MathHelpers.divideFacesIntersectingPlane! [copidado para aqui de um origami.js mais recente, só para o guardar]
+
 		for (let i = 0; i < steps.length; i++){ 
 			const step = steps[i];
 
