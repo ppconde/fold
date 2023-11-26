@@ -4,11 +4,6 @@ export const ControlsComponent = () => {
 
 	const [isPlaying, setIsPlaying] = useState(false);
 
-	useEffect(() => {
-		console.log('isPlaying: ', isPlaying);
-	}, [isPlaying]);
-
-
 	const renderSteps = () => {
 		return Array.from({ length: 5 }, (_, i) => (
 			<div key={`step-${i}`} className="step" id={`step-${i}`} />
