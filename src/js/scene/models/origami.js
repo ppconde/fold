@@ -8,6 +8,8 @@ import { OrigamiController } from '../controllers/origami-controller';
 
 export class Origami extends BaseModel {
 
+	mesh_instructions = [];
+
 	constructor(scene) {
 		super();
 		// Sets Origami Controller
@@ -96,46 +98,57 @@ export class Origami extends BaseModel {
 		const mesh2 = new THREE.Mesh(geometry2, material2);
 		const mesh3 = new THREE.Mesh(geometry3, material3);
 		this.meshes = [mesh1, mesh2, mesh3];
-		this.scene.add(...this.meshes);
 
 		this.mesh_instructions = [
 			{ meshIds: [0, 1], axis: ['a', 'd'], angle: 180 },
 		];
+
+		// Populates each instruction with the group of the remaining meshes
+		this.mesh_instructions = this.mesh_instructions.map((mesh_instruction) => {
+			return {
+				...mesh_instruction,
+				foldingGroup: new THREE.Group().add(...mesh_instruction.meshIds.map((id) => this.meshes[id])),
+				staticGroup: new THREE.Group().add(...this.meshes.map((_, i) => i).filter((id) => !mesh_instruction.meshIds.includes(id)).map((id) => this.meshes[id])),
+			}
+		})
+
+		const groups = this.mesh_instructions.flatMap(({ foldingGroup, staticGroup }) => [foldingGroup, staticGroup]);
+
+		this.scene.add(...groups);
 	}
 
-	renderOrigami = (time, currentFrame) => {
-		if (currentFrame > 0) {
-			this.scene.clear();
-			const group = new THREE.Group();
-			// const instruction = this.mesh_instructions[currentFrame - 1];
-			const instruction = this.mesh_instructions[0];
-			for (let i = 0; i < instruction.meshIds.length; i++) {
-				group.add(this.meshes[instruction.meshIds[i]]);
-			}
-
-			this.scene.add(group, this.meshes[2]);
-
-			// const vecA = this.pts[instruction.axis[0]];
-			// const vecB = this.pts[instruction.axis[1]];
-			const vecA = new THREE.Vector3(...this.pts['a']);
-			const vecB = new THREE.Vector3(...this.pts['d']);
-			const vec = new THREE.Vector3();
-
-			vec.copy(vecA).sub(vecB).normalize();
-			group.rotateOnWorldAxis(vec, 0.1);
-		}
-
+	renderOrigami = (time, currentStep) => {
 		this.previousTime = time;
-		this.setFrame(currentFrame + 1);
+		this.setCurrentStep(currentStep + 1);
+		this.pauseAnimation();
+	}
+
+	playAnimation = (currentStep, ) => {
+		console.log('isPlaying');
+
+		const instruction = this.mesh_instructions[currentStep];
+		const vecA = new THREE.Vector3(...this.pts[instruction.axis[0]]);
+		const vecB = new THREE.Vector3(...this.pts[instruction.axis[1]]);
+		const axis = new THREE.Vector3();
+
+		axis.copy(vecB).sub(vecA).normalize();
+		instruction.foldingGroup.rotateOnWorldAxis(axis, 0.01);
+
+		// get rotation angle from folding group
+		// checks if is greater or equal than instruction angle
+		// if true then set animation paused and trigger next render
+		// change button state to paused when animation is paused directly
 	}
 
 	update = (time) => {
-		const { currentFrame } = this.animationControls;
+		const { currentStep } = this.animationControls;
 
 		if (this.shouldPause()) return;
 
-		if (this.shouldPlayAnimation(time, currentFrame)) {
-			this.renderOrigami(time, currentFrame);
+		if (this.shouldPlayAnimation()) {
+			this.playAnimation(currentStep);
+		} else if (this.shouldRender(time, currentStep, this.mesh_instructions.length)) {
+			this.renderOrigami(time, currentStep);
 		}
 	}
 }

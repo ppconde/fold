@@ -43,44 +43,4 @@ $transition-time: 0.3s;
         }
     }
 
-    .steps {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        top: -5px;
-    }
-
-    .step {
-        width: $step-size;
-        height: $step-size;
-        background-color: colors.$secondary-color;
-        border: 2px solid colors.$secondary-color;
-        border-radius: 50%;
-        transition: background-color $transition-time ease-in-out, border-color $transition-time ease-in-out;
-
-        &:hover {
-            background-color: colors.$primary-color;
-            border-color: colors.$primary-color;;
-        }
-
-        &:active {
-            background-color: colors.$primary-color;
-        }
-
-        &:nth-child(3) {
-            width: $step-size * 1.7;
-            height: $step-size * 1.7;
-        }
-
-        &:nth-child(2),
-        &:nth-child(4) {
-            width: $step-size * 1.2;
-            height: $step-size * 1.2;
-        }
-    }
-
-    .progress {
-        height: 50%;
-    }
 }

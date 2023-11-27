@@ -6,10 +6,9 @@ export class BaseModel {
 		this.previousTime = 0;
 		this.animationControls = {
 			paused: true,
-			currentFrame: 0,
-			totalFrames: 0,
+			currentStep: -1,
+			totalSteps: 0,
 		}
-		this.mesh_instructions = [];
 	}
 
 	/**
@@ -34,46 +33,53 @@ export class BaseModel {
 	}
 
 	/**
-	 * Used to stop animation and reset to frame 0
+	 * Used to stop animation and reset to step 0
 	 */
 	stopAnimation = () => {
 		this.animationControls.paused = true;
-		this.animationControls.currentFrame = 0;
+		this.animationControls.currentStep = 0;
 	}
 
 	/**
-	 * Used to set animation to a specific frame
+	 * Used to set animation to a specific step
 	 */
-	setFrame = (frame) => {
-		this.animationControls.currentFrame = frame;
+	setCurrentStep = (step) => {
+		this.animationControls.currentStep = step;
 	}
 
 	setPreviousFrame = () => {
-		this.animationControls.currentFrame -= 1;
+		this.animationControls.currentStep -= 1;
 	}
 
 	setNextFrame = () => {
-		this.animationControls.currentFrame += 1;
+		this.animationControls.currentStep += 1;
 	}
 
 	/**
 	 * Used to determine if animation should pause
-	 * We need to check if the animation is paused and if the current frame is 0
+	 * We need to check if the animation is paused and if the current step is 0
 	 * because we need to render the mesh the first time when the origami is first loaded
 	 * and only then we can pause it
 	 */
 	shouldPause = () => {
-		const { paused, currentFrame } = this.animationControls;
-		return paused && currentFrame > 0;
+		const { paused, currentStep } = this.animationControls;
+		return paused && currentStep > 0;
+	}
+
+	/**
+	 * Used to determine if the model should render
+	 */
+	shouldRender = (time, currentStep, total) => {
+		// const delta_time = time - this.previousTime;
+		// return delta_time >= BaseModel.STEP_TIME && currentStep <= total
+		return this.animationControls.currentStep === -1;
 	}
 
 	/**
 	 * Used to determine if animation should play
 	 */
-	shouldPlayAnimation = (time, currentFrame) => {
-		return true;
-		// const delta_time = time - this.previousTime;
-		// return delta_time >= BaseModel.STEP_TIME && currentFrame <= this.mesh_instructions.length
+	shouldPlayAnimation = () => {
+		return this.animationControls.currentStep >= 0 && !this.animationControls.paused;
 	}
 
 }
