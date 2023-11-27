@@ -1,5 +1,6 @@
 {
-  "name": "threejs-tutorial",
+  "name": "fold",
+  "homepage": "https://ppconde.github.io/fold/",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -37,7 +38,7 @@
     "eslint": "^7.32.0",
     "eslint-plugin-react": "^7.23.2",
     "file-loader": "^6.2.0",
-    "gh-pages": "^4.0.0",
+    "gh-pages": "^6.1.0",
     "html-webpack-plugin": "^4.3.0",
     "json-loader": "^0.5.7",
     "sass": "^1.32.8",
