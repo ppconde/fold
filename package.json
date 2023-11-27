@@ -1,5 +1,6 @@
 {
-  "name": "threejs-tutorial",
+  "name": "fold",
+  "homepage": "https://ppconde.github.io/fold/",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
