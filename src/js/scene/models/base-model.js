@@ -37,7 +37,7 @@ export class BaseModel {
 	 */
 	stopAnimation = () => {
 		this.animationControls.paused = true;
-		this.animationControls.currentStep = 0;
+		this.animationControls.currentStep = -1;
 	}
 
 	/**
@@ -69,7 +69,7 @@ export class BaseModel {
 	/**
 	 * Used to determine if the model should render
 	 */
-	shouldRender = (time, currentStep, total) => {
+	shouldPrepareNextStep = () => {
 		// const delta_time = time - this.previousTime;
 		// return delta_time >= BaseModel.STEP_TIME && currentStep <= total
 		return this.animationControls.currentStep === -1;
