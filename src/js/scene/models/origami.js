@@ -3,6 +3,7 @@ import fold from '../../../crease-patterns/rectangle.fold';
 import { FoldToThreeConverter } from '../converters/fold-to-three-converter';
 import txt from '../../../instructions/test-1.txt';
 import { OrigamiSolver } from './origami-solver'
+import { OrigamiExamples } from './origami-examples'
 import { BaseModel } from './base-model';
 import { OrigamiController } from '../controllers/origami-controller';
 
@@ -40,102 +41,49 @@ export class Origami extends BaseModel {
 
 		// Convert paper coordinates and fold instructions to paper meshes and mesh instructions
 		// [this.meshes, this.mesh_instructions] = OrigamiSolver.solveOrigami(points, faces, pattern, face_order, fold_instructions, translation, rotation);
+		[this.points, this.meshes, this.mesh_instructions] = OrigamiExamples.example1();
 
-		const generateGeometry = (pts) => {
-			const arr = new Float32Array(pts.length * 3);
-			for (let i = 0; i < pts.length; i++) {
-				const i3 = i * 3;
-				arr[i3] = pts[i][0];
-				arr[i3 + 1] = pts[i][1];
-				arr[i3 + 2] = pts[i][2];
-			}
-			return arr;
-		}
 
-		const geometry1 = new THREE.BufferGeometry();
-		const geometry2 = new THREE.BufferGeometry();
-		const geometry3 = new THREE.BufferGeometry();
-
-		this.pts = {
-			a: [0, 0, 0],
-			b: [0, width, 0],
-			c: [length / 2, width / 2, 0],
-			d: [length, width, 0],
-			e: [length, 0, 0]
-		};
-
-		geometry1.setAttribute(
-			'position',
-			new THREE.BufferAttribute(
-				generateGeometry([this.pts.a, this.pts.b, this.pts.c]),
-				3,
-			),
-		);
-
-		geometry2.setAttribute(
-			'position',
-			new THREE.BufferAttribute(
-				generateGeometry([this.pts.c, this.pts.d, this.pts.b]),
-				3,
-			),
-		);
-
-		geometry3.setAttribute(
-			'position',
-			new THREE.BufferAttribute(
-				generateGeometry([this.pts.a, this.pts.e, this.pts.d]),
-				3,
-			),
-		);
-
-		const material1 = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide });
-		const material2 = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
-		const material3 = new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide });
-
-		const mesh1 = new THREE.Mesh(geometry1, material1);
-		const mesh2 = new THREE.Mesh(geometry2, material2);
-		const mesh3 = new THREE.Mesh(geometry3, material3);
-		this.meshes = [mesh1, mesh2, mesh3];
+		// Set animation parameters
+		this.w = Math.PI/2;  // Angular velocity
+		this.then = 0;
+		this.angle_rotated = 0;
+		this.instruction_id = 0;
 		this.scene.add(...this.meshes);
 
-		this.mesh_instructions = [
-			{ meshIds: [0, 1], axis: ['a', 'd'], angle: 180 },
-		];
-	}
-
-	renderOrigami = (time, currentFrame) => {
-		if (currentFrame > 0) {
-			this.scene.clear();
-			const group = new THREE.Group();
-			// const instruction = this.mesh_instructions[currentFrame - 1];
-			const instruction = this.mesh_instructions[0];
-			for (let i = 0; i < instruction.meshIds.length; i++) {
-				group.add(this.meshes[instruction.meshIds[i]]);
-			}
-
-			this.scene.add(group, this.meshes[2]);
-
-			// const vecA = this.pts[instruction.axis[0]];
-			// const vecB = this.pts[instruction.axis[1]];
-			const vecA = new THREE.Vector3(...this.pts['a']);
-			const vecB = new THREE.Vector3(...this.pts['d']);
-			const vec = new THREE.Vector3();
-
-			vec.copy(vecA).sub(vecB).normalize();
-			group.rotateOnWorldAxis(vec, 0.1);
-		}
-
-		this.previousTime = time;
-		this.setFrame(currentFrame + 1);
 	}
 
 	update = (time) => {
-		const { currentFrame } = this.animationControls;
+		if (time && (this.instruction_id < this.mesh_instructions.length)){
+ 			const now = time * 0.001;
+			const time_passed = now - this.then;
+			let angle_to_rotate = this.w * time_passed;
+	
+			if (this.angle_rotated + angle_to_rotate < this.mesh_instructions[this.instruction_id].angle){
+				this.rotate(angle_to_rotate);
+				this.angle_rotated = this.angle_rotated + angle_to_rotate;
 
-		if (this.shouldPause()) return;
+			}else{
+				angle_to_rotate = this.mesh_instructions[this.instruction_id].angle - this.angle_rotated;
+				this.rotate(angle_to_rotate);
+				this.instruction_id += 1;
+				this.angle_rotated = 0;
+			}
+			this.then = now;
+		}
+	}
 
-		if (this.shouldPlayAnimation(time, currentFrame)) {
-			this.renderOrigami(time, currentFrame);
+	rotate = (angle) => {
+		const vecA = new THREE.Vector3(...this.points[this.mesh_instructions[this.instruction_id].axis[0]]);
+		const vecB = new THREE.Vector3(...this.points[this.mesh_instructions[this.instruction_id].axis[1]]);
+		const vec = new THREE.Vector3();
+		vec.copy( vecA ).sub( vecB ).normalize();
+		for (let i = 0; i < this.meshes.length; i++) {
+			if (this.mesh_instructions[this.instruction_id].meshIds.some((meshId) => meshId === i)){
+				this.meshes[i].position.sub(vecA);
+				this.meshes[i].rotateOnWorldAxis(vec, angle);
+				this.meshes[i].position.add(vecA);
+			}
 		}
 	}
 }
