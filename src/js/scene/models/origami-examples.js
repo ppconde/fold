@@ -61,7 +61,7 @@ export class OrigamiExamples {
 		const mesh2 = new THREE.Mesh(geometry2, material2);
 		const mesh3 = new THREE.Mesh(geometry3, material3);
 		const meshes = [mesh1, mesh2, mesh3];
-		const mesh_instructions = [{ meshIds: [0, 1], axis: ['a', 'd'], angle: 180 / 180 * Math.PI }];
+		const mesh_instructions = [{ meshIds: [0, 1], axis: ['a', 'd'], angle: 180 / 180 * Math.PI }, { meshIds: [2], axis: ['a', 'd'], angle: 90 / 180 * Math.PI }];
 
         return [pts, meshes, mesh_instructions];
     }
