@@ -53,15 +53,21 @@ export class OrigamiExamples {
 			),
 		);
 
-		const material1 = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide });
+ 		const material1 = new THREE.MeshBasicMaterial({ color: 0xff0000, side: THREE.DoubleSide });
 		const material2 = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide });
-		const material3 = new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide });
+		const material3 = new THREE.MeshBasicMaterial({ color: 0x0000ff, side: THREE.DoubleSide }); 
+ 		/* 
+        const material1 = new THREE.MeshBasicMaterial({ color: 0xF9FBFF, side: THREE.DoubleSide });
+		const material2 = new THREE.MeshBasicMaterial({ color: 0xF9FBFF, side: THREE.DoubleSide });
+		const material3 = new THREE.MeshBasicMaterial({ color: 0xF9FBFF, side: THREE.DoubleSide }); */
+
+        
 
 		const mesh1 = new THREE.Mesh(geometry1, material1);
 		const mesh2 = new THREE.Mesh(geometry2, material2);
 		const mesh3 = new THREE.Mesh(geometry3, material3);
 		const meshes = [mesh1, mesh2, mesh3];
-		const mesh_instructions = [{ meshIds: [0, 1], axis: ['a', 'd'], angle: 180 / 180 * Math.PI }, { meshIds: [2], axis: ['a', 'd'], angle: 90 / 180 * Math.PI }];
+		const mesh_instructions = [{ meshIds: [0, 1], axis: ['a', 'd'], angle: 180 / 180 * Math.PI }, { meshIds: [2], axis: ['a', 'd'], angle: 90 / 180 * Math.PI }];  // , { meshIds: [2], axis: ['a', 'd'], angle: 90 / 180 * Math.PI }
 
         return [pts, meshes, mesh_instructions];
     }

@@ -43,14 +43,12 @@ export class Origami extends BaseModel {
 		// [this.meshes, this.mesh_instructions] = OrigamiSolver.solveOrigami(points, faces, pattern, face_order, fold_instructions, translation, rotation);
 		[this.points, this.meshes, this.mesh_instructions] = OrigamiExamples.example1();
 
-
 		// Set animation parameters
 		this.w = Math.PI/2;  // Angular velocity
 		this.then = 0;
 		this.angle_rotated = 0;
 		this.instruction_id = 0;
 		this.scene.add(...this.meshes);
-
 	}
 
 	update = (time) => {
@@ -77,13 +75,11 @@ export class Origami extends BaseModel {
 		const vecA = new THREE.Vector3(...this.points[this.mesh_instructions[this.instruction_id].axis[0]]);
 		const vecB = new THREE.Vector3(...this.points[this.mesh_instructions[this.instruction_id].axis[1]]);
 		const vec = new THREE.Vector3();
-		vec.copy( vecA ).sub( vecB ).normalize();
-		for (let i = 0; i < this.meshes.length; i++) {
-			if (this.mesh_instructions[this.instruction_id].meshIds.some((meshId) => meshId === i)){
-				this.meshes[i].position.sub(vecA);
-				this.meshes[i].rotateOnWorldAxis(vec, angle);
-				this.meshes[i].position.add(vecA);
-			}
+		vec.copy(vecA).sub(vecB).normalize();
+		for (let i of this.mesh_instructions[this.instruction_id].meshIds){
+			this.meshes[i].position.sub(vecA);
+			this.meshes[i].rotateOnWorldAxis(vec, angle);
+			this.meshes[i].position.add(vecA);
 		}
 	}
 }
