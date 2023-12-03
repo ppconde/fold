@@ -33,6 +33,13 @@ export class Controller {
 		return this.animationControls.isPlaying;
 	}
 
+	stopAnimation = () => {
+		this.animationControls.isPlaying = false;
+		this.animationControls.currentStep = this.INITIAL_STEP;
+		this.pauseEvent = new CustomEvent('pause', { target: { value: true } })
+		document.dispatchEvent(this.pauseEvent);
+	}
+
 	// toggleIsAnimating = () => {
 	// 	this.animationControls.isAnimating = !this.animationControls.isAnimating;
 	// }

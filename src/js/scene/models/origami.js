@@ -7,10 +7,6 @@ import { Controller } from './../controllers/controller';
 export class Origami extends Controller {
 
 	mesh_instructions = [];
-	groups = {
-		foldingGroup: new THREE.Group(),
-		staticGroup: new THREE.Group(),
-	}
 	currentAngle = 0;
 	previousTime = 0;
 
@@ -102,40 +98,14 @@ export class Origami extends Controller {
 		this.meshes = [mesh1, mesh2, mesh3];
 
 		this.mesh_instructions = [
-			{ meshIds: [0, 1], axis: ['a', 'd'], angle: 90 },
-			{ meshIds: [2], axis: ['d', 'a'], angle: 90 },
+			{ meshIds: [0, 1], axis: ['a', 'd'], angle: THREE.MathUtils.degToRad(90) },
+			{ meshIds: [2], axis: ['d', 'a'], angle: THREE.MathUtils.degToRad(90) },
 		];
 
+		this.w = Math.PI / 2;  // Angular velocity
+		this.angle_rotated = 0;
+
 		this.scene.add(...this.meshes);
-		// this.scene.add(this.groups.foldingGroup);
-		// this.scene.add(this.groups.staticGroup);
-	}
-
-	getGroups = (step, mesh_instruction) => {
-		const indexes = this.meshes.map((_, i) => i);
-		const meshIds = indexes.reduce((acc, id) => {
-			mesh_instruction.meshIds.includes(id)
-				? acc.foldingMeshIds.push(id)
-				: acc.staticMeshIds.push(id)
-			return acc;
-		}
-			, { foldingMeshIds: [], staticMeshIds: [] });
-
-		return {
-			foldingMeshes: meshIds.foldingMeshIds.map((id) => this.meshes[id]),
-			staticMeshes: meshIds.staticMeshIds.map((id) => this.meshes[id]),
-		}
-	}
-
-	renderStep = (step) => {
-		this.scene.clear();
-		const instruction = this.mesh_instructions[step];
-		// Groups the surfaces
-		const { foldingMeshes, staticMeshes } = this.getGroups(step, instruction);
-		const foldingGroup = this.groups.foldingGroup.add(...foldingMeshes);
-		const staticGroup = this.groups.staticGroup.add(...staticMeshes);
-
-		return { foldingGroup, staticGroup };
 	}
 
 	playAnimation = (time) => {
@@ -143,8 +113,8 @@ export class Origami extends Controller {
 		// 	this.toggleIsAnimating();
 		// }
 		const { currentStep } = this.animationControls;
-		const { foldingGroup, staticGroup } = this.renderStep(currentStep);
-		this.scene.add(...[foldingGroup, staticGroup]);
+		// const { foldingGroup, staticGroup } = this.renderStep(currentStep);
+		// this.scene.add(...[foldingGroup, staticGroup]);
 		// get rotation angle from folding group
 
 		// const angle = staticGroup.quaternion.angleTo(foldingGroup.quaternion);
@@ -183,24 +153,44 @@ export class Origami extends Controller {
 		this.pauseAnimation();
 	}
 
+	rotate = (angle) => {
+		const { currentStep } = this.animationControls;
+		const instruction = this.mesh_instructions[currentStep];
+		const vecA = new THREE.Vector3(...this.pts[instruction.axis[0]]);
+		const vecB = new THREE.Vector3(...this.pts[instruction.axis[1]]);
+		const vec = new THREE.Vector3();
+		vec.copy(vecB).sub(vecA).normalize();
+		for (let i of instruction.meshIds) {
+			this.meshes[i].position.sub(vecA);
+			this.meshes[i].rotateOnWorldAxis(vec, angle);
+			this.meshes[i].position.add(vecA);
+		}
+	}
+
 	update = (time) => {
 		const { currentStep } = this.animationControls;
 
-		// This is needed to sync 
 		const deltaTime = time - this.previousTime;
 		this.previousTime = time;
-		// console.log(
-		// 	'step: ', currentStep,
-		// 	' shouldRenderFirstStep', this.shouldRenderFirstStep(),
-		// 	' shouldPause: ', this.shouldPause(),
-		// 	' shouldPlayAnimation: ', this.shouldPlayAnimation(this.mesh_instructions.length),
-		// 	' shouldPrepareNextStep: ', this.shouldPrepareNextStep(),
-		// );
-
 		if (!this.isPlayingAnimation()) return;
 		// Is playing animation
-		else {
-			this.playAnimation(deltaTime);
+		else if (currentStep < this.mesh_instructions.length) {
+			// const now = deltaTime * 0.001;
+			const instruction = this.mesh_instructions[currentStep];
+			let angle_to_rotate = this.w * deltaTime * 0.001;
+
+			if (this.angle_rotated + angle_to_rotate < instruction.angle) {
+				this.rotate(angle_to_rotate);
+				this.angle_rotated += angle_to_rotate;
+
+			} else {
+				angle_to_rotate = instruction.angle - this.angle_rotated;
+				this.rotate(angle_to_rotate);
+				this.increaseStepBy(1)
+				this.angle_rotated = 0;
+				this.pauseAnimation();
+			}
+			// this.previousTime = now;
 		}
 
 		// if (this.shouldRenderFirstStep()) {
