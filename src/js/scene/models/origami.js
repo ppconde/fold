@@ -2,18 +2,20 @@ import * as THREE from 'three';
 import fold from '../../../crease-patterns/rectangle.fold';
 import { FoldToThreeConverter } from '../converters/fold-to-three-converter';
 import txt from '../../../instructions/test-1.txt';
-import { OrigamiSolver } from './origami-solver'
-import { BaseModel } from './base-model';
-import { OrigamiController } from '../controllers/origami-controller';
+import { Controller } from './../controllers/controller';
 
-export class Origami extends BaseModel {
+export class Origami extends Controller {
 
 	mesh_instructions = [];
+	groups = {
+		foldingGroup: new THREE.Group(),
+		staticGroup: new THREE.Group(),
+	}
+	currentAngle = 0;
+	previousTime = 0;
 
 	constructor(scene) {
 		super();
-		// Sets Origami Controller
-		this.controller = new OrigamiController(this);
 		// Temporary geo and material
 		this.foldInfo = new FoldToThreeConverter(fold);
 		this.crease = this.foldInfo.crease;
@@ -100,81 +102,117 @@ export class Origami extends BaseModel {
 		this.meshes = [mesh1, mesh2, mesh3];
 
 		this.mesh_instructions = [
-			{ meshIds: [0, 1], axis: ['a', 'd'], angle: 180 },
+			{ meshIds: [0, 1], axis: ['a', 'd'], angle: 90 },
+			{ meshIds: [2], axis: ['d', 'a'], angle: 90 },
 		];
 
-		const getGroups = (mesh_instruction) => {
-			const indexes = this.meshes.map((_, i) => i);
-			const meshIds = indexes.reduce((acc, id) => (
-				mesh_instruction.meshIds.includes(id)
-					? acc.foldingMeshIds.push(id)
-					: acc.staticMeshIds.push(id),
-				acc
-			), { foldingMeshIds: [], staticMeshIds: [] });
-
-			return {
-				foldingMeshes: meshIds.foldingMeshIds.map((id) => this.meshes[id]),
-				staticMeshes: meshIds.staticMeshIds.map((id) => this.meshes[id]),
-			}
-		}
-
-		// Populates each instruction with the group of the remaining meshes
-		this.mesh_instructions = this.mesh_instructions.map((mesh_instruction) => {
-			const { foldingMeshes, staticMeshes } = getGroups(mesh_instruction);
-			return {
-				...mesh_instruction,
-				foldingGroup: new THREE.Group().add(...foldingMeshes),
-				staticGroup: new THREE.Group().add(...staticMeshes),
-			}
-		})
-
-		const groups = this.mesh_instructions.flatMap(({ foldingGroup, staticGroup }) => [foldingGroup, staticGroup]);
-
-		this.scene.add(...groups);
+		this.scene.add(...this.meshes);
+		// this.scene.add(this.groups.foldingGroup);
+		// this.scene.add(this.groups.staticGroup);
 	}
 
-	playAnimation = (currentStep) => {
-		const instruction = this.mesh_instructions[currentStep];
+	getGroups = (step, mesh_instruction) => {
+		const indexes = this.meshes.map((_, i) => i);
+		const meshIds = indexes.reduce((acc, id) => {
+			mesh_instruction.meshIds.includes(id)
+				? acc.foldingMeshIds.push(id)
+				: acc.staticMeshIds.push(id)
+			return acc;
+		}
+			, { foldingMeshIds: [], staticMeshIds: [] });
+
+		return {
+			foldingMeshes: meshIds.foldingMeshIds.map((id) => this.meshes[id]),
+			staticMeshes: meshIds.staticMeshIds.map((id) => this.meshes[id]),
+		}
+	}
+
+	renderStep = (step) => {
+		this.scene.clear();
+		const instruction = this.mesh_instructions[step];
+		// Groups the surfaces
+		const { foldingMeshes, staticMeshes } = this.getGroups(step, instruction);
+		const foldingGroup = this.groups.foldingGroup.add(...foldingMeshes);
+		const staticGroup = this.groups.staticGroup.add(...staticMeshes);
+
+		return { foldingGroup, staticGroup };
+	}
+
+	playAnimation = (time) => {
+		// if (!this.animationControls.isAnimating) {
+		// 	this.toggleIsAnimating();
+		// }
+		const { currentStep } = this.animationControls;
+		const { foldingGroup, staticGroup } = this.renderStep(currentStep);
+		this.scene.add(...[foldingGroup, staticGroup]);
 		// get rotation angle from folding group
-		const { foldingGroup, staticGroup } = instruction;
-		const currentRotation = foldingGroup.quaternion;
-		const angle = staticGroup.quaternion.angleTo(currentRotation);
+
+		// const angle = staticGroup.quaternion.angleTo(foldingGroup.quaternion);
+		const angleIncrement = 2 * Math.PI * time * 0.0002;
+		this.currentAngle += angleIncrement;
+		console.log('this.currentAngle: ', this.currentAngle);
 		/**
 		 *  Checks if angle is less than instruction angle subtracted by a small offset
 		 *  (needed in order to prevent non stop animations)
 		 */
+		const instruction = this.mesh_instructions[currentStep];
 		const offset = 0.1;
-		if (angle < (THREE.MathUtils.degToRad(instruction.angle) - offset)) {
+		if (this.currentAngle < (THREE.MathUtils.degToRad(instruction.angle) - offset)) {
+			// console.log('rotate: ', this.currentAngle, (THREE.MathUtils.degToRad(instruction.angle) - offset));
 			// this should be computed out of the update function
-			
+
 			const vecA = new THREE.Vector3(...this.pts[instruction.axis[0]]);
 			const vecB = new THREE.Vector3(...this.pts[instruction.axis[1]]);
 			const axis = new THREE.Vector3();
 			axis.copy(vecB).sub(vecA).normalize();
 			//
-			const animationSpeed = 0.01; // In radians
-			instruction.foldingGroup.rotateOnWorldAxis(axis, animationSpeed);
+			foldingGroup.rotateOnAxis(axis, angleIncrement);
+		} else {
+			this.currentAngle = 0;
+			// this.toggleIsAnimating();
+			this.prepareNextStep(time);
 		}
 
 		// if true then set animation paused and trigger next render
 		// change button state to paused when animation is paused directly
 	}
 
-	prepareNextStep = (currentStep, time) => {
-		this.previousTime = time;
-		this.setCurrentStep(currentStep + 1);
+	prepareNextStep = (time) => {
+		this.animationControls.previousTime = time;
+		this.increaseStepBy(1);
 		this.pauseAnimation();
 	}
 
 	update = (time) => {
 		const { currentStep } = this.animationControls;
 
-		if (this.shouldPause()) return;
+		// This is needed to sync 
+		const deltaTime = time - this.previousTime;
+		this.previousTime = time;
+		// console.log(
+		// 	'step: ', currentStep,
+		// 	' shouldRenderFirstStep', this.shouldRenderFirstStep(),
+		// 	' shouldPause: ', this.shouldPause(),
+		// 	' shouldPlayAnimation: ', this.shouldPlayAnimation(this.mesh_instructions.length),
+		// 	' shouldPrepareNextStep: ', this.shouldPrepareNextStep(),
+		// );
 
-		if (this.shouldPlayAnimation()) {
-			this.playAnimation(currentStep);
-		} else if (this.shouldPrepareNextStep()) {
-			this.prepareNextStep(currentStep, time)
+		if (!this.isPlayingAnimation()) return;
+		// Is playing animation
+		else {
+			this.playAnimation(deltaTime);
 		}
+
+		// if (this.shouldRenderFirstStep()) {
+		// 	this.renderStep(0);
+		// 	this.prepareNextStep(time);
+		// 	return this.setIsFirstRenderDone();
+		// } else if (this.shouldPause()) {
+		// 	return;
+		// } else if (this.shouldPlayAnimation(this.mesh_instructions.length)) {
+		// 	this.playAnimation(time);
+		// } else if (this.shouldPrepareNextStep()) {
+		// 	this.prepareNextStep(time);
+		// }
 	}
 }
