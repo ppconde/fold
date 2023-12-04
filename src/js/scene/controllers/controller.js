@@ -1,14 +1,16 @@
 export class Controller {
 	static STEP_TIME = 1000;
 	INITIAL_STEP = 0;
+	enablePlayEventDispatched = false;
+
 	constructor() {
 		this.animationControls = {
 			previousTime: 0,
 			isPlaying: false,
+			isStopped: true,
 			currentStep: this.INITIAL_STEP,
 			totalSteps: 0,
-			// isAnimating: false,
-			// isFirstRenderDone: false,
+			playDisabled: false,
 		}
 
 		// Adds event listeners to buttons
@@ -21,11 +23,12 @@ export class Controller {
 	 */
 	playAnimation = () => {
 		this.animationControls.isPlaying = true;
+		this.animationControls.isStopped = false;
 	}
 
 	pauseAnimation = () => {
 		this.animationControls.isPlaying = false;
-		this.pauseEvent = new CustomEvent('pause', { target: { value: !this.animationControls.paused } })
+		this.pauseEvent = new CustomEvent('pause', { detail: { value: this.animationControls.isPlaying }, cancelable: true })
 		document.dispatchEvent(this.pauseEvent);
 	}
 
@@ -35,43 +38,24 @@ export class Controller {
 
 	stopAnimation = () => {
 		this.animationControls.isPlaying = false;
+		this.animationControls.isStopped = true;
 		this.animationControls.currentStep = this.INITIAL_STEP;
-		this.pauseEvent = new CustomEvent('pause', { target: { value: true } })
+		this.pauseEvent = new CustomEvent('pause', { detail: { value: true }, cancelable: true, })
 		document.dispatchEvent(this.pauseEvent);
+		this.enablePlay();
 	}
 
-	// toggleIsAnimating = () => {
-	// 	this.animationControls.isAnimating = !this.animationControls.isAnimating;
-	// }
-
-	/**
-	 * Used to pause animation
-	 */
-	// pauseAnimation = () => {
-	// 	this.animationControls.paused = true;
-	// 	this.stopEvent = new CustomEvent('pause', { target: { value: !this.animationControls.paused } })
-	// 	document.dispatchEvent(this.stopEvent);
-	// }
+	isStopped = () => {
+		return this.animationControls.isStopped;
+	}
 
 	/**
 	 * Used to toggle animation on/off (play/pause)
 	 */
 	togglePlayAnimation = () => {
-		console.log('deu toggle: ', this.animationControls.isPlaying);
 		this.animationControls.isPlaying = !this.animationControls.isPlaying;
+		this.animationControls.isStopped = false;
 	}
-
-	/**
-	 * Used to stop animation and reset to step 0
-	 */
-	// stopAnimation = () => {
-	// 	this.animationControls.paused = true;
-	// 	this.animationControls.currentStep = this.INITIAL_STEP;
-	// 	this.animationControls.isAnimating = false;
-	// 	this.animationControls.isFirstRenderDone = false;
-	// 	this.stopEvent = new CustomEvent('pause', { target: { value: true } })
-	// 	document.dispatchEvent(this.stopEvent);
-	// }
 
 	/**
 	 * Used to set animation to a specific step
@@ -80,52 +64,20 @@ export class Controller {
 		this.animationControls.currentStep += step;
 	}
 
-	// setIsFirstRenderDone = () => {
-	// 	this.animationControls.isFirstRenderDone = true;
-	// }
+	shouldDisablePlay = (total) => {
+		return !this.enablePlayEventDispatched && this.animationControls.currentStep >= total;
+	}
 
-	// shouldRenderFirstStep = () => {
-	// 	const { currentStep, isFirstRenderDone } = this.animationControls;
-	// 	console.log('shouldRender: ', isFirstRenderDone, currentStep === this.INITIAL_STEP);
-	// 	return !isFirstRenderDone && currentStep === this.INITIAL_STEP;
-	// }
+	enablePlay = () => {
+		this.disabledEvent = new CustomEvent('enableplay', { detail: { value: true } })
+		document.dispatchEvent(this.disabledEvent);
+		this.enablePlayEventDispatched = false;
+	}
 
-	// /**
-	//  * Used to determine if animation should pause
-	//  * We need to check if the animation is paused and if the current step is 0
-	//  * because we need to render the mesh the first time when the origami is first loaded
-	//  * and only then we can pause it
-	//  */
-	// shouldPause = () => {
-	// 	const { paused, currentStep } = this.animationControls;
-	// 	return paused && (currentStep > this.INITIAL_STEP);
-	// }
-
-	// /**
-	//  * Used to determine if the model should render
-	//  */
-	// shouldPrepareNextStep = () => {
-	// 	// const delta_time = time - this.previousTime;
-	// 	// return delta_time >= BaseModel.STEP_TIME && currentStep <= total
-	// 	const { currentStep, isAnimating } = this.animationControls;
-	// 	return /* currentStep === this.INITIAL_STEP ||  */!isAnimating;
-	// }
-
-	// /**
-	//  * Used to determine if animation should play
-	//  */
-	// shouldPlayAnimation = (totalSteps) => {
-	// 	const { currentStep, isAnimating, paused } = this.animationControls;
-	// 	console.log(
-	// 		'currentStep: ', currentStep,
-	// 		' totalSteps: ', totalSteps,
-	// 		' isAnimating: ', isAnimating,
-	// 		' paused: ', paused,
-	// 	)
-	// 	return ((currentStep >= 0) && (currentStep < totalSteps) || isAnimating) && !paused;
-	// }
+	disablePlay = () => {
+		this.disabledEvent = new CustomEvent('enableplay', { detail: { value: false } })
+		document.dispatchEvent(this.disabledEvent);
+		this.enablePlayEventDispatched = true;
+	}
 
 }
-
-
-// I want togglePlayAnimation to notify the animation to pause but also when the animation pauses by itself to notify the component

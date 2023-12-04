@@ -96,6 +96,7 @@ export class Origami extends Controller {
 		const mesh2 = new THREE.Mesh(geometry2, material2);
 		const mesh3 = new THREE.Mesh(geometry3, material3);
 		this.meshes = [mesh1, mesh2, mesh3];
+		this.meshesRotation = this.meshes.map((mesh) => mesh.position);
 
 		this.mesh_instructions = [
 			{ meshIds: [0, 1], axis: ['a', 'd'], angle: THREE.MathUtils.degToRad(90) },
@@ -103,54 +104,9 @@ export class Origami extends Controller {
 		];
 
 		this.w = Math.PI / 2;  // Angular velocity
-		this.angle_rotated = 0;
+		this.angleRotated = 0;
 
 		this.scene.add(...this.meshes);
-	}
-
-	playAnimation = (time) => {
-		// if (!this.animationControls.isAnimating) {
-		// 	this.toggleIsAnimating();
-		// }
-		const { currentStep } = this.animationControls;
-		// const { foldingGroup, staticGroup } = this.renderStep(currentStep);
-		// this.scene.add(...[foldingGroup, staticGroup]);
-		// get rotation angle from folding group
-
-		// const angle = staticGroup.quaternion.angleTo(foldingGroup.quaternion);
-		const angleIncrement = 2 * Math.PI * time * 0.0002;
-		this.currentAngle += angleIncrement;
-		console.log('this.currentAngle: ', this.currentAngle);
-		/**
-		 *  Checks if angle is less than instruction angle subtracted by a small offset
-		 *  (needed in order to prevent non stop animations)
-		 */
-		const instruction = this.mesh_instructions[currentStep];
-		const offset = 0.1;
-		if (this.currentAngle < (THREE.MathUtils.degToRad(instruction.angle) - offset)) {
-			// console.log('rotate: ', this.currentAngle, (THREE.MathUtils.degToRad(instruction.angle) - offset));
-			// this should be computed out of the update function
-
-			const vecA = new THREE.Vector3(...this.pts[instruction.axis[0]]);
-			const vecB = new THREE.Vector3(...this.pts[instruction.axis[1]]);
-			const axis = new THREE.Vector3();
-			axis.copy(vecB).sub(vecA).normalize();
-			//
-			foldingGroup.rotateOnAxis(axis, angleIncrement);
-		} else {
-			this.currentAngle = 0;
-			// this.toggleIsAnimating();
-			this.prepareNextStep(time);
-		}
-
-		// if true then set animation paused and trigger next render
-		// change button state to paused when animation is paused directly
-	}
-
-	prepareNextStep = (time) => {
-		this.animationControls.previousTime = time;
-		this.increaseStepBy(1);
-		this.pauseAnimation();
 	}
 
 	rotate = (angle) => {
@@ -167,42 +123,38 @@ export class Origami extends Controller {
 		}
 	}
 
-	update = (time) => {
+	playAnimation = (deltaTime) => {
 		const { currentStep } = this.animationControls;
+		const instruction = this.mesh_instructions[currentStep];
+		let angle_to_rotate = this.w * deltaTime * 0.001;
 
+		if (this.angleRotated + angle_to_rotate < instruction.angle) {
+			this.rotate(angle_to_rotate);
+			this.angleRotated += angle_to_rotate;
+
+		} else {
+			angle_to_rotate = instruction.angle - this.angleRotated;
+			this.rotate(angle_to_rotate);
+			this.increaseStepBy(1)
+			this.pauseAnimation();
+			this.angleRotated = 0;
+		}
+	}
+
+	setInitialMeshesRotation = () => {
+		this.meshesRotation.forEach((rotation, i) => this.meshes[i].rotation.set(...rotation));
+		this.angleRotated = 0;
+	}
+
+	update = (time) => {
 		const deltaTime = time - this.previousTime;
 		this.previousTime = time;
-		if (!this.isPlayingAnimation()) return;
-		// Is playing animation
-		else if (currentStep < this.mesh_instructions.length) {
-			// const now = deltaTime * 0.001;
-			const instruction = this.mesh_instructions[currentStep];
-			let angle_to_rotate = this.w * deltaTime * 0.001;
 
-			if (this.angle_rotated + angle_to_rotate < instruction.angle) {
-				this.rotate(angle_to_rotate);
-				this.angle_rotated += angle_to_rotate;
-
-			} else {
-				angle_to_rotate = instruction.angle - this.angle_rotated;
-				this.rotate(angle_to_rotate);
-				this.increaseStepBy(1)
-				this.angle_rotated = 0;
-				this.pauseAnimation();
-			}
-			// this.previousTime = now;
-		}
-
-		// if (this.shouldRenderFirstStep()) {
-		// 	this.renderStep(0);
-		// 	this.prepareNextStep(time);
-		// 	return this.setIsFirstRenderDone();
-		// } else if (this.shouldPause()) {
-		// 	return;
-		// } else if (this.shouldPlayAnimation(this.mesh_instructions.length)) {
-		// 	this.playAnimation(time);
-		// } else if (this.shouldPrepareNextStep()) {
-		// 	this.prepareNextStep(time);
-		// }
+		if (this.shouldDisablePlay(this.mesh_instructions.length)) {
+			this.disablePlay();
+		} else if (this.isStopped()) {
+			this.setInitialMeshesRotation()
+		} else if (!this.isPlayingAnimation()) return;
+		else this.playAnimation(deltaTime)
 	}
 }
