@@ -2,16 +2,16 @@ import * as THREE from 'three';
 import fold from '../../../crease-patterns/rectangle.fold';
 import { FoldToThreeConverter } from '../converters/fold-to-three-converter';
 import txt from '../../../instructions/test-1.txt';
-import { OrigamiSolver } from './origami-solver'
-import { BaseModel } from './base-model';
-import { OrigamiController } from '../controllers/origami-controller';
+import { Controller } from './../controllers/controller';
 
-export class Origami extends BaseModel {
+export class Origami extends Controller {
+
+	mesh_instructions = [];
+	currentAngle = 0;
+	previousTime = 0;
 
 	constructor(scene) {
 		super();
-		// Sets Origami Controller
-		this.controller = new OrigamiController(this);
 		// Temporary geo and material
 		this.foldInfo = new FoldToThreeConverter(fold);
 		this.crease = this.foldInfo.crease;
@@ -96,46 +96,65 @@ export class Origami extends BaseModel {
 		const mesh2 = new THREE.Mesh(geometry2, material2);
 		const mesh3 = new THREE.Mesh(geometry3, material3);
 		this.meshes = [mesh1, mesh2, mesh3];
-		this.scene.add(...this.meshes);
+		this.meshesRotation = this.meshes.map((mesh) => mesh.position);
 
 		this.mesh_instructions = [
-			{ meshIds: [0, 1], axis: ['a', 'd'], angle: 180 },
+			{ meshIds: [0, 1], axis: ['a', 'd'], angle: THREE.MathUtils.degToRad(90) },
+			{ meshIds: [2], axis: ['d', 'a'], angle: THREE.MathUtils.degToRad(90) },
 		];
+
+		this.w = Math.PI / 2;  // Angular velocity
+		this.angleRotated = 0;
+
+		this.scene.add(...this.meshes);
 	}
 
-	renderOrigami = (time, currentFrame) => {
-		if (currentFrame > 0) {
-			this.scene.clear();
-			const group = new THREE.Group();
-			// const instruction = this.mesh_instructions[currentFrame - 1];
-			const instruction = this.mesh_instructions[0];
-			for (let i = 0; i < instruction.meshIds.length; i++) {
-				group.add(this.meshes[instruction.meshIds[i]]);
-			}
-
-			this.scene.add(group, this.meshes[2]);
-
-			// const vecA = this.pts[instruction.axis[0]];
-			// const vecB = this.pts[instruction.axis[1]];
-			const vecA = new THREE.Vector3(...this.pts['a']);
-			const vecB = new THREE.Vector3(...this.pts['d']);
-			const vec = new THREE.Vector3();
-
-			vec.copy(vecA).sub(vecB).normalize();
-			group.rotateOnWorldAxis(vec, 0.1);
+	rotate = (angle) => {
+		const { currentStep } = this.animationControls;
+		const instruction = this.mesh_instructions[currentStep];
+		const vecA = new THREE.Vector3(...this.pts[instruction.axis[0]]);
+		const vecB = new THREE.Vector3(...this.pts[instruction.axis[1]]);
+		const vec = new THREE.Vector3();
+		vec.copy(vecB).sub(vecA).normalize();
+		for (let i of instruction.meshIds) {
+			this.meshes[i].position.sub(vecA);
+			this.meshes[i].rotateOnWorldAxis(vec, angle);
+			this.meshes[i].position.add(vecA);
 		}
+	}
 
-		this.previousTime = time;
-		this.setFrame(currentFrame + 1);
+	playAnimation = (deltaTime) => {
+		const { currentStep } = this.animationControls;
+		const instruction = this.mesh_instructions[currentStep];
+		let angle_to_rotate = this.w * deltaTime * 0.001;
+
+		if (this.angleRotated + angle_to_rotate < instruction.angle) {
+			this.rotate(angle_to_rotate);
+			this.angleRotated += angle_to_rotate;
+
+		} else {
+			angle_to_rotate = instruction.angle - this.angleRotated;
+			this.rotate(angle_to_rotate);
+			this.increaseStepBy(1)
+			this.pauseAnimation();
+			this.angleRotated = 0;
+		}
+	}
+
+	setInitialMeshesRotation = () => {
+		this.meshesRotation.forEach((rotation, i) => this.meshes[i].rotation.set(...rotation));
+		this.angleRotated = 0;
 	}
 
 	update = (time) => {
-		const { currentFrame } = this.animationControls;
+		const deltaTime = time - this.previousTime;
+		this.previousTime = time;
 
-		if (this.shouldPause()) return;
-
-		if (this.shouldPlayAnimation(time, currentFrame)) {
-			this.renderOrigami(time, currentFrame);
-		}
+		if (this.shouldDisablePlay(this.mesh_instructions.length)) {
+			this.disablePlay();
+		} else if (this.isStopped()) {
+			this.setInitialMeshesRotation()
+		} else if (!this.isPlayingAnimation()) return;
+		else this.playAnimation(deltaTime)
 	}
 }
