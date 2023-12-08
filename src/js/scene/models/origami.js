@@ -41,7 +41,6 @@ export class Origami extends BaseModel {
 
 		// Convert paper coordinates and fold instructions to paper meshes and mesh instructions
 		[this.meshes, this.mesh_instructions] = OrigamiSolver.solveOrigami(points, faces, pattern, face_order, fold_instructions, translation, rotation);
-		debugger;
 		[this.points, this.meshes, this.mesh_instructions] = OrigamiExamples.example1();
 
 		// Set animation parameters
@@ -57,7 +56,7 @@ export class Origami extends BaseModel {
  			const now = time * 0.001;
 			const time_passed = now - this.then;
 			let angle_to_rotate = this.w * time_passed;
-	
+			
 			if (this.angle_rotated + angle_to_rotate < this.mesh_instructions[this.instruction_id].angle){
 				this.rotate(angle_to_rotate);
 				this.angle_rotated = this.angle_rotated + angle_to_rotate;
