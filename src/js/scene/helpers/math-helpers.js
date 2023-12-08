@@ -10,11 +10,22 @@ export class MathHelpers {
 				if (match[element] !== undefined) {
 					acc.push(match[element]);
 				}
-
 				return acc;
 			}, []);
 			return { ...obj, [val]: valueForArray };
 		}, {});
 	}
 
+	static findPlaneBetween(points, from, to){
+
+		if (from.length == 1 && to.length == 1){
+
+		}else if(from.length == 1 && to.length == 2){
+
+		}else if(from.length == 2 && to.length == 2){
+
+		}else{
+			throw new Error('The instruction is not valid. Try again!')
+		}
+	}
 }

@@ -28,7 +28,7 @@ export class OrigamiSolver {
 		}
 		// Create face meshes
 		const meshes = this.createFaceMeshes(faces, pattern);
-		return [meshes, mesh_instructions];
+		return [0, 0];
 	}
 
 
@@ -41,6 +41,7 @@ export class OrigamiSolver {
 		// Get 'from point', 'to point', and rotation sense
 		let { from, to, sense } = MathHelpers.getFromFoldInstruction(['from', 'to', 'sense'], translation, instruction);
 
+		debugger;
 		// TODO: Continue to code
 
 		// Finds plane between from and to points
@@ -49,16 +50,17 @@ export class OrigamiSolver {
 		// Intersects plane with origami, yielding intersection lines
 		// let intersection_lines = MathHelpers.findIntersectionBetweenPlaneAndOrigami(points, faces, plane);
 
+		return [0, 0, 0, 0, 0];
 	}
 
 
 	static solveRotation(points, faces, pattern, planes, instruction, rotation, tolerance) {
-
+		return [0, 0, 0, 0, 0];
 	}
 
 
 	static createFaceMeshes(faces, pattern) {
-
+		return [0];
 	}
 
 }

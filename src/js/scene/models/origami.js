@@ -40,7 +40,8 @@ export class Origami extends BaseModel {
 		const fold_instructions = txt.split('\n');
 
 		// Convert paper coordinates and fold instructions to paper meshes and mesh instructions
-		// [this.meshes, this.mesh_instructions] = OrigamiSolver.solveOrigami(points, faces, pattern, face_order, fold_instructions, translation, rotation);
+		[this.meshes, this.mesh_instructions] = OrigamiSolver.solveOrigami(points, faces, pattern, face_order, fold_instructions, translation, rotation);
+		debugger;
 		[this.points, this.meshes, this.mesh_instructions] = OrigamiExamples.example1();
 
 		// Set animation parameters
