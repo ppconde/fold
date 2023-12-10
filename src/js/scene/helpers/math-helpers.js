@@ -2,30 +2,61 @@ import * as THREE from 'three';
 
 export class MathHelpers {
 
-	// Extract values from instruction
-	static getFromFoldInstruction(array, translation, step) {
-		const match = step.match(translation.regex);
-		return array.reduce((obj, val) => {
-			const valueForArray = translation[val].reduce((acc, element) => {
-				if (match[element] !== undefined) {
-					acc.push(match[element]);
-				}
-				return acc;
-			}, []);
-			return { ...obj, [val]: valueForArray };
-		}, {});
+
+	static indexArray(a,b){
+		return b.map((element) => a[element]);
 	}
 
-	static findPlaneBetween(points, from, to){
+	static multiplyArray(a,c){
+		return a.map((element) => element * c);
+	}
 
-		if (from.length == 1 && to.length == 1){
-
-		}else if(from.length == 1 && to.length == 2){
-
-		}else if(from.length == 2 && to.length == 2){
-
-		}else{
-			throw new Error('The instruction is not valid. Try again!')
+	static addArray(a,c){
+		if (!Array.isArray(c)){
+			c = Array(a.length).fill(c);
 		}
+		return a.map((element,i) => element + c[i]);
 	}
+
+	static findVectorBetweenPoints(a,b){
+		return b.map((element, i) => element - a[i]);
+	}
+
+	static findVectorNorm(u){
+		return Math.sqrt(u.reduce((acc, element) => acc + Math.pow(element, 2), 0));
+	}
+
+	static addVectorToPoint(a, u){
+		return a.map((element, i) => element + u[i]);
+	}
+
+	static dot(u,v){
+		return u.reduce((acc, element, i) => acc + (element * v[i]), 0);
+	}
+
+	static findVersorBetweenPoints(a, b){
+		const u =  this.findVectorBetweenPoints(a, b);
+		const n = this.findVectorNorm(u);
+		return  this.multiplyArray(u, 1/n);
+	}
+
+	static findVectorVersor(u){
+		const n = this.findVectorNorm(u);
+		return this.multiplyArray(u, 1/n);
+	}
+
+	static findDistanceBetweenPoints(a,b){
+		const u = this.findVectorBetweenPoints(a,b);
+		return this.findVectorNorm(u);
+	}
+
+	static projectPointOntoLine(a,b,c){
+		const ab = this.findVectorBetweenPoints(a,b);
+		const ac = this.findVectorBetweenPoints(a,c);
+		// return a + this.dot(ac,ab) / this.dot(ab,ab) * ab;
+		return this.addArray(a,this.multiplyArray(ab,this.dot(ac,ab) / this.dot(ab,ab)));
+	}
+
+
+
 }
