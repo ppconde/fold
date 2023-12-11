@@ -1,35 +1,100 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+import { ControlsComponent } from "./components/controls/controls-component";
+import { HeaderComponent } from "./components/header/header.component";
+import { SideMenuComponent } from "./components/side-menu/side-menu.component";
+import { CACHE } from "./constants/cache-constants";
+import { Canvas } from "./scene/canvas";
+import { cacheService } from "./services/cache-service";
+import { supabaseService } from "./services/db-service";
 
-function App() {
-  const [count, setCount] = useState(0)
+export const App = () => {
+  const [{ showSideMenu, menuType }, setShowSideMenu] = useState({
+    showSideMenu: false,
+    menuType: "",
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    /**
+     * Initializes the application
+     */
+    const init = async () => {
+      const canvas = document.getElementById("canvas")!;
+      new Canvas(canvas);
+      addClickEventListener();
+
+      const library = await supabaseService.getOrigamiLibrary();
+      if (library.length) {
+        cacheService.setItem(CACHE.ORIGAMI, library);
+        setOrigamiImages(library);
+      }
+      setLoading(false);
+    };
+
+    init();
+  }, []);
+
+  /**
+   * Renders side menu component
+   */
+  const renderSideMenu = () => {
+    return showSideMenu ? (
+      <SideMenuComponent
+        key={menuType}
+        menuType={menuType}
+        activateSideMenu={activateSideMenu}
+        loading={loading}
+      />
+    ) : null;
+  };
+
+  /**
+   * Toggles side menu when there's a click inside the menu button
+   * @param {*} e
+   */
+  const activateSideMenu = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const target = e.target as HTMLElement;
+
+    setShowSideMenu({
+      showSideMenu: !!target.innerText || false,
+      menuType: target.innerText.toLowerCase(),
+    });
+  };
+
+  /**
+   * Adds a click event listener when there's a click on top of side menu
+   */
+  const addClickEventListener = () => {
+    window.addEventListener("click", ({ target }: React.MouseEvent) => {
+      const element = document.querySelector(".side-menu");
+      const isClickedInsideSideMenu =
+        element !== target && element?.contains(target as Node);
+
+      if (!isClickedInsideSideMenu) {
+        setShowSideMenu({ showSideMenu: false, menuType: "" });
+      }
+    });
+  };
+
+  /**
+   * Load origami images from supabase storage and sets them into cache
+   * @param library
+   */
+  const setOrigamiImages = (library) => {
+    library.forEach(async (origami) => {
+      const origameName = origami.name.toLowerCase();
+      const img = await supabaseService.getOrigamiImage(origameName);
+      cacheService.setItem(origameName, img);
+    });
+  };
 
   return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
-
-export default App
+    <main className="main">
+      <HeaderComponent activateSideMenu={activateSideMenu} />
+      {renderSideMenu()}
+      <canvas id="canvas"></canvas>
+      <ControlsComponent />
+    </main>
+  );
+};
