@@ -6,7 +6,7 @@
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
   "features": {
     "ghcr.io/devcontainers-contrib/features/act:1": {},
-    "ghcr.io/itsmechlark/features/1password:1": {}
+    // "ghcr.io/itsmechlark/features/1password:1": {}
   },
   "waitFor": "onCreateCommand",
   "updateContentCommand": "npm install",

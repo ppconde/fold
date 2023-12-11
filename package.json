@@ -7,23 +7,35 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dat.gui": "^0.7.9",
+    "earcut": "^2.2.4",
+    "gsap": "^3.12.3",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "three": "^0.159.0",
+    "three-orbit-controls": "^82.1.0",
+    "vite-plugin-svgr": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
+    "@types/three": "^0.159.0",
+    "@types/webgl2": "^0.0.10",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.3",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "gh-pages": "^6.1.0",
     "typescript": "^5.0.2",
     "vite": "^4.4.5"
   }
