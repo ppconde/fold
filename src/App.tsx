@@ -19,7 +19,7 @@ export const App = () => {
      * Initializes the application
      */
     const init = async () => {
-      const canvas = document.getElementById("canvas")!;
+      const canvas = document.getElementById("canvas")! as HTMLCanvasElement;
       new Canvas(canvas);
       addClickEventListener();
 

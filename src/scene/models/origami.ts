@@ -10,6 +10,9 @@ interface IMeshInstruction {
 interface IPoints {
   [key: string]: number[];
 }
+/**
+ * @todo: origami should extend Object3D
+ */
 export class Origami extends Controller {
   public clock = new THREE.Clock();
 
