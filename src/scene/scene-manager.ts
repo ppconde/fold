@@ -37,8 +37,8 @@ export class SceneManager {
   private init(): void {
     this.setScene();
     this.setRenderer();
-    this.setCamera();
     this.setSceneObjects();
+    this.setCamera();
   }
 
   /**
@@ -79,6 +79,9 @@ export class SceneManager {
 
       // Creates orbit controls object with same view direction vector as the camera
       const controls = new OrbitControls(this.camera, this.canvas);
+      /**
+       * @todo - find a way to set the target to the origami object
+       */
       const lookAtVec = new THREE.Vector3(6.25, 0, 0);
       controls.target = lookAtVec;
       this.camera.lookAt(lookAtVec);

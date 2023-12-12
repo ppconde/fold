@@ -24,7 +24,9 @@
         "wix.vscode-import-cost",
         "ms-python.isort",
         "ms-vscode.js-debug-nightly",
-        "ms-toolsai.jupyter"
+        "ms-toolsai.jupyter",
+        "GitHub.vscode-github-actions",
+        "github.vscode-github-actions"
       ]
     }
   }
