@@ -1,9 +1,6 @@
 import React, {
   Dispatch,
   SetStateAction,
-  JSXElementConstructor,
-  ReactElement,
-  ReactNode,
   useEffect,
   useState,
 } from "react";
@@ -11,6 +8,7 @@ import { SearchBarComponent } from "../search-bar/search-bar.component";
 import { OrigamiPreviewComponent } from "../origami-preview/origami-preview.component";
 import { cacheService } from "../../services/cache-service";
 import { CACHE } from "../../constants/cache-constants";
+import { IOrigamiParsed, IInstructions } from "../../../types/origami.tpes";
 
 interface ISideMenuComponentProps {
   menuType?: string;
@@ -20,24 +18,28 @@ interface ISideMenuComponentProps {
 
 export const SideMenuComponent = (props: ISideMenuComponentProps) => {
   const [searchText, setSearchText] = useState("");
-  const [library, setLibrary] = useState([]);
-  const [instructions, setInstructions] = useState([]);
+  const [library, setLibrary] = useState<IOrigamiParsed[]>([]);
+  const [instructions, setInstructions] = useState<IInstructions[]>([]);
 
   useEffect(() => getOrigamiFromCache(), []);
 
   const getOrigamiFromCache = () => {
     const library = cacheService.getItem(CACHE.ORIGAMI);
-    const origamis = JSON.parse(library);
-    setLibrary(origamis);
-    console.log("origamis", origamis);
 
-    setInstructions(
-      origamis.map((origami) => origami.instructions)
-    );
+    if (library) {
+      const origamis = JSON.parse(library) as IOrigamiParsed[];
+      setLibrary(origamis);
+
+      setInstructions(
+        origamis.map((origami) => origami.instructions)
+      );
+    } else {
+      console.error('Error: No origami found in cache');
+    }
   };
 
   const getInstructions = () => [
-    ...instructions.map((m, i) => <p key={i}>{m[i + 1]}</p>),
+    ...instructions.map((instruction, i) => <p key={i}>{instruction[i]}</p>),
   ];
 
   const renderSettings = () => {
@@ -97,15 +99,9 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
 
   const renderOrigamiPreviews = () => {
     const { loading } = props;
-    const origamis = library.reduce((acc, origami) => {
-      if (origami?.name.match(new RegExp(searchText, "i"))) {
-        acc.push(
-          <OrigamiPreviewComponent key={origami.id} name={origami.name} />
-        );
-      }
-
-      return acc;
-    }, []);
+    const origamis = library
+      .filter((origami) => origami?.name.match(new RegExp(searchText, "i")))
+      .map((origami) => <OrigamiPreviewComponent key={origami.id} name={origami.name} />);
 
     return origamis.length ? (
       <div className="origami-previews">{origamis}</div>
@@ -128,16 +124,7 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
     );
   };
 
-  const renderBox = (
-    name:
-      | string
-      | number
-      | boolean
-      | ReactElement<any, string | JSXElementConstructor<any>>
-      | Iterable<ReactNode>
-      | null
-      | undefined
-  ) => {
+  const renderBox = (name: string) => {
     return (
       <div className={name.toLowerCase()}>
         <span className="text">{name}</span>

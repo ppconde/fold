@@ -1,16 +1,8 @@
+import { IAnimationControls } from "../../../types/controller.types";
 import { IControllerEvent } from "../../components/controls/controls-component";
 
-interface IAnimationControls {
-  previousTime: number;
-  isPlaying: boolean;
-  isStopped: boolean;
-  currentStep: number;
-  totalSteps: number;
-  playDisabled: boolean;
-}
-
 export class Controller {
-  static STEP_TIME = 1000;
+  public static STEP_TIME = 1000;
 
   private INITIAL_STEP = 0;
 
@@ -50,7 +42,7 @@ export class Controller {
   /**
    * Used to pause animation
    */
-  public pauseAnimation() {
+  public pauseAnimation(): void {
     this.animationControls.isPlaying = false;
     this.pauseEvent = new CustomEvent("controller:pause", {
       detail: { value: this.animationControls.isPlaying },
@@ -62,14 +54,14 @@ export class Controller {
   /**
    * Used to check if animation is playing
    */
-  public isPlayingAnimation() {
+  public isPlayingAnimation(): boolean {
     return this.animationControls.isPlaying;
   }
 
   /**
    * Used to stop animation
    */
-  public stopAnimation() {
+  public stopAnimation(): void {
     this.animationControls.isPlaying = false;
     this.animationControls.isStopped = true;
     this.animationControls.currentStep = this.INITIAL_STEP;
@@ -84,14 +76,14 @@ export class Controller {
   /**
    * Used to check if animation is stopped
    */
-  public isStopped() {
+  public isStopped(): boolean {
     return this.animationControls.isStopped;
   }
 
   /**
    * Used to toggle animation on/off (play/pause)
    */
-  public togglePlayAnimation() {
+  public togglePlayAnimation(): void {
     this.animationControls.isPlaying = !this.animationControls.isPlaying;
     this.animationControls.isStopped = false;
   }
@@ -99,7 +91,7 @@ export class Controller {
   /**
    * Used to set animation to a specific step
    */
-  public increaseStepBy(step: number) {
+  public increaseStepBy(step: number): void {
     this.animationControls.currentStep += step;
   }
 
@@ -107,7 +99,7 @@ export class Controller {
    * Used to set animation to a specific step
    * @param total
    */
-  public shouldDisablePlay(total: number) {
+  public shouldDisablePlay(total: number): boolean {
     return (
       !this.enablePlayEventDispatched &&
       this.animationControls.currentStep >= total
@@ -117,7 +109,7 @@ export class Controller {
   /**
    * Used to enable play button
    */
-  public enablePlay() {
+  public enablePlay(): void {
     this.disabledEvent = new CustomEvent<IControllerEvent>("controller:play", {
       detail: { value: true },
     });
@@ -128,7 +120,7 @@ export class Controller {
   /**
    * Used to disable play button
    */
-  public disablePlay() {
+  public disablePlay(): void {
     this.disabledEvent = new CustomEvent<IControllerEvent>("controller:play", {
       detail: { value: false },
     });

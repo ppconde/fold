@@ -12,9 +12,9 @@ class SupabaseService {
    */
   public async getOrigamiLibrary() {
     try {
-      const { data, error } = await supabase.from("Origami").select("*");
+      const { data } = await supabase.from("Origami").select("*");
 
-      return data?.length ? data : error;
+      return data?.length ? data : [];
     } catch (e) {
       console.error("Error fetching origami library data: ", e);
       return [];

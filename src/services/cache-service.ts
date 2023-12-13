@@ -13,7 +13,7 @@ class CacheService {
    * @param {string} key
    * @returns
    */
-  public getItem(key: string) {
+  public getItem(key: string): string | null {
     return localStorage.getItem(key);
   }
 }

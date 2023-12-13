@@ -6,6 +6,7 @@ import { CACHE } from "./constants/cache-constants";
 import { Canvas } from "./scene/canvas";
 import { cacheService } from "./services/cache-service";
 import { supabaseService } from "./services/db-service";
+import { IOrigami } from "../types/origami-db.types";
 
 export const App = () => {
   const [{ showSideMenu, menuType }, setShowSideMenu] = useState({
@@ -66,7 +67,7 @@ export const App = () => {
    * Adds a click event listener when there's a click on top of side menu
    */
   const addClickEventListener = () => {
-    window.addEventListener("click", ({ target }: React.MouseEvent) => {
+    window.addEventListener("click", ({ target }: Event) => {
       const element = document.querySelector(".side-menu");
       const isClickedInsideSideMenu =
         element !== target && element?.contains(target as Node);
@@ -81,7 +82,7 @@ export const App = () => {
    * Load origami images from supabase storage and sets them into cache
    * @param library
    */
-  const setOrigamiImages = (library) => {
+  const setOrigamiImages = (library: IOrigami[]) => {
     library.forEach(async (origami) => {
       const origameName = origami.name.toLowerCase();
       const img = await supabaseService.getOrigamiImage(origameName);
