@@ -3,7 +3,7 @@ import { Controller } from '../../controllers/controller';
 import { MathHelper } from '../../helpers/math-helper';
 import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 
-export interface IMeshInstruction {
+interface IMeshInstruction {
   meshIds: number[];
   axis: string[];
   angle: number;
@@ -13,9 +13,6 @@ export type IVertices = {
   [key in string]: number[];
 };
 
-/**
- * @todo: origami should extend Object3D
- */
 export class Origami extends THREE.Group {
 
   private clock = new THREE.Clock();

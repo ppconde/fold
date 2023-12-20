@@ -1,4 +1,4 @@
-import { IAnimationControls } from '../../../types/controller.types';
+import { IAnimationControls } from '../../types/controller.types';
 import { IControllerEvent } from '../../components/controls/controls-component';
 
 export class Controller {

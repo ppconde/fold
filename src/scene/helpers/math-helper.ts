@@ -14,10 +14,10 @@ export class MathHelper {
    * @param shiftX 
    * @param shiftY 
    */
-  public static shiftPoints = (points: IVertices, shiftX: number, shiftY: number): IVertices => {
+  public static shiftPoints(points: IVertices, shiftX: number, shiftY: number): IVertices {
     return Object.keys(points).reduce((acc, key) => {
       acc[key] = [points[key][0] + shiftX, points[key][1] + shiftY, 0];
       return acc;
     }, {} as IVertices);
-  };
+  }
 }

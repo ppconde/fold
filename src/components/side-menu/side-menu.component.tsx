@@ -8,7 +8,7 @@ import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { OrigamiPreviewComponent } from '../origami-preview/origami-preview.component';
 import { cacheService } from '../../services/cache-service';
 import { CACHE } from '../../constants/cache-constants';
-import { IOrigamiParsed, IInstructions } from '../../../types/origami.types';
+import { IOrigamiParsed, IInstructions } from '../../types/origami.types';
 
 interface ISideMenuComponentProps {
   menuType?: string;
