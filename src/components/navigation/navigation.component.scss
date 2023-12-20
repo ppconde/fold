@@ -1,28 +1,28 @@
-@use '../../../assets/scss/colors.scss' as colors;
+@use "../../scss/colors.scss" as colors;
 
 .navigation {
+  display: flex;
+  justify-content: center;
+
+  .list {
     display: flex;
-    justify-content: center;
-    
-    .list {
-        display: flex;
-        width: 50%;
+    width: 50%;
+  }
+
+  .link {
+    border: none;
+    flex: 1;
+    list-style-type: none;
+    transition: color 0.3s;
+    transition-timing-function: ease-in-out;
+    cursor: pointer;
+
+    &:hover {
+      color: colors.$secondary-color;
     }
 
-    .link {
-        border: none;
-        flex: 1;
-        list-style-type: none;
-        transition: color 0.3s;
-        transition-timing-function: ease-in-out;
-        cursor: pointer;
-
-        &:hover {
-            color: colors.$secondary-color;
-        }
-
-        &:not(:hover) {
-            color: colors.$primary-color;
-        }
+    &:not(:hover)  {
+      color: colors.$primary-color;
     }
+  }
 }

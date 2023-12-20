@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { cacheService } from "../../services/cache-service";
+import { useEffect, useState } from 'react';
+import { cacheService } from '../../services/cache-service';
 
 interface IOrigamiPreviewComponentProps {
   name: string;
@@ -8,11 +8,11 @@ interface IOrigamiPreviewComponentProps {
 export const OrigamiPreviewComponent = (
   props: IOrigamiPreviewComponentProps
 ) => {
-  const [image, setImage] = useState("");
+  const [image, setImage] = useState('');
 
   useEffect(() => {
     const image = cacheService.getItem(props.name.toLowerCase());
-    setImage(JSON.parse(image ?? ""));
+    setImage(JSON.parse(image ?? ''));
   }, [props.name]);
 
   return (

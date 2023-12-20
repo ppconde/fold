@@ -6,7 +6,7 @@ export const NavigationComponent = (props: INavigationComponentProps) => {
   return (
     <nav className="navigation">
       <ul className="list">
-        {["Library", "Instructions", "Settings", "Share"].map((link) => (
+        {['Library', 'Instructions', 'Settings', 'Share'].map((link) => (
           <li className="link" key={link} onClick={props.onClickLink}>
             {link}
           </li>

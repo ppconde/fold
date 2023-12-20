@@ -1,23 +1,23 @@
-@use '../../../assets/scss/colors.scss' as colors;
+@use "../../scss/colors.scss" as colors;
 
 .origami-preview {
-    align-items: center;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 
-    .image {
-        height: auto;
-        width: 94px;
-        font-size: 12px;
-        color: colors.$quartiary-color;
-    }
+  .image {
+    height: auto;
+    width: 94px;
+    font-size: 12px;
+    color: colors.$quartiary-color;
+  }
 
-    .text {
-        font-family: 'Roboto', sans-serif;
-        font-size: 18px;
-        width: 94px;
-        color: colors.$secondary-color;
-        padding-top: 3px;
-    }
+  .text {
+    font-family: "Roboto", sans-serif;
+    font-size: 18px;
+    width: 94px;
+    color: colors.$secondary-color;
+    padding-top: 3px;
+  }
 }

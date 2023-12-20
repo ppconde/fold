@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 export interface IControllerEvent {
   value: boolean;
@@ -29,14 +29,14 @@ export const ControlsComponent = () => {
       setIsEnabled(event.detail.value);
     };
 
-    document.addEventListener("controller:pause", handlePause.bind(this));
-    document.addEventListener("controller:play", handleIsEnabled.bind(this));
+    document.addEventListener('controller:pause', handlePause.bind(this));
+    document.addEventListener('controller:play', handleIsEnabled.bind(this));
 
     // Clean up the event listeners when the component unmounts
     return () => {
-      document.removeEventListener("controller:pause", handlePause.bind(this));
+      document.removeEventListener('controller:pause', handlePause.bind(this));
       document.removeEventListener(
-        "controller:play",
+        'controller:play',
         handleIsEnabled.bind(this)
       );
     };
@@ -48,13 +48,13 @@ export const ControlsComponent = () => {
     <div className="controls-wrapper">
       <div className="controls">
         <button
-          style={{ pointerEvents: isEnabled ? "auto" : "none" }}
+          style={{ pointerEvents: isEnabled ? 'auto' : 'none' }}
           disabled={!isEnabled}
           id="play-pause-button"
           className="control"
           onClick={handleSetIsPlaying.bind(this, !isPlaying)}
         >
-          {isPlaying ? "⏸︎" : "⏵︎"}
+          {isPlaying ? '⏸︎' : '⏵︎'}
         </button>
         <button
           id="stop-button"

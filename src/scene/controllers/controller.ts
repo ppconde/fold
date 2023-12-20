@@ -1,7 +1,8 @@
-import { IAnimationControls } from "../../../types/controller.types";
-import { IControllerEvent } from "../../components/controls/controls-component";
+import { IAnimationControls } from '../../../types/controller.types';
+import { IControllerEvent } from '../../components/controls/controls-component';
 
 export class Controller {
+
   public static STEP_TIME = 1000;
 
   private INITIAL_STEP = 0;
@@ -24,11 +25,11 @@ export class Controller {
   constructor() {
     // Adds event listeners to buttons
     document
-      .getElementById("play-pause-button")!
-      .addEventListener("click", this.togglePlayAnimation);
+      .getElementById('play-pause-button')!
+      .addEventListener('click', this.togglePlayAnimation.bind(this));
     document
-      .getElementById("stop-button")!
-      .addEventListener("click", this.stopAnimation);
+      .getElementById('stop-button')!
+      .addEventListener('click', this.stopAnimation.bind(this));
   }
 
   /**
@@ -44,7 +45,7 @@ export class Controller {
    */
   public pauseAnimation(): void {
     this.animationControls.isPlaying = false;
-    this.pauseEvent = new CustomEvent("controller:pause", {
+    this.pauseEvent = new CustomEvent('controller:pause', {
       detail: { value: this.animationControls.isPlaying },
       cancelable: true,
     });
@@ -65,7 +66,7 @@ export class Controller {
     this.animationControls.isPlaying = false;
     this.animationControls.isStopped = true;
     this.animationControls.currentStep = this.INITIAL_STEP;
-    this.pauseEvent = new CustomEvent<IControllerEvent>("pause", {
+    this.pauseEvent = new CustomEvent<IControllerEvent>('pause', {
       detail: { value: true },
       cancelable: true,
     });
@@ -96,7 +97,7 @@ export class Controller {
   }
 
   /**
-   * Used to set animation to a specific step
+   * Used to check if play button should be disabled
    * @param total
    */
   public shouldDisablePlay(total: number): boolean {
@@ -110,7 +111,7 @@ export class Controller {
    * Used to enable play button
    */
   public enablePlay(): void {
-    this.disabledEvent = new CustomEvent<IControllerEvent>("controller:play", {
+    this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
       detail: { value: true },
     });
     document.dispatchEvent(this.disabledEvent);
@@ -121,7 +122,7 @@ export class Controller {
    * Used to disable play button
    */
   public disablePlay(): void {
-    this.disabledEvent = new CustomEvent<IControllerEvent>("controller:play", {
+    this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
       detail: { value: false },
     });
     document.dispatchEvent(this.disabledEvent);
