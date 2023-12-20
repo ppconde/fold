@@ -23,8 +23,6 @@ export class SceneManager {
 
   public canvas: HTMLCanvasElement;
 
-  public debug = {};
-
   public screenDimensions: { width: number; height: number };
 
   private controls!: OrbitControls;
@@ -85,7 +83,7 @@ export class SceneManager {
     /**
      * @todo - find a way to set the target to the origami object
      */
-    const lookAtVec = new THREE.Vector3(0, -3, 0);
+    const lookAtVec = new THREE.Vector3(0, 0, 0);
 
     this.controls.target = lookAtVec;
     this.camera.lookAt(lookAtVec);
@@ -103,7 +101,7 @@ export class SceneManager {
    * Adds a debug cube to the scene
    * @todo - remove when not needed
    */
-  private addDebugCube() {
+  private addDebugCube(): void {
     const debugCube = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshStandardMaterial({

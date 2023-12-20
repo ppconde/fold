@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { gui } from '../../helpers/gui';
-import { LightKey, Lights, LightsHelpers, LightsTypes } from './lights-types';
+import { LightKey, Lights, LightsHelpers, LightsTypes, LightsTypesHelper } from './lights-types';
+import { TypeGuards } from '../../guards/type-guards';
 
 export class LightsManager {
   scene: THREE.Scene;
@@ -8,9 +9,9 @@ export class LightsManager {
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     this.setLights();
-    this.addDebugInterface();
     this.addHelpers();
     this.addLightsToScene();
+    this.addDebugInterface();
   }
 
   /**
@@ -35,7 +36,14 @@ export class LightsManager {
    */
   private addDebugInterface(): void {
     const lightsFolder = gui.addFolder('Lights');
-    this.lightsMap.forEach((lightObj, key) => {
+    for (const key of this.lightsMap.keys()) {
+      const lightObj = this.lightsMap.get(key)!;
+      /**
+       * If the light is a helper, we don't want to add it to the debug interface
+       */
+      if (!lightObj || TypeGuards.isLightHelper(lightObj)) {
+        continue;
+      }
       const folder = lightsFolder.addFolder(key);
       folder.add(lightObj, 'intensity').min(0).max(10).step(0.01);
       if (lightObj.type !== LightsTypes.AMBIENT_LIGHT) {
@@ -45,7 +53,7 @@ export class LightsManager {
       }
       folder.add(lightObj, 'visible');
       folder.addColor(lightObj, 'color');
-    });
+    }
   }
 
   /**
@@ -71,21 +79,24 @@ export class LightsManager {
       }
     });
 
-    helpers.forEach((helper, i) => {
+    helpers.forEach((helper, key) => {
+      console.log(helper.type, key);
       switch (helper.type) {
-        case LightsTypes.DIRECTIONAL_LIGHT:
-          this.lightsMap.set(`Dir-${i}`, helper);
+        case LightsTypesHelper.DIRECTIONAL_LIGHT:
+          this.lightsMap.set(`Dir-${key + 1}-Helper`, helper);
           break;
-        case LightsTypes.POINT_LIGHT:
-          this.lightsMap.set(`Point-${i}`, helper);
+        case LightsTypesHelper.POINT_LIGHT:
+          this.lightsMap.set(`Point-${key + 1}-Helper`, helper);
           break;
-        case LightsTypes.SPOT_LIGHT:
-          this.lightsMap.set(`Spot-${i}`, helper);
+        case LightsTypesHelper.SPOT_LIGHT:
+          this.lightsMap.set(`Spot-${key + 1}-Helper`, helper);
           break;
         default:
           break;
       }
     });
+
+    console.log(this.lightsMap);
   }
 
   /**

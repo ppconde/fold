@@ -6,7 +6,7 @@ import { CACHE } from './constants/cache-constants';
 import { Canvas } from './scene/canvas';
 import { cacheService } from './services/cache-service';
 import { supabaseService } from './services/db-service';
-import { IOrigami } from '../types/origami-db.types';
+import { IOrigami } from './types/origami-db.types';
 import useEventListener from './hooks/use-event-listener';
 
 export const App = () => {

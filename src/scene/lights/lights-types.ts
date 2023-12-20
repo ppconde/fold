@@ -4,11 +4,19 @@ export type LightsHelpers = THREE.DirectionalLightHelper | THREE.PointLightHelpe
 
 export type Lights = THREE.Light | THREE.DirectionalLight | THREE.AmbientLight | LightsHelpers;
 
-export type LightKey = `Amb-${number}` | `Dir-${number}` | `Point-${number}` | `Spot-${number}`;
+export type LightKey = `Amb-${number}` | `Dir-${number}` | `Point-${number}` | `Spot-${number}` |
+  `Amb-${number}-Helper` | `Dir-${number}-Helper` | `Point-${number}-Helper` | `Spot-${number}-Helper`;
 
 export const LightsTypes = {
   AMBIENT_LIGHT: 'AmbientLight',
   DIRECTIONAL_LIGHT: 'DirectionalLight',
   POINT_LIGHT: 'PointLight',
   SPOT_LIGHT: 'SpotLight',
+};
+
+export const LightsTypesHelper = {
+  AMBIENT_LIGHT: 'AmbientLightHelper',
+  DIRECTIONAL_LIGHT: 'DirectionalLightHelper',
+  POINT_LIGHT: 'PointLightHelper',
+  SPOT_LIGHT: 'SpotLightHelper',
 };
