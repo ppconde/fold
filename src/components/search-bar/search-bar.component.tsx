@@ -1,5 +1,5 @@
-import React from "react";
-import SearchIcon from "./search.svg?react";
+import React from 'react';
+import SearchIcon from './search.svg?react';
 
 interface ISearchBarComponentProps {
   setSearchText: (text: string) => void;

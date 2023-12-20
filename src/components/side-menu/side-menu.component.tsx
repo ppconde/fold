@@ -3,12 +3,12 @@ import React, {
   SetStateAction,
   useEffect,
   useState,
-} from "react";
-import { SearchBarComponent } from "../search-bar/search-bar.component";
-import { OrigamiPreviewComponent } from "../origami-preview/origami-preview.component";
-import { cacheService } from "../../services/cache-service";
-import { CACHE } from "../../constants/cache-constants";
-import { IOrigamiParsed, IInstructions } from "../../../types/origami.tpes";
+} from 'react';
+import { SearchBarComponent } from '../search-bar/search-bar.component';
+import { OrigamiPreviewComponent } from '../origami-preview/origami-preview.component';
+import { cacheService } from '../../services/cache-service';
+import { CACHE } from '../../constants/cache-constants';
+import { IOrigamiParsed, IInstructions } from '../../../types/origami.types';
 
 interface ISideMenuComponentProps {
   menuType?: string;
@@ -17,7 +17,7 @@ interface ISideMenuComponentProps {
 }
 
 export const SideMenuComponent = (props: ISideMenuComponentProps) => {
-  const [searchText, setSearchText] = useState("");
+  const [searchText, setSearchText] = useState('');
   const [library, setLibrary] = useState<IOrigamiParsed[]>([]);
   const [instructions, setInstructions] = useState<IInstructions[]>([]);
 
@@ -43,19 +43,19 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
   ];
 
   const renderSettings = () => {
-    return props.menuType === "settings" ? (
+    return props.menuType === 'settings' ? (
       <aside className="side-menu">
         <div className="settings">
           <button className="close" onClick={props.activateSideMenu} />
           <h2>Settings</h2>
           <div className="resizer">
-            {label("width")}
-            {label("height")}
+            {label('width')}
+            {label('height')}
             <div className="boxes">
-              {renderBox("A4")}
+              {renderBox('A4')}
               <div className="col">
-                {renderBox("Custom")}
-                {renderBox("Square")}
+                {renderBox('Custom')}
+                {renderBox('Square')}
               </div>
             </div>
           </div>
@@ -65,7 +65,7 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
   };
 
   const renderLibrary = (setSearchText: Dispatch<SetStateAction<string>>) => {
-    return props.menuType === "library" ? (
+    return props.menuType === 'library' ? (
       <aside className="side-menu">
         <div className="library">
           <h2 className="title">Library</h2>
@@ -78,7 +78,7 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
   };
 
   const renderInstructions = () => {
-    return props.menuType === "instructions" ? (
+    return props.menuType === 'instructions' ? (
       <aside className="side-menu">
         <div className="instructions">
           <h2 className="title">Instructions</h2>
@@ -90,7 +90,7 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
   };
 
   const renderShare = () => {
-    return props.menuType === "share" ? (
+    return props.menuType === 'share' ? (
       <aside className="side-menu">
         <div className="share">Share your origamis</div>
       </aside>
@@ -100,24 +100,24 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
   const renderOrigamiPreviews = () => {
     const { loading } = props;
     const origamis = library
-      .filter((origami) => origami?.name.match(new RegExp(searchText, "i")))
+      .filter((origami) => origami?.name.match(new RegExp(searchText, 'i')))
       .map((origami) => <OrigamiPreviewComponent key={origami.id} name={origami.name} />);
 
     return origamis.length ? (
       <div className="origami-previews">{origamis}</div>
     ) : (
       <p className="no-origami">
-        {loading ? "Loading" : "We couldn't find your origami 😞"}
+        {loading ? 'Loading' : "We couldn't find your origami 😞"}
       </p>
     );
   };
 
   const label = (name: string | undefined) => {
-    const text = name === "width" ? "W" : "H";
+    const text = name === 'width' ? 'W' : 'H';
     return (
       <div className={`label-${text}`}>
         <label className="text" htmlFor={name}>
-          {text}:{" "}
+          {text}:{' '}
         </label>
         <input type="numeric" name={name}></input>
       </div>
@@ -133,13 +133,13 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
   };
 
   switch (props.menuType) {
-    case "settings":
+    case 'settings':
       return renderSettings();
-    case "library":
+    case 'library':
       return renderLibrary(setSearchText);
-    case "instructions":
+    case 'instructions':
       return renderInstructions();
-    case "share":
+    case 'share':
       return renderShare();
     default:
       return null;

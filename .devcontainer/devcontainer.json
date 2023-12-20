@@ -13,18 +13,18 @@
   "postAttachCommand": "npm run dev",
   "customizations": {
     "vscode": {
+      "settings": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      },
       "extensions": [
         "streetsidesoftware.code-spell-checker",
         "dbaeumer.vscode-eslint",
         "esbenp.prettier-vscode",
         "DavidAnson.vscode-markdownlint",
         "ms-vscode-remote.remote-containers",
-        "bradlc.vscode-tailwindcss",
         "GitHub.copilot",
         "wix.vscode-import-cost",
-        "ms-python.isort",
         "ms-vscode.js-debug-nightly",
-        "ms-toolsai.jupyter",
         "GitHub.vscode-github-actions",
         "github.vscode-github-actions"
       ]

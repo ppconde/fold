@@ -1,4 +1,4 @@
-import { NavigationComponent } from "../navigation/navigation.component";
+import { NavigationComponent } from '../navigation/navigation.component';
 
 interface IHeaderComponentProps {
   activateSideMenu: (e: React.MouseEvent) => void;

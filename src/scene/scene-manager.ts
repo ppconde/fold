@@ -1,8 +1,11 @@
-import * as THREE from "three";
-import { GeneralLights } from "./lights/general-lights";
-import { Origami } from "./models/origami";
-import { CamerasConfig } from "./cameras/cameras-config";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import * as THREE from 'three';
+import { LightsManager } from './lights/lights';
+import { Origami } from './models/origami/origami';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { gui } from '../helpers/gui';
+import { OrigamiTexture } from './models/origami/origami-texture';
+
+type SceneObjects = Origami | LightsManager;
 
 /**
  * Create scene, renderer, camera
@@ -10,9 +13,9 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
  * Update everything at every frame
  */
 export class SceneManager {
-  public sceneObjects: Map<string, Origami | GeneralLights> = new Map();
+  public sceneObjects: Map<string, SceneObjects> = new Map();
 
-  public scene!: THREE.Scene;
+  public scene = new THREE.Scene();
 
   public renderer!: THREE.WebGLRenderer;
 
@@ -20,7 +23,11 @@ export class SceneManager {
 
   public canvas: HTMLCanvasElement;
 
+  public debug = {};
+
   public screenDimensions: { width: number; height: number };
+
+  private controls!: OrbitControls;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -35,21 +42,15 @@ export class SceneManager {
    * Initializes every scene element
    */
   private init(): void {
-    this.setScene();
     this.setRenderer();
     this.setSceneObjects();
     this.setCamera();
+    this.addDebugCube();
+    this.setAxisHelper();
   }
 
   /**
-   * Sets a new scene to the current scene
-   */
-  private setScene(): void {
-    this.scene = new THREE.Scene();
-  }
-
-  /**
-   * Sets a new WebGL renderer
+   * Sets the WebGL renderer
    */
   private setRenderer(): void {
     const { width, height } = this.screenDimensions;
@@ -69,33 +70,61 @@ export class SceneManager {
    */
   private setCamera(): void {
     const { width, height } = this.screenDimensions;
-    const config = CamerasConfig.find((camera) => camera.key === "Pers-1");
-    if (config) {
-      const ratio = width / height;
-      const { fov, aspect, near, far } = config.props;
-      this.camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-      this.camera.aspect = ratio;
-      this.camera.position.set(6.25, 0, 20);
+    const ratio = width / height;
+    this.camera = new THREE.PerspectiveCamera(65, 2, 0.1, 500);
+    this.camera.aspect = ratio;
+    this.camera.position.set(0, 0, 20);
+    const cameraFolder = gui.addFolder('Camera');
+    cameraFolder.add(this.camera.position, 'x', -50, 50, 1);
+    cameraFolder.add(this.camera.position, 'y', -50, 50, 1);
+    cameraFolder.add(this.camera.position, 'z', -50, 50, 1);
 
-      // Creates orbit controls object with same view direction vector as the camera
-      const controls = new OrbitControls(this.camera, this.canvas);
-      /**
-       * @todo - find a way to set the target to the origami object
-       */
-      const lookAtVec = new THREE.Vector3(6.25, 0, 0);
-      controls.target = lookAtVec;
-      this.camera.lookAt(lookAtVec);
-    } else {
-      console.error("Camera not found");
-    }
+    // Creates orbit controls object with same view direction vector as the camera
+    this.controls = new OrbitControls(this.camera, this.canvas);
+    this.controls.enableDamping = true;
+    /**
+     * @todo - find a way to set the target to the origami object
+     */
+    const lookAtVec = new THREE.Vector3(0, -3, 0);
+
+    this.controls.target = lookAtVec;
+    this.camera.lookAt(lookAtVec);
   }
 
   /**
    * Sets each scene object in the scene
    */
   private setSceneObjects(): void {
-    this.sceneObjects.set("GeneralLights", new GeneralLights(this.scene));
-    this.sceneObjects.set("Origami", new Origami(this.scene));
+    this.sceneObjects.set('LightsManager', new LightsManager(this.scene));
+    this.sceneObjects.set('Origami', new Origami(this.scene, 12.5, 9));
+  }
+
+  /**
+   * Adds a debug cube to the scene
+   * @todo - remove when not needed
+   */
+  private addDebugCube() {
+    const debugCube = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshStandardMaterial({
+        ...OrigamiTexture.loadTexture(),
+      })
+    );
+    debugCube.visible = false;
+    this.scene.add(debugCube);
+    const cubeFolder = gui.addFolder('Cube');
+    cubeFolder.add(debugCube, 'visible');
+  }
+
+  /**
+   * Sets a new axis helper
+   */
+  private setAxisHelper(): void {
+    const axesHelper = new THREE.AxesHelper(5);
+    axesHelper.visible = false;
+    this.scene.add(axesHelper);
+    const axesFolder = gui.addFolder('Axes');
+    axesFolder.add(axesHelper, 'visible');
   }
 
   /**
@@ -104,6 +133,7 @@ export class SceneManager {
   public update(): void {
     this.sceneObjects.forEach((sceneObject) => sceneObject.update());
     this.renderer.render(this.scene, this.camera);
+    this.controls.update();
   }
 
   /**
