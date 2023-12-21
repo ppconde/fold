@@ -1,22 +1,27 @@
-export type LightsType = 'AmbientLight' | 'DirectionalLight';
+export type Lights =
+  | THREE.Light
+  | THREE.DirectionalLight
+  | THREE.AmbientLight
+  | THREE.PointLight
+  | THREE.SpotLight;
 
-export type LightsHelpers = THREE.DirectionalLightHelper | THREE.PointLightHelper | THREE.SpotLightHelper;
+export type LightsHelpers =
+  | THREE.DirectionalLightHelper
+  | THREE.PointLightHelper
+  | THREE.SpotLightHelper;
 
-export type Lights = THREE.Light | THREE.DirectionalLight | THREE.AmbientLight | LightsHelpers;
+export type LightsObjects = Lights | LightsHelpers;
 
-export type LightKey = `Amb-${number}` | `Dir-${number}` | `Point-${number}` | `Spot-${number}` |
-  `Amb-${number}-Helper` | `Dir-${number}-Helper` | `Point-${number}-Helper` | `Spot-${number}-Helper`;
+export type LightKey =
+  | `Amb-${number}`
+  | `Dir-${number}`
+  | `Point-${number}`
+  | `Spot-${number}`;
 
-export const LightsTypes = {
-  AMBIENT_LIGHT: 'AmbientLight',
-  DIRECTIONAL_LIGHT: 'DirectionalLight',
-  POINT_LIGHT: 'PointLight',
-  SPOT_LIGHT: 'SpotLight',
-};
+export type LightHelperKey =
+  | `Amb-${number}-Helper`
+  | `Dir-${number}-Helper`
+  | `Point-${number}-Helper`
+  | `Spot-${number}-Helper`;
 
-export const LightsTypesHelper = {
-  AMBIENT_LIGHT: 'AmbientLightHelper',
-  DIRECTIONAL_LIGHT: 'DirectionalLightHelper',
-  POINT_LIGHT: 'PointLightHelper',
-  SPOT_LIGHT: 'SpotLightHelper',
-};
+export type LightsObjectsKeys = LightKey | LightHelperKey;

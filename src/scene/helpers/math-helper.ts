@@ -1,4 +1,4 @@
-import { IVertices } from '../models/origami/origami';
+import { IVertices } from '../models/origami/origami-types';
 
 export class MathHelper {
   /**

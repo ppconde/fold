@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 import { gui } from '../../helpers/gui';
-import { LightKey, Lights, LightsHelpers, LightsTypes, LightsTypesHelper } from './lights-types';
+import { LightsObjectsKeys, LightsObjects, LightsHelpers } from './lights-types';
 import { TypeGuards } from '../../guards/type-guards';
+import { LightsTypes, LightsTypesHelper } from './lights-constants';
 
 export class LightsManager {
-  scene: THREE.Scene;
-  public lightsMap: Map<LightKey, Lights> = new Map();
+
+  public scene: THREE.Scene;
+
+  public lightsMap: Map<LightsObjectsKeys, LightsObjects> = new Map();
+
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     this.setLights();
@@ -51,7 +55,12 @@ export class LightsManager {
         folder.add(lightObj.position, 'y').min(-30).max(30).step(1);
         folder.add(lightObj.position, 'z').min(-30).max(30).step(1);
       }
-      folder.add(lightObj, 'visible');
+      folder.add(lightObj, 'visible').onFinishChange(() => {
+        if (TypeGuards.isLight(lightObj)) {
+          // If the light is a helper, we want to change the visibility of the helper as well
+          this.lightsMap.get(`${key}-Helper` as 'Dir-1-Helper')!.visible = lightObj.visible;
+        }
+      })
       folder.addColor(lightObj, 'color');
     }
   }
