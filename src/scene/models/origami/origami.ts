@@ -2,16 +2,7 @@ import * as THREE from 'three';
 import { Controller } from '../../controllers/controller';
 import { MathHelper } from '../../helpers/math-helper';
 import { OrigamiPlaneGeometry } from './origami-plane-geometry';
-
-interface IMeshInstruction {
-  meshIds: number[];
-  axis: string[];
-  angle: number;
-}
-
-export type IVertices = {
-  [key in string]: number[];
-};
+import { IMeshInstruction, IVertices } from './origami-types';
 
 export class Origami extends THREE.Group {
 

@@ -4,8 +4,7 @@ import { Origami } from './models/origami/origami';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { gui } from '../helpers/gui';
 import { OrigamiTexture } from './models/origami/origami-texture';
-
-type SceneObjects = Origami | LightsManager;
+import { SceneObjects } from './scene-types';
 
 /**
  * Create scene, renderer, camera
