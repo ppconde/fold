@@ -9,5 +9,5 @@ for (const gui of guis) {
 
 export const gui = new GUI({
   title: 'Debug',
-  closeFolders: false,
+  closeFolders: true,
 });
