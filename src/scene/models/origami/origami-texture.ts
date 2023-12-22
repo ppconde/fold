@@ -13,12 +13,12 @@ export class OrigamiTexture {
     public static loadTexture(): ITexture {
         const textureLoader = new THREE.TextureLoader();
         // Textures obtained from https://freepbr.com/materials/wrinkled-paper1/
-        const map = textureLoader.load('/textures/paper/wrinkled-paper-albedo.png');
-        // const displacementMap = textureLoader.load('/textures/paper/wrinkled-paper-height.png');
-        const normalMap = textureLoader.load('/textures/paper/wrinkled-paper-normal-ogl.png');
-        const aoMap = textureLoader.load('/textures/paper/wrinkled-paper-ao.png');
-        const metalnessMap = textureLoader.load('/textures/paper/wrinkled-paper-metalness.png');
-        const roughnessMap = textureLoader.load('/textures/paper/wrinkled-paper-roughness.png');
+        const map = textureLoader.load('textures/paper/wrinkled-paper-albedo.png');
+        // const displacementMap = textureLoader.load('textures/paper/wrinkled-paper-height.png');
+        const normalMap = textureLoader.load('textures/paper/wrinkled-paper-normal-ogl.png');
+        const aoMap = textureLoader.load('textures/paper/wrinkled-paper-ao.png');
+        const metalnessMap = textureLoader.load('textures/paper/wrinkled-paper-metalness.png');
+        const roughnessMap = textureLoader.load('textures/paper/wrinkled-paper-roughness.png');
         map.wrapS = THREE.RepeatWrapping;
         map.wrapT = THREE.RepeatWrapping;
         map.repeat.set(1, 1);
