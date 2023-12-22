@@ -89,7 +89,6 @@ export class LightsManager {
     });
 
     helpers.forEach((helper, key) => {
-      console.log(helper.type, key);
       switch (helper.type) {
         case LightsTypesHelper.DIRECTIONAL_LIGHT:
           this.lightsMap.set(`Dir-${key + 1}-Helper`, helper);
@@ -104,8 +103,6 @@ export class LightsManager {
           break;
       }
     });
-
-    console.log(this.lightsMap);
   }
 
   /**
