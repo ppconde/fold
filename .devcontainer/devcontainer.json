@@ -8,6 +8,12 @@
   "updateContentCommand": "npm install",
   "postAttachCommand": "npm run dev",
   "shutdownAction": "stopContainer",
+  "portsAttributes": {
+    "5173": {
+      "label": "Application",
+      "onAutoForward": "openBrowserOnce"
+    }
+  },
   "customizations": {
     "vscode": {
       "settings": {
