@@ -1,14 +1,13 @@
-import { createClient } from '@supabase/supabase-js';
+import { SupabaseClient, createClient } from '@supabase/supabase-js';
 import { IOrigami } from '../types/origami-db.types';
 import { Database } from '../types/database';
 
 class SupabaseService {
 
-  /**
-   * Returns origami library from the database
-   */
-  public async getOrigamiLibrary(): Promise<IOrigami[]> {
-    const supabase = createClient<Database>(
+  private client: SupabaseClient;
+
+  constructor() {
+    this.client = createClient<Database>(
       import.meta.env.VITE_SUPABASE_URL,
       import.meta.env.VITE_SUPABASE_KEY,
       {
@@ -19,9 +18,14 @@ class SupabaseService {
         }
       }
     );
+  }
 
+  /**
+   * Returns origami library from the database
+   */
+  public async getOrigamiLibrary(): Promise<IOrigami[]> {
     try {
-      const { data } = await supabase.from('Origami').select('*');
+      const { data } = await this.client.from('Origami').select('*');
 
       return data?.length ? data : [];
     } catch (e) {
@@ -35,20 +39,8 @@ class SupabaseService {
    * @param name
    */
   public async getOrigamiImage(name: string) {
-    const supabase = createClient<Database>(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_KEY,
-      {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: false,
-        }
-      }
-    );
-
     try {
-      const { data } = supabase.storage
+      const { data } = this.client.storage
         .from('images')
         .getPublicUrl(`${name.toLowerCase()}.jpg`);
       return data.publicUrl;
