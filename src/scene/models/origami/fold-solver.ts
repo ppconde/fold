@@ -1,27 +1,39 @@
-import { MathHelpers } from '../helpers/math-helpers'
+import { MathHelpers } from '../../../js/scene/helpers/math-helpers'
+import { IOrigamiCoordinates } from './origami-solver';
+import { IMeshInstruction, IParseTranslation, IParseRotation } from './origami-types';
 
 export class FoldSolver {
 
-	static solveTranslation(points, faces, pattern, planes, instruction, translation, tolerance) {
+	static solveTranslation(origamiCoordinates: IOrigamiCoordinates, instruction: string, translation: IParseTranslation, tolerance: number): [IOrigamiCoordinates, IMeshInstruction] {
 		// Get 'from point', 'to point', and rotation sense
 		let { from, to, sense } = this.getFromFoldInstruction(['from', 'to', 'sense'], translation, instruction);
 
 		// Finds plane between from and to points
-		const plane = this.findPlaneBetween(points, from, to);
+		const plane = this.findPlaneBetween(origamiCoordinates.points, from, to);
 
 		// Intersects plane with origami, yielding intersection lines
 		// let intersection_lines = MathHelpers.findIntersectionBetweenPlaneAndOrigami(points, faces, plane);
 
-		return [0, 0, 0, 0, 0];
+		let meshInstruction;
+
+		// Set place-holder
+		meshInstruction = {meshIds: [0], axis: ['a','b'], angle: 90};
+
+		return [origamiCoordinates, meshInstruction];
 	}
 
-	static solveRotation(points, faces, pattern, planes, instruction, rotation, tolerance) {
-		return [0, 0, 0, 0, 0];
+	static solveRotation(origamiCoordinates: IOrigamiCoordinates, instruction: string, rotation: IParseRotation, tolerance: number): [IOrigamiCoordinates, IMeshInstruction] {
+
+		let meshInstruction;
+
+		// Set place-holder
+		meshInstruction = {meshIds: [0], axis: ['a','b'], angle: 90};
+		return [origamiCoordinates, meshInstruction];
 	}
 
     // Extract values from instruction
-	static getFromFoldInstruction(array, translation, step) {
-		const match = step.match(translation.regex);
+	static getFromFoldInstruction(array: Pick<IParseTranslation,'from'|'to'|'sense'>[], translation: IParseTranslation, instruction: string) {
+		const match = instruction.match(translation.regex);
 		return array.reduce((obj, val) => {
 			const valueForArray = translation[val].reduce((acc, element) => {
 				if (match[element] !== undefined) {
