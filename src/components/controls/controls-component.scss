@@ -1,0 +1,45 @@
+@use "../../scss/colors.scss" as colors;
+
+$step-size: 13px;
+$transition-time: 0.3s;
+
+.controls-wrapper {
+  position: absolute;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  .controls {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .control {
+    display: inline-block;
+    padding: 10px 10px;
+    border: none;
+    background-color: transparent;
+    color: colors.$secondary-color;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: color $transition-time ease-in-out;
+    width: 50px;
+
+    &:hover {
+      color: colors.$primary-color;
+    }
+
+    &:not(:hover) {
+      color: colors.$secondary-color;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+}

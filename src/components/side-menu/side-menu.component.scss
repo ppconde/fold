@@ -1,0 +1,173 @@
+@use "../../scss/colors.scss" as colors;
+
+.side-menu {
+  .settings {
+    h2 {
+      margin-bottom: 30px;
+    }
+
+    .resizer {
+      position: relative;
+    }
+
+    .boxes {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: row;
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .a4 {
+      width: 98px;
+      height: 139px;
+      border: 1px solid colors.$secondary-color;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      margin-right: 5px;
+    }
+
+    .custom {
+      width: 86px;
+      height: 48px;
+      border: 1px solid colors.$secondary-color;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .square {
+      height: 86px;
+      width: 86px;
+      border: 1px solid colors.$secondary-color;
+      background-color: #adadad;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .a4,
+    .custom,
+    .square {
+      font-family: "Roboto", sans-serif;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .a4,
+    .custom {
+      color: colors.$quartiary-color;
+    }
+
+    .square {
+      color: white;
+    }
+
+    .label-W {
+      position: absolute;
+      right: 22%;
+      bottom: 145px;
+    }
+
+    .label-H {
+      position: absolute;
+      right: 3%;
+      bottom: 105px;
+    }
+
+    .label-W,
+    .label-H {
+      display: flex;
+      color: colors.$quartiary-color;
+      width: 80px;
+
+      .text {
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      input {
+        color: colors.$quartiary-color;
+        border: none;
+        border-bottom: 2px solid white;
+        background-color: unset;
+        width: 40px;
+      }
+    }
+  }
+
+  .settings,
+  .instructions {
+    top: 0;
+    right: 0;
+  }
+
+  .library {
+    top: 0;
+    left: 0;
+
+    .title {
+      color: colors.$secondary-color;
+    }
+
+    .origami-previews {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-auto-rows: 120px;
+      grid-gap: 10px;
+      margin-top: 26px;
+    }
+
+    .no-origami {
+      display: flex;
+      color: colors.$secondary-color;
+      justify-content: center;
+      margin-top: 26px;
+    }
+  }
+
+  .instructions {
+    .content {
+      overflow: hidden;
+      font-family: "Roboto", sans-serif;
+      font-size: 18px;
+      color: colors.$secondary-color;
+      width: 400px;
+      padding: 0 30px;
+    }
+  }
+
+  .share {
+    position: absolute;
+    background-color: colors.$tertiary-color;
+    bottom: 0;
+    width: 100%;
+    height: 100px;
+  }
+
+  .settings,
+  .library,
+  .instructions {
+    position: absolute;
+    background-color: colors.$tertiary-color;
+    height: 100%;
+    padding-top: 170px;
+    width: 400px;
+  }
+}
