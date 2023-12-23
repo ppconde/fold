@@ -56,7 +56,6 @@ export class FoldSolver {
 		}else{
 			throw new Error('The instruction is not valid. Try again!')
 		}
-
 		const plane_vector = MathHelpers.findVectorBetweenPoints(from_point, to_point);
 		const plane_point = MathHelpers.addVectorToPoint(from_point, MathHelpers.multiplyArray(plane_vector, 0.5));
 		const plane_versor = MathHelpers.findVectorVersor(plane_vector);
