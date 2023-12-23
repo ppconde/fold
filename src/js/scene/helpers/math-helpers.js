@@ -53,10 +53,6 @@ export class MathHelpers {
 	static projectPointOntoLine(a,b,c){
 		const ab = this.findVectorBetweenPoints(a,b);
 		const ac = this.findVectorBetweenPoints(a,c);
-		// return a + this.dot(ac,ab) / this.dot(ab,ab) * ab;
 		return this.addArray(a,this.multiplyArray(ab,this.dot(ac,ab) / this.dot(ab,ab)));
 	}
-
-
-
 }
