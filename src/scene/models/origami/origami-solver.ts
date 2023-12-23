@@ -2,13 +2,13 @@ import * as THREE from 'three';
 import { FoldSolver } from './fold-solver'
 import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices } from './origami-types';
 
-type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>,THREE.MeshStandardMaterial>;
+type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>;
 
 export interface IOrigamiCoordinates {
 	points: IVertices,
 	faces: string[][],
 	pattern: IVertices,
-	faceOrder: Map<number,number>
+	faceOrder: Map<number, number>
 };
 
 export class OrigamiSolver {
@@ -19,12 +19,12 @@ export class OrigamiSolver {
 
 		// Set origami coordinates
 		let origamiCoordinates: IOrigamiCoordinates = {
-			points: {'a': [0,0,0], 'b':[length,0,0], 'c':[length,width,0], 'd':[0,width,0]},
-			faces: [['a','b','c','d']],
-			pattern: {'a': [0,0], 'b':[length,0], 'c':[length,width], 'd':[0,width]},
+			points: { 'a': [0, 0, 0], 'b': [length, 0, 0], 'c': [length, width, 0], 'd': [0, width, 0] },
+			faces: [['a', 'b', 'c', 'd']],
+			pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width] },
 			faceOrder: new Map()
 		};
-		origamiCoordinates.faces.forEach((_, i) => origamiCoordinates.faceOrder.set(i,i));  // Check if a MAP is the best type to represent the face order
+		origamiCoordinates.faces.forEach((_, i) => origamiCoordinates.faceOrder.set(i, i));  // Check if a MAP is the best type to represent the face order
 
 		// Set parsing instructions
 		const translation = { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] };
@@ -41,12 +41,12 @@ export class OrigamiSolver {
 			// Execute translation
 			if (this.isInstruction(instruction, translation)) {
 				[origamiCoordinates, meshInstruction] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation, tolerance)
-			
-			// Execute rotation
+
+				// Execute rotation
 			} else if (this.isInstruction(instruction, rotation)) {
 				[origamiCoordinates, meshInstruction] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation, tolerance);
-			
-			// In the case it's neither, thow an error
+
+				// In the case it's neither, thow an error
 			} else {
 				throw new Error('The instruction is neither a translation or a rotation!');
 			}
@@ -60,12 +60,12 @@ export class OrigamiSolver {
 	}
 
 
-    public static isInstruction(instruction: string, type: IParseTranslation|IParseRotation) {
+	public static isInstruction(instruction: string, type: IParseTranslation | IParseRotation) {
 		return instruction.match(type.regex) !== null;
 	}
 
-	public static createFaceMeshes(faces: string[][], pattern: IVertices): IOrigamiMesh[]{
-		return [new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshStandardMaterial({color:0xFF0000}))];
+	public static createFaceMeshes(faces: string[][], pattern: IVertices): IOrigamiMesh[] {
+		return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
 	}
 
 }
