@@ -9,7 +9,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.VITE_SUPABASE_KEY }}
       PROJECT_REF: dvwjchfzwfhxuqlixomh
     steps:
       - uses: actions/checkout@v2
@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v2.1.5
         with:
-          node-version: 16
+          node-version: 20
       - run: npm run update-types
       - name: check for file changes
         id: git_status
