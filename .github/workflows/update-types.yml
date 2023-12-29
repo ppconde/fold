@@ -9,7 +9,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     env:
-      SUPABASE_ACCESS_TOKEN: ${{ secrets.VITE_SUPABASE_KEY }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
       PROJECT_REF: dvwjchfzwfhxuqlixomh
     steps:
       - uses: actions/checkout@v2
