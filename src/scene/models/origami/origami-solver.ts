@@ -32,7 +32,7 @@ export class OrigamiSolver {
 
 		// Create mesh instructions
 		let meshInstruction: IMeshInstruction;
-		let mesh_instructions: IMeshInstruction[] = [];
+		const mesh_instructions: IMeshInstruction[] = [];
 
 		// Read fold instructions
 		for (let i = 0; i < foldInstructions.length; i++) {

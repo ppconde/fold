@@ -1,6 +1,6 @@
-import { MathHelpers } from '../../../js/scene/helpers/math-helpers'
+import { MathHelpers } from './math-helpers';
 import { IOrigamiCoordinates } from './origami-solver';
-import { IMeshInstruction, IParseTranslation, IParseRotation } from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices } from './origami-types';
 
 export class FoldSolver {
 
@@ -27,23 +27,33 @@ export class FoldSolver {
 	}
 
 	// Extract values from instruction
-	public static getFromFoldInstruction(array: (keyof Pick<IParseTranslation, 'from' | 'to' | 'sense'>)[], translation: IParseTranslation, instruction: string) {
+	public static getFromFoldInstruction(
+		array: TranslationKeys[],
+		translation: IParseTranslation,
+		instruction: string
+	): IParseTranslation {
 		const match = instruction.match(translation.regex);
-		return array.reduce((obj, val) => {
-			const valueForArray = translation[val].reduce((acc, element) => {
-				if (match?.[element] !== undefined) {
-					acc.push(match[element]);
+
+		return array.reduce((obj, transition) => {
+			const valueForArray = translation[transition].reduce((acc, quantity) => {
+				if (match?.[quantity]) {
+					acc.push(match[quantity]);
 				}
 				return acc;
-			}, []);
-			return { ...obj, [val]: valueForArray };
-		}, {});
+			}, [] as string[]);
+			return { ...obj, [transition]: valueForArray };
+		}, {} as IParseTranslation);
 	}
 
-	public static findPlaneBetween(points, from, to) {
+
+	public static findPlaneBetween(points: IVertices, from: number[], to: number[]) {
 		let from_point;
 		let to_point;
 
+		/**
+		 * @todo - not sure if typing is correct because of the following
+		 * Type 'number[]' cannot be used as an index type.ts(2538)
+		 */
 		if (from.length == 1 && to.length == 1) {
 			from_point = points[from];
 			to_point = points[to];

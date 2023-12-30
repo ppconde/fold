@@ -25,3 +25,4 @@ export interface IParseRotation {
     angle: number[];
 }
 
+export type TranslationKeys = keyof Pick<IParseTranslation, 'from' | 'to' | 'sense'>;
