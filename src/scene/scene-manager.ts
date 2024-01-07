@@ -2,9 +2,9 @@ import * as THREE from 'three';
 import { LightsManager } from './lights/lights';
 import { Origami } from './models/origami/origami';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { gui } from '../helpers/gui';
 import { OrigamiTexture } from './models/origami/origami-texture';
 import { SceneObjects } from './scene-types';
+import { debug } from '../helpers/debug';
 
 /**
  * Create scene, renderer, camera
@@ -42,8 +42,11 @@ export class SceneManager {
     this.setRenderer();
     this.setSceneObjects();
     this.setCamera();
-    this.addDebugCube();
-    this.setAxisHelper();
+    if (debug.active) {
+      this.addDebugCube();
+      this.setAxisHelper();
+      this.setCameraHelper();
+    }
   }
 
   /**
@@ -71,10 +74,6 @@ export class SceneManager {
     this.camera = new THREE.PerspectiveCamera(65, 2, 0.1, 500);
     this.camera.aspect = ratio;
     this.camera.position.set(0, 0, 20);
-    const cameraFolder = gui.addFolder('Camera');
-    cameraFolder.add(this.camera.position, 'x', -50, 50, 1);
-    cameraFolder.add(this.camera.position, 'y', -50, 50, 1);
-    cameraFolder.add(this.camera.position, 'z', -50, 50, 1);
 
     // Creates orbit controls object with same view direction vector as the camera
     this.controls = new OrbitControls(this.camera, this.canvas);
@@ -86,6 +85,16 @@ export class SceneManager {
 
     this.controls.target = lookAtVec;
     this.camera.lookAt(lookAtVec);
+  }
+
+  /**
+   * Adds a debug interface for the camera
+   */
+  private setCameraHelper(): void {
+    const cameraFolder = debug.ui!.addFolder('Camera');
+    cameraFolder.add(this.camera.position, 'x', -50, 50, 1);
+    cameraFolder.add(this.camera.position, 'y', -50, 50, 1);
+    cameraFolder.add(this.camera.position, 'z', -50, 50, 1);
   }
 
   /**
@@ -109,7 +118,7 @@ export class SceneManager {
     );
     debugCube.visible = false;
     this.scene.add(debugCube);
-    const cubeFolder = gui.addFolder('Cube');
+    const cubeFolder = debug.ui!.addFolder('Cube');
     cubeFolder.add(debugCube, 'visible');
   }
 
@@ -120,7 +129,7 @@ export class SceneManager {
     const axesHelper = new THREE.AxesHelper(5);
     axesHelper.visible = false;
     this.scene.add(axesHelper);
-    const axesFolder = gui.addFolder('Axes');
+    const axesFolder = debug.ui!.addFolder('Axes');
     axesFolder.add(axesHelper, 'visible');
   }
 
