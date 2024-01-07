@@ -40,6 +40,7 @@ export class OrigamiSolver {
 
 				// In the case it's neither, thow an error
 			} else {
+				console.log(1);
 				throw new Error('The instruction is neither a translation nor a rotation!');
 			}
 

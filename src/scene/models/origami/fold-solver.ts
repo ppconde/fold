@@ -1,3 +1,4 @@
+import { join } from 'path/posix';
 import { MathHelpers } from './math-helpers';
 import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane } from './origami-types';
 
@@ -5,13 +6,13 @@ export class FoldSolver {
 
 	public static solveTranslation(origamiCoordinates: IOrigamiCoordinates, instruction: string, translation: IParseTranslation, tolerance: number): [IOrigamiCoordinates, IMeshInstruction] {
 		// Get 'from point', 'to point', and rotation sense
-		let { from, to, sense } = this.getFromFoldInstruction(['from', 'to', 'sense'], translation, instruction);
+		const { from, to, sense } = this.getFromFoldInstruction(['from', 'to', 'sense'], translation, instruction);
 
 		// Finds plane between from and to points
 		const plane = this.findPlaneBetween(origamiCoordinates.points, from, to);
 
 		// Intersects plane with origami, yielding intersection lines
-		// let intersection_lines = MathHelpers.findIntersectionBetweenPlaneAndOrigami(points, faces, plane);
+		let intersection_lines = this.findIntersectionBetweenPlaneAndOrigami(origamiCoordinates, plane);
 
 		// Set place-holder
 		const meshInstruction = { meshIds: [0], axis: ['a', 'b'], angle: 90 };
@@ -77,5 +78,30 @@ export class FoldSolver {
 		const plane_versor = MathHelpers.findVectorVersor(plane_vector);
 		const plane = { point: plane_point, versor: plane_versor };
 		return plane;
+	}
+
+	public static findIntersectionBetweenPlaneAndOrigami(origamiCoordinates: IOrigamiCoordinates, plane: IPlane) {
+
+		let intersectionPoints = [];
+
+		for (let i = 0; i < origamiCoordinates.faces.length; i++){
+
+			const face = origamiCoordinates.faces[i];
+
+			for (let j = 0; j < face.length; j++) {
+
+				const edge = [face[j], face[j % face.length]];
+
+				const line = ;  // Line3
+				const plane = ;  // Plane3
+
+				const intersectionPoint = plane.( line : Line3, target : Vector3 ) : Vector3
+
+				intersectionPoints.push({face_id: i, edge: edge, coord: intersectionPoint});
+
+				//.intersectLine ( line : Line3, target : Vector3 ) : Vector3
+				// https://gamedev.stackexchange.com/questions/72528/how-can-i-project-a-3d-point-onto-a-3d-line
+			}
+		}
 	}
 };
