@@ -1,8 +1,11 @@
 import * as THREE from 'three';
 import { Controller } from '../../controllers/controller';
-import { MathHelper } from '../../helpers/math-helper';
 import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
+import { MathHelpers } from './math-helpers';
+import { OrigamiSolver } from './origami-solver';
+import foldInstructionsText from '../instructions/test-1.txt';
+
 
 export class Origami extends THREE.Group {
 
@@ -47,21 +50,28 @@ export class Origami extends THREE.Group {
   /**
    * Paper height
    */
-  private height: number;
+  private length: number;
+
+  private foldInstructionsText: string;
 
   private controller: Controller = new Controller();
 
-  constructor(scene: THREE.Scene, width: number, height: number) {
+  constructor(scene: THREE.Scene, width: number, length: number) {
     super();
     this.scene = scene;
     this.width = width;
-    this.height = height;
+    this.length = length;
+    this.foldInstructionsText = foldInstructionsText;
 
     this.vertices = this.generateVertices();
 
-    this.meshes = this.generateMeshes();
+    // this.meshes = this.generateMeshes();
 
-    this.meshesRotation = this.meshes.map((mesh) => mesh.position);
+    const foldInstructions = this.getFoldInstructions();
+    
+    [this.meshes, this.meshInstructions] = OrigamiSolver.solveOrigami(width, length, foldInstructions);
+
+    this.meshesRotation = this.meshes.map((mesh) => mesh.position);  // Gustavo: What is meshesRotation?
 
     /**
      * Adds the meshes to the group
@@ -74,20 +84,24 @@ export class Origami extends THREE.Group {
     this.scene.add(...this.meshes);
   }
 
+  private getFoldInstructions(): string[] {
+    return this.foldInstructionsText.split('\n');
+  }
+
   /**
    * Generates the vertices of the origami
    */
   private generateVertices(): IVertices {
-    return MathHelper.shiftPoints(
+    return MathHelpers.shiftPoints(
       {
         a: [0, 0, 0],
-        b: [0, this.height, 0],
-        c: [this.width / 2, this.height / 2, 0],
-        d: [this.width, this.height, 0],
+        b: [0, this.length, 0],
+        c: [this.width / 2, this.length / 2, 0],
+        d: [this.width, this.length, 0],
         e: [this.width, 0, 0],
       },
       -this.width / 2,
-      -this.height / 2,
+      -this.length / 2,
     );
   }
 

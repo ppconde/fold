@@ -1,15 +1,7 @@
 import * as THREE from 'three';
 import { FoldSolver } from './fold-solver'
-import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices } from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices, IOrigamiCoordinates, IOrigamiMesh} from './origami-types';
 
-type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>;
-
-export interface IOrigamiCoordinates {
-	points: IVertices,
-	faces: string[][],
-	pattern: IVertices,
-	faceOrder: Map<number, number>
-};
 
 export class OrigamiSolver {
 
@@ -27,8 +19,8 @@ export class OrigamiSolver {
 		origamiCoordinates.faces.forEach((_, i) => origamiCoordinates.faceOrder.set(i, i));  // Check if a MAP is the best type to represent the face order
 
 		// Set parsing instructions
-		const translation = { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] };
-		const rotation = { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)/, from: [2, 3, 9], axis: [5, 6, 11, 12], sense: [7, 13], angle: [8, 14] };
+		const translation: IParseTranslation = { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] };
+		const rotation: IParseRotation = { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)/, from: [2, 3, 9], axis: [5, 6, 11, 12], sense: [7, 13], angle: [8, 14] };
 
 		// Create mesh instructions
 		let meshInstruction: IMeshInstruction;
@@ -48,7 +40,7 @@ export class OrigamiSolver {
 
 				// In the case it's neither, thow an error
 			} else {
-				throw new Error('The instruction is neither a translation or a rotation!');
+				throw new Error('The instruction is neither a translation nor a rotation!');
 			}
 
 			// Add mesh instruction
@@ -58,7 +50,6 @@ export class OrigamiSolver {
 		const meshes = this.createFaceMeshes(origamiCoordinates.faces, origamiCoordinates.pattern);
 		return [meshes, mesh_instructions];
 	}
-
 
 	public static isInstruction(instruction: string, type: IParseTranslation | IParseRotation) {
 		return instruction.match(type.regex) !== null;

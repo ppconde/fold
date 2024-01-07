@@ -1,10 +1,13 @@
+import { IVertices } from './origami-types';
+
 export class MathHelpers {
   /**
    * Returns an array of elements from a, indexed by b
    * @param a
    * @param b 
    */
-  public static indexArray(a: number[], b: number[]): number[] {
+
+  public static indexArray(a: Record<string, number[]>, b: string[]): number[][] {
     return b.map((element) => a[element]);
   }
 
@@ -109,4 +112,17 @@ export class MathHelpers {
       this.multiplyArray(ab, this.dot(ac, ab) / this.dot(ab, ab))
     );
   }
+
+    /**
+   * Shifts points by given values - used to center a given shape
+   * @param points 
+   * @param shiftX 
+   * @param shiftY 
+   */
+    public static shiftPoints(points: IVertices, shiftX: number, shiftY: number): IVertices {
+      return Object.keys(points).reduce((acc, key) => {
+        acc[key] = [points[key][0] + shiftX, points[key][1] + shiftY, 0];
+        return acc;
+      }, {} as IVertices);
+    }
 }

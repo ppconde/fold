@@ -26,3 +26,24 @@ export interface IParseRotation {
 }
 
 export type TranslationKeys = keyof Pick<IParseTranslation, 'from' | 'to' | 'sense'>;
+
+export interface TranslationValues {
+    from: string[];
+    to: string[];
+    sense: 'V'|'M';
+}
+
+export interface IOrigamiCoordinates {
+	points: IVertices,
+	faces: string[][],
+	pattern: IVertices,
+	faceOrder: Map<number, number>
+};
+
+export type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>;
+
+
+export interface IPlane {
+    point: number[],
+    versor: number[];
+}

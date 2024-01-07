@@ -1,6 +1,5 @@
 import { MathHelpers } from './math-helpers';
-import { IOrigamiCoordinates } from './origami-solver';
-import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices } from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane } from './origami-types';
 
 export class FoldSolver {
 
@@ -31,7 +30,7 @@ export class FoldSolver {
 		array: TranslationKeys[],
 		translation: IParseTranslation,
 		instruction: string
-	): IParseTranslation {
+	): TranslationValues {
 		const match = instruction.match(translation.regex);
 
 		return array.reduce((obj, transition) => {
@@ -42,11 +41,11 @@ export class FoldSolver {
 				return acc;
 			}, [] as string[]);
 			return { ...obj, [transition]: valueForArray };
-		}, {} as IParseTranslation);
+		}, {} as TranslationValues);
 	}
 
 
-	public static findPlaneBetween(points: IVertices, from: number[], to: number[]) {
+	public static findPlaneBetween(points: IVertices, from: string[], to: string[]): IPlane {
 		let from_point;
 		let to_point;
 
@@ -55,11 +54,11 @@ export class FoldSolver {
 		 * Type 'number[]' cannot be used as an index type.ts(2538)
 		 */
 		if (from.length == 1 && to.length == 1) {
-			from_point = points[from];
-			to_point = points[to];
+			from_point = points[from[0]];
+			to_point = points[to[0]];
 
 		} else if (from.length == 1 && to.length == 2) {
-			from_point = points[from];
+			from_point = points[from[0]];
 			const to_points = MathHelpers.indexArray(points, to);
 			const to_versor = MathHelpers.findVersorBetweenPoints(to_points[0], to_points[1]);
 			const from_norm = MathHelpers.findDistanceBetweenPoints(from_point, to_points[0]);
@@ -76,7 +75,7 @@ export class FoldSolver {
 		const plane_vector = MathHelpers.findVectorBetweenPoints(from_point, to_point);
 		const plane_point = MathHelpers.addVectorToPoint(from_point, MathHelpers.multiplyArray(plane_vector, 0.5));
 		const plane_versor = MathHelpers.findVectorVersor(plane_vector);
-		const plane = { plane_point, plane_versor };
+		const plane = { point: plane_point, versor: plane_versor };
 		return plane;
 	}
 };
