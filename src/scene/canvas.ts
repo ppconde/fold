@@ -8,6 +8,7 @@ export class Canvas {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.sceneManager = new SceneManager(canvas);
+    this.resizeCanvas = this.resizeCanvas.bind(this);
     this.init();
   }
 

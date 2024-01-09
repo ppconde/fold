@@ -1,8 +1,8 @@
+import { ControllerState } from '../scene/controllers/controller';
+
 export interface IAnimationControls {
-    previousTime: number;
-    isPlaying: boolean;
-    isStopped: boolean;
-    currentStep: number;
-    totalSteps: number;
-    playDisabled: boolean;
-  }
+  previousTime: number;
+  currentStep: number;
+  totalSteps: number;
+  currentState: ControllerState;
+}

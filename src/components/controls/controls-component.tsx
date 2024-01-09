@@ -35,10 +35,7 @@ export const ControlsComponent = () => {
     // Clean up the event listeners when the component unmounts
     return () => {
       document.removeEventListener('controller:pause', handlePause.bind(this));
-      document.removeEventListener(
-        'controller:play',
-        handleIsEnabled.bind(this)
-      );
+      document.removeEventListener('controller:play', handleIsEnabled.bind(this));
     };
   }, []);
 
