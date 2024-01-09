@@ -33,10 +33,7 @@ export const App = () => {
      * Initialize the app
      */
     const init = async () => {
-      const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-      if (canvas) {
-        new Canvas(canvas);
-      }
+      new Canvas(document.getElementById('canvas') as HTMLCanvasElement);
       try {
         const library = await supabaseService.getOrigamiLibrary();
         if (library.length) {
