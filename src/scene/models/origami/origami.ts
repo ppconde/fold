@@ -4,7 +4,9 @@ import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
-import foldInstructionsText from '../../../instructions/test-1.txt';
+import foldInstructionsText from '../../../instructions/test-1.text';
+
+
 
 export class Origami extends THREE.Group {
 

@@ -1,4 +1,5 @@
-import { IVertices } from './origami-types';
+import { IVertices, IPlane } from './origami-types';
+import * as THREE from 'three';
 
 export class MathHelpers {
   /**
@@ -10,6 +11,21 @@ export class MathHelpers {
   public static indexArray(a: Record<string, number[]>, b: string[]): number[][] {
     return b.map((element) => a[element]);
   }
+
+  public static checkIfArrayIsEmpty(a: Array<any>) {
+    return (Array.isArray(a) && a.length);
+  }
+
+  public static findIntersectionBetweenLineAndPlane(lineSegment: Record<string, number[]>, plane: IPlane): [boolean, number[]] {
+    const lineTHREE = new THREE.Line3(new THREE.Vector3(...lineSegment.startPoint), new THREE.Vector3(...lineSegment.endPoint));  // Line3
+    const planeTHREE = new THREE.Plane();
+    planeTHREE.setFromNormalAndCoplanarPoint(new THREE.Vector3(...plane.versor), new THREE.Vector3(...plane.point));
+    const intersectionPointTHREE = new THREE.Vector3();
+    const planeIntersectsLine = planeTHREE.intersectsLine(lineTHREE);
+    planeTHREE.intersectLine(lineTHREE, intersectionPointTHREE);
+    return [planeIntersectsLine, intersectionPointTHREE.toArray()];
+  }
+
 
   /**
    * Returns the product of an array and a constant

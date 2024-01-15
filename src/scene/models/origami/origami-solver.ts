@@ -11,9 +11,9 @@ export class OrigamiSolver {
 
 		// Set origami coordinates
 		let origamiCoordinates: IOrigamiCoordinates = {
-			points: { 'a': [0, 0, 0], 'b': [length, 0, 0], 'c': [length, width, 0], 'd': [0, width, 0] },
-			faces: [['a', 'b', 'c', 'd']],
-			pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width] },
+			points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
+			faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
+			pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
 			faceOrder: new Map()
 		};
 		origamiCoordinates.faces.forEach((_, i) => origamiCoordinates.faceOrder.set(i, i));  // Check if a MAP is the best type to represent the face order

@@ -102,7 +102,7 @@ export class SceneManager {
    */
   private setSceneObjects(): void {
     this.sceneObjects.set('LightsManager', new LightsManager(this.scene));
-    this.sceneObjects.set('Origami', new Origami(this.scene, 12.5, 9));
+    this.sceneObjects.set('Origami', new Origami(this.scene, 9, 12.5));
   }
 
   /**

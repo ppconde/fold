@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
 import svgr from 'vite-plugin-svgr';
+import plainText from 'vite-plugin-plain-text';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -10,6 +11,7 @@ export default defineConfig({
       // A minimatch pattern, or array of patterns, which specifies the files in the build the plugin should include.
       include: '**/*.svg?react',
     }),
+    plainText(['**/*.text'], { namedExport: false }),
   ],
   assetsInclude: ['**/*.fold', '**/*.txt'],
   server: {

@@ -2,6 +2,7 @@ import { join } from 'path/posix';
 import { MathHelpers } from './math-helpers';
 import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane } from './origami-types';
 
+
 export class FoldSolver {
 
 	public static solveTranslation(origamiCoordinates: IOrigamiCoordinates, instruction: string, translation: IParseTranslation, tolerance: number): [IOrigamiCoordinates, IMeshInstruction] {
@@ -82,26 +83,26 @@ export class FoldSolver {
 
 	public static findIntersectionBetweenPlaneAndOrigami(origamiCoordinates: IOrigamiCoordinates, plane: IPlane) {
 
+		// Find intersection points
 		let intersectionPoints = [];
-
 		for (let i = 0; i < origamiCoordinates.faces.length; i++){
-
 			const face = origamiCoordinates.faces[i];
-
 			for (let j = 0; j < face.length; j++) {
-
-				const edge = [face[j], face[j % face.length]];
-
-				const line = ;  // Line3
-				const plane = ;  // Plane3
-
-				const intersectionPoint = plane.( line : Line3, target : Vector3 ) : Vector3
-
-				intersectionPoints.push({face_id: i, edge: edge, coord: intersectionPoint});
-
-				//.intersectLine ( line : Line3, target : Vector3 ) : Vector3
-				// https://gamedev.stackexchange.com/questions/72528/how-can-i-project-a-3d-point-onto-a-3d-line
+				const edge = [face[j], face[(j + 1) % face.length]];
+				const lineSegment = {startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]]};
+				const [planeIntersectsLine, intersectionPoint] = MathHelpers.findIntersectionBetweenLineAndPlane(lineSegment, plane);
+				if (planeIntersectsLine){
+					intersectionPoints.push({face_id: i, edge: edge, coord: intersectionPoint});
+				}
 			}
 		}
+
+		// Find intersection lines
+		
+
+
+
+
+
 	}
 };
