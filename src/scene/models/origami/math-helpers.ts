@@ -2,6 +2,22 @@ import { IVertices, IPlane } from './origami-types';
 import * as THREE from 'three';
 
 export class MathHelpers {
+
+
+  public static checkIfArraysAreEqual(a:Array<any>, b:Array<any>){
+      // WARNING: arrays must not contain {objects} or behavior may be undefined; a better (more complicated) option might be presented here:
+      // https://stackoverflow.com/questions/3115982/how-to-check-if-two-arrays-are-equal-with-javascript
+      return JSON.stringify(a)==JSON.stringify(b);
+  }
+
+
+  public static checkIfArrayContainsArray(a:Array<any>, b:Array<any>){
+    const s1 = JSON.stringify(a);
+    const s2 = JSON.stringify(b);
+    const i = s1.indexOf(s2);
+    return i != -1;
+  }
+
   /**
    * Returns an array of elements from a, indexed by b
    * @param a

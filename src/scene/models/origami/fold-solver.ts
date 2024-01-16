@@ -81,28 +81,75 @@ export class FoldSolver {
 		return plane;
 	}
 
-	public static findIntersectionBetweenPlaneAndOrigami(origamiCoordinates: IOrigamiCoordinates, plane: IPlane) {
+	// public static findIntersectionBetweenPlaneAndOrigami(origamiCoordinates: IOrigamiCoordinates, plane: IPlane) {
 
-		// Find intersection points
+	// 	// Find intersection points
+	// 	let intersectionPoints = [];
+	// 	for (let i = 0; i < origamiCoordinates.faces.length; i++){
+	// 		const face = origamiCoordinates.faces[i];
+	// 		for (let j = 0; j < face.length; j++) {
+	// 			const edge = [face[j], face[(j + 1) % face.length]];
+	// 			const lineSegment = {startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]]};
+	// 			const [planeIntersectsLine, intersectionPoint] = MathHelpers.findIntersectionBetweenLineAndPlane(lineSegment, plane);
+	// 			if (planeIntersectsLine){
+	// 				intersectionPoints.push({face_id: i, edge: edge, coord: intersectionPoint});
+	// 			}
+	// 		}
+	// 	}
+
+	// 	debugger;
+
+	// 	// Find intersection lines
+	// }
+
+	public static findIntersectionBetweenPlaneAndOrigami(origamiCoordinates: IOrigamiCoordinates, plane: IPlane) {
+		const edges = this.findEdgesFromFaces(origamiCoordinates.faces);
 		let intersectionPoints = [];
-		for (let i = 0; i < origamiCoordinates.faces.length; i++){
-			const face = origamiCoordinates.faces[i];
-			for (let j = 0; j < face.length; j++) {
-				const edge = [face[j], face[(j + 1) % face.length]];
-				const lineSegment = {startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]]};
-				const [planeIntersectsLine, intersectionPoint] = MathHelpers.findIntersectionBetweenLineAndPlane(lineSegment, plane);
-				if (planeIntersectsLine){
-					intersectionPoints.push({face_id: i, edge: edge, coord: intersectionPoint});
-				}
+		for (const edge of edges) {
+			const lineSegment = {startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]]};
+			const [planeIntersectsLine, intersectionPoint] = MathHelpers.findIntersectionBetweenLineAndPlane(lineSegment, plane);
+			if (planeIntersectsLine){
+				intersectionPoints.push({edge: edge, coord: intersectionPoint});
 			}
 		}
-
+		debugger;
 		// Find intersection lines
-		
 
-
-
+		// Pick first intersection point randomly, to define a direction, and then project everyhing, sort, and run algorithm to identify intersection lines
 
 
 	}
+
+
+	public static findEdgesFromFaces(faces: string[][]){
+		const edges = [];
+		for (const face of faces) {
+			for (let j = 0; j < face.length; j++){
+				const edge = [face[j], face[(j + 1) % face.length]];
+				if (!MathHelpers.checkIfArrayContainsArray(edges, edge)){
+					edges.push(edge);
+				}
+			}
+		}
+		return edges;
+	}
+
+	public static findFacesfromEdges(faces: string[][], edges:string[][]){
+		const faceIds = [];
+		for (const edge of edges){
+			for (let i = 0; i < faces.length; i++) {
+				const face = faces[i];
+				for (let j = 0; j < face.length; j++){
+					const faceEdge = [face[j], face[(j + 1) % face.length]];
+					if (!MathHelpers.checkIfArraysAreEqual(faceEdge, edge)){
+						faceIds.push(i);
+						break;
+					}
+				}
+			}
+		}
+		return faceIds;
+	}
+
+
 };

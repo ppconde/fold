@@ -28,7 +28,7 @@
   "include": [
     "src",
     "declarations",
-    "src/types"
+    "src/types",
   ],
   "references": [
     {

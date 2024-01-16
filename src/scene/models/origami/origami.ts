@@ -4,8 +4,8 @@ import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
-import foldInstructionsText from '../../../instructions/test-1.text';
-
+// @ts-ignore  
+//import foldInstructionsText from "../../../instructions/test-1.text"
 
 
 export class Origami extends THREE.Group {
@@ -62,7 +62,8 @@ export class Origami extends THREE.Group {
     this.scene = scene;
     this.width = width;
     this.length = length;
-    this.foldInstructionsText = foldInstructionsText;
+    // this.foldInstructionsText = foldInstructionsText;
+    this.foldInstructionsText = "a to e V\nc around [e,b] M";
 
     this.vertices = this.generateVertices();
 
