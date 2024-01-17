@@ -61,14 +61,14 @@ export class FoldSolver {
 
 		} else if (from.length == 1 && to.length == 2) {
 			from_point = points[from[0]];
-			const to_points = MathHelpers.indexArray(points, to);
+			const to_points = MathHelpers.indexObject(points, to);
 			const to_versor = MathHelpers.findVersorBetweenPoints(to_points[0], to_points[1]);
 			const from_norm = MathHelpers.findDistanceBetweenPoints(from_point, to_points[0]);
 			to_point = MathHelpers.addVectorToPoint(to_points[0], MathHelpers.multiplyArray(to_versor, from_norm));
 
 		} else if (from.length == 2 && to.length == 2) {
 			from_point = points[from[0]];
-			const to_points = MathHelpers.indexArray(points, to);
+			const to_points = MathHelpers.indexObject(points, to);
 			to_point = MathHelpers.projectPointOntoLine(to_points[0], to_points[1], from_point);
 
 		} else {
@@ -112,10 +112,35 @@ export class FoldSolver {
 				intersectionPoints.push({edge: edge, coord: intersectionPoint});
 			}
 		}
-		debugger;
 		// Find intersection lines
 
 		// Pick first intersection point randomly, to define a direction, and then project everyhing, sort, and run algorithm to identify intersection lines
+		const firstIntersectionPoint = intersectionPoints[0];
+		const [firstIntersectedFaces, _] = this.findFacesfromEdges(origamiCoordinates.faces, [firstIntersectionPoint.edge]);
+		let secondIntersectionPoint = undefined;
+		for (let i = 1; i < intersectionPoints.length; i++){
+			const [faces, _] = this.findFacesfromEdges(origamiCoordinates.faces, [intersectionPoints[i].edge]);
+			if (MathHelpers.checkIfArrayContainsArray(faces, firstIntersectedFaces)){
+				secondIntersectionPoint = intersectionPoints[i];
+				break;
+			}
+		}
+
+		if (secondIntersectionPoint === undefined){
+			throw new Error('A second intersection point could not be found!');
+		}
+
+		// Use MathHelpers.projectPointOntoLine() to project all points onto line defined by first and second intersection points
+		const projectedIntersectionPointsCoords = [];
+		for (const intersectionPoint of intersectionPoints){  // The order here solely determines the correspondence between the projected points and the unprojected!
+			projectedIntersectionPointsCoords.push(MathHelpers.projectPointOntoLine(intersectionPoint.coord, firstIntersectionPoint.coord, secondIntersectionPoint.coord));
+		}
+
+		// Sort projected points
+		const intersectionVersor = MathHelpers.findVersorBetweenPoints(firstIntersectionPoint.coord, secondIntersectionPoint.coord);
+
+		
+		debugger;
 
 
 	}
@@ -134,21 +159,23 @@ export class FoldSolver {
 		return edges;
 	}
 
-	public static findFacesfromEdges(faces: string[][], edges:string[][]){
-		const faceIds = [];
+	public static findFacesfromEdges(faces: string[][], edges:string[][]): [string[][], number[]]{
+		const foundFaces = [];
+		const foundFaceIds = [];
 		for (const edge of edges){
 			for (let i = 0; i < faces.length; i++) {
 				const face = faces[i];
 				for (let j = 0; j < face.length; j++){
 					const faceEdge = [face[j], face[(j + 1) % face.length]];
-					if (!MathHelpers.checkIfArraysAreEqual(faceEdge, edge)){
-						faceIds.push(i);
+					if (MathHelpers.checkIfEdgesAreEqual(faceEdge, edge)){
+						foundFaces.push(face);
+						foundFaceIds.push(i);
 						break;
 					}
 				}
 			}
 		}
-		return faceIds;
+		return [foundFaces, foundFaceIds];
 	}
 
 

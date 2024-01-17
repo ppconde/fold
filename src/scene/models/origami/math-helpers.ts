@@ -10,6 +10,11 @@ export class MathHelpers {
       return JSON.stringify(a)==JSON.stringify(b);
   }
 
+  
+  public static checkIfEdgesAreEqual(a:Array<any>, b:Array<any>){
+      return (JSON.stringify(a)==JSON.stringify(b) || JSON.stringify(a)==JSON.stringify(b.reverse));
+  }
+
 
   public static checkIfArrayContainsArray(a:Array<any>, b:Array<any>){
     const s1 = JSON.stringify(a);
@@ -18,13 +23,17 @@ export class MathHelpers {
     return i != -1;
   }
 
+  public static indexArray(a:Array<any>, b: number[]): Array<any> {
+    return b.map((element) => a[element]);
+  }
+
   /**
    * Returns an array of elements from a, indexed by b
    * @param a
    * @param b 
    */
 
-  public static indexArray(a: Record<string, number[]>, b: string[]): number[][] {
+  public static indexObject(a: Record<string, number[]>, b: string[]): number[][] {
     return b.map((element) => a[element]);
   }
 
@@ -136,12 +145,12 @@ export class MathHelpers {
    * @param b
    * @param c
    */
-  public static projectPointOntoLine(a: number[], b: number[], c: number[]): number[] {
+  public static projectPointOntoLine(p: number[], a: number[], b: number[]): number[] {
+    const ap = this.findVectorBetweenPoints(a, p);
     const ab = this.findVectorBetweenPoints(a, b);
-    const ac = this.findVectorBetweenPoints(a, c);
     return this.addArray(
       a,
-      this.multiplyArray(ab, this.dot(ac, ab) / this.dot(ab, ab))
+      this.multiplyArray(ab, this.dot(ap, ab) / this.dot(ab, ab))
     );
   }
 
