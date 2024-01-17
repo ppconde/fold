@@ -4,26 +4,26 @@ import * as THREE from 'three';
 export class MathHelpers {
 
 
-  public static checkIfArraysAreEqual(a:Array<any>, b:Array<any>){
-      // WARNING: arrays must not contain {objects} or behavior may be undefined; a better (more complicated) option might be presented here:
-      // https://stackoverflow.com/questions/3115982/how-to-check-if-two-arrays-are-equal-with-javascript
-      return JSON.stringify(a)==JSON.stringify(b);
-  }
-
-  
-  public static checkIfEdgesAreEqual(a:Array<any>, b:Array<any>){
-      return (JSON.stringify(a)==JSON.stringify(b) || JSON.stringify(a)==JSON.stringify(b.reverse));
+  public static checkIfArraysAreEqual(a: Array<unknown>, b: Array<unknown>) {
+    // WARNING: arrays must not contain {objects} or behavior may be undefined; a better (more complicated) option might be presented here:
+    // https://stackoverflow.com/questions/3115982/how-to-check-if-two-arrays-are-equal-with-javascript
+    return JSON.stringify(a) == JSON.stringify(b);
   }
 
 
-  public static checkIfArrayContainsArray(a:Array<any>, b:Array<any>){
+  public static checkIfEdgesAreEqual(a: Array<unknown>, b: Array<unknown>) {
+    return (JSON.stringify(a) == JSON.stringify(b) || JSON.stringify(a) == JSON.stringify(b.reverse));
+  }
+
+
+  public static checkIfArrayContainsArray(a: Array<unknown>, b: Array<unknown>) {
     const s1 = JSON.stringify(a);
     const s2 = JSON.stringify(b);
     const i = s1.indexOf(s2);
     return i != -1;
   }
 
-  public static indexArray(a:Array<any>, b: number[]): Array<any> {
+  public static indexArray(a: Array<unknown>, b: number[]): Array<unknown> {
     return b.map((element) => a[element]);
   }
 
@@ -37,7 +37,7 @@ export class MathHelpers {
     return b.map((element) => a[element]);
   }
 
-  public static checkIfArrayIsEmpty(a: Array<any>) {
+  public static checkIfArrayIsEmpty(a: Array<unknown>) {
     return (Array.isArray(a) && a.length);
   }
 
@@ -154,16 +154,16 @@ export class MathHelpers {
     );
   }
 
-    /**
-   * Shifts points by given values - used to center a given shape
-   * @param points 
-   * @param shiftX 
-   * @param shiftY 
-   */
-    public static shiftPoints(points: IVertices, shiftX: number, shiftY: number): IVertices {
-      return Object.keys(points).reduce((acc, key) => {
-        acc[key] = [points[key][0] + shiftX, points[key][1] + shiftY, 0];
-        return acc;
-      }, {} as IVertices);
-    }
+  /**
+ * Shifts points by given values - used to center a given shape
+ * @param points 
+ * @param shiftX 
+ * @param shiftY 
+ */
+  public static shiftPoints(points: IVertices, shiftX: number, shiftY: number): IVertices {
+    return Object.keys(points).reduce((acc, key) => {
+      acc[key] = [points[key][0] + shiftX, points[key][1] + shiftY, 0];
+      return acc;
+    }, {} as IVertices);
+  }
 }

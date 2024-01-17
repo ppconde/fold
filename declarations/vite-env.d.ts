@@ -1,6 +1,4 @@
-// vite-env.d.ts
-declare module '**/*.text' {
-    export const plainText: string
+declare module '*.text' {
+    const plainText: string
+    export default plainText;
 }
-
-declare module "vite-plugin-plain-text"

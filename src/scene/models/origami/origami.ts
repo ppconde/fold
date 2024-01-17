@@ -61,9 +61,8 @@ export class Origami extends THREE.Group {
     this.scene = scene;
     this.width = width;
     this.length = length;
-    // this.foldInstructionsText = foldInstructionsText;
-    console.log(foldInstructionsText);
-    this.foldInstructionsText = 'a to e V\nc around [e,b] M';
+    this.foldInstructionsText = foldInstructionsText;
+    // this.foldInstructionsText = 'a to e V\nc around [e,b] M';
 
     this.vertices = this.generateVertices();
 

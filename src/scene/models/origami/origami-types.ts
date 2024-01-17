@@ -6,7 +6,7 @@ export interface IMeshInstruction {
 
 export type IVertices = {
     [key in string]: number[];
-};
+}
 
 export type IFace = string[];
 
@@ -30,15 +30,15 @@ export type TranslationKeys = keyof Pick<IParseTranslation, 'from' | 'to' | 'sen
 export interface TranslationValues {
     from: string[];
     to: string[];
-    sense: 'V'|'M';
+    sense: 'V' | 'M';
 }
 
 export interface IOrigamiCoordinates {
-	points: IVertices,
-	faces: string[][],
-	pattern: IVertices,
-	faceOrder: Map<number, number>
-};
+    points: IVertices,
+    faces: string[][],
+    pattern: IVertices,
+    faceOrder: Map<number, number>
+}
 
 export type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>;
 

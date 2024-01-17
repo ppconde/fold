@@ -11,9 +11,9 @@ export default defineConfig({
       // A minimatch pattern, or array of patterns, which specifies the files in the build the plugin should include.
       include: '**/*.svg?react',
     }),
-    plainText(['**/*.text', "C:/Users/guta_/Desktop/Projetos de programação/fold/src/instructions/test-1.text"], { namedExport: false }),
+    plainText(['**/*.text'], { namedExport: false, dtsAutoGen: true, distAutoClean: true }),
   ],
-  assetsInclude: ['**/*.fold', '**/*.txt', '**/*.text', "C:/Users/guta_/Desktop/Projetos de programação/fold/src/instructions/test-1.text"],
+  // assetsInclude: ['**/*.fold', '**/*.txt', '**/*.text'],
   server: {
     // This is not working when set to true because of problems exposing the server to the local networkS
     host: false, // Open to local network and display URL

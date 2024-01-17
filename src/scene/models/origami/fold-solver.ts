@@ -1,4 +1,3 @@
-import { join } from 'path/posix';
 import { MathHelpers } from './math-helpers';
 import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane } from './origami-types';
 
@@ -106,10 +105,10 @@ export class FoldSolver {
 		const edges = this.findEdgesFromFaces(origamiCoordinates.faces);
 		let intersectionPoints = [];
 		for (const edge of edges) {
-			const lineSegment = {startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]]};
+			const lineSegment = { startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]] };
 			const [planeIntersectsLine, intersectionPoint] = MathHelpers.findIntersectionBetweenLineAndPlane(lineSegment, plane);
-			if (planeIntersectsLine){
-				intersectionPoints.push({edge: edge, coord: intersectionPoint});
+			if (planeIntersectsLine) {
+				intersectionPoints.push({ edge: edge, coord: intersectionPoint });
 			}
 		}
 		// Find intersection lines
@@ -118,40 +117,39 @@ export class FoldSolver {
 		const firstIntersectionPoint = intersectionPoints[0];
 		const [firstIntersectedFaces, _] = this.findFacesfromEdges(origamiCoordinates.faces, [firstIntersectionPoint.edge]);
 		let secondIntersectionPoint = undefined;
-		for (let i = 1; i < intersectionPoints.length; i++){
+		for (let i = 1; i < intersectionPoints.length; i++) {
 			const [faces, _] = this.findFacesfromEdges(origamiCoordinates.faces, [intersectionPoints[i].edge]);
-			if (MathHelpers.checkIfArrayContainsArray(faces, firstIntersectedFaces)){
+			if (MathHelpers.checkIfArrayContainsArray(faces, firstIntersectedFaces)) {
 				secondIntersectionPoint = intersectionPoints[i];
 				break;
 			}
 		}
 
-		if (secondIntersectionPoint === undefined){
+		if (secondIntersectionPoint === undefined) {
 			throw new Error('A second intersection point could not be found!');
 		}
 
 		// Use MathHelpers.projectPointOntoLine() to project all points onto line defined by first and second intersection points
 		const projectedIntersectionPointsCoords = [];
-		for (const intersectionPoint of intersectionPoints){  // The order here solely determines the correspondence between the projected points and the unprojected!
+		for (const intersectionPoint of intersectionPoints) {  // The order here solely determines the correspondence between the projected points and the unprojected!
 			projectedIntersectionPointsCoords.push(MathHelpers.projectPointOntoLine(intersectionPoint.coord, firstIntersectionPoint.coord, secondIntersectionPoint.coord));
 		}
 
 		// Sort projected points
 		const intersectionVersor = MathHelpers.findVersorBetweenPoints(firstIntersectionPoint.coord, secondIntersectionPoint.coord);
 
-		
-		debugger;
+
 
 
 	}
 
 
-	public static findEdgesFromFaces(faces: string[][]){
+	public static findEdgesFromFaces(faces: string[][]) {
 		const edges = [];
 		for (const face of faces) {
-			for (let j = 0; j < face.length; j++){
+			for (let j = 0; j < face.length; j++) {
 				const edge = [face[j], face[(j + 1) % face.length]];
-				if (!MathHelpers.checkIfArrayContainsArray(edges, edge)){
+				if (!MathHelpers.checkIfArrayContainsArray(edges, edge)) {
 					edges.push(edge);
 				}
 			}
@@ -159,15 +157,15 @@ export class FoldSolver {
 		return edges;
 	}
 
-	public static findFacesfromEdges(faces: string[][], edges:string[][]): [string[][], number[]]{
+	public static findFacesfromEdges(faces: string[][], edges: string[][]): [string[][], number[]] {
 		const foundFaces = [];
 		const foundFaceIds = [];
-		for (const edge of edges){
+		for (const edge of edges) {
 			for (let i = 0; i < faces.length; i++) {
 				const face = faces[i];
-				for (let j = 0; j < face.length; j++){
+				for (let j = 0; j < face.length; j++) {
 					const faceEdge = [face[j], face[(j + 1) % face.length]];
-					if (MathHelpers.checkIfEdgesAreEqual(faceEdge, edge)){
+					if (MathHelpers.checkIfEdgesAreEqual(faceEdge, edge)) {
 						foundFaces.push(face);
 						foundFaceIds.push(i);
 						break;
