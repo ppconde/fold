@@ -20,8 +20,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "three": "^0.159.0",
-    "three-orbit-controls": "^82.1.0",
-    "vite-plugin-svgr": "^4.2.0"
+    "three-orbit-controls": "^82.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.4",
@@ -39,6 +38,7 @@
     "supabase": "^1.123.4",
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
-    "vite-plugin-plain-text": "^1.4.2"
+    "vite-plugin-plain-text": "^1.4.2",
+    "vite-plugin-svgr": "^4.2.0"
   }
 }

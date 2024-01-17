@@ -4,8 +4,7 @@ import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
-// @ts-ignore  
-//import foldInstructionsText from "../../../instructions/test-1.text"
+import foldInstructionsText from '../../../instructions/test-1.text'
 
 
 export class Origami extends THREE.Group {
@@ -17,7 +16,7 @@ export class Origami extends THREE.Group {
   /**
    * @todo - It should be set in the constructor
    */
-  private meshInstructions: IMeshInstruction[] = [
+  public meshInstructions: IMeshInstruction[] = [
     {
       meshIds: [0, 1],
       axis: ['a', 'd'],
@@ -35,7 +34,7 @@ export class Origami extends THREE.Group {
     THREE.MeshStandardMaterial
   >[];
 
-  private meshesRotation: THREE.Vector3[];
+  private meshesRotation: THREE.Euler[];
 
   private vertices: IVertices;
 
@@ -55,7 +54,7 @@ export class Origami extends THREE.Group {
 
   private foldInstructionsText: string;
 
-  private controller: Controller = new Controller();
+  private controller: Controller = new Controller(this, this.clock);
 
   constructor(scene: THREE.Scene, width: number, length: number) {
     super();
@@ -63,17 +62,18 @@ export class Origami extends THREE.Group {
     this.width = width;
     this.length = length;
     // this.foldInstructionsText = foldInstructionsText;
-    this.foldInstructionsText = "a to e V\nc around [e,b] M";
+    console.log(foldInstructionsText);
+    this.foldInstructionsText = 'a to e V\nc around [e,b] M';
 
     this.vertices = this.generateVertices();
 
     // this.meshes = this.generateMeshes();
 
     const foldInstructions = this.getFoldInstructions();
-    
+
     [this.meshes, this.meshInstructions] = OrigamiSolver.solveOrigami(width, length, foldInstructions);
 
-    this.meshesRotation = this.meshes.map((mesh) => mesh.position);  // Gustavo: What is meshesRotation?
+    this.meshesRotation = this.meshes.map((mesh) => mesh.rotation.clone());
 
     /**
      * Adds the meshes to the group
@@ -111,27 +111,31 @@ export class Origami extends THREE.Group {
    * Generates meshes for each plane geometry and returns and array of meshes
    */
   private generateMeshes(): THREE.Mesh<OrigamiPlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
+    const geometry1 = new OrigamiPlaneGeometry([this.vertices.a, this.vertices.b, this.vertices.c]);
     const mesh1 = new THREE.Mesh(
-      new OrigamiPlaneGeometry([this.vertices.a, this.vertices.b, this.vertices.c]),
+      geometry1,
       new THREE.MeshStandardMaterial({
         color: 0xff0000,
         side: THREE.DoubleSide,
       })
     );
+    const geometry2 = new OrigamiPlaneGeometry([this.vertices.c, this.vertices.d, this.vertices.b]);
     const mesh2 = new THREE.Mesh(
-      new OrigamiPlaneGeometry([this.vertices.c, this.vertices.d, this.vertices.b]),
+      geometry2,
       new THREE.MeshStandardMaterial({
         color: 0x00ff00,
         side: THREE.DoubleSide,
       })
     );
+    const geometry3 = new OrigamiPlaneGeometry([this.vertices.a, this.vertices.e, this.vertices.d]);
     const mesh3 = new THREE.Mesh(
-      new OrigamiPlaneGeometry([this.vertices.a, this.vertices.e, this.vertices.d]),
+      geometry3,
       new THREE.MeshStandardMaterial({
         color: 0x0000ff,
         side: THREE.DoubleSide,
       })
     );
+    [geometry1, geometry2, geometry3].forEach((geometry) => geometry.computeVertexNormals());
 
     return [mesh1, mesh2, mesh3];
   }
@@ -139,9 +143,8 @@ export class Origami extends THREE.Group {
   /**
    * Plays the animation
    */
-  private playAnimation(): void {
-    const { currentStep } = this.controller.animationControls;
-    const instruction = this.meshInstructions[currentStep];
+  public playAnimationStep(): void {
+    const instruction = this.meshInstructions[this.controller.currentStep];
     const deltaTime = this.clock.getDelta();
     let angle_to_rotate = this.angularSpeed * deltaTime;
 
@@ -151,9 +154,9 @@ export class Origami extends THREE.Group {
     } else {
       angle_to_rotate = instruction.angle - this.angleRotated;
       this.rotate(angle_to_rotate);
+      this.angleRotated = 0;
       this.controller.increaseStepBy(1);
       this.controller.pauseAnimation();
-      this.angleRotated = 0;
     }
   }
 
@@ -161,9 +164,8 @@ export class Origami extends THREE.Group {
    * Rotates the meshes
    * @param angle
    */
-  private rotate(angle: number): void {
-    const { currentStep } = this.controller.animationControls;
-    const instruction = this.meshInstructions[currentStep];
+  public rotate(angle: number): void {
+    const instruction = this.meshInstructions[this.controller.currentStep];
     const vecA = new THREE.Vector3(...this.vertices[instruction.axis[0]]);
     const vecB = new THREE.Vector3(...this.vertices[instruction.axis[1]]);
     const vec = new THREE.Vector3();
@@ -179,8 +181,8 @@ export class Origami extends THREE.Group {
   /**
    * Resets the origami to its initial state
    */
-  private resetOrigami(): void {
-    this.meshesRotation.forEach((rotation, i) => this.meshes[i].rotation.set(...rotation.toArray()));
+  public resetOrigami(): void {
+    this.meshesRotation.forEach(({ x, y, z, order }, i) => this.meshes[i].rotation.set(x, y, z, order));
     this.angleRotated = 0;
   }
 
@@ -188,20 +190,7 @@ export class Origami extends THREE.Group {
    * Updates the origami
    */
   public update(): void {
-    const { controller } = this;
-
-    if (controller.shouldDisablePlay(this.meshInstructions.length)) {
-      this.clock.stop();
-      controller.disablePlay();
-    } else if (controller.isStopped()) {
-      this.clock.stop();
-      this.resetOrigami();
-    } else if (!controller.isPlayingAnimation()) {
-      this.clock.start();
-      return;
-    } else {
-      !this.clock.running && this.clock.start();
-      this.playAnimation();
-    }
+    this.controller.update();
   }
+
 }
