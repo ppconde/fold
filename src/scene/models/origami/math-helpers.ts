@@ -4,6 +4,12 @@ import * as THREE from 'three';
 export class MathHelpers {
 
 
+  public static findSortIndices(a: Array<any>){
+    let indices = [...Array(a.length).keys()];
+    indices.sort(function (i, j) { return a[i] < a[j] ? -1 : a[i] > a[j] ? 1 : 0; });
+    return indices;
+  }
+
   public static checkIfArraysAreEqual(a: Array<unknown>, b: Array<unknown>) {
     // WARNING: arrays must not contain {objects} or behavior may be undefined; a better (more complicated) option might be presented here:
     // https://stackoverflow.com/questions/3115982/how-to-check-if-two-arrays-are-equal-with-javascript
@@ -41,14 +47,38 @@ export class MathHelpers {
     return (Array.isArray(a) && a.length);
   }
 
-  public static findIntersectionBetweenLineAndPlane(lineSegment: Record<string, number[]>, plane: IPlane): [boolean, number[]] {
+  public static findIntersectionBetweenLineAndPlane(lineSegment: Record<string, number[]>, plane: IPlane): [boolean, number[], number] {
     const lineTHREE = new THREE.Line3(new THREE.Vector3(...lineSegment.startPoint), new THREE.Vector3(...lineSegment.endPoint));  // Line3
     const planeTHREE = new THREE.Plane();
     planeTHREE.setFromNormalAndCoplanarPoint(new THREE.Vector3(...plane.versor), new THREE.Vector3(...plane.point));
     const intersectionPointTHREE = new THREE.Vector3();
-    const planeIntersectsLine = planeTHREE.intersectsLine(lineTHREE);
+    let planeIntersectsLine = planeTHREE.intersectsLine(lineTHREE);
     planeTHREE.intersectLine(lineTHREE, intersectionPointTHREE);
-    return [planeIntersectsLine, intersectionPointTHREE.toArray()];
+    // For some reason, when plane intersects start/end point of line segment, even  
+    // though the intersection point is defined, "intersectsLine" returns false. 
+    // This is to correct this extremely deceitful behaviour. And also, since it
+    // happens, to use it to identify if the intersection is at a start/end point:
+    let intersectedVerticeIndex = -1;
+    if (planeIntersectsLine === false) {
+      if (intersectionPointTHREE.equals(new THREE.Vector3())) {
+        if (planeTHREE.constant === 0) {
+          planeIntersectsLine = true;
+          if (lineTHREE.start.equals(intersectionPointTHREE)){
+            intersectedVerticeIndex = 0;
+          } else {
+            intersectedVerticeIndex = 1;
+          }
+        }
+      } else {
+        planeIntersectsLine = true;
+        if (lineTHREE.start.equals(intersectionPointTHREE)){
+          intersectedVerticeIndex = 0;
+        } else {
+          intersectedVerticeIndex = 1;
+        }
+      }
+    }
+    return [planeIntersectsLine, intersectionPointTHREE.toArray(), intersectedVerticeIndex];
   }
 
 
