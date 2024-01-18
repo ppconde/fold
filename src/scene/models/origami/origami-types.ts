@@ -4,6 +4,12 @@ export interface IMeshInstruction {
     angle: number;
 }
 
+export interface IRotationReport {
+    faces: string[][];
+    axis: string[];
+    angle: number;
+}
+
 export type IVertices = {
     [key in string]: number[];
 }

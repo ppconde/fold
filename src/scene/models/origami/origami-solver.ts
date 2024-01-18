@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { FoldSolver } from './fold-solver'
-import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices, IOrigamiCoordinates, IOrigamiMesh} from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices, IOrigamiCoordinates, IOrigamiMesh, IRotationReport} from './origami-types';
 
 
 export class OrigamiSolver {
@@ -26,17 +26,20 @@ export class OrigamiSolver {
 		let meshInstruction: IMeshInstruction;
 		const mesh_instructions: IMeshInstruction[] = [];
 
+		let rotationReport: IRotationReport;
+		const rotationReports = [];
+
 		// Read fold instructions
 		for (let i = 0; i < foldInstructions.length; i++) {
 			const instruction = foldInstructions[i];
 
 			// Execute translation
 			if (this.isInstruction(instruction, translation)) {
-				[origamiCoordinates, meshInstruction] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation, tolerance)
+				[origamiCoordinates, rotationReport] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation, tolerance)
 
 				// Execute rotation
 			} else if (this.isInstruction(instruction, rotation)) {
-				[origamiCoordinates, meshInstruction] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation, tolerance);
+				[origamiCoordinates, rotationReport] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation, tolerance);
 
 				// In the case it's neither, thow an error
 			} else {
@@ -45,18 +48,20 @@ export class OrigamiSolver {
 			}
 
 			// Add mesh instruction
-			mesh_instructions.push(meshInstruction);
+			rotationReports.push(rotationReport);
 		}
 		// Create face meshes
-		const meshes = this.createFaceMeshes(origamiCoordinates.faces, origamiCoordinates.pattern);
-		return [meshes, mesh_instructions];
+		const meshes = this.createFaceMeshes(origamiCoordinates);
+		const meshInstructions = this.createMeshInstructions(meshes, rotationReports);
+		return [meshes, meshInstructions];
 	}
 
 	public static isInstruction(instruction: string, type: IParseTranslation | IParseRotation) {
 		return instruction.match(type.regex) !== null;
 	}
 
-	public static createFaceMeshes(faces: string[][], pattern: IVertices): IOrigamiMesh[] {
+	// Use faces and pattern!:
+	public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
 		return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
 	}
 

@@ -12,9 +12,16 @@ export class FoldSolver {
 		const plane = this.findPlaneBetween(origamiCoordinates.points, from, to);
 
 		// Intersects plane with origami, yielding intersection lines
-		let intersectionLines = this.findIntersectionBetweenPlaneAndOrigami(origamiCoordinates, plane);
+		const intersectionLines = this.findIntersectionBetweenPlaneAndOrigami(origamiCoordinates, plane);
 
-		//
+		// Selects intersection lines which will serve as rotation axis
+		let axisLines = this.findAxisLines(origamiCoordinates, intersectionLines);
+
+		// Adds crease points
+		[origamiCoordinates, axisLines] = this.creaseOrigami(origamiCoordinates, plane, axisLines);
+
+		// Rotates points 
+		[origamiCoordinates, rotationReport] = this.rotateOrigami(origamiCoordinates, sense, plane, axisLines);
 
 		// Set place-holder
 		const meshInstruction = { meshIds: [0], axis: ['a', 'b'], angle: 90 };
