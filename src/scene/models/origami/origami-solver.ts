@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { FoldSolver } from './fold-solver'
-import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices, IOrigamiCoordinates, IOrigamiMesh, IRotationReport} from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices, IOrigamiCoordinates, IOrigamiMesh, IRotationReport, IParsingInstruction} from './origami-types';
 
 
 export class OrigamiSolver {
@@ -10,50 +10,69 @@ export class OrigamiSolver {
 		const tolerance = width / 100;
 
 		// Set origami coordinates
+		let origamiCoordinates = this.generateOrigamiCoordinates(width, length);
+
+		// Set parsing instructions
+		const parsingInstructions = this.setParsingInstructions();
+
+		// Set rotation reports
+		let rotationReport: IRotationReport;
+		const rotationReports = [];
+
+		// Execute fold instructions
+		for (const instruction of foldInstructions) {
+			// Execute fold instruction
+			[origamiCoordinates, rotationReport] = this.solveInstruction(origamiCoordinates, parsingInstructions, instruction, tolerance);
+
+			// Save rotation report
+			rotationReports.push(rotationReport);
+		}
+		// Create face meshes and rotation instructions
+		const meshes = this.createFaceMeshes(origamiCoordinates);
+		const meshInstructions = this.createMeshInstructions(meshes, rotationReports);
+		return [meshes, meshInstructions];
+	}
+
+	public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
 		let origamiCoordinates: IOrigamiCoordinates = {
 			points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
 			faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
 			pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
-			faceOrder: new Map()
+			faceOrder: {0: [],  1: []},
 		};
-		origamiCoordinates.faces.forEach((_, i) => origamiCoordinates.faceOrder.set(i, i));  // Check if a MAP is the best type to represent the face order
+		return origamiCoordinates;
+	}
 
-		// Set parsing instructions
-		const translation: IParseTranslation = { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] };
-		const rotation: IParseRotation = { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)/, from: [2, 3, 9], axis: [5, 6, 11, 12], sense: [7, 13], angle: [8, 14] };
+	public static setParsingInstructions(): IParsingInstruction{
+		const parsingInstructions = {
+			translation: { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] },
+			rotation: { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)/, from: [2, 3, 9], axis: [5, 6, 11, 12], sense: [7, 13], angle: [8, 14] }
+		};
+		return parsingInstructions;
+	}
 
-		// Create mesh instructions
-		let meshInstruction: IMeshInstruction;
-		const mesh_instructions: IMeshInstruction[] = [];
-
+	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string, tolerance: number): [IOrigamiCoordinates, IRotationReport]{
+		// Set rotation report
 		let rotationReport: IRotationReport;
-		const rotationReports = [];
 
-		// Read fold instructions
-		for (let i = 0; i < foldInstructions.length; i++) {
-			const instruction = foldInstructions[i];
+		// Unpack parsing instructions
+		const translation = parsingInstructions.translation;
+		const rotation = parsingInstructions.rotation;
 
-			// Execute translation
-			if (this.isInstruction(instruction, translation)) {
-				[origamiCoordinates, rotationReport] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation, tolerance)
+		// Execute translation
+		if (this.isInstruction(instruction, translation)) {
+			[origamiCoordinates, rotationReport] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation, tolerance)
 
-				// Execute rotation
-			} else if (this.isInstruction(instruction, rotation)) {
-				[origamiCoordinates, rotationReport] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation, tolerance);
+		// Execute rotation
+		} else if (this.isInstruction(instruction, rotation)) {
+			[origamiCoordinates, rotationReport] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation, tolerance);
 
-				// In the case it's neither, thow an error
-			} else {
-				console.log(1);
-				throw new Error('The instruction is neither a translation nor a rotation!');
-			}
-
-			// Add mesh instruction
-			rotationReports.push(rotationReport);
+		// In the case it's neither, thow an error
+		} else {
+			console.log(1);
+			throw new Error('The instruction is neither a translation nor a rotation!');
 		}
-		// Create face meshes
-		const meshes = this.createFaceMeshes(origamiCoordinates);
-		const meshInstructions = this.createMeshInstructions(meshes, rotationReports);
-		return [meshes, meshInstructions];
+		return [origamiCoordinates, rotationReport];
 	}
 
 	public static isInstruction(instruction: string, type: IParseTranslation | IParseRotation) {
@@ -63,6 +82,10 @@ export class OrigamiSolver {
 	// Use faces and pattern!:
 	public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
 		return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
+	}
+
+	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IRotationReport[]): IMeshInstruction[]{
+		return [{meshIds: [0], axis: ['e', 'f'], angle: 180}];
 	}
 
 }

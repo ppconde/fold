@@ -18,7 +18,7 @@ export class MathHelpers {
 
 
   public static checkIfEdgesAreEqual(a: Array<unknown>, b: Array<unknown>) {
-    return (JSON.stringify(a) == JSON.stringify(b) || JSON.stringify(a) == JSON.stringify(b.reverse));
+    return (JSON.stringify(a) == JSON.stringify(b) || JSON.stringify(a) == JSON.stringify(b.reverse()));
   }
 
 

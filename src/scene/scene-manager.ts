@@ -101,8 +101,10 @@ export class SceneManager {
    * Sets each scene object in the scene
    */
   private setSceneObjects(): void {
+    const width = 9;
+    const length = 12.5;
     this.sceneObjects.set('LightsManager', new LightsManager(this.scene));
-    this.sceneObjects.set('Origami', new Origami(this.scene, 9, 12.5));
+    this.sceneObjects.set('Origami', new Origami(this.scene, width, length));
   }
 
   /**

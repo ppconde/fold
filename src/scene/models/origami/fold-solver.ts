@@ -1,10 +1,10 @@
 import { MathHelpers } from './math-helpers';
-import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane } from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IRotationReport } from './origami-types';
 
 
 export class FoldSolver {
 
-	public static solveTranslation(origamiCoordinates: IOrigamiCoordinates, instruction: string, translation: IParseTranslation, tolerance: number): [IOrigamiCoordinates, IMeshInstruction] {
+	public static solveTranslation(origamiCoordinates: IOrigamiCoordinates, instruction: string, translation: IParseTranslation, tolerance: number): [IOrigamiCoordinates, IRotationReport] {
 		// Get 'from point', 'to point', and rotation sense
 		const { from, to, sense } = this.getFromFoldInstruction(['from', 'to', 'sense'], translation, instruction);
 
@@ -15,23 +15,23 @@ export class FoldSolver {
 		const intersectionLines = this.findIntersectionBetweenPlaneAndOrigami(origamiCoordinates, plane);
 
 		// Selects intersection lines which will serve as rotation axis
-		let axisLines = this.findAxisLines(origamiCoordinates, intersectionLines);
+		let axisLines = this.findAxisLines(from, to, origamiCoordinates, intersectionLines);
 
 		// Adds crease points
-		[origamiCoordinates, axisLines] = this.creaseOrigami(origamiCoordinates, plane, axisLines);
+		// [origamiCoordinates, axisLines] = this.creaseOrigami(origamiCoordinates, plane, axisLines);
 
 		// Rotates points 
-		[origamiCoordinates, rotationReport] = this.rotateOrigami(origamiCoordinates, sense, plane, axisLines);
+		// [origamiCoordinates, rotationReport] = this.rotateOrigami(origamiCoordinates, sense, plane, axisLines);
 
 		// Set place-holder
-		const meshInstruction = { meshIds: [0], axis: ['a', 'b'], angle: 90 };
+		const rotationReport = { faces: [['a', 'e', 'b', 'd']], axis: ['a', 'b'], angle: 90 };
 
-		return [origamiCoordinates, meshInstruction];
+		return [origamiCoordinates, rotationReport];
 	}
 
-	public static solveRotation(origamiCoordinates: IOrigamiCoordinates, instruction: string, rotation: IParseRotation, tolerance: number): [IOrigamiCoordinates, IMeshInstruction] {
+	public static solveRotation(origamiCoordinates: IOrigamiCoordinates, instruction: string, rotation: IParseRotation, tolerance: number): [IOrigamiCoordinates, IRotationReport] {
 		// Set place-holder
-		const meshInstruction = { meshIds: [0], axis: ['a', 'b'], angle: 90 };
+		const meshInstruction = { faces: [['a', 'e', 'b', 'd']], axis: ['a', 'b'], angle: 90 };
 		return [origamiCoordinates, meshInstruction];
 	}
 
@@ -53,7 +53,6 @@ export class FoldSolver {
 			return { ...obj, [transition]: valueForArray };
 		}, {} as TranslationValues);
 	}
-
 
 	public static findPlaneBetween(points: IVertices, from: string[], to: string[]): IPlane {
 		let from_point;
@@ -89,10 +88,10 @@ export class FoldSolver {
 		return plane;
 	}
 
-	public static findIntersectionBetweenPlaneAndOrigami(origamiCoordinates: IOrigamiCoordinates, plane: IPlane) {
+	public static findIntersectionBetweenPlaneAndOrigami(origamiCoordinates: IOrigamiCoordinates, plane: IPlane): {edge: string[]; coord: number[]}[][] {
 		// Find intersection between plane and the origami edges
 		const edges = this.findEdgesFromFaces(origamiCoordinates.faces);
-		let intersectionPoints = [];
+		let intersectionPoints =  [];
 		const intersectedVertices: string[] = [];
 		for (const edge of edges) {
 			const lineSegment = { startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]] };
@@ -175,13 +174,12 @@ export class FoldSolver {
 		return intersectionLines;
 	}
 
-
 	public static findEdgesFromFaces(faces: string[][]) {
 		const edges = [];
 		for (const face of faces) {
 			for (let j = 0; j < face.length; j++) {
 				const edge = [face[j], face[(j + 1) % face.length]];
-				if (!MathHelpers.checkIfArrayContainsArray(edges, edge)) {
+				if (!MathHelpers.checkIfArrayContainsArray(edges, edge) && !MathHelpers.checkIfArrayContainsArray(edges, edge.reverse())) {
 					edges.push(edge);
 				}
 			}
@@ -235,6 +233,26 @@ export class FoldSolver {
 		}
 		return false;
 	}
+
+
+
+	public static findAxisLines(from: string[], to: string[], origamiCoordinates: IOrigamiCoordinates, intersectionLines: {edge: string[]; coord: number[]}[][]) {
+
+		const origamiGraph = this.convertOrigamiCoordinatesToGraph(origamiCoordinates);
+		const shortestPath = this.findShortestPath(origamiGraph, from[0], to[0]);
+		for (const intersectionLine of intersectionLines) {
+			const intersectedEdge = this.findIntersectionBetweenPaths(shortestPath, intersectionLine);
+		}
+
+		// Find first intersected line
+		shortestPath.indexOf(intersectedEdge[0]);
+	}
+
+
+	public static convertOrigamiCoordinatesToGraph(origamiCoordinates) {
+		return origamiGraph;
+	};
+
 
 
 };

@@ -43,7 +43,7 @@ export interface IOrigamiCoordinates {
     points: IVertices,
     faces: string[][],
     pattern: IVertices,
-    faceOrder: Map<number, number>
+    faceOrder: Record<number, number[]>
 }
 
 export type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>;
@@ -52,4 +52,9 @@ export type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAtt
 export interface IPlane {
     point: number[],
     versor: number[];
+}
+
+export interface IParsingInstruction {
+    translation: IParseTranslation,
+    rotation: IParseRotation,
 }
