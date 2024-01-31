@@ -46,6 +46,15 @@ export interface IOrigamiCoordinates {
     faceOrder: Record<number, number[]>
 }
 
+export interface IintersectionPoint {
+    edge: string[], 
+    coord: number[]
+}
+
+export type IintersectionLine = IintersectionPoint[];
+
+export type IOrigamiGraph = Record<string, Record<string, number>>;
+
 export type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>;
 
 

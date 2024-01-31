@@ -21,7 +21,6 @@ export class MathHelpers {
     return (JSON.stringify(a) == JSON.stringify(b) || JSON.stringify(a) == JSON.stringify(b.reverse()));
   }
 
-
   public static checkIfArrayContainsArray(a: Array<unknown>, b: Array<unknown>) {
     const s1 = JSON.stringify(a);
     const s2 = JSON.stringify(b);
@@ -29,7 +28,11 @@ export class MathHelpers {
     return i != -1;
   }
 
-  public static indexArray(a: Array<unknown>, b: number[]): Array<unknown> {
+  public static checkIfArrayContainsElements(a: Array<unknown>, b: Array<unknown>){
+    return b.every(r => a.includes(r));
+  }
+
+  public static indexArray(a: Array<unknown>, b: number[]): Array<any> {
     return b.map((element) => a[element]);
   }
 
@@ -96,7 +99,7 @@ export class MathHelpers {
    * @param a
    * @param c
    */
-  public static addArray(a: number[], c: number[]): number[] {
+  public static addArray(a: number[], c: Array<number> | number): number[] {
     if (!Array.isArray(c)) {
       c = Array(a.length).fill(c);
     }
@@ -196,4 +199,5 @@ export class MathHelpers {
       return acc;
     }, {} as IVertices);
   }
+
 }

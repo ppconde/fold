@@ -1,5 +1,5 @@
 import { MathHelpers } from './math-helpers';
-import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IRotationReport } from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IRotationReport, IOrigamiGraph, IintersectionLine} from './origami-types';
 
 
 export class FoldSolver {
@@ -95,13 +95,13 @@ export class FoldSolver {
 		const intersectedVertices: string[] = [];
 		for (const edge of edges) {
 			const lineSegment = { startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]] };
-			const [planeIntersectsLine, intersectionPoint, intersectedVerticeIndex] = MathHelpers.findIntersectionBetweenLineAndPlane(lineSegment, plane);
+			const [planeIntersectsLine, intersectionCoord, intersectedVerticeIndex] = MathHelpers.findIntersectionBetweenLineAndPlane(lineSegment, plane);
 			if (planeIntersectsLine) {
 				// This garantees that if the intersection point is a vertice, it is only added once:
 				if (intersectedVerticeIndex === -1) {
-					intersectionPoints.push({ edge: edge, coord: intersectionPoint });
+					intersectionPoints.push({ edge: edge, coord: intersectionCoord });
 				} else if (!intersectedVertices.includes(edge[intersectedVerticeIndex])){
-					intersectionPoints.push({ edge: edge, coord: intersectionPoint });
+					intersectionPoints.push({ edge: edge, coord: intersectionCoord });
 					intersectedVertices.push(edge[intersectedVerticeIndex])
 				}
 			}
@@ -123,7 +123,7 @@ export class FoldSolver {
 			// Add first point to intersection line
 			let intersectionPoint;
 			let intersectionPointPosition;
-			const intersectionLine = [];
+			const intersectionLine: IintersectionLine = [];
 			for (let i = 0; i < intersectionPoints.length; i++) {
 				if (intersectionPointsFitToLine[i] === 0) {
 					intersectionPoint = intersectionPoints[i];
@@ -236,21 +236,51 @@ export class FoldSolver {
 
 
 
-	public static findAxisLines(from: string[], to: string[], origamiCoordinates: IOrigamiCoordinates, intersectionLines: {edge: string[]; coord: number[]}[][]) {
-
+	public static findAxisLines(from: string[], to: string[], origamiCoordinates: IOrigamiCoordinates, intersectionLines: IintersectionLine[]) {
 		const origamiGraph = this.convertOrigamiCoordinatesToGraph(origamiCoordinates);
 		const shortestPath = this.findShortestPath(origamiGraph, from[0], to[0]);
-		for (const intersectionLine of intersectionLines) {
-			const intersectedEdge = this.findIntersectionBetweenPaths(shortestPath, intersectionLine);
-		}
-
-		// Find first intersected line
-		shortestPath.indexOf(intersectedEdge[0]);
+		const firstIntersectedLine = this.findFirstIntersectionLine(shortestPath, intersectionLines)
+		const collinearLines = this.selectCollinearLines(intersectionLines, firstIntersectedLine);
+		const sortedLines = this.sortIntersectionLines();  // This is to find the lowest one and select that and the above. This makes rotating faces below the from point possible, but it might be undesirable in some cases. Introduce pin concept to solve them?
+		const axisLines = this.selectAxisLines();  
+		return axisLines;
 	}
 
+	public static findFirstIntersectionLine(shortestPath: string[], intersectionLines: IintersectionLine[]) {
+		for (let i = 0; i < shortestPath.length; i++) {
+			const shortestPathEdge = [shortestPath[i], shortestPath[(i + 1) % shortestPath.length]];
+			for (const intersectionLine of intersectionLines) {
+				for (const intersectionPoint of intersectionLine) {
+					if (MathHelpers.checkIfArrayContainsElements(shortestPathEdge, intersectionPoint.edge)){
+						return intersectionLine;
+					}
+				}
+			}
+		}
+		return undefined;
+	}
 
-	public static convertOrigamiCoordinatesToGraph(origamiCoordinates) {
-		return origamiGraph;
+	public static convertOrigamiCoordinatesToGraph(origamiCoordinates: IOrigamiCoordinates): IOrigamiGraph {
+		const points = origamiCoordinates.points;
+		const faces = origamiCoordinates.faces;
+		let origamiGraph: IOrigamiGraph = {};
+		for (let i = 0; i < faces.length; i++) {
+			const face = faces[i];
+			for (let j = 0; j < face.length; j++) {
+				const letter = face[j];
+				if (!origamiGraph.hasOwnProperty(letter)){
+					origamiGraph[letter] = {};
+				}
+				const faceNeighborSteps = [+1, +face.length - 1];
+				for (const faceNeighborStep of faceNeighborSteps){
+					const faceNeighborLetter = face[(j + faceNeighborStep) % face.length];
+					if (!origamiGraph[letter].hasOwnProperty(faceNeighborLetter)) {
+						origamiGraph[letter][faceNeighborLetter] = MathHelpers.findDistanceBetweenPoints(points[letter], points[faceNeighborLetter]);
+					}
+				}
+			}
+		}
+		return origamiGraph;  // let origamiGraph = {'a': {'e': 6, 'd': 9}, 'b': {'e': 7,'c': 9}};
 	};
 
 
