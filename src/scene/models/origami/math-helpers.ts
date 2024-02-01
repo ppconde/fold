@@ -1,3 +1,4 @@
+import { TypeGuards } from '../../../guards/type-guards';
 import { IVertices, IPlane } from './origami-types';
 import * as THREE from 'three';
 
@@ -99,11 +100,12 @@ export class MathHelpers {
    * @param a
    * @param c
    */
-  public static addArray(a: number[], c: Array<number> | number): number[] {
+
+  public static addArray(a: number[], c: number[] | number): number[] {
     if (!Array.isArray(c)) {
       c = Array(a.length).fill(c);
     }
-    return a.map((element, i) => element + c[i]);
+    return a.map((element, i) => element + (c as [])[i]);
   }
 
   /**
@@ -198,6 +200,13 @@ export class MathHelpers {
       acc[key] = [points[key][0] + shiftX, points[key][1] + shiftY, 0];
       return acc;
     }, {} as IVertices);
+  }
+
+  public static findAngleBetweenVectors(u: number[], v: number[]) {
+    const uTHREE = new THREE.Vector3(...u);
+    const vTHREE = new THREE.Vector3(...v);
+    const angle = uTHREE.angleTo(vTHREE) / Math.PI * 180;
+    return angle;
   }
 
 }

@@ -28,5 +28,4 @@ export class TypeGuards {
             || light.type === LightsTypesHelper.POINT_LIGHT
             || light.type === LightsTypesHelper.SPOT_LIGHT;
     }
-
 }

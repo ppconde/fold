@@ -15,7 +15,7 @@ export class FoldSolver {
 		const intersectionLines = this.findIntersectionBetweenPlaneAndOrigami(origamiCoordinates, plane);
 
 		// Selects intersection lines which will serve as rotation axis
-		let axisLines = this.findAxisLines(from, to, origamiCoordinates, intersectionLines);
+		let axisLines = this.findAxisLines(from, to, sense, origamiCoordinates, intersectionLines);
 
 		// Adds crease points
 		// [origamiCoordinates, axisLines] = this.creaseOrigami(origamiCoordinates, plane, axisLines);
@@ -234,16 +234,15 @@ export class FoldSolver {
 		return false;
 	}
 
-
-
-	public static findAxisLines(from: string[], to: string[], origamiCoordinates: IOrigamiCoordinates, intersectionLines: IintersectionLine[]) {
+	public static findAxisLines(from: string[], to: string[], sense: 'V'|'M', origamiCoordinates: IOrigamiCoordinates, intersectionLines: IintersectionLine[]) {
 		const origamiGraph = this.convertOrigamiCoordinatesToGraph(origamiCoordinates);
 		const shortestPath = this.findShortestPath(origamiGraph, from[0], to[0]);
 		const firstIntersectedLine = this.findFirstIntersectionLine(shortestPath, intersectionLines)
-		const collinearLines = this.selectCollinearLines(intersectionLines, firstIntersectedLine);
-		const sortedLines = this.sortIntersectionLines();  // This is to find the lowest one and select that and the above. This makes rotating faces below the from point possible, but it might be undesirable in some cases. Introduce pin concept to solve them?
-		const axisLines = this.selectAxisLines();  
-		return axisLines;
+		const coincidentLines = this.selectCoincidentLines(intersectionLines, firstIntersectedLine);
+		// const sortedLines = this.sortIntersectionLines(origamiCoordinates, coincidentLines, sense);  // This is to find the lowest one and select that and the above. This makes rotating faces below the from point possible, but it might be undesirable in some cases. Introduce pin concept to solve them?
+		// const axisLines = this.selectAxisLines();  
+		// return axisLines;
+		return 0;
 	}
 
 	public static findFirstIntersectionLine(shortestPath: string[], intersectionLines: IintersectionLine[]) {
@@ -257,7 +256,7 @@ export class FoldSolver {
 				}
 			}
 		}
-		return undefined;
+		throw new Error('Could not find first intersected line! Check why');
 	}
 
 	public static convertOrigamiCoordinatesToGraph(origamiCoordinates: IOrigamiCoordinates): IOrigamiGraph {
@@ -283,6 +282,118 @@ export class FoldSolver {
 		return origamiGraph;  // let origamiGraph = {'a': {'e': 6, 'd': 9}, 'b': {'e': 7,'c': 9}};
 	};
 
+	// Find shortest path between nodes in graph using the dijkstra algorithm
+	public static findShortestPath(graph: IOrigamiGraph, startNode: string, endNode: string): string[] {
+		// Track distances from the start node using a hash object
+		let distances: Record<string, number> = {};
+		distances[endNode] = Infinity;
+		distances = Object.assign(distances, graph[startNode]);
+	   	// Track paths using a hash object
+		let parents: Record<string, string|null> = { endNode: null };
+		for (let child in graph[startNode]) {
+			parents[child] = startNode;
+		}
+		// Collect visited nodes
+		let visited: string[] = [];
+	    // Find the nearest node
+		let node = this.findNearestNode(distances, visited);
+		// For that node:
+		while (node) {
+			// Find its distance from the start node & its child nodes
+			let distance = distances[node];
+			let children = graph[node]; 
+			// For each of those child nodes:
+			for (let child in children) {
+		 		// Make sure each child node is not the start node
+				if (String(child) === String(startNode)) {
+					continue;
+			  	} else {
+					// Save the distance from the start node to the child node
+					let newdistance = distance + children[child];
+	   				// Ff there's no recorded distance from the start node to the child node in the distances object
+	   				// or if the recorded distance is shorter than the previously stored distance from the start node to the child node
+					if (!distances[child] || distances[child] > newdistance) {
+	   					// save the distance to the object
+						distances[child] = newdistance;
+	   					// record the path
+						parents[child] = node;
+		   			} 
+				}
+			}  
+			// Move the current node to the visited set
+			visited.push(node);
+	   		// Move to the nearest neighbor node
+			node = this.findNearestNode(distances, visited);
+		   }
+		// Using the stored paths from start node to end node record the shortest path
+		let shortestPath = [endNode];
+		let parent = parents[endNode];
+		while (parent) {
+			shortestPath.push(parent);
+			parent = parents[parent];
+		}
+		shortestPath.reverse();
+		// let results = {distance: distances[endNode], path: shortestPath};
+		return shortestPath;
+	};
 
+	public static findNearestNode(distances: Record<string, number>, visited: string[]) {
+	// Create a default value for shortest
+		let shortest = null;
+		// For each node in the distances object
+		for (let node in distances) {
+			// If no node has been assigned to shortest yet or if the current node's distance is smaller than the current shortest
+			let currentIsShortest = shortest === null || distances[node] < distances[shortest];
+			// And if the current node is in the unvisited set
+			if (currentIsShortest && !visited.includes(node)) {
+				// Update shortest to be the current node
+				shortest = node;
+			}
+		}
+		return shortest;
+	};
+
+	public static selectCoincidentLines(intersectionLines: IintersectionLine[], firstIntersectedLine: IintersectionLine) {
+		let coincidentLines = [];
+		for (const intersectionLine of intersectionLines) {
+			// Select points from first intersection line and current intersection line
+			let points = [];
+			for (const intersectionPoint of firstIntersectedLine) {
+				points.push(intersectionPoint.coord);
+			}
+			for (const intersectionPoint of intersectionLine) {
+				points.push(intersectionPoint.coord);
+			}
+			if (this.checkIfPointsAreCollinear(points)){
+				coincidentLines.push(intersectionLine);
+			}
+		}
+		return coincidentLines;
+	}
+
+	public static checkIfPointsAreCollinear(points: number[][]): boolean {
+		const tolerance = 0.00001;
+		const nonCoincidentPoints = [];
+		for (let i = 1; i < points.length; i++) {
+			const distance = MathHelpers.findDistanceBetweenPoints(points[0], points[i]);
+			if (distance > tolerance) {
+				nonCoincidentPoints.push(points[0]);
+				nonCoincidentPoints.push(points[i]);
+				break;
+			}
+		}
+		if (nonCoincidentPoints.length > 0) {
+			const lineVersor = MathHelpers.findVersorBetweenPoints(nonCoincidentPoints[0], nonCoincidentPoints[1]);
+			points.sort(function (p1, p2) { return MathHelpers.dot(p1,lineVersor) - MathHelpers.dot(p2,lineVersor)});
+			for (let i = 0; i < points.length - 1; i++) {
+				const pointVersor = MathHelpers.findVersorBetweenPoints(points[i], points[i+1]);
+				// If points are not coincident and are not collinear to line versor, the complete set of points is not collinear
+				if (MathHelpers.findDistanceBetweenPoints(points[i], points[i+1]) >  tolerance && MathHelpers.dot(lineVersor, pointVersor) < 1 - tolerance) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 
 };
