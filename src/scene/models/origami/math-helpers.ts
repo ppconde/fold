@@ -1,3 +1,4 @@
+import { uint } from 'three/examples/jsm/nodes/Nodes.js';
 import { TypeGuards } from '../../../guards/type-guards';
 import { IVertices, IPlane } from './origami-types';
 import * as THREE from 'three';
@@ -143,6 +144,10 @@ export class MathHelpers {
     return u.reduce((acc, element, i) => acc + element * v[i], 0);
   }
 
+  public static cross(u: number[], v: number[]): number[] {
+    return [u[1]*v[2] - u[2]*v[1], -(u[0]*v[2] - u[2]*v[0]), u[0]*v[1] - u[1]*v[0]];
+  }
+
   /**
    * Returns the versor between two points
    * @param a
@@ -176,17 +181,21 @@ export class MathHelpers {
 
   /**
    * Returns the projection of a point onto a line
-   * @param a
    * @param b
    * @param c
    */
   public static projectPointOntoLine(p: number[], a: number[], b: number[]): number[] {
     const ap = this.findVectorBetweenPoints(a, p);
     const ab = this.findVectorBetweenPoints(a, b);
-    return this.addArray(
-      a,
-      this.multiplyArray(ab, this.dot(ap, ab) / this.dot(ab, ab))
-    );
+    return this.addArray(a, this.projectVectorOntoVector(ap, ab));
+  }
+
+  public static projectVectorOntoVector(u: number[], v: number[]): number[] {
+    return this.multiplyArray(v, this.dot(u, v) / this.dot(v, v));
+  }
+
+  public static projectVectorOntoPlane(u: number[], planeNormal: number[]): number[] {
+    return this.addArray(u, this.multiplyArray(this.projectVectorOntoVector(u, planeNormal), -1));
   }
 
   /**
@@ -208,5 +217,16 @@ export class MathHelpers {
     const angle = uTHREE.angleTo(vTHREE) / Math.PI * 180;
     return angle;
   }
+
+  public static findPlaneNormalVersor(coplanarPoints: number[][]) {
+    const AB = this.findVectorBetweenPoints(coplanarPoints[0], coplanarPoints[1]);
+    const AC = this.findVectorBetweenPoints(coplanarPoints[0], coplanarPoints[2]);
+    const u = this.cross(AB,AC);
+    return this.findVectorVersor(u);
+  }
+
+
+
+
 
 }

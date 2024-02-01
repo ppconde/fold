@@ -38,7 +38,7 @@ export class OrigamiSolver {
 			points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
 			faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
 			pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
-			faceOrder: {0: [],  1: []},
+			faceOrder: {0: {1: 1},  1: {0: -1}},
 		};
 		return origamiCoordinates;
 	}

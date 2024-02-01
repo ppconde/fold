@@ -15,7 +15,7 @@ export class FoldSolver {
 		const intersectionLines = this.findIntersectionBetweenPlaneAndOrigami(origamiCoordinates, plane);
 
 		// Selects intersection lines which will serve as rotation axis
-		let axisLines = this.findAxisLines(from, to, sense, origamiCoordinates, intersectionLines);
+		let axisLines = this.findAxisLines(from, to, sense, origamiCoordinates, plane, intersectionLines);
 
 		// Adds crease points
 		// [origamiCoordinates, axisLines] = this.creaseOrigami(origamiCoordinates, plane, axisLines);
@@ -234,12 +234,12 @@ export class FoldSolver {
 		return false;
 	}
 
-	public static findAxisLines(from: string[], to: string[], sense: 'V'|'M', origamiCoordinates: IOrigamiCoordinates, intersectionLines: IintersectionLine[]) {
+	public static findAxisLines(from: string[], to: string[], sense: 'V'|'M', origamiCoordinates: IOrigamiCoordinates, plane: IPlane, intersectionLines: IintersectionLine[]) {
 		const origamiGraph = this.convertOrigamiCoordinatesToGraph(origamiCoordinates);
 		const shortestPath = this.findShortestPath(origamiGraph, from[0], to[0]);
 		const firstIntersectedLine = this.findFirstIntersectionLine(shortestPath, intersectionLines)
 		const coincidentLines = this.selectCoincidentLines(intersectionLines, firstIntersectedLine);
-		// const sortedLines = this.sortIntersectionLines(origamiCoordinates, coincidentLines, sense);  // This is to find the lowest one and select that and the above. This makes rotating faces below the from point possible, but it might be undesirable in some cases. Introduce pin concept to solve them?
+		const sortedLines = this.sortIntersectionLines(origamiCoordinates, sense, plane, coincidentLines, firstIntersectedLine); 
 		// const axisLines = this.selectAxisLines();  
 		// return axisLines;
 		return 0;
@@ -394,6 +394,23 @@ export class FoldSolver {
 			}
 		}
 		return true;
+	}
+
+	public static sortIntersectionLines(origamiCoordinates: IOrigamiCoordinates, sense: 'M'|'V', plane: IPlane, coincidentLines: IintersectionLine[], firstIntersectedLine: IintersectionLine) {
+
+		// const rotationForwardVersor = ;
+		// const rotationUpVersor = ;  // Projeção da normal da face de cá da primeira linha de interseção, com o plane. (utilizar o mathhelpers.projectVectorOntoPlane()). Talvez utilizar o rotation forward versor para escolher a face que tenha a primeira interseção e que tenha pelo menos uma letra para cá (sentido contrario ao planeforwardversor) do plano)
+		const sortedLinesIndexes = [];
+		for (let i = 0; i < coincidentLines.length; i++) {
+
+
+
+
+
+		}
+
+
+
 	}
 
 };

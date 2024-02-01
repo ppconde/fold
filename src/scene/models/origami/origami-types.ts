@@ -43,7 +43,7 @@ export interface IOrigamiCoordinates {
     points: IVertices,
     faces: string[][],
     pattern: IVertices,
-    faceOrder: Record<number, number[]>
+    faceOrder: Record<number, Record<number, 1|-1>>
 }
 
 export interface IintersectionPoint {
