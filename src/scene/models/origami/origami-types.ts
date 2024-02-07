@@ -4,7 +4,7 @@ export interface IMeshInstruction {
     angle: number;
 }
 
-export interface IRotationReport {
+export interface IFaceRotationInstruction {
     faces: string[][];
     axis: string[];
     angle: number;
@@ -34,8 +34,8 @@ export interface IParseRotation {
 export type TranslationKeys = keyof Pick<IParseTranslation, 'from' | 'to' | 'sense'>;
 
 export interface TranslationValues {
-    from: string[];
-    to: string[];
+    startNodes: string[];
+    endNodes: string[];
     sense: 'V' | 'M';
 }
 

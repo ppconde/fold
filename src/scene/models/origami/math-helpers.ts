@@ -5,6 +5,9 @@ import * as THREE from 'three';
 
 export class MathHelpers {
 
+  public static elementWiseAnd(a: Array<any>, b: Array<any>) {
+    return a.map((e, i) => e && b[i]);
+  }
 
   public static findSortIndices(a: Array<any>){
     let indices = [...Array(a.length).keys()];
@@ -18,7 +21,6 @@ export class MathHelpers {
     return JSON.stringify(a) == JSON.stringify(b);
   }
 
-
   public static checkIfEdgesAreEqual(a: Array<unknown>, b: Array<unknown>) {
     return (JSON.stringify(a) == JSON.stringify(b) || JSON.stringify(a) == JSON.stringify(b.reverse()));
   }
@@ -30,12 +32,41 @@ export class MathHelpers {
     return i != -1;
   }
 
+  public static checkIfEdgesContainEdge(a: Array<any>, b: Array<unknown>) {
+    for (const edge of a) {
+      if (MathHelpers.checkIfEdgesAreEqual(edge, b)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static checkIfFaceContainsEdge(face: Array<any>, edge: Array<unknown>) {
+    for (let i = 0; i < face.length; i++) {
+      const faceEdge = [face[i], face[(i + 1) % face.length]];
+      if (this.checkIfEdgesAreEqual(faceEdge, edge)) {
+          return true;
+      }
+    }
+    return false;
+  }
+
+  public static checkIfArrayContainsAnyElement(a: Array<any>, b: Array<unknown>) {
+    return b.some(e=> a.includes(e));
+  }
+
+
   public static checkIfArrayContainsElements(a: Array<unknown>, b: Array<unknown>){
     return b.every(r => a.includes(r));
   }
 
   public static indexArray(a: Array<unknown>, b: number[]): Array<any> {
     return b.map((element) => a[element]);
+  }
+
+  public static logicallyIndexArray(a: Array<any>, b: boolean[]) {
+    const indices = b.flatMap((bool, index) => bool ? index : [])
+    return this.indexArray(a, indices);
   }
 
   /**
@@ -51,6 +82,15 @@ export class MathHelpers {
   public static checkIfArrayIsEmpty(a: Array<unknown>) {
     return (Array.isArray(a) && a.length);
   }
+
+  public static checkIfObjectIsEmpty(obj: Object) {
+		for (const prop in obj) {
+		  if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+			return false;
+		  }
+		}
+		return true;
+	  }
 
   public static findIntersectionBetweenLineAndPlane(lineSegment: Record<string, number[]>, plane: IPlane): [boolean, number[], number] {
     const lineTHREE = new THREE.Line3(new THREE.Vector3(...lineSegment.startPoint), new THREE.Vector3(...lineSegment.endPoint));  // Line3

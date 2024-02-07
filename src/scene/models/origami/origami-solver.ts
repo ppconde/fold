@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { FoldSolver } from './fold-solver'
-import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices, IOrigamiCoordinates, IOrigamiMesh, IRotationReport, IParsingInstruction} from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, IVertices, IOrigamiCoordinates, IOrigamiMesh, IFaceRotationInstruction, IParsingInstruction} from './origami-types';
 
 
 export class OrigamiSolver {
@@ -16,20 +16,20 @@ export class OrigamiSolver {
 		const parsingInstructions = this.setParsingInstructions();
 
 		// Set rotation reports
-		let rotationReport: IRotationReport;
-		const rotationReports = [];
+		let faceRotationInstruction: IFaceRotationInstruction;
+		const faceRotationInstructions = [];
 
 		// Execute fold instructions
 		for (const instruction of foldInstructions) {
 			// Execute fold instruction
-			[origamiCoordinates, rotationReport] = this.solveInstruction(origamiCoordinates, parsingInstructions, instruction, tolerance);
+			[origamiCoordinates, faceRotationInstruction] = this.solveInstruction(origamiCoordinates, parsingInstructions, instruction, tolerance);
 
 			// Save rotation report
-			rotationReports.push(rotationReport);
+			faceRotationInstructions.push(faceRotationInstruction);
 		}
 		// Create face meshes and rotation instructions
 		const meshes = this.createFaceMeshes(origamiCoordinates);
-		const meshInstructions = this.createMeshInstructions(meshes, rotationReports);
+		const meshInstructions = this.createMeshInstructions(meshes, faceRotationInstructions);
 		return [meshes, meshInstructions];
 	}
 
@@ -51,9 +51,9 @@ export class OrigamiSolver {
 		return parsingInstructions;
 	}
 
-	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string, tolerance: number): [IOrigamiCoordinates, IRotationReport]{
+	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string, tolerance: number): [IOrigamiCoordinates, IFaceRotationInstruction]{
 		// Set rotation report
-		let rotationReport: IRotationReport;
+		let rotationReport: IFaceRotationInstruction;
 
 		// Unpack parsing instructions
 		const translation = parsingInstructions.translation;
@@ -69,7 +69,6 @@ export class OrigamiSolver {
 
 		// In the case it's neither, thow an error
 		} else {
-			console.log(1);
 			throw new Error('The instruction is neither a translation nor a rotation!');
 		}
 		return [origamiCoordinates, rotationReport];
@@ -84,7 +83,7 @@ export class OrigamiSolver {
 		return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
 	}
 
-	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IRotationReport[]): IMeshInstruction[]{
+	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[]{
 		return [{meshIds: [0], axis: ['e', 'f'], angle: 180}];
 	}
 
