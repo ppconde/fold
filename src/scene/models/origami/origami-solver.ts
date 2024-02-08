@@ -33,12 +33,22 @@ export class OrigamiSolver {
 		return [meshes, meshInstructions];
 	}
 
+	// public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
+	// 	let origamiCoordinates: IOrigamiCoordinates = {
+	// 		points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
+	// 		faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
+	// 		pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
+	// 		faceOrder: {0: {1: 1},  1: {0: -1}},
+	// 	};
+	// 	return origamiCoordinates;
+	// }
+
 	public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
 		let origamiCoordinates: IOrigamiCoordinates = {
-			points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
-			faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
-			pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
-			faceOrder: {0: {1: 1},  1: {0: -1}},
+			points: {'a':[0,0,0],'b': [length,0,0],'c':[length,width,0],'d':[0,width,0],'e':[0,width*2/5,0], 'f':[length*5/10,0,0],'g':[length*5/10,width*1/5,0],'h':[length*8/10,width*1/5,0],'i':[length*8/10,width*4/5,0], 'j':[length*5/10,width*4/5,0],'k':[length*5/10,width*3/5,0],'l':[length*7/10,width*3/5,0],'m':[length*7/10,width*2/5,0]},
+			faces: [['a','f','g','h','i','j','k','l','m','e'], ['f','b','c','d','e','m','l','k','j','i','h','g']],
+			pattern: {'a':[0,0],'b': [length,0],'c':[length,width],'d':[0,width],'e':[0,width*2/5], 'f':[length*5/10,0],'g':[length*5/10,width*1/5],'h':[length*8/10,width*1/5],'i':[length*8/10,width*4/5], 'j':[length*5/10,width*4/5],'k':[length*5/10,width*3/5],'l':[length*7/10,width*3/5],'m':[length*7/10,width*2/5]},
+			faceOrder: {0: {},  1: {}},
 		};
 		return origamiCoordinates;
 	}

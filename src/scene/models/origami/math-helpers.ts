@@ -1,6 +1,6 @@
 import { uint } from 'three/examples/jsm/nodes/Nodes.js';
 import { TypeGuards } from '../../../guards/type-guards';
-import { IVertices, IPlane } from './origami-types';
+import { IVertices, IPlane, I2DVector } from './origami-types';
 import * as THREE from 'three';
 
 export class MathHelpers {
@@ -15,6 +15,25 @@ export class MathHelpers {
     return indices;
   }
 
+  // public static sortByIndices(a: Array<any>, b: Array<any>){
+  //   a.sort((e,i) => e.index - b.index);
+  //   return a;
+
+  // }
+
+  public static findPositionOfArrayInArray(a: Array<any>, b: Array<any>) {
+    for (let i = 0; i < b.length; i++) {
+      if (this.checkIfArraysAreEqual(a, b[i])) {
+          return i;
+      }
+    }  
+    return -1;
+  }
+
+  public static findPositionOfMinimumValue(a: Array<any>) {
+    return a.reduce((r, v, i, a) => v >= a[r] ? r : i, -1);
+  }
+
   public static checkIfArraysAreEqual(a: Array<unknown>, b: Array<unknown>) {
     // WARNING: arrays must not contain {objects} or behavior may be undefined; a better (more complicated) option might be presented here:
     // https://stackoverflow.com/questions/3115982/how-to-check-if-two-arrays-are-equal-with-javascript
@@ -25,10 +44,16 @@ export class MathHelpers {
     return (JSON.stringify(a) == JSON.stringify(b) || JSON.stringify(a) == JSON.stringify(b.reverse()));
   }
 
+  public static checkIfPointsAreEqual(a: Array<any>, b: Array<any>) {
+    const tolerance = 0.0001;
+    const d = this.findDistanceBetweenPoints(a, b);
+    return d < tolerance;
+  }
+
   public static checkIfArrayContainsArray(a: Array<unknown>, b: Array<unknown>) {
     const s1 = JSON.stringify(a);
     const s2 = JSON.stringify(b);
-    const i = s1.indexOf(s2);
+    const i = s2.indexOf(s1);
     return i != -1;
   }
 
@@ -50,6 +75,17 @@ export class MathHelpers {
     }
     return false;
   }
+
+  public static checkIfFaceContainsDirectionalEdge(face: Array<any>, edge: Array<unknown>) {
+    for (let i = 0; i < face.length; i++) {
+      const faceEdge = [face[i], face[(i + 1) % face.length]];
+      if (this.checkIfArraysAreEqual(faceEdge, edge)) {
+          return true;
+      }
+    }
+    return false;
+  }
+
 
   public static checkIfArrayContainsAnyElement(a: Array<any>, b: Array<unknown>) {
     return b.some(e=> a.includes(e));
@@ -80,7 +116,7 @@ export class MathHelpers {
   }
 
   public static checkIfArrayIsEmpty(a: Array<unknown>) {
-    return (Array.isArray(a) && a.length);
+    return (Array.isArray(a) && a.length === 0);
   }
 
   public static checkIfObjectIsEmpty(obj: Object) {
@@ -238,6 +274,15 @@ export class MathHelpers {
     return this.addArray(u, this.multiplyArray(this.projectVectorOntoVector(u, planeNormal), -1));
   }
 
+  public static findClockwiseAngleBetweenVectors(u: [number, number], v: [number, number]) {
+    u = this.findVectorVersor(u) as [number, number];
+    v = this.findVectorVersor(v) as [number, number];
+    const dot = this.dot(u, v);
+    const det = u[0] * v[1] - u[1] * v[0]; 
+    const angle = (Math.atan2(det, dot) * 180 / Math.PI + 360) % 360;  // In degrees
+    return angle;
+  }
+
   /**
  * Shifts points by given values - used to center a given shape
  * @param points 
@@ -265,8 +310,25 @@ export class MathHelpers {
     return this.findVectorVersor(u);
   }
 
+  public static findVectorNormalVersor(u: [number, number]) {
+    const v = [-u[1], u[0]];
+    return this.findVectorVersor(v);
+  }
 
+  public static findDistanceBetweenPointAndPlane(p: number[], plane: IPlane) {
+    return MathHelpers.dot(MathHelpers.addArray(p, MathHelpers.multiplyArray(plane.point, -1)), plane.versor); // Signed distance!
+  }
 
+  public static findPointSideOfPlane(p: number[], plane: IPlane) {
+    const tolerance = 0.0001;
+    const d = MathHelpers.findDistanceBetweenPointAndPlane(p, plane);
+    return d > tolerance ? 1 : d < -tolerance ? -1 : 0;
+  }
 
+  public static findFaceSideOfPlane(face: string[], points: IVertices, plane: IPlane) {
+    const nodeSides = face.map((e) => this.findPointSideOfPlane(points[e], plane));
+    const faceSide = nodeSides.every((e) => e === 1) ? 1 : nodeSides.every((e) => e === -1) ? -1 : 0;
+    return faceSide;
+  }
 
 }

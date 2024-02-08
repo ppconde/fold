@@ -1,11 +1,11 @@
 import { MathHelpers } from './math-helpers';
-import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction} from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, I2DVector} from './origami-types';
 
 
 export class FoldSolver {
 
 	public static solveTranslation(origamiCoordinates: IOrigamiCoordinates, instruction: string, translation: IParseTranslation, tolerance: number): [IOrigamiCoordinates, IFaceRotationInstruction] {
-		// Get 'from point', 'to point', and rotation sense
+		// Get instruction values
 		const { startNodes, endNodes, sense } = this.getFromFoldInstruction(['from', 'to', 'sense'], translation, instruction);
 
 		// Finds plane between from and to points
@@ -423,21 +423,19 @@ export class FoldSolver {
 		const intersectedEdges = this.getIntersectionLinesEdges(coincidentLines);
 
 		let faceLabels: {rotate: boolean[], dontRotate: boolean[], divide: boolean[]} = {rotate:[], dontRotate:[], divide:[]};
-		faceLabels.rotate = this.sweepFacesUntilEdges(startFaces, origamiCoordinates.faces, intersectedEdges);
-		faceLabels.dontRotate = this.sweepFacesUntilEdges(endFaces, origamiCoordinates.faces, intersectedEdges);
+		faceLabels.rotate = this.sweepFacesUntilPlane(startFaces, origamiCoordinates, plane);
+		faceLabels.dontRotate = this.sweepFacesUntilPlane(endFaces, origamiCoordinates, plane);
 		faceLabels.divide  = MathHelpers.elementWiseAnd(faceLabels.rotate, faceLabels.dontRotate);
 
 		// Crease
 		const divideFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.divide);
 		const intersectionLine = this.findIntersectionLineFromFace(divideFaces[0], coincidentLines);
-		[origamiCoordinates, creaseNodes] = this.creaseOrigami(origamiCoordinates, intersectionLine);
+		origamiCoordinates = this.creaseOrigami(origamiCoordinates, intersectionLine);
 
-		// Update Labels somehow
+		// Update Labels somehow. Is it necessary? Maybe do sweeping again after.
 
 		// Find faces that will indirectly rotate or not rotate (by being on top of a start or end node, respectively)
 		let overlaidFaces = this.findOverlaidFaces(origamiCoordinates, facesToRotate);
-
-
 
 		// let creaseNodes;
 		// [origamiCoordinates, creaseNodes] = this.creaseOrigami(origamiCoordinates, firstIntersectionLine);
@@ -454,13 +452,179 @@ export class FoldSolver {
 
 		const faceRotationInstructions = {faces: [['a','b','c','d']], axis: ['e','f'], angle: 180};
 		return faceRotationInstructions;
-
-
 	}
 
-	public static creaseOrigami(origamiCoordinates, intersectionLine, faceLabels)  {
 
+	public static creaseOrigami(origamiCoordinates: IOrigamiCoordinates, intersectionLine: IintersectionLine)  {
+		// Unpack origami coordinates
+		let points = origamiCoordinates.points;
+		let pattern = origamiCoordinates.pattern;
+		let faces = origamiCoordinates.faces;
+		let newFaces = [];
+		let subFaces;
+		// Divide each face
+		for (const face of faces) {
+			[subFaces, points, pattern] = this.divideFace(face, points, pattern, intersectionLine);
+			newFaces.push(...subFaces);
+		}
+		// Update origami coordinates
+		origamiCoordinates.points = points;
+		origamiCoordinates.pattern = pattern;
+		origamiCoordinates.faces = newFaces;
+		return origamiCoordinates;
+	}
+
+
+	public static divideFace(face: string[], points: IVertices, pattern: IVertices, intersectionLine: IintersectionLine): [string[][], IVertices, IVertices] {
+		// Add intersection points to face
+		let intersectionPointIds = [];
+		[face, points, pattern, intersectionPointIds] = this.addIntersectionPoints(face, points, pattern, intersectionLine);
+		// Divide face
+		const currentFaceNodeId = 0;
+		const previousFaceNodeId = -1;
+		let subface: string[] = [];
+		let subfaces: string[][] = [];
+		subfaces = this.divideFaceHelper(face, pattern, intersectionPointIds, currentFaceNodeId, previousFaceNodeId, subface, subfaces)
+		return [subfaces, points, pattern];
+	}
+
+
+	public static divideFaceHelper(face: string[], pattern: IVertices, intersectionPointIds: number[], currentId: number, previousId: number, subface: string[], subfaces:string[][]) {
+		// Get current node
+		const currentNode = face[currentId % face.length];
+		// If current node is at the start of subface (subface has been completed), return subfaces
+		if (subface.includes(currentNode)) {
+			subfaces.push(subface);
+			return subfaces;
+		}
+		// If not, add current node
+		subface.push(currentNode);
 		
+		// If possible, follow crease
+		const nextCreaseNodeId = this.findNextCreaseNodeId(face, pattern, intersectionPointIds, currentId, previousId);
+		if (nextCreaseNodeId !== -1) {
+			previousId = currentId;
+			subfaces = this.divideFaceHelper(face, pattern, intersectionPointIds, nextCreaseNodeId, previousId, subface, subfaces);
+			// Stop making next subface if first edge matches (directionally) the edge of a previously made subface
+			const nextEdge = [face[currentId % face.length], face[currentId + 1 % face.length]];
+			if (subfaces.some((e) => MathHelpers.checkIfFaceContainsDirectionalEdge(e, nextEdge))) {
+				return subfaces;
+			}
+			// Add current node
+			subface = [face[currentId % face.length]];
+
+		}
+		// Continue to add points
+		previousId = currentId;
+		currentId = currentId + 1;
+		subfaces = this.divideFaceHelper(face, pattern, intersectionPointIds, currentId, previousId, subface, subfaces);
+		return subfaces;
+	}
+
+
+
+	public static findNextCreaseNodeId(face: string[], pattern: IVertices, intersectionPointIds: number[], currentId: number, previousId: number): number {
+		const angleTolerance = 0.5;
+		const currentNode = face[currentId];
+		const currentIntersectionPointPosition = intersectionPointIds.indexOf(currentId);
+		if (currentIntersectionPointPosition !== -1) {
+			const adjacentIntersectionPointSteps = [-1, +1];
+			for (const step of adjacentIntersectionPointSteps) {
+				if (currentIntersectionPointPosition + step >= 0 && currentIntersectionPointPosition + step < intersectionPointIds.length) {
+					const adjacentIntersectionPointId = intersectionPointIds[currentIntersectionPointPosition + step];
+					const adjacentIntersectionNode = face[adjacentIntersectionPointId];
+					const previousNode = face[(previousId + face.length) % face.length];
+					const nextNode = face[(currentId + 1) % face.length];
+					const backVector = MathHelpers.findVectorBetweenPoints(pattern[currentNode], pattern[previousNode]) as [number, number];
+					const frontVector = MathHelpers.findVectorBetweenPoints(pattern[currentNode], pattern[nextNode]) as [number, number];
+					const intersectionPointVector = MathHelpers.findVectorBetweenPoints(pattern[currentNode], pattern[adjacentIntersectionNode]) as [number, number];
+					const frontToIntersectionAngle = MathHelpers.findClockwiseAngleBetweenVectors(frontVector, intersectionPointVector);
+					const frontToBackAngle = MathHelpers.findClockwiseAngleBetweenVectors(frontVector, backVector); 
+					if (frontToIntersectionAngle > 0 + angleTolerance && frontToIntersectionAngle < frontToBackAngle - angleTolerance) {
+						return adjacentIntersectionPointId;
+					}
+				}
+			}
+		}
+		return -1;
+	}
+	
+	public static findNextCreaseNodeIdOld(face: string[], pattern: IVertices, intersectionPointIds: number[], currentId: number): number {
+		const tolerance = 0.001;
+		// Current point must be crease point, and there must be an eligible crease point to connect with (the closest crease point connected by paper)
+		if (intersectionPointIds.includes(currentId)) {
+			const nextNonCreasedEdge = [face[currentId], face[currentId + 1 % face.length]];
+			const nextNonCreasedVector = MathHelpers.findVectorBetweenPoints(pattern[nextNonCreasedEdge[0]], pattern[nextNonCreasedEdge[1]]) as [number, number];
+			const nextNonCreasedNormalVersor = MathHelpers.findVectorNormalVersor(nextNonCreasedVector);
+			const currentIntersectionPoint = face[currentId];
+			const creaseDistances = [];
+			const elegibleIntersectionPointIds = [];
+			for (const id of intersectionPointIds) {
+				const creaseVector = MathHelpers.findVectorBetweenPoints(pattern[currentIntersectionPoint], pattern[face[id]]);
+				const distanceAlongNonCreasedNormalVersor = MathHelpers.dot(nextNonCreasedNormalVersor, creaseVector);
+				// If crease point is not coincident (current point), colinear (next face point after edge), nor behind
+				if (distanceAlongNonCreasedNormalVersor > tolerance) {
+					creaseDistances.push(distanceAlongNonCreasedNormalVersor);
+					elegibleIntersectionPointIds.push(id);
+				}
+			}
+			// Find next crease point
+			if (!MathHelpers.checkIfArrayIsEmpty(creaseDistances)){
+				const creasePointIndex = MathHelpers.findPositionOfMinimumValue(creaseDistances);
+				return elegibleIntersectionPointIds[creasePointIndex];
+			}
+		}
+		return -1;
+	}
+
+	public static addIntersectionPoints(face: string[], points: IVertices, pattern: IVertices, intersectionLine: IintersectionLine): [string[], IVertices, IVertices, number[]] {
+		let newFace = [];
+		let intersectionPointIds = [];
+		let intersectionPointIdsOrder = [];
+		for (let i = 0; i < face.length; i++) {
+			newFace.push(face[i]);
+			const edge = [face[i], face[(i + 1) % face.length]];
+			for (let j = 0; j < intersectionLine.length; j++) {
+				const intersectionPoint = intersectionLine[j];
+				if (MathHelpers.checkIfEdgesAreEqual(edge, intersectionPoint.edge)) {
+					let intersectionAtNode = false;
+					for (let k = 0; k < edge.length; k++) {
+						if (MathHelpers.checkIfPointsAreEqual(points[edge[k]], intersectionPoint.coord)) {
+							intersectionPointIds.push((newFace.length - 1 + k));  // The id will be the last node (k=0) or the next (k=1)
+							intersectionPointIdsOrder.push(j);
+							intersectionAtNode = true;
+							break;
+						}
+					}
+					if (!intersectionAtNode) {
+						const newNodeName = this.createNewNodeName(points);
+						newFace.push(newNodeName);
+						points[newNodeName] = intersectionPoint.coord;
+						const intersectionPointDistance = MathHelpers.findDistanceBetweenPoints(points[edge[0]], intersectionPoint.coord);
+						const patternEdgeVersor = MathHelpers.findVersorBetweenPoints(pattern[edge[0]], pattern[edge[1]]);
+						const patternIntersectionPoint = MathHelpers.addArray(pattern[edge[0]], MathHelpers.multiplyArray(patternEdgeVersor, intersectionPointDistance));
+						pattern[newNodeName] = patternIntersectionPoint;
+						intersectionPointIds.push((newFace.length - 1)); // The id will be the last node
+						intersectionPointIdsOrder.push(j);
+					}
+				}
+			}
+		}
+
+		// This is to antecipate an error in the case in whick it's the face point last iteration and the "next node" is added. I am not 100% if it is necessary.
+		for (let i = 0; i < intersectionPointIds.length; i++) {
+			intersectionPointIds[i] = intersectionPointIds[i] % newFace.length;
+		}
+		// Preserve intersection line point order; If commented, the order will be face edge order.
+		const sortIndices = MathHelpers.findSortIndices(intersectionPointIdsOrder);
+		intersectionPointIds = MathHelpers.indexArray(intersectionPointIds, sortIndices);
+		return [newFace, points, pattern, intersectionPointIds];
+	}
+
+	public static createNewNodeName(points: IVertices) {
+		const currentNodeNames = Object.keys(points).map((element, k) => element.charCodeAt(0));
+		const newNodeName = String.fromCharCode(Math.max(...currentNodeNames) + 1);
+		return newNodeName;
 	}
 
 	public static findIntersectionLineFromFace(face: string[], intersectionLines: IintersectionLine[]) {
@@ -477,6 +641,32 @@ export class FoldSolver {
 		}
 		throw new Error('Could not find intersection line that intersected this face to divide! Check why.');
 	}
+
+	public static sweepFacesUntilPlane(startFaces: string[][], origamiCoordinates: IOrigamiCoordinates, plane: IPlane): boolean[] {
+		// Unpack origami coordinates
+		const points = origamiCoordinates.points;
+		const faces = origamiCoordinates.faces;
+		// Set array to store sweeping information
+		const sweptFaceLabels = new Array(faces.length).fill(false);
+		// Convert start faces to ids to improve performance
+		let startFaceIds = [];
+		for (const startFace of startFaces){
+			startFaceIds.push(MathHelpers.findPositionOfArrayInArray(startFace, faces));
+		}
+		while (startFaceIds.length > 0) {
+			const startFaceId = startFaceIds.shift() as number;
+			sweptFaceLabels[startFaceId] = true;
+			const [_, neighborFaceIds] = this.findNeighborFaces(faces[startFaceId], faces);
+			for (const neighborFaceId of neighborFaceIds) {
+				// If neighbor has not been selected and it is not beyond plane
+				if (sweptFaceLabels[neighborFaceId] === false && MathHelpers.findFaceSideOfPlane(faces[neighborFaceId], points, plane) !== +1) {
+					startFaceIds.push(neighborFaceId);
+				}
+			}
+		}
+		return sweptFaceLabels;
+	}
+
 
 	public static sweepFacesUntilEdges(startFaces: string[][], faces: string[][], endEdges: string[][]): boolean[] {
 		// Set array to store sweeping information
