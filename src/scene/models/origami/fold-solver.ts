@@ -548,34 +548,6 @@ export class FoldSolver {
 		}
 		return -1;
 	}
-	
-	public static findNextCreaseNodeIdOld(face: string[], pattern: IVertices, intersectionPointIds: number[], currentId: number): number {
-		const tolerance = 0.001;
-		// Current point must be crease point, and there must be an eligible crease point to connect with (the closest crease point connected by paper)
-		if (intersectionPointIds.includes(currentId)) {
-			const nextNonCreasedEdge = [face[currentId], face[currentId + 1 % face.length]];
-			const nextNonCreasedVector = MathHelpers.findVectorBetweenPoints(pattern[nextNonCreasedEdge[0]], pattern[nextNonCreasedEdge[1]]) as [number, number];
-			const nextNonCreasedNormalVersor = MathHelpers.findVectorNormalVersor(nextNonCreasedVector);
-			const currentIntersectionPoint = face[currentId];
-			const creaseDistances = [];
-			const elegibleIntersectionPointIds = [];
-			for (const id of intersectionPointIds) {
-				const creaseVector = MathHelpers.findVectorBetweenPoints(pattern[currentIntersectionPoint], pattern[face[id]]);
-				const distanceAlongNonCreasedNormalVersor = MathHelpers.dot(nextNonCreasedNormalVersor, creaseVector);
-				// If crease point is not coincident (current point), colinear (next face point after edge), nor behind
-				if (distanceAlongNonCreasedNormalVersor > tolerance) {
-					creaseDistances.push(distanceAlongNonCreasedNormalVersor);
-					elegibleIntersectionPointIds.push(id);
-				}
-			}
-			// Find next crease point
-			if (!MathHelpers.checkIfArrayIsEmpty(creaseDistances)){
-				const creasePointIndex = MathHelpers.findPositionOfMinimumValue(creaseDistances);
-				return elegibleIntersectionPointIds[creasePointIndex];
-			}
-		}
-		return -1;
-	}
 
 	public static addIntersectionPoints(face: string[], points: IVertices, pattern: IVertices, intersectionLine: IintersectionLine): [string[], IVertices, IVertices, number[]] {
 		let newFace = [];
