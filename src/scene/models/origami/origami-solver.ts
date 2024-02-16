@@ -24,7 +24,7 @@ export class OrigamiSolver {
 			// Execute fold instruction
 			[origamiCoordinates, faceRotationInstruction] = this.solveInstruction(origamiCoordinates, parsingInstructions, instruction, tolerance);
 
-			// Save rotation report
+			// Save instruction used to rotate points
 			faceRotationInstructions.push(faceRotationInstruction);
 		}
 		// Create face meshes and rotation instructions

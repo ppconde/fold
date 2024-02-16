@@ -1,7 +1,9 @@
 import { uint } from 'three/examples/jsm/nodes/Nodes.js';
 import { TypeGuards } from '../../../guards/type-guards';
-import { IVertices, IPlane, I2DVector } from './origami-types';
+import { IVertices, IPlane } from './origami-types';
 import * as THREE from 'three';
+import { PolygonIntersectionHelper } from './polygon-intersection-helper.js'
+
 
 export class MathHelpers {
 
@@ -115,7 +117,7 @@ export class MathHelpers {
     return b.map((element) => a[element]);
   }
 
-  public static checkIfArrayIsEmpty(a: Array<unknown>) {
+  public static checkIfArrayIsEmpty(a: Array<any>) {
     return (Array.isArray(a) && a.length === 0);
   }
 
@@ -329,6 +331,72 @@ export class MathHelpers {
     const nodeSides = face.map((e) => this.findPointSideOfPlane(points[e], plane));
     const faceSide = nodeSides.every((e) => e === 1) ? 1 : nodeSides.every((e) => e === -1) ? -1 : 0;
     return faceSide;
+  }
+
+  public static checkIfLineSegmentsIntersect(a: [number, number], b: [number, number], c: [number, number], d: [number, number]) {
+    const tolerance = 0.0001;
+    const det = (b[0] - a[0]) * (d[1] - c[1]) - (d[0] - c[0]) * (b[1] - a[1]);
+    if (det === 0) {
+      return false;
+    } else {
+      const lambda = ((d[1] - c[1]) * (d[0] - a[0]) + (c[0] - d[0]) * (d[1] - a[1])) / det;
+      const gamma = ((a[1] - b[1]) * (d[0] - a[0]) + (b[0] - a[0]) * (d[1] - a[1])) / det;
+      return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1)
+    }
+  }
+
+
+  public static checkIfCoplanarFacesIntersect(a: number[][], b: number[][]): boolean{
+    let polygon1: {x:number, y:number}[] = [];
+    let polygon2: {x:number, y:number}[] = [];
+    a.forEach((e) => polygon1.push({x: e[0], y: e[1]}));
+    b.forEach((e) => polygon2.push({x: e[0], y: e[1]}));
+    let c = PolygonIntersectionHelper.intersect(polygon1, polygon2) as any[];  // Could c = false?
+    return this.checkIfArrayIsEmpty(c);
+  }
+
+
+  // (https://stackoverflow.com/questions/49769459/convert-points-on-a-3d-plane-to-2d-coordinates)
+  public static convertCoplanarPointsTo2D(a: number[][], planeAxis: {o:number[], n:number[], u:number[], v:number[]}) {
+
+    const o = planeAxis.o;
+    const n = planeAxis.n;
+    const u = planeAxis.u;
+    const v = planeAxis.v;
+
+    const S = new THREE.Matrix4(); 
+    S.set(  o[0], u[0], v[0], n[0], 
+            o[1], u[1], v[1], n[1],
+            o[2], u[2], v[2], n[2], 
+            1, 1, 1, 1 );
+    
+    const D = new THREE.Matrix4(); 
+    D.set(  0, 1, 0, 0, 
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+            1, 1, 1, 1 );
+
+    S.invert();
+
+    const b = [];
+    for (let i = 0; i < a.length; i++) {
+      const p = new THREE.Vector3( ...a[i] );
+      p.applyMatrix4(S);
+      b.push([p.getComponent(0), p.getComponent(1)]);
+    }
+    return b;
+  }
+
+
+  public static checkIfPointsAreCollinear(a: number[][]) {
+    const u = MathHelpers.findVersorBetweenPoints(a[0], a[1]);
+    for (let i = 2; i < a.length; i++) {
+      const v = MathHelpers.findVersorBetweenPoints(a[0], a[i]);
+      if (!this.checkIfPointsAreEqual(u,v)){
+        return false; 
+      }
+    }
+    return true;
   }
 
 }

@@ -39,11 +39,13 @@ export interface TranslationValues {
     sense: 'V' | 'M';
 }
 
+export type IFaceGraph = Record<number, Record<number, 1|-1>>;
+
 export interface IOrigamiCoordinates {
     points: IVertices,
     faces: string[][],
     pattern: IVertices,
-    faceOrder: Record<number, Record<number, 1|-1>>
+    faceOrder: IFaceGraph
 }
 
 export interface IintersectionPoint {
@@ -67,3 +69,19 @@ export interface IParsingInstruction {
     translation: IParseTranslation,
     rotation: IParseRotation,
 }
+
+// export type IPolygonPoint = {'x':number,'y':number};
+
+// export type IPolygonPoint = Record<string,number>
+
+export interface IPolygonPoint {x: any, y: any, t?: any};
+
+export type IPolygonEdge = [IPolygonPoint, IPolygonPoint]
+
+export type IPolygon = [IPolygonPoint, IPolygonPoint, IPolygonPoint, ...IPolygonPoint[]];
+
+export interface IPolygonLabel {
+    loc: string,
+    theta?: number,
+    t?: number
+};

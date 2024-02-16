@@ -1,5 +1,5 @@
 import { MathHelpers } from './math-helpers';
-import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, I2DVector} from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, I2DVector, IFaceGraph} from './origami-types';
 
 
 export class FoldSolver {
@@ -460,17 +460,60 @@ export class FoldSolver {
 		let points = origamiCoordinates.points;
 		let pattern = origamiCoordinates.pattern;
 		let faces = origamiCoordinates.faces;
+		let faceOrder = origamiCoordinates.faceOrder;
+		// Set new origami coordinates
 		let newFaces = [];
+		let newPoints = points;
+		let newPattern = {};
+		let newFaceOrder: IFaceGraph = {};
 		let subFaces;
 		// Divide each face
-		for (const face of faces) {
-			[subFaces, points, pattern] = this.divideFace(face, points, pattern, intersectionLine);
-			newFaces.push(...subFaces);
+		let faceToNewFaceCorrespondence: Record<number,number[]> = {};
+		let subFaceCount = 0;
+		for (let i = 0; i < faces.length; i++) {
+			[subFaces, newPoints, newPattern] = this.divideFace(faces[i], newPoints, pattern, intersectionLine);
+			faceToNewFaceCorrespondence[i] = [];
+			for (let j = 0; j < subFaces.length; j++) {
+				newFaces.push(subFaces[j]);
+				faceToNewFaceCorrespondence[i].push(subFaceCount);
+				subFaceCount++;
+			}
 		}
+		// Update face order
+		for (let i = 0; i < faces.length; i++) {
+			const subfaceIds = faceToNewFaceCorrespondence[i];
+			const contactFaceIds = Object.keys(faceOrder[i]).map(e => {return Number(e)});
+
+			for (let j = 0; j < subfaceIds.length; j++) {
+				const subface = newFaces[subfaceIds[j]];
+				const o = newPoints[subface[0]];
+				const n = MathHelpers.findPlaneNormalVersor(MathHelpers.indexObject(newPoints, subface));
+				const u = MathHelpers.findVersorBetweenPoints(newPoints[subface[0]], newPoints[subface[1]]);
+				const v = MathHelpers.cross(n,u);
+				const planeAxis = {o:o, n:n, u:u, v:v};
+				const subface2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(newPoints, subface), planeAxis);
+				newFaceOrder[subfaceIds[j]] = {};
+
+				for (let k = 0; k < contactFaceIds.length; k++) {
+					const contactFaceSide = faceOrder[i][contactFaceIds[k]];
+					const subContactFaceIds = faceToNewFaceCorrespondence[contactFaceIds[k]];
+
+					for (let m = 0; m < subContactFaceIds.length; m++) {
+						const contactFace2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(newPoints, newFaces[subContactFaceIds[m]]), planeAxis);
+
+						if (MathHelpers.checkIfCoplanarFacesIntersect(subface2D, contactFace2D)) {
+							newFaceOrder[subfaceIds[j]][subContactFaceIds[m]] = contactFaceSide;
+						}
+					}
+				}
+			}
+		}
+
 		// Update origami coordinates
-		origamiCoordinates.points = points;
-		origamiCoordinates.pattern = pattern;
+		origamiCoordinates.points = newPoints;
+		origamiCoordinates.pattern = newPattern;
 		origamiCoordinates.faces = newFaces;
+		origamiCoordinates.faceOrder = newFaceOrder;
 		return origamiCoordinates;
 	}
 

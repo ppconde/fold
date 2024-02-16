@@ -5,6 +5,7 @@ import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
 import foldInstructionsText from '../../../instructions/test-2.text'
+import { PolygonIntersectionHelper } from './polygon-intersection-helper'  // Just for test
 
 
 export class Origami extends THREE.Group {
@@ -69,6 +70,35 @@ export class Origami extends THREE.Group {
     // this.meshes = this.generateMeshes();
 
     const foldInstructions = this.getFoldInstructions();
+
+
+    // let fig1 = [
+    //   { x: 100, y: 200  },
+    //   { x: 300, y: 150  },
+    //   { x: 300, y: 250  }
+    // ];
+    
+    // let fig2 = [
+    //   { x: 200, y: 100  },
+    //   { x: 200, y: 300  },
+    //   { x: 350, y: 300  },
+    //   { x: 350, y: 100  }
+    // ];
+
+
+    let fig1 = [[100,200],[300,150],[300,250]];
+    let fig2 = [[200,100],[200,300],[350,300],[350,100]];
+
+    for (let i = 0; i<fig2.length; i++) {
+      fig2[i][0] += 100;
+
+    }
+
+
+    const intersection =  MathHelpers.checkIfCoplanarFacesIntersect(fig1, fig2);
+
+
+    // const intersection = PolygonIntersectionHelper.intersect(fig1, fig2);
 
     [this.meshes, this.meshInstructions] = OrigamiSolver.solveOrigami(width, length, foldInstructions);
 
