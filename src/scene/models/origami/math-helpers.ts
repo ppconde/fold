@@ -352,7 +352,7 @@ export class MathHelpers {
     a.forEach((e) => polygon1.push({x: e[0], y: e[1]}));
     b.forEach((e) => polygon2.push({x: e[0], y: e[1]}));
     let c = PolygonIntersectionHelper.intersect(polygon1, polygon2) as any[];  // Could c = false?
-    return this.checkIfArrayIsEmpty(c);
+    return !this.checkIfArrayIsEmpty(c);
   }
 
 
@@ -378,10 +378,12 @@ export class MathHelpers {
 
     S.invert();
 
+    const M = D.multiply(S);
+
     const b = [];
     for (let i = 0; i < a.length; i++) {
       const p = new THREE.Vector3( ...a[i] );
-      p.applyMatrix4(S);
+      p.applyMatrix4(M);
       b.push([p.getComponent(0), p.getComponent(1)]);
     }
     return b;

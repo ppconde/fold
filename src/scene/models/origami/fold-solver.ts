@@ -1,5 +1,5 @@
 import { MathHelpers } from './math-helpers';
-import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, I2DVector, IFaceGraph} from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, IFaceGraph} from './origami-types';
 
 
 export class FoldSolver {
@@ -432,10 +432,11 @@ export class FoldSolver {
 		const intersectionLine = this.findIntersectionLineFromFace(divideFaces[0], coincidentLines);
 		origamiCoordinates = this.creaseOrigami(origamiCoordinates, intersectionLine);
 
+		debugger;
 		// Update Labels somehow. Is it necessary? Maybe do sweeping again after.
 
 		// Find faces that will indirectly rotate or not rotate (by being on top of a start or end node, respectively)
-		let overlaidFaces = this.findOverlaidFaces(origamiCoordinates, facesToRotate);
+		// let overlaidFaces = this.findOverlaidFaces(origamiCoordinates, facesToRotate);
 
 		// let creaseNodes;
 		// [origamiCoordinates, creaseNodes] = this.creaseOrigami(origamiCoordinates, firstIntersectionLine);
@@ -463,7 +464,6 @@ export class FoldSolver {
 		let faceOrder = origamiCoordinates.faceOrder;
 		// Set new origami coordinates
 		let newFaces = [];
-		let newPoints = points;
 		let newPattern = {};
 		let newFaceOrder: IFaceGraph = {};
 		let subFaces;
@@ -471,7 +471,7 @@ export class FoldSolver {
 		let faceToNewFaceCorrespondence: Record<number,number[]> = {};
 		let subFaceCount = 0;
 		for (let i = 0; i < faces.length; i++) {
-			[subFaces, newPoints, newPattern] = this.divideFace(faces[i], newPoints, pattern, intersectionLine);
+			[subFaces, points, newPattern] = this.divideFace(faces[i], points, pattern, intersectionLine);
 			faceToNewFaceCorrespondence[i] = [];
 			for (let j = 0; j < subFaces.length; j++) {
 				newFaces.push(subFaces[j]);
@@ -486,12 +486,12 @@ export class FoldSolver {
 
 			for (let j = 0; j < subfaceIds.length; j++) {
 				const subface = newFaces[subfaceIds[j]];
-				const o = newPoints[subface[0]];
-				const n = MathHelpers.findPlaneNormalVersor(MathHelpers.indexObject(newPoints, subface));
-				const u = MathHelpers.findVersorBetweenPoints(newPoints[subface[0]], newPoints[subface[1]]);
+				const o = points[subface[0]];
+				const n = MathHelpers.findPlaneNormalVersor(MathHelpers.indexObject(points, subface));
+				const u = MathHelpers.findVersorBetweenPoints(points[subface[0]], points[subface[1]]);
 				const v = MathHelpers.cross(n,u);
 				const planeAxis = {o:o, n:n, u:u, v:v};
-				const subface2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(newPoints, subface), planeAxis);
+				const subface2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(points, subface), planeAxis);
 				newFaceOrder[subfaceIds[j]] = {};
 
 				for (let k = 0; k < contactFaceIds.length; k++) {
@@ -499,7 +499,7 @@ export class FoldSolver {
 					const subContactFaceIds = faceToNewFaceCorrespondence[contactFaceIds[k]];
 
 					for (let m = 0; m < subContactFaceIds.length; m++) {
-						const contactFace2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(newPoints, newFaces[subContactFaceIds[m]]), planeAxis);
+						const contactFace2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(points, newFaces[subContactFaceIds[m]]), planeAxis);
 
 						if (MathHelpers.checkIfCoplanarFacesIntersect(subface2D, contactFace2D)) {
 							newFaceOrder[subfaceIds[j]][subContactFaceIds[m]] = contactFaceSide;
@@ -510,7 +510,7 @@ export class FoldSolver {
 		}
 
 		// Update origami coordinates
-		origamiCoordinates.points = newPoints;
+		origamiCoordinates.points = points;
 		origamiCoordinates.pattern = newPattern;
 		origamiCoordinates.faces = newFaces;
 		origamiCoordinates.faceOrder = newFaceOrder;

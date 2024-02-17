@@ -4,7 +4,7 @@ import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
-import foldInstructionsText from '../../../instructions/test-2.text'
+import foldInstructionsText from '../../../instructions/test-1.text'
 import { PolygonIntersectionHelper } from './polygon-intersection-helper'  // Just for test
 
 
@@ -86,16 +86,16 @@ export class Origami extends THREE.Group {
     // ];
 
 
-    let fig1 = [[100,200],[300,150],[300,250]];
-    let fig2 = [[200,100],[200,300],[350,300],[350,100]];
+    // let fig1 = [[100,200],[300,150],[300,250]];
+    // let fig2 = [[200,100],[200,300],[350,300],[350,100]];
 
-    for (let i = 0; i<fig2.length; i++) {
-      fig2[i][0] += 100;
+    // for (let i = 0; i<fig2.length; i++) {
+    //   fig2[i][0] += 100;
 
-    }
+    // }
 
 
-    const intersection =  MathHelpers.checkIfCoplanarFacesIntersect(fig1, fig2);
+    // const intersection =  MathHelpers.checkIfCoplanarFacesIntersect(fig1, fig2);
 
 
     // const intersection = PolygonIntersectionHelper.intersect(fig1, fig2);
