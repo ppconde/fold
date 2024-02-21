@@ -14,7 +14,7 @@ export class FoldSolver {
 		// Intersects plane with origami, yielding intersection lines
 		const intersectionLines = this.findIntersectionBetweenPlaneAndEdges(origamiCoordinates, plane);
 
-		// Selects intersection lines which will serve as rotation axis
+		// Find rotation faces, axis and angle
 		const faceRotationInstructions = this.createFaceRotationInstructions(startNodes, endNodes, sense, origamiCoordinates, plane, intersectionLines);
 
 		origamiCoordinates  = this.rotateFaces(origamiCoordinates, faceRotationInstructions);
@@ -410,27 +410,90 @@ export class FoldSolver {
 
 
 	public static createFaceRotationInstructions(fromNodes: string[], toNodes: string[], sense: 'V'|'M', origamiCoordinates: IOrigamiCoordinates, plane: IPlane, intersectionLines: IintersectionLine[]){
-		const origamiGraph = this.convertOrigamiCoordinatesToGraph(origamiCoordinates);
+		// Unpack start and end nodes
 		const fromNode = fromNodes[0];
 		const toNode = toNodes[toNodes.length-1];
+
+		// Find the first intersection line and crease origami
+		const origamiGraph = this.convertOrigamiCoordinatesToGraph(origamiCoordinates);
 		const shortestPath = this.findShortestPath(origamiGraph, fromNode, toNode);
 		const firstIntersectionLine = this.findFirstIntersectionLine(shortestPath, intersectionLines);
-		const coincidentLines = this.selectCoincidentLines(intersectionLines, firstIntersectionLine);
+		origamiCoordinates = this.creaseOrigami(origamiCoordinates, firstIntersectionLine);
 
 		// Find faces that will directly rotate or not rotate (by being connected to a start or end node, respectively)
 		const startFaces = this.findFacesThatContainNodes(origamiCoordinates.faces, [fromNode])
 		const endFaces = this.findFacesThatContainNodes(origamiCoordinates.faces, [toNode])
-		const intersectedEdges = this.getIntersectionLinesEdges(coincidentLines);
-
 		let faceLabels: {rotate: boolean[], dontRotate: boolean[], divide: boolean[]} = {rotate:[], dontRotate:[], divide:[]};
-		faceLabels.rotate = this.sweepFacesUntilPlane(startFaces, origamiCoordinates, plane);
-		faceLabels.dontRotate = this.sweepFacesUntilPlane(endFaces, origamiCoordinates, plane);
+		faceLabels.rotate = this.sweepFacesUntilPlane(startFaces, origamiCoordinates, plane, 1);  // The plane side = 1 could probably be infered if we started sweeping from node instead of face
+		faceLabels.dontRotate = this.sweepFacesUntilPlane(endFaces, origamiCoordinates, plane, -1);
 		faceLabels.divide  = MathHelpers.elementWiseAnd(faceLabels.rotate, faceLabels.dontRotate);
-
-		// Crease
 		const divideFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.divide);
-		const intersectionLine = this.findIntersectionLineFromFace(divideFaces[0], coincidentLines);
-		origamiCoordinates = this.creaseOrigami(origamiCoordinates, intersectionLine);
+
+		// Find faces that will indirectly rotate or not rotate (by being overlaid on a start or end node, respectively)
+		const directRotationFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.rotate);
+		const directNoRotationFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.dontRotate);
+		const intersectionNodes = this.findIntersectionLineNodes(origamiCoordinates, firstIntersectionLine);
+		const rotationAxis = this.findRotationAxis(origamiCoordinates, sense, intersectionNodes, faceLabels);
+		const startOverlaidFaces = this.findOverlaidFaces(directRotationFaces, origamiCoordinates, rotationAxis);
+		const endOverlaidFaces = this.findOverlaidFaces(directNoRotationFaces, origamiCoordinates, rotationAxis);
+		let overlaidFaceLabels: {rotate: boolean[], dontRotate: boolean[], divide: boolean[]} = {rotate:[], dontRotate:[], divide:[]};
+		overlaidFaceLabels.rotate = this.sweepFacesUntilPlane(startOverlaidFaces, origamiCoordinates, plane, 1);  // The plane side = 1 could probably be infered if we started sweeping from node instead of face
+		overlaidFaceLabels.dontRotate = this.sweepFacesUntilPlane(endOverlaidFaces, origamiCoordinates, plane, -1);
+
+
+		// Maybe join faceLabels and overlaidFaceLabels, to then find which faces are to divide.
+
+
+
+		debugger;
+		//
+
+		// const coincidentLines = this.selectCoincidentLines(intersectionLines, firstIntersectionLine);
+		// const directRotationFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.rotate);
+		// const rotationAxis = this.findRotationAxis(origamiCoordinates, sense, firstIntersectionLine);
+		// this.findOverlaidFaces(directRotationFaces, origamiCoordinates, rotationAxis);
+
+
+	
+		
+
+		// // For each intersection line on a divide face, crease origami
+		// for (const intersectionLine of intersectionLines) {
+		// 	for (const divideFace of divideFaces) {
+		// 		const faceIntersectionLine = this.findIntersectionLineFromFace(divideFace, coincidentLines);
+		// 		if (this.checkIfIntersectionLinesAreEqual(intersectionLine, faceIntersectionLine)) {
+		// 			origamiCoordinates = this.creaseOrigami(origamiCoordinates, intersectionLine);
+		// 			break;
+		// 		}
+		// 	}
+		// }
+
+		// Update faces that will directly rotate or not rotate, based on creases
+		// const directStartFaces = this.findFacesThatContainNodes(origamiCoordinates.faces, [fromNode])
+		// const directEndFaces = this.findFacesThatContainNodes(origamiCoordinates.faces, [toNode])
+		// let directFaceLabels: {rotate: boolean[], dontRotate: boolean[], divide: boolean[]} = {rotate:[], dontRotate:[], divide:[]};
+		// directFaceLabels.rotate = this.sweepFacesUntilPlane(directStartFaces, origamiCoordinates, plane, 1);
+		// directFaceLabels.dontRotate = this.sweepFacesUntilPlane(directEndFaces, origamiCoordinates, plane, -1);
+		// directFaceLabels.divide  = MathHelpers.elementWiseAnd(directFaceLabels.rotate, directFaceLabels.dontRotate);
+
+		debugger;
+		// Find faces that will undirectly rotate or not rotate (by being "above" a start or end node, respectively)
+		// firstIntersectionLine, sense, directFaceLabels.rotate => axis ([g, h])
+		// findFacesAbove(directRotationFaces, origamiCoordinates);
+
+
+		// Relabel faces from From to intersection lines (this could have been updated as well)
+		// Relabel faces from To to intersection lines (this could have been updated as well)
+		// Find faces "above" rotate-labeled faces
+		// Find faces "below"" dont-rotate-labeled faces
+		// Sweep from above-faces to intersection lines
+		// Sweep from to-faces to intersection lines
+		// Crease
+		// Sweep each again (update labels)
+		// From each intersection line, continue the rotate sweep if the new face is not above dont-rotate-labeled faces
+		// From each intersection line, continue the no-rotate sweep if the new face is not above rotate-labeled faces
+		// Return faces to rotate (from faces and labeles), axis, and angle
+
 
 		debugger;
 		// Update Labels somehow. Is it necessary? Maybe do sweeping again after.
@@ -455,6 +518,55 @@ export class FoldSolver {
 		return faceRotationInstructions;
 	}
 
+	public static findRotationAxis(origamiCoordinates: IOrigamiCoordinates, sense: 'M'|'V', intersectionNodes: string[], faceLabels: {rotate: boolean[], dontRotate: boolean[], divide: boolean[]}) {
+		// Find face at intersection and meant to rotate
+		let faceAtIntersectionToRotate;
+		for (let i = 0; i < faceLabels.rotate.length; i++) {
+			if (faceLabels.rotate[i] === true && MathHelpers.checkIfArrayContainsAnyElement(origamiCoordinates.faces[i], intersectionNodes)) {
+				faceAtIntersectionToRotate = origamiCoordinates.faces[i];
+				break;
+			}
+		}
+		if (faceAtIntersectionToRotate === undefined) {
+			throw new Error('Could not find face that was both at the intersection and meant to rotate.')
+		}
+
+		// Find axis versor
+		const faceCenterPoint = MathHelpers.findAveragePoint(MathHelpers.indexObject(origamiCoordinates.points, faceAtIntersectionToRotate));
+		const faceNormalVersor = MathHelpers.findPlaneNormalVersor(MathHelpers.indexObject(origamiCoordinates.points, faceAtIntersectionToRotate));
+		const faceCenterPointProjection = MathHelpers.projectPointOntoLine(faceCenterPoint, origamiCoordinates.points[intersectionNodes[0]], origamiCoordinates.points[intersectionNodes[1]])
+		const faceCenterToAxisVersor = MathHelpers.findVersorBetweenPoints(faceCenterPoint, faceCenterPointProjection);
+		const axisVersor = MathHelpers.cross(faceNormalVersor, faceCenterToAxisVersor);
+
+		// Sort intersection nodes along axis versor
+		intersectionNodes.sort(function (n1, n2) { return MathHelpers.dot(origamiCoordinates.points[n1],axisVersor) - MathHelpers.dot(origamiCoordinates.points[n2],axisVersor)});
+		
+		// Pick first and last node as axis nodes
+		const axis = [intersectionNodes[0], intersectionNodes[intersectionNodes.length-1]];
+		return axis;
+	}
+
+
+	public static findIntersectionLineNodes(origamiCoordinates: IOrigamiCoordinates, intersectionLine: IintersectionLine) {
+		const intersectionNodes = [];
+		for (const intersectionPoint of intersectionLine) {
+			const nodes = Object.keys(origamiCoordinates.points);
+			for (const node of nodes) {
+				if (MathHelpers.checkIfPointsAreEqual(intersectionPoint.coord, origamiCoordinates.points[node])) {
+					intersectionNodes.push(node);
+					break;
+				}
+			}
+		}
+		return intersectionNodes;
+	}
+
+	public static checkIfIntersectionLinesAreEqual(line1: IintersectionLine, line2: IintersectionLine) {
+		if (line1.length === line2.length) {
+			return (line1.every((e, i) => MathHelpers.checkIfArraysAreEqual(e.edge, line2[i].edge)));
+		}
+		return false;
+	}
 
 	public static creaseOrigami(origamiCoordinates: IOrigamiCoordinates, intersectionLine: IintersectionLine)  {
 		// Unpack origami coordinates
@@ -483,7 +595,6 @@ export class FoldSolver {
 		for (let i = 0; i < faces.length; i++) {
 			const subfaceIds = faceToNewFaceCorrespondence[i];
 			const contactFaceIds = Object.keys(faceOrder[i]).map(e => {return Number(e)});
-
 			for (let j = 0; j < subfaceIds.length; j++) {
 				const subface = newFaces[subfaceIds[j]];
 				const o = points[subface[0]];
@@ -493,14 +604,11 @@ export class FoldSolver {
 				const planeAxis = {o:o, n:n, u:u, v:v};
 				const subface2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(points, subface), planeAxis);
 				newFaceOrder[subfaceIds[j]] = {};
-
 				for (let k = 0; k < contactFaceIds.length; k++) {
 					const contactFaceSide = faceOrder[i][contactFaceIds[k]];
 					const subContactFaceIds = faceToNewFaceCorrespondence[contactFaceIds[k]];
-
 					for (let m = 0; m < subContactFaceIds.length; m++) {
 						const contactFace2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(points, newFaces[subContactFaceIds[m]]), planeAxis);
-
 						if (MathHelpers.checkIfCoplanarFacesIntersect(subface2D, contactFace2D)) {
 							newFaceOrder[subfaceIds[j]][subContactFaceIds[m]] = contactFaceSide;
 						}
@@ -508,7 +616,6 @@ export class FoldSolver {
 				}
 			}
 		}
-
 		// Update origami coordinates
 		origamiCoordinates.points = points;
 		origamiCoordinates.pattern = newPattern;
@@ -657,7 +764,7 @@ export class FoldSolver {
 		throw new Error('Could not find intersection line that intersected this face to divide! Check why.');
 	}
 
-	public static sweepFacesUntilPlane(startFaces: string[][], origamiCoordinates: IOrigamiCoordinates, plane: IPlane): boolean[] {
+	public static sweepFacesUntilPlane(startFaces: string[][], origamiCoordinates: IOrigamiCoordinates, plane: IPlane, planeSide: -1|1): boolean[] {
 		// Unpack origami coordinates
 		const points = origamiCoordinates.points;
 		const faces = origamiCoordinates.faces;
@@ -674,7 +781,7 @@ export class FoldSolver {
 			const [_, neighborFaceIds] = this.findNeighborFaces(faces[startFaceId], faces);
 			for (const neighborFaceId of neighborFaceIds) {
 				// If neighbor has not been selected and it is not beyond plane
-				if (sweptFaceLabels[neighborFaceId] === false && MathHelpers.findFaceSideOfPlane(faces[neighborFaceId], points, plane) !== +1) {
+				if (sweptFaceLabels[neighborFaceId] === false && MathHelpers.findFaceSideOfPlane(faces[neighborFaceId], points, plane) === -planeSide) {
 					startFaceIds.push(neighborFaceId);
 				}
 			}
@@ -788,9 +895,9 @@ export class FoldSolver {
 	}
 
 
-	public static findRotationAxis(firstIntersectionLine: string[]): string[] {
-		return [firstIntersectionLine[0], firstIntersectionLine[firstIntersectionLine.length-1]];
-	}
+	// public static findRotationAxis(firstIntersectionLine: string[]): string[] {
+	// 	return [firstIntersectionLine[0], firstIntersectionLine[firstIntersectionLine.length-1]];
+	// }
 
 
 	public static findRotationAngle(fromNode: string, toNode: string, rotationAxis: string[]): number {

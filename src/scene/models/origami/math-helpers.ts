@@ -329,7 +329,8 @@ export class MathHelpers {
 
   public static findFaceSideOfPlane(face: string[], points: IVertices, plane: IPlane) {
     const nodeSides = face.map((e) => this.findPointSideOfPlane(points[e], plane));
-    const faceSide = nodeSides.every((e) => e === 1) ? 1 : nodeSides.every((e) => e === -1) ? -1 : 0;
+    // const faceSide = nodeSides.every((e) => e === 1) ? 1 : nodeSides.every((e) => e === -1) ? -1 : 0;
+    const faceSide = !nodeSides.some((e) => e === -1) ? 1 : !nodeSides.some((e) => e === 1) ? -1 : 0;
     return faceSide;
   }
 
@@ -399,6 +400,15 @@ export class MathHelpers {
       }
     }
     return true;
+  }
+
+  public static findAveragePoint(points: number[][]) {
+    let a = Array(points[0].length).fill(0);
+    for (const arg of points) {
+      a = this.addArray(a,arg);
+    }
+    a = this.multiplyArray(a,1/points.length);
+    return a;
   }
 
 }
