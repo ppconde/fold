@@ -34,15 +34,15 @@ export class OrigamiSolver {
 	}
 
 	// test-1.text
-	// public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
-	// 	let origamiCoordinates: IOrigamiCoordinates = {
-	// 		points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
-	// 		faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
-	// 		pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
-	// 		faceOrder: {0: {1: 1},  1: {0: 1}},
-	// 	};
-	// 	return origamiCoordinates;
-	// }
+	public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
+		let origamiCoordinates: IOrigamiCoordinates = {
+			points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
+			faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
+			pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
+			faceOrder: {0: {1: 1},  1: {0: 1}},
+		};
+		return origamiCoordinates;
+	}
 
 	// test-2.text
 	// public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
@@ -56,15 +56,15 @@ export class OrigamiSolver {
 	// }
 
 	// test-3.text
-	public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
-		let origamiCoordinates: IOrigamiCoordinates = {
-			points: {'a':[0,0,0],'b': [length,0,0],'c':[length,width,0],'d':[0,width,0],'e':[length/2,0,0], 'f':[length/2,width,0]},
-			faces: [['a','e','f','d'], ['e','b','c','f']],
-			pattern: {'a':[0,0],'b': [length,0],'c':[length,width],'d':[0,width],'e':[length/2,0], 'f':[length/2,width]},
-			faceOrder: {0: {},  1: {}},
-		};
-		return origamiCoordinates;
-	}
+	// public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
+	// 	let origamiCoordinates: IOrigamiCoordinates = {
+	// 		points: {'a':[0,0,0],'b': [length,0,0],'c':[length,width,0],'d':[0,width,0],'e':[length/2,0,0], 'f':[length/2,width,0]},
+	// 		faces: [['a','e','f','d'], ['e','b','c','f']],
+	// 		pattern: {'a':[0,0],'b': [length,0],'c':[length,width],'d':[0,width],'e':[length/2,0], 'f':[length/2,width]},
+	// 		faceOrder: {0: {},  1: {}},
+	// 	};
+	// 	return origamiCoordinates;
+	// }
 
 	public static setParsingInstructions(): IParsingInstruction{
 		const parsingInstructions = {
