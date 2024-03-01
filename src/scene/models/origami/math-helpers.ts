@@ -59,6 +59,15 @@ export class MathHelpers {
     return i != -1;
   }
 
+  public static checkIfPointsContainPoint(points: number[][], point: number[]) {
+    for (let p of points) {
+      if (this.checkIfPointsAreEqual(p, point)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public static checkIfEdgesContainEdge(a: Array<any>, b: Array<unknown>) {
     for (const edge of a) {
       if (MathHelpers.checkIfEdgesAreEqual(edge, b)) {
@@ -186,6 +195,109 @@ export class MathHelpers {
     }
     return a.map((element, i) => element + (c as [])[i]);
   }
+
+  public static findArrayDimensions(a: any): Array<any> {
+    return a.length ? [...[a.length], ...this.findArrayDimensions(a[0])] : [];
+  }
+  public static findArrayDimension(a: any): number {
+    const aDims = this.findArrayDimensions(a);
+    return aDims.length - aDims.filter((v) => (v === 1)).length;
+  }
+
+
+  public static addMatrix(a: number[][], b: number[][]|number[]|number) {
+    const aDims = this.findArrayDimensions(a);
+    const bDim = this.findArrayDimension(b);
+    let c: number[][] = [];
+    // If element to add is a number or a vector, transform it to matrix, to perform element-wise addition
+    if (bDim===0) {
+      for (let i = 0; i < aDims[0]; i++) {
+        c[i] = [];
+        for (let j = 0; j < aDims[1]; j++) {
+          c[i][j] = b as number;
+        }
+      }
+    } else if (bDim===1) {
+      for (let i = 0; i < aDims[0]; i++) {
+        c[i] = [];
+        for (let j = 0; j < aDims[1]; j++) {
+          c[i][j] = (b as number[][])[i][0];
+        }
+      }
+    } else if (bDim===2) {
+      c = b as number[][];
+    }
+    return a.map((e1, i1) => e1.map((e2,i2) => e2 + c[i1][i2]));
+  }
+
+  
+  public static multiplyMatrix(a: number[][], b: number[][]|number) {
+    const [aNumRows, aNumCols] = this.findArrayDimensions(a);
+    const bdims = this.findArrayDimensions(b);
+    const bDim = this.findArrayDimension(b);
+    let m;
+    if (bDim===0) {
+      m = a.map((e1, i1) => e1.map((e2,i2) => e2 * (b as number))); 
+    } else {
+      m = new Array(aNumRows);
+      const bNumCols = bdims[1];
+      for (var r = 0; r < aNumRows; ++r) {
+        m[r] = new Array(bNumCols); 
+        for (var c = 0; c < bNumCols; ++c) {
+          m[r][c] = 0; 
+          for (var i = 0; i < aNumCols; ++i) {
+            m[r][c] += a[r][i] * (b as number[][])[i][c];
+          }
+        }
+      }
+    }
+    return m;
+  }
+
+  public static transposeMatrix(a: number[][]) {
+    return a[0].map((_, i) => a.map(row => row[i]));
+  }
+
+  // (https://www.reddit.com/r/askmath/comments/17jqn73/how_do_i_transform_3d_points_on_a_plane_to_2d/)
+  public static convertCoplanarPointsTo2D(a: number[][], planeAxis: {o:number[], n:number[], u:number[], v:number[]}) {
+
+    const basisOrigin = [planeAxis.o];
+    const basisVectors = [planeAxis.u, planeAxis.v];
+    const points2D = this.transposeMatrix(this.multiplyMatrix(basisVectors, this.addMatrix(this.transposeMatrix(a), this.multiplyMatrix(this.transposeMatrix(basisOrigin),-1))));
+
+    // Idk what I did wrong but this doesn't work:
+    // (https://stackoverflow.com/questions/49769459/convert-points-on-a-3d-plane-to-2d-coordinates)
+    // const o = planeAxis.o;
+    // const n = planeAxis.n;
+    // const u = planeAxis.u;
+    // const v = planeAxis.v;
+
+    // const S = new THREE.Matrix4(); 
+    // S.set(  o[0], u[0], v[0], n[0], 
+    //         o[1], u[1], v[1], n[1],
+    //         o[2], u[2], v[2], n[2], 
+    //         1, 1, 1, 1 );
+    
+    // const D = new THREE.Matrix4(); 
+    // D.set(  0, 1, 0, 0, 
+    //         0, 0, 1, 0,
+    //         0, 0, 0, 1,
+    //         1, 1, 1, 1 );
+
+    // S.invert();
+
+    // const M = D.multiply(S);
+
+    // const b = [];
+    // for (let i = 0; i < a.length; i++) {
+    //   const p = new THREE.Vector3( ...a[i] );
+    //   p.applyMatrix4(M);
+    //   b.push([p.getComponent(0), p.getComponent(1)]);
+    // }
+    return points2D;
+  }
+
+
 
   /**
    * Returns the vector between two points
@@ -346,7 +458,8 @@ export class MathHelpers {
     }
   }
 
-
+  // Some input polygons have actually collinear points. I think in some cases these badly defined polygons can get PolygonIntersectionHelper stuck in an infinite loop.
+  // Considering eliminating collinear points (the array should be read by a moving windows of 3 elements and if the elements were deemed collinear, the middle should be dropped)
   public static checkIfCoplanarFacesIntersect(a: number[][], b: number[][]): boolean{
     let polygon1: {x:number, y:number}[] = [];
     let polygon2: {x:number, y:number}[] = [];
@@ -357,50 +470,56 @@ export class MathHelpers {
   }
 
 
-  // (https://stackoverflow.com/questions/49769459/convert-points-on-a-3d-plane-to-2d-coordinates)
-  public static convertCoplanarPointsTo2D(a: number[][], planeAxis: {o:number[], n:number[], u:number[], v:number[]}) {
+  // // (https://stackoverflow.com/questions/49769459/convert-points-on-a-3d-plane-to-2d-coordinates)
+  // public static convertCoplanarPointsTo2D(a: number[][], planeAxis: {o:number[], n:number[], u:number[], v:number[]}) {
 
-    const o = planeAxis.o;
-    const n = planeAxis.n;
-    const u = planeAxis.u;
-    const v = planeAxis.v;
+  //   const o = planeAxis.o;
+  //   const n = planeAxis.n;
+  //   const u = planeAxis.u;
+  //   const v = planeAxis.v;
 
-    const S = new THREE.Matrix4(); 
-    S.set(  o[0], u[0], v[0], n[0], 
-            o[1], u[1], v[1], n[1],
-            o[2], u[2], v[2], n[2], 
-            1, 1, 1, 1 );
+  //   const S = new THREE.Matrix4(); 
+  //   S.set(  o[0], u[0], v[0], n[0], 
+  //           o[1], u[1], v[1], n[1],
+  //           o[2], u[2], v[2], n[2], 
+  //           1, 1, 1, 1 );
     
-    const D = new THREE.Matrix4(); 
-    D.set(  0, 1, 0, 0, 
-            0, 0, 1, 0,
-            0, 0, 0, 1,
-            1, 1, 1, 1 );
+  //   const D = new THREE.Matrix4(); 
+  //   D.set(  0, 1, 0, 0, 
+  //           0, 0, 1, 0,
+  //           0, 0, 0, 1,
+  //           1, 1, 1, 1 );
 
-    S.invert();
+  //   S.invert();
 
-    const M = D.multiply(S);
+  //   const M = D.multiply(S);
 
-    const b = [];
-    for (let i = 0; i < a.length; i++) {
-      const p = new THREE.Vector3( ...a[i] );
-      p.applyMatrix4(M);
-      b.push([p.getComponent(0), p.getComponent(1)]);
-    }
-    return b;
-  }
+  //   const b = [];
+  //   for (let i = 0; i < a.length; i++) {
+  //     const p = new THREE.Vector3( ...a[i] );
+  //     p.applyMatrix4(M);
+  //     b.push([p.getComponent(0), p.getComponent(1)]);
+  //   }
+  //   return b;
+  // }
 
 
-  public static checkIfPointsAreCollinear(a: number[][]) {
-    const u = MathHelpers.findVersorBetweenPoints(a[0], a[1]);
-    for (let i = 2; i < a.length; i++) {
-      const v = MathHelpers.findVersorBetweenPoints(a[0], a[i]);
-      if (!this.checkIfPointsAreEqual(u,v)){
-        return false; 
-      }
-    }
-    return true;
-  }
+
+
+  // public static checkIfPointsAreCollinear(a: number[][]) {
+  //   const u = MathHelpers.findVersorBetweenPoints(a[0], a[1]);
+  //   for (let i = 2; i < a.length; i++) {
+  //     const v = MathHelpers.findVersorBetweenPoints(a[0], a[i]);
+
+  //     if (this.dot(u,v) < )
+
+
+  //     if (!this.checkIfPointsAreEqual(u,v)){
+  //       return false; 
+  //     }
+  //   }
+  //   return true;
+  // }
 
   public static findAveragePoint(points: number[][]) {
     let a = Array(points[0].length).fill(0);
@@ -411,4 +530,75 @@ export class MathHelpers {
     return a;
   }
 
+
+  // public static pickThreeNonCollinearPoints(points: number[][]) {
+  //   // Find non-coincident points
+	// 	const nonCoincidentPoints = [];
+	// 	for (let i = 0; i < points.length; i++) {
+  //     if (!this.checkIfPointsContainPoint(nonCoincidentPoints, points[i])) {
+  //       nonCoincidentPoints.push(points[i]);
+  //     }
+  //   }
+  //   if (nonCoincidentPoints.length < 3) {
+  //     throw new Error('There were not at least 3 non-coincident points.');
+  //   }
+
+  //   // Find non-collinear points
+  //   const nonCollinearPoints = [nonCoincidentPoints[0], nonCoincidentPoints[1]];
+  //   for (let j = 2; j < nonCoincidentPoints.length; j++) {
+  //     if (!this.checkIfPointsAreCollinear([...nonCollinearPoints, nonCollinearPoints[j]])) {
+  //       nonCollinearPoints.push();
+  //     }
+  //   }
+
+  //   if (nonCollinearPoints.length < 3) {
+  //     throw new Error('There were not at least 3 non-collinear points.');
+  //   }
+
+  //   return [nonCollinearPoints[0], nonCollinearPoints[1], nonCollinearPoints[2]];
+  // }
+
+
+  public static pickThreeNonCollinearPoints(points: number[][]) {
+    // Find all collinear points
+    const nonCollinearPoints = [points[0]];
+    for (let i = 0; i < points.length; i++) {
+      if (nonCollinearPoints.length === 1) {
+        if (!this.checkIfPointsContainPoint(nonCollinearPoints, points[i])) {
+          nonCollinearPoints.push(points[i]);
+        }
+      } else {
+        if (!this.checkIfPointsAreCollinear([...nonCollinearPoints, points[i]])){
+          nonCollinearPoints.push(points[i]);
+        }
+      }
+    }
+    // Return first three if found
+    if (nonCollinearPoints.length < 3) {
+      throw new Error('Could not find at least 3 non-collinear points.');
+    } else {
+      return [nonCollinearPoints[0], nonCollinearPoints[1], nonCollinearPoints[2]]
+    }
+  }
+
+  public static checkIfPointsAreCollinear(points: number[][]) {
+    const tolerance = 0.0001;
+    let u: number[] = [];
+    const nonCollinearPoints = [points[0]];
+    for (let i = 1; i < points.length; i++) {
+      if (!this.checkIfPointsContainPoint(nonCollinearPoints, points[i])) {
+        if (this.checkIfArrayIsEmpty(u)) {
+          u = this.findVersorBetweenPoints(nonCollinearPoints[0], points[i]);
+        } else {
+          const v = this.findVersorBetweenPoints(nonCollinearPoints[0], points[i]);
+          if (Math.abs(this.dot(u,v)) < 1 - tolerance) {
+            return false;
+          }
+        }
+      }
+      nonCollinearPoints.push(points[i]);
+    }
+    return true;
+  }
 }
+

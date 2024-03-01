@@ -34,15 +34,15 @@ export class OrigamiSolver {
 	}
 
 	// test-1.text
-	public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
-		let origamiCoordinates: IOrigamiCoordinates = {
-			points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
-			faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
-			pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
-			faceOrder: {0: {1: 1},  1: {0: 1}},
-		};
-		return origamiCoordinates;
-	}
+	// public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
+	// 	let origamiCoordinates: IOrigamiCoordinates = {
+	// 		points: { 'a': [0, 0, 0], 'b': [1, 4, 0], 'c': [6.5, 11, 0], 'd': [0, width, 0], 'e': [6, 0, 0], 'f': [9, width, 0] },
+	// 		faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
+	// 		pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [6, 0], 'f': [9, width] },
+	// 		faceOrder: {0: {1: 1},  1: {0: 1}},
+	// 	};
+	// 	return origamiCoordinates;
+	// }
 
 	// test-2.text
 	// public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
@@ -65,6 +65,17 @@ export class OrigamiSolver {
 	// 	};
 	// 	return origamiCoordinates;
 	// }
+
+	// test-1.text
+	public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
+		let origamiCoordinates: IOrigamiCoordinates = {
+			points: { 'a': [0,0,0],'b':[-2,5,0],'c':[3,10,0],'d':[0,9,0],'e':[6,0,0],'f':[9,9,0],'g':[2,0,0],'h':[9,-2,0],'i':[7,-1,0],'j':[6,4,0],'k':[2,9,0],'l':[-2,10,0],'m':[-3,11,0],'n':[-1,5,0]},
+			faces: [['a','g','e','f','d'],['e','b','k','c','f'],['a','h','i','g'],['h','j','i'],['k','l','m','c'],['l','n','m']],
+			pattern: { 'a': [0,0],'b':[15.4,-0.8],'c':[14.4,6.2],'d':[0,9],'e':[6,0],'f':[9,9],'g':[2,0],'h':[9,-2],'i':[7,-1],'j':[6,4],'k':[14.6,4.8],'l':[18.4,3.2],'m':[19.8,4],'n':[14.6,-0.2]},  // Not accurate
+			faceOrder: {0: {1: 1},  1: {0: 1, 3:-1, 5:-1}, 2:{}, 3:{1:-1}, 4:{}, 5:{1:1}},
+		};
+		return origamiCoordinates;
+	}
 
 	public static setParsingInstructions(): IParsingInstruction{
 		const parsingInstructions = {

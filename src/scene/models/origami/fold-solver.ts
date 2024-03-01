@@ -366,37 +366,37 @@ export class FoldSolver {
 			for (const intersectionPoint of intersectionLine) {
 				points.push(intersectionPoint.coord);
 			}
-			if (this.checkIfPointsAreCollinear(points)){
+			if (MathHelpers.checkIfPointsAreCollinear(points)){
 				coincidentLines.push(intersectionLine);
 			}
 		}
 		return coincidentLines;
 	}
 
-	public static checkIfPointsAreCollinear(points: number[][]): boolean {
-		const tolerance = 0.00001;
-		const nonCoincidentPoints = [];
-		for (let i = 1; i < points.length; i++) {
-			const distance = MathHelpers.findDistanceBetweenPoints(points[0], points[i]);
-			if (distance > tolerance) {
-				nonCoincidentPoints.push(points[0]);
-				nonCoincidentPoints.push(points[i]);
-				break;
-			}
-		}
-		if (nonCoincidentPoints.length > 0) {
-			const lineVersor = MathHelpers.findVersorBetweenPoints(nonCoincidentPoints[0], nonCoincidentPoints[1]);
-			points.sort(function (p1, p2) { return MathHelpers.dot(p1,lineVersor) - MathHelpers.dot(p2,lineVersor)});
-			for (let i = 0; i < points.length - 1; i++) {
-				const pointVersor = MathHelpers.findVersorBetweenPoints(points[i], points[i+1]);
-				// If points are not coincident and are not collinear to line versor, the complete set of points is not collinear
-				if (MathHelpers.findDistanceBetweenPoints(points[i], points[i+1]) >  tolerance && MathHelpers.dot(lineVersor, pointVersor) < 1 - tolerance) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+	// public static checkIfPointsAreCollinear(points: number[][]): boolean {
+	// 	const tolerance = 0.00001;
+	// 	const nonCoincidentPoints = [];
+	// 	for (let i = 1; i < points.length; i++) {
+	// 		const distance = MathHelpers.findDistanceBetweenPoints(points[0], points[i]);
+	// 		if (distance > tolerance) {
+	// 			nonCoincidentPoints.push(points[0]);
+	// 			nonCoincidentPoints.push(points[i]);
+	// 			break;
+	// 		}
+	// 	}
+	// 	if (nonCoincidentPoints.length > 0) {
+	// 		const lineVersor = MathHelpers.findVersorBetweenPoints(nonCoincidentPoints[0], nonCoincidentPoints[1]);
+	// 		points.sort(function (p1, p2) { return MathHelpers.dot(p1,lineVersor) - MathHelpers.dot(p2,lineVersor)});
+	// 		for (let i = 0; i < points.length - 1; i++) {
+	// 			const pointVersor = MathHelpers.findVersorBetweenPoints(points[i], points[i+1]);
+	// 			// If points are not coincident and are not collinear to line versor, the complete set of points is not collinear
+	// 			if (MathHelpers.findDistanceBetweenPoints(points[i], points[i+1]) >  tolerance && MathHelpers.dot(lineVersor, pointVersor) < 1 - tolerance) {
+	// 				return false;
+	// 			}
+	// 		}
+	// 	}
+	// 	return true;
+	// }
 
 	// public static sortIntersectionLines(origamiCoordinates: IOrigamiCoordinates, sense: 'M'|'V', plane: IPlane, coincidentLines: IintersectionLine[], firstIntersectionLine: IintersectionLine) {
 
@@ -428,36 +428,21 @@ export class FoldSolver {
 		faceLabels.dontRotate = this.sweepFacesUntilPlane(endFaces, origamiCoordinates, plane, 1);
 		faceLabels.divide  = MathHelpers.elementWiseAnd(faceLabels.rotate, faceLabels.dontRotate);
 		const divideFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.divide);
-
-		// Find faces that will indirectly rotate or not rotate (by being overlaid on a start or end node, respectively)
 		const directRotationFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.rotate);
 		const directNoRotationFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.dontRotate);
 		const intersectionNodes = this.findIntersectionLineNodes(origamiCoordinates, firstIntersectionLine);
 		const rotationAxis = this.findRotationAxis(origamiCoordinates, sense, intersectionNodes, faceLabels);
 
-
+		// Find faces that will indirectly rotate or not rotate (by being overlaid on a start or end node, respectively)
 		const startOverlaidFaces = this.sweepOverlaidFacesBeforePlane(directRotationFaces, origamiCoordinates, plane, intersectionLines, rotationAxis, -1, 1);
-		const endOverlaidFaces = this.sweepOverlaidFacesBeforePlane(directNoRotationFaces, origamiCoordinates, plane, intersectionLines, rotationAxis, 1, 1);
+		const endOverlaidFaces = this.sweepOverlaidFacesBeforePlane(directNoRotationFaces, origamiCoordinates, plane, intersectionLines, rotationAxis, 1, -1);
 		let overlaidFaceLabels: {rotate: boolean[], dontRotate: boolean[], divide: boolean[]} = {rotate:[], dontRotate:[], divide:[]};
 		overlaidFaceLabels.rotate = this.sweepFacesUntilPlane(startOverlaidFaces, origamiCoordinates, plane, -1);  // The plane side = 1 could probably be infered if we started sweeping from node instead of face
 		overlaidFaceLabels.dontRotate = this.sweepFacesUntilPlane(endOverlaidFaces, origamiCoordinates, plane, 1);
 		overlaidFaceLabels.divide  = MathHelpers.elementWiseAnd(overlaidFaceLabels.rotate, overlaidFaceLabels.dontRotate);
 
 
-		// TODO: test with weirder sheet! decide if unite labels. label the rest of the faces.
-
-
-		// // todo: findOverLaidFaces está a encontrar faces "above" até do outro lado do plano (portanto below!). Decidir se limito só às deste lado do plano.
-		// // Ou se procuro só a de imediatamente acima, depois faço crease, assim sucessivamente
-		// const startOverlaidFaces = this.findOverlaidFaces(directRotationFaces, origamiCoordinates, rotationAxis);  // Adicionar plane e só encontrar aquelas do lado de cá
-		// const endOverlaidFaces = this.findOverlaidFaces(directNoRotationFaces, origamiCoordinates, rotationAxis);
-		// let overlaidFaceLabels: {rotate: boolean[], dontRotate: boolean[], divide: boolean[]} = {rotate:[], dontRotate:[], divide:[]};
-		// overlaidFaceLabels.rotate = this.sweepFacesUntilPlane(startOverlaidFaces, origamiCoordinates, plane, 1);  // The plane side = 1 could probably be infered if we started sweeping from node instead of face
-		// overlaidFaceLabels.dontRotate = this.sweepFacesUntilPlane(endOverlaidFaces, origamiCoordinates, plane, -1);
-
-
-		// // Maybe join faceLabels and overlaidFaceLabels, to then find which faces are to divide.
-
+		// todo: decide if unite labels. divide. label the rest of the faces.
 
 
 		debugger;
@@ -517,18 +502,21 @@ export class FoldSolver {
 		const sweptFaceLabels = new Array(faces.length).fill(false);
 		// Convert start faces to ids to improve performance
 		let startFaceIds: number[] = [];
+		let overlaidFaceIds: number[] = [];
 		directRotationFaces.forEach((e) => startFaceIds.push(MathHelpers.findPositionOfArrayInArray(e, faces)))
 		while (startFaceIds.length > 0) {
 			const startFaceId = startFaceIds.shift() as number;
 			sweptFaceLabels[startFaceId] = true;
-			const [_, contactFaceIds] = this.findOverlaidNeighborFacesBeforePlane(startFaceId, origamiCoordinates, plane, intersectionLines, rotationAxis, -1, 1)
+			const [_, contactFaceIds] = this.findOverlaidNeighborFacesBeforePlane(startFaceId, origamiCoordinates, plane, intersectionLines, rotationAxis, planeSide, axisSense)
 			for (let i = 0; i < contactFaceIds.length; i++) {
 				if (sweptFaceLabels[contactFaceIds[i]] === false) {
 					startFaceIds.push(contactFaceIds[i]);
+					overlaidFaceIds.push(contactFaceIds[i])
 				}
 			}
 		}
-		return MathHelpers.logicallyIndexArray(faces, sweptFaceLabels);
+		// return MathHelpers.logicallyIndexArray(faces, sweptFaceLabels);
+		return MathHelpers.indexArray(faces, overlaidFaceIds);  // This is to output strictly the faces that are overlaid! (not the start no-overlaid ones as well)
 
 	}
 
@@ -539,10 +527,10 @@ export class FoldSolver {
 		let faceOrder = origamiCoordinates.faceOrder;
 
 		// Set axis direction
-		let newAxis;
+		// let newAxis;
 		if (axisSense === -1) {
-			newAxis = [...axis];
-			newAxis.reverse();
+			// newAxis = [...axis];
+			axis.reverse();
 		}
 
 		// Select sections before plane
@@ -560,7 +548,7 @@ export class FoldSolver {
 				const bothContactFaceIds = Object.keys(faceOrder[faceId]).map(e => {return Number(e)});
 				const overContactFaceIds = [];
 				for (let j = 0; j < bothContactFaceIds.length; j++) {
-					const contactFaceSide = faceOrder[i][bothContactFaceIds[j]];
+					const contactFaceSide = faceOrder[faceId][bothContactFaceIds[j]];
 					if (contactFaceSide === overSide) {
 						overContactFaceIds.push(bothContactFaceIds[j]);
 					}
@@ -608,7 +596,8 @@ export class FoldSolver {
 
 	public static findFaceOverSide(face: string[], points: IVertices, axis: string[]) {
 		const faceCenterPoint = MathHelpers.findAveragePoint(MathHelpers.indexObject(points, face));
-		const faceNormalVersor = MathHelpers.findPlaneNormalVersor(MathHelpers.indexObject(points, face));
+		const faceNonCollinearThreePoints = MathHelpers.pickThreeNonCollinearPoints(MathHelpers.indexObject(points, face));
+		const faceNormalVersor = MathHelpers.findPlaneNormalVersor(faceNonCollinearThreePoints);
 		const faceCenterPointProjection = MathHelpers.projectPointOntoLine(faceCenterPoint, points[axis[0]], points[axis[1]])
 		const faceCenterToAxisVersor = MathHelpers.findVersorBetweenPoints(faceCenterPoint, faceCenterPointProjection);
 		const faceAxisVersor = MathHelpers.findVectorVersor(MathHelpers.cross(faceNormalVersor, faceCenterToAxisVersor));
@@ -726,18 +715,14 @@ export class FoldSolver {
 			const contactFaceIds = Object.keys(faceOrder[i]).map(e => {return Number(e)});
 			for (let j = 0; j < subfaceIds.length; j++) {
 				const subface = newFaces[subfaceIds[j]];
-				const o = points[subface[0]];
-				const n = MathHelpers.findPlaneNormalVersor(MathHelpers.indexObject(points, subface));
-				const u = MathHelpers.findVersorBetweenPoints(points[subface[0]], points[subface[1]]);
-				const v = MathHelpers.cross(n,u);
-				const planeAxis = {o:o, n:n, u:u, v:v};
-				const subface2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(points, subface), planeAxis);
+				const subfaceAxis = this.findFaceAxis(points, subface);
+				const subface2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(points, subface), subfaceAxis);
 				newFaceOrder[subfaceIds[j]] = {};
 				for (let k = 0; k < contactFaceIds.length; k++) {
 					const contactFaceSide = faceOrder[i][contactFaceIds[k]];
 					const subContactFaceIds = faceToNewFaceCorrespondence[contactFaceIds[k]];
 					for (let m = 0; m < subContactFaceIds.length; m++) {
-						const contactFace2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(points, newFaces[subContactFaceIds[m]]), planeAxis);
+						const contactFace2D = MathHelpers.convertCoplanarPointsTo2D(MathHelpers.indexObject(points, newFaces[subContactFaceIds[m]]), subfaceAxis);
 						if (MathHelpers.checkIfCoplanarFacesIntersect(subface2D, contactFace2D)) {
 							newFaceOrder[subfaceIds[j]][subContactFaceIds[m]] = contactFaceSide;
 						}
@@ -754,9 +739,10 @@ export class FoldSolver {
 	}
 
 	public static findFaceAxis(points: IVertices, face: string[]) {
-		const o = points[face[0]];
-		const n = MathHelpers.findPlaneNormalVersor(MathHelpers.indexObject(points, face));
-		const u = MathHelpers.findVersorBetweenPoints(points[face[0]], points[face[1]]);
+		const ABC = MathHelpers.pickThreeNonCollinearPoints(MathHelpers.indexObject(points, face));
+		const o = ABC[0];
+		const n = MathHelpers.findPlaneNormalVersor(ABC);
+		const u = MathHelpers.findVersorBetweenPoints(ABC[0], ABC[1]);
 		const v = MathHelpers.cross(n,u);
 		const faceAxis = {o:o, n:n, u:u, v:v};
 		return faceAxis;
