@@ -29,8 +29,12 @@ export class Controller {
     this.origami = origami;
     this.clock = clock;
     // Adds event listeners to buttons
-    document.getElementById('play-pause-button')!.addEventListener('click', this.togglePlayAnimation.bind(this));
-    document.getElementById('stop-button')!.addEventListener('click', this.stopAnimation.bind(this));
+    document
+      .getElementById('play-pause-button')!
+      .addEventListener('click', this.togglePlayAnimation.bind(this));
+    document
+      .getElementById('refresh-button')!
+      .addEventListener('click', this.stopAnimation.bind(this));
   }
 
   /**
