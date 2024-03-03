@@ -80,14 +80,6 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
     ) : null;
   };
 
-  const renderShare = () => {
-    return props.menuType === 'share' ? (
-      <aside className="side-menu">
-        <div className="share">Share your origamis</div>
-      </aside>
-    ) : null;
-  };
-
   const renderOrigamiPreviews = () => {
     const { loading } = props;
     const origamis = library
@@ -128,8 +120,6 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
       return renderLibrary(setSearchText);
     case 'instructions':
       return renderInstructions();
-    case 'share':
-      return renderShare();
     default:
       return null;
   }
