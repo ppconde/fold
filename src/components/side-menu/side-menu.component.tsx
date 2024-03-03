@@ -39,17 +39,6 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
         <div className="settings">
           <button className="close" onClick={props.activateSideMenu} />
           <h2>Settings</h2>
-          <div className="resizer">
-            {label('width')}
-            {label('height')}
-            <div className="boxes">
-              {renderBox('A4')}
-              <div className="col">
-                {renderBox('Custom')}
-                {renderBox('Square')}
-              </div>
-            </div>
-          </div>
         </div>
       </aside>
     ) : null;
