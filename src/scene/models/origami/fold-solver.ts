@@ -1,6 +1,6 @@
 import { MathHelpers } from './math-helpers';
 import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, IFaceGraph} from './origami-types';
-
+import * as orient from 'robust-orientation'
 
 export class FoldSolver {
 
@@ -445,6 +445,7 @@ export class FoldSolver {
 		// todo: decide if unite labels. divide. label the rest of the faces.
 
 
+		console.log(orient([0, 0], [1e-64, 0], [0, 1]))
 		debugger;
 		//
 
