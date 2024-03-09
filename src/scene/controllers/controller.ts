@@ -1,4 +1,4 @@
-import { IControllerEvent, IStepEvent } from '../../components/controls/controls-component';
+import { IControllerEvent, IControllerStepEvent } from '../../components/controls/controls-component';
 import { Origami } from '../models/origami/origami';
 
 export enum ControllerState {
@@ -10,8 +10,9 @@ export enum ControllerState {
 }
 
 export enum AnimationDirection {
-  Forward,
-  Reverse,
+  Forward = 1,
+  Reverse = 2,
+  Both = 3,
 }
 
 export class Controller {
@@ -27,7 +28,7 @@ export class Controller {
 
   private disabledEvent!: CustomEvent<IControllerEvent>;
 
-  private stepEvent!: CustomEvent<IStepEvent>;
+  private stepEvent!: CustomEvent<IControllerStepEvent>;
 
   private clock: THREE.Clock;
 
@@ -43,11 +44,9 @@ export class Controller {
     document
       .getElementById('play-button')!
       .addEventListener('click', this.togglePlayAnimation.bind(this, AnimationDirection.Forward));
-    document
-      .getElementById('refresh-button')!
-      .addEventListener('click', this.resetAnimation.bind(this));
+    document.getElementById('refresh-button')!.addEventListener('click', this.resetAnimation.bind(this));
 
-    this.stepEvent = new CustomEvent<IStepEvent>('controller:step', {
+    this.stepEvent = new CustomEvent<IControllerStepEvent>('controller:step', {
       detail: { currentStep: 0, totalSteps: this.origami.meshInstructions.length },
       cancelable: true,
     });
@@ -57,11 +56,11 @@ export class Controller {
   /**
    * Used to pause animation
    */
-  public pauseAnimation(): void {
+  public pauseAnimation(direction: AnimationDirection): void {
     this.currentState = ControllerState.Paused;
     this.pauseEvent = new CustomEvent('controller:pause', {
-      detail: { value: false },
-      cancelable: true
+      detail: { value: false, direction: direction },
+      cancelable: true,
     });
     document.dispatchEvent(this.pauseEvent);
   }
@@ -73,16 +72,16 @@ export class Controller {
     this.currentState = ControllerState.Stopped;
     this.currentStep = Controller.INITIAL_STEP;
     this.pauseEvent = new CustomEvent<IControllerEvent>('controller:pause', {
-      detail: { value: true },
-      cancelable: true
+      detail: { value: false, direction: AnimationDirection.Both },
+      cancelable: true,
     });
     document.dispatchEvent(this.pauseEvent);
-    this.stepEvent = new CustomEvent<IStepEvent>('controller:step', {
+    this.stepEvent = new CustomEvent<IControllerStepEvent>('controller:step', {
       detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
       cancelable: true,
     });
     document.dispatchEvent(this.stepEvent);
-    this.enablePlay();
+    this.enablePlay(AnimationDirection.Forward);
   }
 
   /**
@@ -91,9 +90,9 @@ export class Controller {
   private togglePlayAnimation(direction: AnimationDirection): void {
     if (this.currentState !== ControllerState.Paused && this.currentState !== ControllerState.Stopped) {
       this.currentState = ControllerState.Paused;
-    }
-    else {
-      this.currentState = direction === AnimationDirection.Forward ? ControllerState.Playing : ControllerState.Playing_Reverse;
+    } else {
+      this.currentState =
+        direction === AnimationDirection.Reverse ? ControllerState.Playing_Reverse : ControllerState.Playing;
     }
   }
 
@@ -103,7 +102,7 @@ export class Controller {
   public increaseStepBy(step: number): void {
     this.currentStep += step;
 
-    this.stepEvent = new CustomEvent<IStepEvent>('controller:step', {
+    this.stepEvent = new CustomEvent<IControllerStepEvent>('controller:step', {
       detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
       cancelable: true,
     });
@@ -121,9 +120,9 @@ export class Controller {
   /**
    * Used to enable play button
    */
-  private enablePlay(): void {
+  private enablePlay(direction: AnimationDirection): void {
     this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
-      detail: { value: true },
+      detail: { value: true, direction: direction },
     });
     document.dispatchEvent(this.disabledEvent);
     this.enablePlayEventDispatched = false;
@@ -132,10 +131,10 @@ export class Controller {
   /**
    * Used to disable play button
    */
-  private disablePlay(): void {
+  private disablePlay(direction: AnimationDirection): void {
     this.clock.stop();
     this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
-      detail: { value: false },
+      detail: { value: false, direction: direction },
     });
     document.dispatchEvent(this.disabledEvent);
     this.enablePlayEventDispatched = true;
@@ -146,7 +145,9 @@ export class Controller {
    */
   public update(): void {
     if (this.shouldDisablePlay(this.origami.meshInstructions.length)) {
-      this.disablePlay();
+      this.disablePlay(AnimationDirection.Forward);
+    } else if (this.shouldDisablePlay(Controller.INITIAL_STEP)) {
+      this.disablePlay(AnimationDirection.Reverse);
     } else {
       this.handleAnimation();
     }
@@ -159,7 +160,11 @@ export class Controller {
     switch (this.currentState) {
       case ControllerState.Playing:
         !this.clock.running && this.clock.start();
-        this.origami.playAnimationStep();
+        this.origami.playAnimationStep(AnimationDirection.Forward);
+        break;
+      case ControllerState.Playing_Reverse:
+        !this.clock.running && this.clock.start();
+        this.origami.playAnimationStep(AnimationDirection.Reverse);
         break;
       case ControllerState.Paused:
         this.clock.start();

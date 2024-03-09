@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
+import { AnimationDirection } from '../../scene/controllers/controller';
 
 export interface IControllerEvent {
   value: boolean;
+  direction: AnimationDirection;
 }
 
-export interface IStepEvent {
+export interface IControllerStepEvent {
   currentStep: number;
   totalSteps: number;
 }
@@ -25,8 +27,11 @@ export const ControlsComponent = () => {
     const handlePause = (event: CustomEvent<IControllerEvent>) => {
       event.preventDefault();
       event.stopPropagation();
-      setIsPlayingReverse(event.detail.value);
-      setIsPlayingForward(event.detail.value);
+      if (event.detail.direction == AnimationDirection.Forward) {
+        setIsPlayingForward(event.detail.value);
+      } else {
+        setIsPlayingReverse(event.detail.value);
+      }
     };
 
     /**
@@ -36,15 +41,21 @@ export const ControlsComponent = () => {
     const handleIsEnabled = (event: CustomEvent<IControllerEvent>) => {
       event.preventDefault();
       event.stopPropagation();
-      setIsEnabledReverse(event.detail.value);
-      setIsEnabledForward(event.detail.value);
+      if (event.detail.direction == AnimationDirection.Forward) {
+        setIsEnabledForward(event.detail.value);
+      } else if (event.detail.direction == AnimationDirection.Reverse) {
+        setIsEnabledReverse(event.detail.value);
+      } else {
+        setIsEnabledForward(event.detail.value);
+        setIsEnabledReverse(event.detail.value);
+      }
     };
 
     /**
      * Handle the steps event
      * @param event
      */
-    const handleSteps = (event: CustomEvent<IStepEvent>) => {
+    const handleSteps = (event: CustomEvent<IControllerStepEvent>) => {
       event.preventDefault();
       event.stopPropagation();
       setCurrentStep(event.detail.currentStep);
@@ -78,11 +89,7 @@ export const ControlsComponent = () => {
         >
           {isPlayingReverse ? '⏸' : '⏴'}
         </button>
-        <button
-          id="refresh-button"
-          className="control"
-          onClick={handleSetIsPlayingForward.bind(this, false)}
-        >
+        <button id="refresh-button" className="control" onClick={handleSetIsPlayingForward.bind(this, false)}>
           ↻
         </button>
         <button
@@ -96,7 +103,7 @@ export const ControlsComponent = () => {
         </button>
       </div>
       <div className="pagination">
-      {currentStep} / {totalSteps}
+        {currentStep} / {totalSteps}
       </div>
     </div>
   );
