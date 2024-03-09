@@ -1,4 +1,4 @@
-@use "./colors.scss" as colors;
+@use './colors.scss' as colors;
 
 *,
 *:before,
@@ -9,7 +9,7 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: "Orbitron", sans-serif;
+  font-family: 'Orbitron', sans-serif;
   overflow: hidden;
   color: colors.$primary-color;
   text-align: center;

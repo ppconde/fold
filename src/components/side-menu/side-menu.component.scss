@@ -1,4 +1,4 @@
-@use "../../scss/colors.scss" as colors;
+@use '../../scss/colors.scss' as colors;
 
 .side-menu {
   .settings {
@@ -65,7 +65,7 @@
     .a4,
     .custom,
     .square {
-      font-family: "Roboto", sans-serif;
+      font-family: 'Roboto', sans-serif;
       font-size: 18px;
       font-weight: bold;
     }
@@ -145,7 +145,7 @@
   .instructions {
     .content {
       overflow: hidden;
-      font-family: "Roboto", sans-serif;
+      font-family: 'Roboto', sans-serif;
       font-size: 18px;
       color: colors.$secondary-color;
       width: 400px;

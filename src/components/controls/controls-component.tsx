@@ -53,11 +53,7 @@ export const ControlsComponent = () => {
         >
           {isPlaying ? '⏸︎' : '⏵︎'}
         </button>
-        <button
-          id="stop-button"
-          className="control"
-          onClick={handleSetIsPlaying.bind(this, false)}
-        >
+        <button id="stop-button" className="control" onClick={handleSetIsPlaying.bind(this, false)}>
           ⏹︎
         </button>
       </div>

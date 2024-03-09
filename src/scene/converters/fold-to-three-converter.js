@@ -1,5 +1,5 @@
-import * as THREE from "three";
-import * as earcut from "earcut";
+import * as THREE from 'three';
+import * as earcut from 'earcut';
 
 /**
  * @todo: Convert to typescript
@@ -16,10 +16,7 @@ export class FoldToThreeConverter {
     this.numVertices = this.trianglesIndexes.length;
     this.geometry = this.convertPointsToPlane(this.trianglesIndexes);
     // Two triplets that define the (for now, first) crease: [[x1,y1,z1],[x2,y2,z2]]
-    this.crease = [
-      fold.vertices_coords[fold.edges_vertices[0][0]],
-      fold.vertices_coords[fold.edges_vertices[0][1]],
-    ];
+    this.crease = [fold.vertices_coords[fold.edges_vertices[0][0]], fold.vertices_coords[fold.edges_vertices[0][1]]];
   }
 
   /**
@@ -56,8 +53,8 @@ export class FoldToThreeConverter {
     const uvsAttr = new THREE.BufferAttribute(uvs, this.uvDimensions);
 
     positionsAttr.setUsage(THREE.DynamicDrawUsage);
-    planeGeo.setAttribute("position", positionsAttr);
-    planeGeo.setAttribute("uv", uvsAttr);
+    planeGeo.setAttribute('position', positionsAttr);
+    planeGeo.setAttribute('uv', uvsAttr);
     planeGeo.computeVertexNormals();
 
     return planeGeo;
@@ -110,9 +107,7 @@ export class FoldToThreeConverter {
     // Put normalized x/y positions into single Float32Array
     const normArr = this.normalizePositions(verticesPositions);
     verticesPositions.xpos.forEach((_, i) => {
-      const normVec = this.is3D()
-        ? [normArr.x[i], normArr.y[i], normArr.z[i]]
-        : [normArr.x[i], normArr.y[i]];
+      const normVec = this.is3D() ? [normArr.x[i], normArr.y[i], normArr.z[i]] : [normArr.x[i], normArr.y[i]];
       uvs.set(normVec, uvNdx);
       uvNdx += this.uvDimensions;
     });
@@ -129,13 +124,13 @@ export class FoldToThreeConverter {
     const max = {
       x: this.getMaxValFromArray(xpos),
       y: this.getMaxValFromArray(ypos),
-      z: this.is3D ? this.getMaxValFromArray(zpos) : null,
+      z: this.is3D ? this.getMaxValFromArray(zpos) : null
     };
     // Normalize x/y/z positions (by x/y/z max)
     return {
       x: this.normalize(xpos, max.x),
       y: this.normalize(ypos, max.y),
-      z: this.is3D() ? this.normalize(zpos, max.z) : null,
+      z: this.is3D() ? this.normalize(zpos, max.z) : null
     };
   };
 

@@ -1,22 +1,10 @@
-export type Lights =
-  | THREE.Light
-  | THREE.DirectionalLight
-  | THREE.AmbientLight
-  | THREE.PointLight
-  | THREE.SpotLight;
+export type Lights = THREE.Light | THREE.DirectionalLight | THREE.AmbientLight | THREE.PointLight | THREE.SpotLight;
 
-export type LightsHelpers =
-  | THREE.DirectionalLightHelper
-  | THREE.PointLightHelper
-  | THREE.SpotLightHelper;
+export type LightsHelpers = THREE.DirectionalLightHelper | THREE.PointLightHelper | THREE.SpotLightHelper;
 
 export type LightsObjects = Lights | LightsHelpers;
 
-export type LightKey =
-  | `Amb-${number}`
-  | `Dir-${number}`
-  | `Point-${number}`
-  | `Spot-${number}`;
+export type LightKey = `Amb-${number}` | `Dir-${number}` | `Point-${number}` | `Spot-${number}`;
 
 export type LightHelperKey =
   | `Amb-${number}-Helper`

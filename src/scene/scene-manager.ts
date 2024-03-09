@@ -30,7 +30,7 @@ export class SceneManager {
     this.canvas = canvas;
     this.screenDimensions = {
       width: this.canvas.width,
-      height: this.canvas.height,
+      height: this.canvas.height
     };
     this.init();
   }
@@ -57,7 +57,7 @@ export class SceneManager {
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: this.canvas,
-      alpha: true,
+      alpha: true
     });
     this.renderer.shadowMap.enabled = true;
     const DPR = window.devicePixelRatio ? window.devicePixelRatio : 1;
@@ -113,7 +113,7 @@ export class SceneManager {
     const debugCube = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshStandardMaterial({
-        ...OrigamiTexture.loadTexture(),
+        ...OrigamiTexture.loadTexture()
       })
     );
     debugCube.visible = false;
