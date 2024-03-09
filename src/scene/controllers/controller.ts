@@ -5,11 +5,10 @@ export enum ControllerState {
   Playing,
   Stopped,
   Paused,
-  Finished,
+  Finished
 }
 
 export class Controller {
-
   public currentState: ControllerState = ControllerState.Stopped;
 
   private static INITIAL_STEP = 0;
@@ -30,12 +29,8 @@ export class Controller {
     this.origami = origami;
     this.clock = clock;
     // Adds event listeners to buttons
-    document
-      .getElementById('play-pause-button')!
-      .addEventListener('click', this.togglePlayAnimation.bind(this));
-    document
-      .getElementById('stop-button')!
-      .addEventListener('click', this.stopAnimation.bind(this));
+    document.getElementById('play-pause-button')!.addEventListener('click', this.togglePlayAnimation.bind(this));
+    document.getElementById('stop-button')!.addEventListener('click', this.stopAnimation.bind(this));
   }
 
   /**
@@ -45,7 +40,7 @@ export class Controller {
     this.currentState = ControllerState.Paused;
     this.pauseEvent = new CustomEvent('controller:pause', {
       detail: { value: false },
-      cancelable: true,
+      cancelable: true
     });
     document.dispatchEvent(this.pauseEvent);
   }
@@ -58,7 +53,7 @@ export class Controller {
     this.currentStep = Controller.INITIAL_STEP;
     this.pauseEvent = new CustomEvent<IControllerEvent>('controller:pause', {
       detail: { value: true },
-      cancelable: true,
+      cancelable: true
     });
     document.dispatchEvent(this.pauseEvent);
     this.enablePlay();
@@ -73,7 +68,6 @@ export class Controller {
         ? ControllerState.Playing
         : ControllerState.Paused;
   }
-
 
   /**
    * Used to set animation to a specific step
@@ -95,7 +89,7 @@ export class Controller {
    */
   private enablePlay(): void {
     this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
-      detail: { value: true },
+      detail: { value: true }
     });
     document.dispatchEvent(this.disabledEvent);
     this.enablePlayEventDispatched = false;
@@ -107,7 +101,7 @@ export class Controller {
   private disablePlay(): void {
     this.clock.stop();
     this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
-      detail: { value: false },
+      detail: { value: false }
     });
     document.dispatchEvent(this.disabledEvent);
     this.enablePlayEventDispatched = true;
@@ -120,7 +114,7 @@ export class Controller {
     if (this.shouldDisablePlay(this.origami.meshInstructions.length)) {
       this.disablePlay();
     } else {
-      this.handleAnimation()
+      this.handleAnimation();
     }
   }
 
@@ -144,5 +138,4 @@ export class Controller {
         break;
     }
   }
-
 }

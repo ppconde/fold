@@ -5,7 +5,6 @@ import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 
 export class Origami extends THREE.Group {
-
   private clock = new THREE.Clock();
 
   private scene: THREE.Scene;
@@ -17,19 +16,16 @@ export class Origami extends THREE.Group {
     {
       meshIds: [0, 1],
       axis: ['a', 'd'],
-      angle: THREE.MathUtils.degToRad(90),
+      angle: THREE.MathUtils.degToRad(90)
     },
     {
       meshIds: [2],
       axis: ['d', 'a'],
-      angle: THREE.MathUtils.degToRad(90),
-    },
+      angle: THREE.MathUtils.degToRad(90)
+    }
   ];
 
-  private meshes: THREE.Mesh<
-    THREE.BufferGeometry<THREE.NormalBufferAttributes>,
-    THREE.MeshStandardMaterial
-  >[];
+  private meshes: THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>[];
 
   private meshesRotation: THREE.Euler[];
 
@@ -84,10 +80,10 @@ export class Origami extends THREE.Group {
         b: [0, this.height, 0],
         c: [this.width / 2, this.height / 2, 0],
         d: [this.width, this.height, 0],
-        e: [this.width, 0, 0],
+        e: [this.width, 0, 0]
       },
       -this.width / 2,
-      -this.height / 2,
+      -this.height / 2
     );
   }
 
@@ -100,7 +96,7 @@ export class Origami extends THREE.Group {
       geometry1,
       new THREE.MeshStandardMaterial({
         color: 0xff0000,
-        side: THREE.DoubleSide,
+        side: THREE.DoubleSide
       })
     );
     const geometry2 = new OrigamiPlaneGeometry([this.vertices.c, this.vertices.d, this.vertices.b]);
@@ -108,7 +104,7 @@ export class Origami extends THREE.Group {
       geometry2,
       new THREE.MeshStandardMaterial({
         color: 0x00ff00,
-        side: THREE.DoubleSide,
+        side: THREE.DoubleSide
       })
     );
     const geometry3 = new OrigamiPlaneGeometry([this.vertices.a, this.vertices.e, this.vertices.d]);
@@ -116,7 +112,7 @@ export class Origami extends THREE.Group {
       geometry3,
       new THREE.MeshStandardMaterial({
         color: 0x0000ff,
-        side: THREE.DoubleSide,
+        side: THREE.DoubleSide
       })
     );
     [geometry1, geometry2, geometry3].forEach((geometry) => geometry.computeVertexNormals());
@@ -176,5 +172,4 @@ export class Origami extends THREE.Group {
   public update(): void {
     this.controller.update();
   }
-
 }

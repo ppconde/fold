@@ -5,7 +5,6 @@ import { LightsTypes, LightsTypesHelper } from './lights-constants';
 import { debug } from '../../helpers/debug';
 
 export class LightsManager {
-
   public scene: THREE.Scene;
 
   public lightsMap: Map<LightsObjectsKeys, LightsObjects> = new Map();
@@ -62,7 +61,7 @@ export class LightsManager {
           // If the light is a helper, we want to change the visibility of the helper as well
           this.lightsMap.get(`${key}-Helper` as 'Dir-1-Helper')!.visible = lightObj.visible;
         }
-      })
+      });
       folder.addColor(lightObj, 'color');
     }
   }
@@ -113,5 +112,4 @@ export class LightsManager {
   public update(): void {
     // Do something
   }
-
 }

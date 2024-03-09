@@ -15,9 +15,9 @@ export const App = () => {
   const [loading, setLoading] = useState(true);
 
   /**
-* Adds a click event listener when there's a click on top of side menu
-* it closes the side menu when the click is outside the menu
-*/
+   * Adds a click event listener when there's a click on top of side menu
+   * it closes the side menu when the click is outside the menu
+   */
   useEventListener('click', ({ target }: Event) => {
     const element = document.querySelector('.side-menu');
     const isClickedInsideSideMenu = element !== target && element?.contains(target as Node);
@@ -44,7 +44,7 @@ export const App = () => {
       } catch (error) {
         console.error('Error initializing:', error);
       }
-    }
+    };
 
     init();
   }, []);
@@ -54,12 +54,7 @@ export const App = () => {
    */
   const renderSideMenu = () => {
     return showSideMenu ? (
-      <SideMenuComponent
-        key={menuType}
-        menuType={menuType}
-        activateSideMenu={activateSideMenu}
-        loading={loading}
-      />
+      <SideMenuComponent key={menuType} menuType={menuType} activateSideMenu={activateSideMenu} loading={loading} />
     ) : null;
   };
 

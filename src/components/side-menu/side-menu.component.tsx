@@ -1,9 +1,4 @@
-import React, {
-  Dispatch,
-  SetStateAction,
-  useEffect,
-  useState,
-} from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { OrigamiPreviewComponent } from '../origami-preview/origami-preview.component';
 import { cacheService } from '../../services/cache-service';
@@ -30,17 +25,13 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
       const origamis = JSON.parse(library) as IOrigamiParsed[];
       setLibrary(origamis);
 
-      setInstructions(
-        origamis.map((origami) => origami.instructions)
-      );
+      setInstructions(origamis.map((origami) => origami.instructions));
     } else {
       console.error('Error: No origami found in cache');
     }
   };
 
-  const getInstructions = () => [
-    ...instructions.map((instruction, i) => <p key={i}>{instruction[i]}</p>),
-  ];
+  const getInstructions = () => [...instructions.map((instruction, i) => <p key={i}>{instruction[i]}</p>)];
 
   const renderSettings = () => {
     return props.menuType === 'settings' ? (
@@ -106,9 +97,7 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
     return origamis.length ? (
       <div className="origami-previews">{origamis}</div>
     ) : (
-      <p className="no-origami">
-        {loading ? 'Loading' : "We couldn't find your origami 😞"}
-      </p>
+      <p className="no-origami">{loading ? 'Loading' : "We couldn't find your origami 😞"}</p>
     );
   };
 
