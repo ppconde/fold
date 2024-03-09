@@ -82,7 +82,7 @@ export class Controller {
       cancelable: true,
     });
     document.dispatchEvent(this.stepEvent);
-    this.enablePlay(AnimationDirection.Forward);
+    this.enablePlay();
   }
 
   /**
@@ -121,8 +121,8 @@ export class Controller {
   /**
    * Used to enable play button
    */
-  private enablePlay(direction: AnimationDirection): void {
-    this.disabledEvent = new CustomEvent<IControllerEvent>(direction == AnimationDirection.Forward ? 'controller:play' : 'controller:play-reverse', {
+  private enablePlay(): void {
+    this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
       detail: { value: true },
     });
     document.dispatchEvent(this.disabledEvent);
@@ -132,9 +132,9 @@ export class Controller {
   /**
    * Used to disable play button
    */
-  private disablePlay(direction: AnimationDirection): void {
+  private disablePlay(): void {
     this.clock.stop();
-    this.disabledEvent = new CustomEvent<IControllerEvent>(direction == AnimationDirection.Forward ? 'controller:play' : 'controller:play-reverse', {
+    this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
       detail: { value: false },
     });
     document.dispatchEvent(this.disabledEvent);
@@ -146,7 +146,7 @@ export class Controller {
    */
   public update(): void {
     if (this.shouldDisablePlay(this.origami.meshInstructions.length)) {
-      this.disablePlay(AnimationDirection.Forward);
+      this.disablePlay();
     } else {
       this.handleAnimation();
     }
