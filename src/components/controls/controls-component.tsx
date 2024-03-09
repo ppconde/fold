@@ -4,9 +4,18 @@ export interface IControllerEvent {
   value: boolean;
 }
 
+export interface IStepEvent {
+  currentStep: number;
+  totalSteps: number;
+}
+
 export const ControlsComponent = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isEnabled, setIsEnabled] = useState(true);
+  const [isPlayingForward, setIsPlayingForward] = useState(false);
+  const [isEnabledForward, setIsEnabledForward] = useState(true);
+  const [isPlayingReverse, setIsPlayingReverse] = useState(false);
+  const [isEnabledReverse, setIsEnabledReverse] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [totalSteps, setTotalSteps] = useState(0);
 
   useEffect(() => {
     /**
@@ -16,7 +25,8 @@ export const ControlsComponent = () => {
     const handlePause = (event: CustomEvent<IControllerEvent>) => {
       event.preventDefault();
       event.stopPropagation();
-      setIsPlaying(event.detail.value);
+      setIsPlayingReverse(event.detail.value);
+      setIsPlayingForward(event.detail.value);
     };
 
     /**
@@ -26,40 +36,67 @@ export const ControlsComponent = () => {
     const handleIsEnabled = (event: CustomEvent<IControllerEvent>) => {
       event.preventDefault();
       event.stopPropagation();
-      setIsEnabled(event.detail.value);
+      setIsEnabledReverse(event.detail.value);
+      setIsEnabledForward(event.detail.value);
+    };
+
+    /**
+     * Handle the steps event
+     * @param event
+     */
+    const handleSteps = (event: CustomEvent<IStepEvent>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setCurrentStep(event.detail.currentStep);
+      setTotalSteps(event.detail.totalSteps);
     };
 
     document.addEventListener('controller:pause', handlePause.bind(this));
     document.addEventListener('controller:play', handleIsEnabled.bind(this));
+    document.addEventListener('controller:step', handleSteps.bind(this));
 
     // Clean up the event listeners when the component unmounts
     return () => {
       document.removeEventListener('controller:pause', handlePause.bind(this));
       document.removeEventListener('controller:play', handleIsEnabled.bind(this));
+      document.removeEventListener('controller:step', handleSteps.bind(this));
     };
   }, []);
 
-  const handleSetIsPlaying = (isPlaying: boolean) => setIsPlaying(isPlaying);
+  const handleSetIsPlayingForward = (isPlaying: boolean) => setIsPlayingForward(isPlaying);
+  const handleSetIsPlayingReverse = (isPlaying: boolean) => setIsPlayingReverse(isPlaying);
 
   return (
     <div className="controls-wrapper">
       <div className="controls">
         <button
-          style={{ pointerEvents: isEnabled ? 'auto' : 'none' }}
-          disabled={!isEnabled}
-          id="play-pause-button"
+          style={{ pointerEvents: isEnabledReverse ? 'auto' : 'none' }}
+          disabled={!isEnabledReverse}
+          id="play-reverse-button"
           className="control"
-          onClick={handleSetIsPlaying.bind(this, !isPlaying)}
+          onClick={handleSetIsPlayingReverse.bind(this, !isPlayingReverse)}
         >
-          {isPlaying ? '⏸︎' : '⏵︎'}
+          {isPlayingReverse ? '⏸' : '⏴'}
         </button>
         <button
           id="refresh-button"
           className="control"
-          onClick={handleSetIsPlaying.bind(this, false)}
+          onClick={handleSetIsPlayingForward.bind(this, false)}
         >
-          ⟳
+          ↻
         </button>
+        <button
+          style={{ pointerEvents: isEnabledForward ? 'auto' : 'none' }}
+          disabled={!isEnabledForward}
+          id="play-button"
+          className="control"
+          onClick={handleSetIsPlayingForward.bind(this, !isPlayingForward)}
+        >
+          {isPlayingForward ? '⏸' : '⏵︎'}
+        </button>
+      </div>
+      <div className="pagination">
+      {currentStep} / {totalSteps}
       </div>
     </div>
   );
