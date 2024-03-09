@@ -1,4 +1,8 @@
-import { IControllerEvent, IControllerStepEvent } from '../../components/controls/controls-component';
+import {
+  IControllerEvent,
+  IControllerStepEvent,
+  IControllerSpeedEvent
+} from '../../components/controls/controls-component';
 import { Origami } from '../models/origami/origami';
 
 export enum ControllerState {
@@ -12,8 +16,10 @@ export enum ControllerState {
 export enum AnimationDirection {
   Forward = 1,
   Reverse = 2,
-  Both = 3,
+  Both = 3
 }
+
+const AnimationSpeeds: number[] = [0.5, 1, 2];
 
 export class Controller {
   public currentState: ControllerState = ControllerState.Stopped;
@@ -24,13 +30,9 @@ export class Controller {
 
   public currentStep: number = 0;
 
-  private pauseEvent!: CustomEvent<IControllerEvent>;
-
-  private disabledEvent!: CustomEvent<IControllerEvent>;
-
-  private stepEvent!: CustomEvent<IControllerStepEvent>;
-
   private clock: THREE.Clock;
+
+  private animationSpeed: number = 1;
 
   private origami: Origami;
 
@@ -41,16 +43,18 @@ export class Controller {
     document
       .getElementById('play-reverse-button')!
       .addEventListener('click', this.togglePlayAnimation.bind(this, AnimationDirection.Reverse));
+    document.getElementById('speed-button')!.addEventListener('click', this.changeAnimationSpeed.bind(this));
+    document.getElementById('refresh-button')!.addEventListener('click', this.resetAnimation.bind(this));
     document
       .getElementById('play-button')!
       .addEventListener('click', this.togglePlayAnimation.bind(this, AnimationDirection.Forward));
-    document.getElementById('refresh-button')!.addEventListener('click', this.resetAnimation.bind(this));
 
-    this.stepEvent = new CustomEvent<IControllerStepEvent>('controller:step', {
-      detail: { currentStep: 0, totalSteps: this.origami.meshInstructions.length },
-      cancelable: true,
-    });
-    document.dispatchEvent(this.stepEvent);
+    document.dispatchEvent(
+      new CustomEvent<IControllerStepEvent>('controller:step', {
+        detail: { currentStep: 0, totalSteps: this.origami.meshInstructions.length },
+        cancelable: true
+      })
+    );
   }
 
   /**
@@ -58,11 +62,12 @@ export class Controller {
    */
   public pauseAnimation(direction: AnimationDirection): void {
     this.currentState = ControllerState.Paused;
-    this.pauseEvent = new CustomEvent('controller:pause', {
-      detail: { value: false, direction: direction },
-      cancelable: true,
-    });
-    document.dispatchEvent(this.pauseEvent);
+    document.dispatchEvent(
+      new CustomEvent('controller:pause', {
+        detail: { value: false, direction: direction },
+        cancelable: true
+      })
+    );
   }
 
   /**
@@ -71,16 +76,18 @@ export class Controller {
   private resetAnimation(): void {
     this.currentState = ControllerState.Stopped;
     this.currentStep = Controller.INITIAL_STEP;
-    this.pauseEvent = new CustomEvent<IControllerEvent>('controller:pause', {
-      detail: { value: false, direction: AnimationDirection.Both },
-      cancelable: true,
-    });
-    document.dispatchEvent(this.pauseEvent);
-    this.stepEvent = new CustomEvent<IControllerStepEvent>('controller:step', {
-      detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
-      cancelable: true,
-    });
-    document.dispatchEvent(this.stepEvent);
+    document.dispatchEvent(
+      new CustomEvent<IControllerEvent>('controller:pause', {
+        detail: { value: false, direction: AnimationDirection.Both },
+        cancelable: true
+      })
+    );
+    document.dispatchEvent(
+      new CustomEvent<IControllerStepEvent>('controller:step', {
+        detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
+        cancelable: true
+      })
+    );
     this.enablePlay(AnimationDirection.Forward);
   }
 
@@ -97,16 +104,33 @@ export class Controller {
   }
 
   /**
+   * Used to change the animation speed
+   */
+  private changeAnimationSpeed(): void {
+    let idx = AnimationSpeeds.indexOf(this.animationSpeed);
+    idx = (idx + 1) % AnimationSpeeds.length;
+    this.animationSpeed = AnimationSpeeds[idx];
+
+    document.dispatchEvent(
+      new CustomEvent<IControllerSpeedEvent>('controller:speed', {
+        detail: { speed: this.animationSpeed },
+        cancelable: true
+      })
+    );
+  }
+
+  /**
    * Used to set animation to a specific step
    */
   public increaseStepBy(step: number): void {
     this.currentStep += step;
 
-    this.stepEvent = new CustomEvent<IControllerStepEvent>('controller:step', {
-      detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
-      cancelable: true,
-    });
-    document.dispatchEvent(this.stepEvent);
+    document.dispatchEvent(
+      new CustomEvent<IControllerStepEvent>('controller:step', {
+        detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
+        cancelable: true
+      })
+    );
   }
 
   /**
@@ -121,10 +145,11 @@ export class Controller {
    * Used to enable play button
    */
   private enablePlay(direction: AnimationDirection): void {
-    this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
-      detail: { value: true, direction: direction },
-    });
-    document.dispatchEvent(this.disabledEvent);
+    document.dispatchEvent(
+      new CustomEvent<IControllerEvent>('controller:play', {
+        detail: { value: true, direction: direction }
+      })
+    );
     this.enablePlayEventDispatched = false;
   }
 
@@ -133,10 +158,11 @@ export class Controller {
    */
   private disablePlay(direction: AnimationDirection): void {
     this.clock.stop();
-    this.disabledEvent = new CustomEvent<IControllerEvent>('controller:play', {
-      detail: { value: false, direction: direction },
-    });
-    document.dispatchEvent(this.disabledEvent);
+    document.dispatchEvent(
+      new CustomEvent<IControllerEvent>('controller:play', {
+        detail: { value: false, direction: direction }
+      })
+    );
     this.enablePlayEventDispatched = true;
   }
 
@@ -160,11 +186,11 @@ export class Controller {
     switch (this.currentState) {
       case ControllerState.Playing:
         !this.clock.running && this.clock.start();
-        this.origami.playAnimationStep(AnimationDirection.Forward);
+        this.origami.playAnimationStep(this.animationSpeed, AnimationDirection.Forward);
         break;
       case ControllerState.Playing_Reverse:
         !this.clock.running && this.clock.start();
-        this.origami.playAnimationStep(AnimationDirection.Reverse);
+        this.origami.playAnimationStep(this.animationSpeed, AnimationDirection.Reverse);
         break;
       case ControllerState.Paused:
         this.clock.start();

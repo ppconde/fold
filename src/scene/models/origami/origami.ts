@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import { Controller, AnimationDirection } from '../../controllers/controller';
+import { AnimationDirection } from '../../controllers/controller';
+import { Controller } from '../../controllers/controller';
 import { MathHelper } from '../../helpers/math-helper';
 import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
@@ -123,10 +124,13 @@ export class Origami extends THREE.Group {
   /**
    * Plays the animation
    */
-  public playAnimationStep(direction: AnimationDirection): void {
-    const instruction = this.meshInstructions[direction === AnimationDirection.Forward ? this.controller.currentStep: this.controller.currentStep];
+  public playAnimationStep(speed: number, direction: AnimationDirection): void {
+    const instruction =
+      this.meshInstructions[
+        direction === AnimationDirection.Forward ? this.controller.currentStep : this.controller.currentStep
+      ];
     const deltaTime = this.clock.getDelta();
-    let angle_to_rotate = this.angularSpeed * deltaTime;
+    let angle_to_rotate = this.angularSpeed * deltaTime * speed;
 
     if (this.angleRotated + angle_to_rotate < instruction.angle) {
       this.rotate(angle_to_rotate, instruction);

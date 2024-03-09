@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
-import { AnimationDirection } from '../../scene/controllers/controller';
+import { AnimationDirection} from '../../scene/controllers/controller';
 
 export interface IControllerEvent {
   value: boolean;
   direction: AnimationDirection;
+}
+
+export interface IControllerSpeedEvent {
+  speed: number;
 }
 
 export interface IControllerStepEvent {
@@ -16,6 +20,7 @@ export const ControlsComponent = () => {
   const [isEnabledForward, setIsEnabledForward] = useState(true);
   const [isPlayingReverse, setIsPlayingReverse] = useState(false);
   const [isEnabledReverse, setIsEnabledReverse] = useState(true);
+  const [animationSpeed, setAnimationSpeed] = useState(1);
   const [currentStep, setCurrentStep] = useState(0);
   const [totalSteps, setTotalSteps] = useState(0);
 
@@ -62,15 +67,27 @@ export const ControlsComponent = () => {
       setTotalSteps(event.detail.totalSteps);
     };
 
+    /**
+     * Handle the speed event
+     * @param event
+     */
+    const handleSpeed = (event: CustomEvent<IControllerSpeedEvent>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setAnimationSpeed(event.detail.speed);
+    };
+
     document.addEventListener('controller:pause', handlePause.bind(this));
     document.addEventListener('controller:play', handleIsEnabled.bind(this));
     document.addEventListener('controller:step', handleSteps.bind(this));
+    document.addEventListener('controller:speed', handleSpeed.bind(this));
 
     // Clean up the event listeners when the component unmounts
     return () => {
       document.removeEventListener('controller:pause', handlePause.bind(this));
       document.removeEventListener('controller:play', handleIsEnabled.bind(this));
       document.removeEventListener('controller:step', handleSteps.bind(this));
+      document.removeEventListener('controller:speed', handleSpeed.bind(this));
     };
   }, []);
 
@@ -88,6 +105,9 @@ export const ControlsComponent = () => {
           onClick={handleSetIsPlayingReverse.bind(this, !isPlayingReverse)}
         >
           {isPlayingReverse ? '⏸' : '⏴'}
+        </button>
+        <button id="speed-button" className="control">
+          {animationSpeed}
         </button>
         <button id="refresh-button" className="control" onClick={handleSetIsPlayingForward.bind(this, false)}>
           ↻
