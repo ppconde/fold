@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { Controller } from '../../controllers/controller';
 import { MathHelper } from '../../helpers/math-helper';
-import { OrigamiPlaneGeometry } from './origami-plane-geometry';
+import { PlaneGeometry } from '../plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
+import { Outline } from '../line';
+import { debug } from '../../../helpers/debug';
 
 export class Origami extends THREE.Group {
 
@@ -25,6 +27,13 @@ export class Origami extends THREE.Group {
       angle: THREE.MathUtils.degToRad(90),
     },
   ];
+
+  public material = new THREE.MeshStandardMaterial({
+    side: THREE.DoubleSide,
+    roughness: 0.95,
+    metalness: 0.1,
+    color: 0xfbf6ef,
+  });
 
   private meshes: THREE.Mesh<
     THREE.BufferGeometry<THREE.NormalBufferAttributes>,
@@ -72,6 +81,8 @@ export class Origami extends THREE.Group {
      * Adds the meshes to the scene
      */
     this.scene.add(...this.meshes);
+
+    this.addDebug();
   }
 
   /**
@@ -94,34 +105,41 @@ export class Origami extends THREE.Group {
   /**
    * Generates meshes for each plane geometry and returns and array of meshes
    */
-  private generateMeshes(): THREE.Mesh<OrigamiPlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
-    const geometry1 = new OrigamiPlaneGeometry([this.vertices.a, this.vertices.b, this.vertices.c]);
-    const mesh1 = new THREE.Mesh(
-      geometry1,
-      new THREE.MeshStandardMaterial({
-        color: 0xff0000,
-        side: THREE.DoubleSide,
-      })
-    );
-    const geometry2 = new OrigamiPlaneGeometry([this.vertices.c, this.vertices.d, this.vertices.b]);
-    const mesh2 = new THREE.Mesh(
-      geometry2,
-      new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
-        side: THREE.DoubleSide,
-      })
-    );
-    const geometry3 = new OrigamiPlaneGeometry([this.vertices.a, this.vertices.e, this.vertices.d]);
-    const mesh3 = new THREE.Mesh(
-      geometry3,
-      new THREE.MeshStandardMaterial({
-        color: 0x0000ff,
-        side: THREE.DoubleSide,
-      })
-    );
-    [geometry1, geometry2, geometry3].forEach((geometry) => geometry.computeVertexNormals());
+  private generateMeshes(): THREE.Mesh<PlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
+    const planeVertices = [[
+      this.vertices.a,
+      this.vertices.b,
+      this.vertices.c,
+    ], [
+      this.vertices.c,
+      this.vertices.d,
+      this.vertices.b,
+    ], [
+      this.vertices.a,
+      this.vertices.e,
+      this.vertices.d,
+    ]];
 
-    return [mesh1, mesh2, mesh3];
+    return planeVertices.map((vertices) => {
+      const geometry = new PlaneGeometry(vertices, this.width, this.height);
+      const outline = new Outline(geometry);
+      const mesh = new THREE.Mesh(geometry, this.material);
+      mesh.add(outline);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+
+      return mesh;
+    });
+  }
+
+  /**
+   * Adds the debug interface for the origami
+   */
+  private addDebug(): void {
+    const origamiFolder = debug.ui!.addFolder('Origami ');
+    origamiFolder.add(this.material, 'roughness').min(0).max(1).step(0.01);
+    origamiFolder.add(this.material, 'metalness').min(0).max(1).step(0.01);
+    origamiFolder.addColor(this.material, 'color');
   }
 
   /**
@@ -175,6 +193,17 @@ export class Origami extends THREE.Group {
    */
   public update(): void {
     this.controller.update();
+  }
+
+  /**
+   * Disposes both geometry and material of each mesh
+   * These need to be disposed to avoid memory leaks
+   */
+  public dispose(): void {
+    this.meshes.forEach((mesh) => {
+      mesh.geometry.dispose();
+      mesh.material.dispose();
+    });
   }
 
 }
