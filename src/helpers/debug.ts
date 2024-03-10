@@ -1,9 +1,12 @@
 import { GUI } from 'lil-gui';
+import Stats from 'stats.js';
 
-class Debug {
+export class Debug {
   public active: boolean;
 
   public ui?: GUI;
+
+  public stats?: Stats;
 
   constructor() {
     // You can write /#debug in the url to activate the debug mode
@@ -14,8 +17,10 @@ class Debug {
         title: 'Debug',
         closeFolders: true
       });
+
+      this.stats = new Stats();
+      this.stats.showPanel(0);
+      document.body.appendChild(this.stats.dom);
     }
   }
 }
-
-export const debug = new Debug();

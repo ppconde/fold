@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { Origami } from './models/origami/origami';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SceneObjects } from './scene-types';
-import { debug } from '../helpers/debug';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { LightsManager } from './lights/lights';
 import { OBJECT_NAMES } from './constants/object-names.constants';
@@ -27,6 +26,8 @@ export class SceneManager {
 
   private controls!: OrbitControls;
 
+  private debug = window.debug;
+
   private debugObject = {
     paperCrane: {
       visible: false
@@ -49,7 +50,7 @@ export class SceneManager {
     this.setRenderer();
     this.setSceneObjects();
     this.setCamera();
-    if (debug.active) {
+    if (this.debug.active) {
       this.addDebugObject();
       this.setAxisHelper();
       this.setCameraHelper();
@@ -98,7 +99,7 @@ export class SceneManager {
    * Adds a debug interface for the camera
    */
   private setCameraHelper(): void {
-    const cameraFolder = debug.ui!.addFolder('Camera');
+    const cameraFolder = this.debug.ui!.addFolder('Camera');
     cameraFolder.add(this.camera.position, 'x', -50, 50, 1);
     cameraFolder.add(this.camera.position, 'y', -50, 50, 1);
     cameraFolder.add(this.camera.position, 'z', -50, 50, 1);
@@ -145,7 +146,7 @@ export class SceneManager {
 
       this.updateAllMaterials();
 
-      const paperCraneFolder = debug.ui!.addFolder('PaperCrane');
+      const paperCraneFolder = this.debug.ui!.addFolder('PaperCrane');
       paperCraneFolder.add(paperCrane, 'visible').onChange((value: boolean) => {
         line.visible = value;
       });
@@ -185,7 +186,7 @@ export class SceneManager {
     const axesHelper = new THREE.AxesHelper(5);
     axesHelper.visible = false;
     this.scene.add(axesHelper);
-    const axesFolder = debug.ui!.addFolder('Axes');
+    const axesFolder = this.debug.ui!.addFolder('Axes');
     axesFolder.add(axesHelper, 'visible');
   }
 

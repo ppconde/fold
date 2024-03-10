@@ -2,7 +2,6 @@ import * as THREE from 'three';
 import { LightsObjectsKeys, LightsObjects, LightsHelpers } from './lights-types';
 import { TypeGuards } from '../../guards/type-guards';
 import { LightsTypes, LightsTypesHelper } from './lights-constants';
-import { debug } from '../../helpers/debug';
 import { OBJECT_NAMES } from '../constants/object-names.constants';
 
 export class LightsManager {
@@ -10,10 +9,12 @@ export class LightsManager {
 
   public lightsMap: Map<LightsObjectsKeys, LightsObjects> = new Map();
 
+  private debug = window.debug;
+
   constructor(scene: THREE.Scene) {
     this.scene = scene;
     this.setLights();
-    if (debug.active) {
+    if (this.debug.active) {
       this.addHelpers();
       this.addDebugInterface();
     }
@@ -60,7 +61,7 @@ export class LightsManager {
    * Adds the debug interface for the lights
    */
   private addDebugInterface(): void {
-    const lightsFolder = debug.ui!.addFolder('Lights');
+    const lightsFolder = this.debug.ui!.addFolder('Lights');
     for (const key of this.lightsMap.keys()) {
       const lightObj = this.lightsMap.get(key)!;
       /**

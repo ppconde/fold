@@ -5,7 +5,6 @@ import { MathHelper } from '../../helpers/math-helper';
 import { PlaneGeometry } from '../plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 import { Outline } from '../line';
-import { debug } from '../../../helpers/debug';
 
 export class Origami extends THREE.Group {
   private clock = new THREE.Clock();
@@ -44,6 +43,8 @@ export class Origami extends THREE.Group {
   private angularSpeed = Math.PI / 2;
 
   private angleRotated = 0; // in radians
+
+  private debug = window.debug;
 
   /**
    * Paper width
@@ -125,7 +126,7 @@ export class Origami extends THREE.Group {
    * Adds the debug interface for the origami
    */
   private addDebug(): void {
-    const origamiFolder = debug.ui!.addFolder('Origami ');
+    const origamiFolder = this.debug.ui!.addFolder('Origami ');
     origamiFolder.add(this.material, 'roughness').min(0).max(1).step(0.01);
     origamiFolder.add(this.material, 'metalness').min(0).max(1).step(0.01);
     origamiFolder.addColor(this.material, 'color');
