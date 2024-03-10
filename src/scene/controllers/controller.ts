@@ -14,9 +14,9 @@ export enum ControllerState {
 }
 
 export enum AnimationDirection {
-  Forward = 1,
-  Reverse = 2,
-  Both = 3
+  Forward,
+  Reverse,
+  Both
 }
 
 export class Controller {

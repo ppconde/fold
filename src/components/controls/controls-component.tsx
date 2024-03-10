@@ -46,7 +46,7 @@ export const ControlsComponent = () => {
      * Handle the pause event
      * @param event
      */
-    const handleIsEnable = (event: CustomEvent<IControllerEvent>) => {
+    const handleIsEnabled = (event: CustomEvent<IControllerEvent>) => {
       event.preventDefault();
       event.stopPropagation();
       if (event.detail.direction == AnimationDirection.Forward) {
@@ -85,14 +85,14 @@ export const ControlsComponent = () => {
     document.addEventListener('controller:pause', handlePause.bind(this));
     document.addEventListener('controller:step', handleSteps.bind(this));
     document.addEventListener('controller:speed', handleSpeed.bind(this));
-    document.addEventListener('controller:enable', handleIsEnable.bind(this));
+    document.addEventListener('controller:enable', handleIsEnabled.bind(this));
 
     // Clean up the event listeners when the component unmounts
     return () => {
       document.removeEventListener('controller:pause', handlePause.bind(this));
       document.removeEventListener('controller:step', handleSteps.bind(this));
       document.removeEventListener('controller:speed', handleSpeed.bind(this));
-      document.removeEventListener('controller:enable', handleIsEnable.bind(this));
+      document.removeEventListener('controller:enable', handleIsEnabled.bind(this));
     };
   }, []);
 

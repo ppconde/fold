@@ -82,26 +82,6 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
     );
   };
 
-  const label = (name: string | undefined) => {
-    const text = name === 'width' ? 'W' : 'H';
-    return (
-      <div className={`label-${text}`}>
-        <label className="text" htmlFor={name}>
-          {text}:{' '}
-        </label>
-        <input type="numeric" name={name}></input>
-      </div>
-    );
-  };
-
-  const renderBox = (name: string) => {
-    return (
-      <div className={name.toLowerCase()}>
-        <span className="text">{name}</span>
-      </div>
-    );
-  };
-
   switch (props.menuType) {
     case 'settings':
       return renderSettings();
