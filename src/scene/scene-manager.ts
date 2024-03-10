@@ -4,7 +4,6 @@ import { Origami } from './models/origami/origami';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { OrigamiTexture } from './models/origami/origami-texture';
 import { SceneObjects } from './scene-types';
-import { debug } from '../helpers/debug';
 
 /**
  * Create scene, renderer, camera
@@ -26,6 +25,8 @@ export class SceneManager {
 
   private controls!: OrbitControls;
 
+  private debug = window.debug;
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.screenDimensions = {
@@ -42,7 +43,7 @@ export class SceneManager {
     this.setRenderer();
     this.setSceneObjects();
     this.setCamera();
-    if (debug.active) {
+    if (this.debug.active) {
       this.addDebugCube();
       this.setAxisHelper();
       this.setCameraHelper();
@@ -91,7 +92,7 @@ export class SceneManager {
    * Adds a debug interface for the camera
    */
   private setCameraHelper(): void {
-    const cameraFolder = debug.ui!.addFolder('Camera');
+    const cameraFolder = this.debug.ui!.addFolder('Camera');
     cameraFolder.add(this.camera.position, 'x', -50, 50, 1);
     cameraFolder.add(this.camera.position, 'y', -50, 50, 1);
     cameraFolder.add(this.camera.position, 'z', -50, 50, 1);
@@ -118,7 +119,7 @@ export class SceneManager {
     );
     debugCube.visible = false;
     this.scene.add(debugCube);
-    const cubeFolder = debug.ui!.addFolder('Cube');
+    const cubeFolder = this.debug.ui!.addFolder('Cube');
     cubeFolder.add(debugCube, 'visible');
   }
 
@@ -129,7 +130,7 @@ export class SceneManager {
     const axesHelper = new THREE.AxesHelper(5);
     axesHelper.visible = false;
     this.scene.add(axesHelper);
-    const axesFolder = debug.ui!.addFolder('Axes');
+    const axesFolder = this.debug.ui!.addFolder('Axes');
     axesFolder.add(axesHelper, 'visible');
   }
 

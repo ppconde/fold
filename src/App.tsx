@@ -8,6 +8,7 @@ import { cacheService } from './services/cache-service';
 import { supabaseService } from './services/db-service';
 import { IOrigami } from './types/origami-db.types';
 import useEventListener from './hooks/use-event-listener';
+import { Debug } from './helpers/debug';
 
 export const App = () => {
   const [showSideMenu, setShowSideMenu] = useState(false);
@@ -45,8 +46,12 @@ export const App = () => {
         console.error('Error initializing:', error);
       }
     };
-
+    window.debug = new Debug();
     init();
+
+    return () => {
+      window.debug.ui?.destroy();
+    };
   }, []);
 
   /**
