@@ -24,13 +24,13 @@ export class Controller {
 
   private static INITIAL_STEP = 0;
 
-  private static ANIMATION_SPEEDS: number[] = [0.5, 1, 1.5, 2];
+  private static ANIMATION_SPEED_MULTIPLIERS: number[] = [0.5, 1, 1.5, 2];
 
   private currentStep: number = 0;
 
   private clock: THREE.Clock;
 
-  public animationSpeed: number = 1;
+  public speedMultiplier: number = 1;
 
   private origami: Origami;
 
@@ -41,7 +41,7 @@ export class Controller {
     document
       .getElementById('play-reverse-button')!
       .addEventListener('click', this.togglePlayAnimation.bind(this, AnimationDirection.Reverse));
-    document.getElementById('speed-button')!.addEventListener('click', this.changeAnimationSpeed.bind(this));
+    document.getElementById('speed-button')!.addEventListener('click', this.changeAnimationSpeedMultiplier.bind(this));
     document.getElementById('refresh-button')!.addEventListener('click', this.resetAnimation.bind(this));
     document
       .getElementById('play-button')!
@@ -106,20 +106,30 @@ export class Controller {
     } else {
       this.currentState = ControllerState.Paused;
     }
+
+    document.dispatchEvent(
+      new CustomEvent<IControllerEvent>('controller:enable', {
+        detail: {
+          value: this.currentStep === ControllerState.Paused,
+          direction: direction === AnimationDirection.Reverse ? AnimationDirection.Forward : AnimationDirection.Reverse
+        },
+        cancelable: true
+      })
+    );
   }
 
   /**
-   * Used to change the animation speed
+   * Used to change the animation speed multiplier
    */
-  private changeAnimationSpeed(): void {
+  private changeAnimationSpeedMultiplier(): void {
     // cycle trought the defined speeds
-    let idx = Controller.ANIMATION_SPEEDS.indexOf(this.animationSpeed);
-    idx = (idx + 1) % Controller.ANIMATION_SPEEDS.length;
-    this.animationSpeed = Controller.ANIMATION_SPEEDS[idx];
+    let idx = Controller.ANIMATION_SPEED_MULTIPLIERS.indexOf(this.speedMultiplier);
+    idx = (idx + 1) % Controller.ANIMATION_SPEED_MULTIPLIERS.length;
+    this.speedMultiplier = Controller.ANIMATION_SPEED_MULTIPLIERS[idx];
 
     document.dispatchEvent(
       new CustomEvent<IControllerSpeedEvent>('controller:speed', {
-        detail: { speed: this.animationSpeed },
+        detail: { speed: this.speedMultiplier },
         cancelable: true
       })
     );

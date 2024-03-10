@@ -34,8 +34,28 @@ export const ControlsComponent = () => {
       event.stopPropagation();
       if (event.detail.direction == AnimationDirection.Forward) {
         setIsPlayingForward(event.detail.value);
-      } else {
+      } else if (event.detail.direction === AnimationDirection.Reverse) {
         setIsPlayingReverse(event.detail.value);
+      } else {
+        setIsPlayingForward(event.detail.value);
+        setIsPlayingReverse(event.detail.value);
+      }
+    };
+
+    /**
+     * Handle the pause event
+     * @param event
+     */
+    const handleIsEnable = (event: CustomEvent<IControllerEvent>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.detail.direction == AnimationDirection.Forward) {
+        setIsEnabledForward(event.detail.value);
+      } else if (event.detail.direction === AnimationDirection.Reverse) {
+        setIsEnabledReverse(event.detail.value);
+      } else {
+        setIsEnabledForward(event.detail.value);
+        setIsEnabledReverse(event.detail.value);
       }
     };
 
@@ -65,12 +85,14 @@ export const ControlsComponent = () => {
     document.addEventListener('controller:pause', handlePause.bind(this));
     document.addEventListener('controller:step', handleSteps.bind(this));
     document.addEventListener('controller:speed', handleSpeed.bind(this));
+    document.addEventListener('controller:enable', handleIsEnable.bind(this));
 
     // Clean up the event listeners when the component unmounts
     return () => {
       document.removeEventListener('controller:pause', handlePause.bind(this));
       document.removeEventListener('controller:step', handleSteps.bind(this));
       document.removeEventListener('controller:speed', handleSpeed.bind(this));
+      document.removeEventListener('controller:enable', handleIsEnable.bind(this));
     };
   }, []);
 
