@@ -44,7 +44,6 @@ export class LightsManager {
     directionalLight2.shadow.bias = -0.0001;
     this.lightsMap.set('Dir-2', directionalLight2);
 
-
     const ambientLight = new THREE.AmbientLight(0xfeffeb, 1.5);
     ambientLight.name = OBJECT_NAMES.AMBIENT_LIGHT_1;
     this.lightsMap.set('Amb-1', ambientLight);

@@ -29,7 +29,7 @@ export class SceneManager {
 
   private debugObject = {
     paperCrane: {
-      visible: false,
+      visible: false
     }
   };
 
@@ -140,7 +140,7 @@ export class SceneManager {
       paperCrane.material = new THREE.MeshStandardMaterial({
         metalness: 0.1,
         roughness: 0.95,
-        color: 0xfbf6ef,
+        color: 0xfbf6ef
       });
 
       this.updateAllMaterials();
@@ -149,15 +149,30 @@ export class SceneManager {
       paperCraneFolder.add(paperCrane, 'visible').onChange((value: boolean) => {
         line.visible = value;
       });
-      paperCraneFolder.add(paperCrane.position, 'x').min(-50).max(50).step(1).onChange(() => {
-        line.position.x = paperCrane.position.x;
-      });
-      paperCraneFolder.add(paperCrane.position, 'y').min(-50).max(50).step(1).onChange(() => {
-        line.position.y = paperCrane.position.y;
-      });
-      paperCraneFolder.add(paperCrane.position, 'z').min(-50).max(50).step(1).onChange(() => {
-        line.position.z = paperCrane.position.z;
-      });
+      paperCraneFolder
+        .add(paperCrane.position, 'x')
+        .min(-50)
+        .max(50)
+        .step(1)
+        .onChange(() => {
+          line.position.x = paperCrane.position.x;
+        });
+      paperCraneFolder
+        .add(paperCrane.position, 'y')
+        .min(-50)
+        .max(50)
+        .step(1)
+        .onChange(() => {
+          line.position.y = paperCrane.position.y;
+        });
+      paperCraneFolder
+        .add(paperCrane.position, 'z')
+        .min(-50)
+        .max(50)
+        .step(1)
+        .onChange(() => {
+          line.position.z = paperCrane.position.z;
+        });
       paperCraneFolder.add(paperCrane.material, 'roughness').min(0).max(1).step(0.001);
       paperCraneFolder.add(paperCrane.material, 'metalness').min(0).max(1).step(0.001);
     });

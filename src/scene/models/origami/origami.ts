@@ -31,13 +31,10 @@ export class Origami extends THREE.Group {
     side: THREE.DoubleSide,
     roughness: 0.95,
     metalness: 0.1,
-    color: 0xfbf6ef,
+    color: 0xfbf6ef
   });
 
-  private meshes: THREE.Mesh<
-    THREE.BufferGeometry<THREE.NormalBufferAttributes>,
-    THREE.MeshStandardMaterial
-  >[];
+  private meshes: THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>[];
 
   private meshesRotation: THREE.Euler[];
 
@@ -105,19 +102,11 @@ export class Origami extends THREE.Group {
    * Generates meshes for each plane geometry and returns and array of meshes
    */
   private generateMeshes(): THREE.Mesh<PlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
-    const planeVertices = [[
-      this.vertices.a,
-      this.vertices.b,
-      this.vertices.c,
-    ], [
-      this.vertices.c,
-      this.vertices.d,
-      this.vertices.b,
-    ], [
-      this.vertices.a,
-      this.vertices.e,
-      this.vertices.d,
-    ]];
+    const planeVertices = [
+      [this.vertices.a, this.vertices.b, this.vertices.c],
+      [this.vertices.c, this.vertices.d, this.vertices.b],
+      [this.vertices.a, this.vertices.e, this.vertices.d]
+    ];
 
     return planeVertices.map((vertices) => {
       const geometry = new PlaneGeometry(vertices, this.width, this.height);
@@ -204,5 +193,4 @@ export class Origami extends THREE.Group {
       mesh.material.dispose();
     });
   }
-
 }
