@@ -5,9 +5,7 @@ interface IOrigamiPreviewComponentProps {
   name: string;
 }
 
-export const OrigamiPreviewComponent = (
-  props: IOrigamiPreviewComponentProps
-) => {
+export const OrigamiPreviewComponent = (props: IOrigamiPreviewComponentProps) => {
   const [image, setImage] = useState('');
 
   useEffect(() => {

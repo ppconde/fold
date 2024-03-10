@@ -1,18 +1,10 @@
-import { MathHelper } from "../helpers/math-helper";
+import { MathHelper } from '../helpers/math-helper';
 
 export class OrigamiSolver {
-  static solveOrigami(
-    points,
-    faces,
-    pattern,
-    planes,
-    fold_instructions,
-    translation,
-    rotation
-  ) {
-    console.log("Solving origami", OrigamiSolver.x);
+  static solveOrigami(points, faces, pattern, planes, fold_instructions, translation, rotation) {
+    console.log('Solving origami', OrigamiSolver.x);
     // Set tolerance for math calculations
-    const width = pattern["b"][1];
+    const width = pattern['b'][1];
     const tolerance = width / 100;
 
     // Create mesh instructions
@@ -25,16 +17,15 @@ export class OrigamiSolver {
 
       // Execute translation
       if (this.isInstruction(instruction, translation)) {
-        [points, faces, pattern, planes, mesh_instruction] =
-          this.solveTranslation(
-            points,
-            faces,
-            pattern,
-            planes,
-            instruction,
-            translation,
-            tolerance
-          );
+        [points, faces, pattern, planes, mesh_instruction] = this.solveTranslation(
+          points,
+          faces,
+          pattern,
+          planes,
+          instruction,
+          translation,
+          tolerance
+        );
 
         // Execute rotation
       } else if (this.isInstruction(instruction, rotation)) {
@@ -60,21 +51,9 @@ export class OrigamiSolver {
     return instruction.match(type.regex) !== null;
   }
 
-  static solveTranslation(
-    points,
-    faces,
-    pattern,
-    planes,
-    instruction,
-    translation,
-    tolerance
-  ) {
+  static solveTranslation(points, faces, pattern, planes, instruction, translation, tolerance) {
     // Get 'from point', 'to point', and rotation sense
-    let { from, to, sense } = MathHelper.getFromFoldInstruction(
-      ["from", "to", "sense"],
-      translation,
-      instruction
-    );
+    let { from, to, sense } = MathHelper.getFromFoldInstruction(['from', 'to', 'sense'], translation, instruction);
 
     // TODO: Continue to code
 
@@ -85,15 +64,7 @@ export class OrigamiSolver {
     // let intersection_lines = MathHelper.findIntersectionBetweenPlaneAndOrigami(points, faces, plane);
   }
 
-  static solveRotation(
-    points,
-    faces,
-    pattern,
-    planes,
-    instruction,
-    rotation,
-    tolerance
-  ) {}
+  static solveRotation(points, faces, pattern, planes, instruction, rotation, tolerance) {}
 
   static createFaceMeshes(faces, pattern) {}
 }

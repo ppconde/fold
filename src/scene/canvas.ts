@@ -8,6 +8,7 @@ export class Canvas {
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.sceneManager = new SceneManager(canvas);
+    this.resizeCanvas = this.resizeCanvas.bind(this);
     this.init();
   }
 
@@ -41,7 +42,12 @@ export class Canvas {
    * Recursively calls render for each frame render
    */
   public render(): void {
+    // Used for checking app performance
+    window.debug.stats?.begin();
+
     requestAnimationFrame(this.render.bind(this));
     this.sceneManager.update();
+
+    window.debug.stats?.end();
   }
 }

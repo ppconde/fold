@@ -19,12 +19,7 @@ export const SearchBarComponent = (props: ISearchBarComponentProps) => {
     <div className="search-bar">
       <div className="wrapper">
         <SearchIcon className="icon" />
-        <input
-          type="text"
-          className="search"
-          placeholder="Search your origami"
-          onChange={onSearchChange}
-        />
+        <input type="text" className="search" placeholder="Search your origami" onChange={onSearchChange} />
       </div>
     </div>
   );

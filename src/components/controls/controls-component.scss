@@ -1,4 +1,4 @@
-@use "../../scss/colors.scss" as colors;
+@use '../../scss/colors.scss' as colors;
 
 $step-size: 13px;
 $transition-time: 0.3s;
@@ -42,4 +42,14 @@ $transition-time: 0.3s;
       transform: translateY(1px);
     }
   }
+
+ .pagination {
+    background-color: transparent;
+    color: colors.$secondary-color;
+    text-align: center;
+    text-decoration: none;
+    user-select: none;
+    font-size: 16px;
+    font-weight: bold;
+ }
 }
