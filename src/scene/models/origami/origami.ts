@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { AnimationDirection } from '../../controllers/controller';
 import { Controller } from '../../controllers/controller';
 import { MathHelper } from '../../helpers/math-helper';
 import { OrigamiPlaneGeometry } from './origami-plane-geometry';
@@ -123,20 +124,19 @@ export class Origami extends THREE.Group {
   /**
    * Plays the animation
    */
-  public playAnimationStep(): void {
-    const instruction = this.meshInstructions[this.controller.currentStep];
+  public playAnimationStep(step: number, direction: AnimationDirection): void {
+    const instruction = this.meshInstructions[step];
     const deltaTime = this.clock.getDelta();
-    let angle_to_rotate = this.angularSpeed * deltaTime;
+    let angle_to_rotate = this.angularSpeed * deltaTime * this.controller.speedMultiplier;
 
     if (this.angleRotated + angle_to_rotate < instruction.angle) {
-      this.rotate(angle_to_rotate);
+      this.rotate(angle_to_rotate, instruction, direction);
       this.angleRotated += angle_to_rotate;
     } else {
       angle_to_rotate = instruction.angle - this.angleRotated;
-      this.rotate(angle_to_rotate);
+      this.rotate(angle_to_rotate, instruction, direction);
       this.angleRotated = 0;
-      this.controller.increaseStepBy(1);
-      this.controller.pauseAnimation();
+      this.controller.finishAnimation(direction);
     }
   }
 
@@ -144,12 +144,15 @@ export class Origami extends THREE.Group {
    * Rotates the meshes
    * @param angle
    */
-  public rotate(angle: number): void {
-    const instruction = this.meshInstructions[this.controller.currentStep];
+  public rotate(angle: number, instruction: IMeshInstruction, direction: AnimationDirection): void {
     const vecA = new THREE.Vector3(...this.vertices[instruction.axis[0]]);
     const vecB = new THREE.Vector3(...this.vertices[instruction.axis[1]]);
     const vec = new THREE.Vector3();
     vec.copy(vecB).sub(vecA).normalize();
+
+    if (direction === AnimationDirection.Reverse) {
+      angle *= -1;
+    }
 
     for (const i of instruction.meshIds) {
       this.meshes[i].position.sub(vecA);

@@ -39,17 +39,6 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
         <div className="settings">
           <button className="close" onClick={props.activateSideMenu} />
           <h2>Settings</h2>
-          <div className="resizer">
-            {label('width')}
-            {label('height')}
-            <div className="boxes">
-              {renderBox('A4')}
-              <div className="col">
-                {renderBox('Custom')}
-                {renderBox('Square')}
-              </div>
-            </div>
-          </div>
         </div>
       </aside>
     ) : null;
@@ -80,14 +69,6 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
     ) : null;
   };
 
-  const renderShare = () => {
-    return props.menuType === 'share' ? (
-      <aside className="side-menu">
-        <div className="share">Share your origamis</div>
-      </aside>
-    ) : null;
-  };
-
   const renderOrigamiPreviews = () => {
     const { loading } = props;
     const origamis = library
@@ -101,26 +82,6 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
     );
   };
 
-  const label = (name: string | undefined) => {
-    const text = name === 'width' ? 'W' : 'H';
-    return (
-      <div className={`label-${text}`}>
-        <label className="text" htmlFor={name}>
-          {text}:{' '}
-        </label>
-        <input type="numeric" name={name}></input>
-      </div>
-    );
-  };
-
-  const renderBox = (name: string) => {
-    return (
-      <div className={name.toLowerCase()}>
-        <span className="text">{name}</span>
-      </div>
-    );
-  };
-
   switch (props.menuType) {
     case 'settings':
       return renderSettings();
@@ -128,8 +89,6 @@ export const SideMenuComponent = (props: ISideMenuComponentProps) => {
       return renderLibrary(setSearchText);
     case 'instructions':
       return renderInstructions();
-    case 'share':
-      return renderShare();
     default:
       return null;
   }
