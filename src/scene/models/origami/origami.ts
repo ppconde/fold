@@ -80,7 +80,9 @@ export class Origami extends THREE.Group {
      */
     this.scene.add(...this.meshes);
 
-    this.addDebug();
+    if (this.debug.active) {
+      this.addDebug();
+    }
   }
 
   /**
