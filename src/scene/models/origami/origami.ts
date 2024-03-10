@@ -125,10 +125,9 @@ export class Origami extends THREE.Group {
    * Plays the animation
    */
   public playAnimationStep(speed: number, direction: AnimationDirection): void {
-    const instruction =
-      this.meshInstructions[
-        direction === AnimationDirection.Forward ? this.controller.currentStep : this.controller.currentStep
-      ];
+    const idx =
+      direction === AnimationDirection.Reverse ? this.controller.currentStep - 1 : this.controller.currentStep;
+    const instruction = this.meshInstructions[idx];
     const deltaTime = this.clock.getDelta();
     let angle_to_rotate = this.angularSpeed * deltaTime * speed;
 
@@ -139,8 +138,8 @@ export class Origami extends THREE.Group {
       angle_to_rotate = instruction.angle - this.angleRotated;
       this.rotate(angle_to_rotate, instruction);
       this.angleRotated = 0;
-      this.controller.increaseStepBy(1);
-      this.controller.pauseAnimation(direction);
+      this.controller.increaseStepBy(direction === AnimationDirection.Reverse ? -1 : 1);
+      this.controller.finishAnimation(direction);
     }
   }
 

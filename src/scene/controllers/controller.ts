@@ -19,14 +19,12 @@ export enum AnimationDirection {
   Both = 3
 }
 
-const AnimationSpeeds: number[] = [0.5, 1, 2];
-
 export class Controller {
   public currentState: ControllerState = ControllerState.Stopped;
 
   private static INITIAL_STEP = 0;
 
-  private enablePlayEventDispatched = false;
+  private static ANIMATION_SPEEDS: number[] = [0.5, 1, 1.5, 2];
 
   public currentStep: number = 0;
 
@@ -60,8 +58,9 @@ export class Controller {
   /**
    * Used to pause animation
    */
-  public pauseAnimation(direction: AnimationDirection): void {
-    this.currentState = ControllerState.Paused;
+  public finishAnimation(direction: AnimationDirection): void {
+    this.clock.stop();
+    this.currentState = ControllerState.Finished;
     document.dispatchEvent(
       new CustomEvent('controller:pause', {
         detail: { value: false, direction: direction },
@@ -88,18 +87,17 @@ export class Controller {
         cancelable: true
       })
     );
-    this.enablePlay(AnimationDirection.Forward);
   }
 
   /**
    * Used to toggle animation on/off (play/pause)
    */
   private togglePlayAnimation(direction: AnimationDirection): void {
-    if (this.currentState !== ControllerState.Paused && this.currentState !== ControllerState.Stopped) {
-      this.currentState = ControllerState.Paused;
-    } else {
+    if (this.currentState !== ControllerState.Playing && this.currentState !== ControllerState.Playing_Reverse) {
       this.currentState =
         direction === AnimationDirection.Reverse ? ControllerState.Playing_Reverse : ControllerState.Playing;
+    } else {
+      this.currentState = ControllerState.Paused;
     }
   }
 
@@ -107,9 +105,10 @@ export class Controller {
    * Used to change the animation speed
    */
   private changeAnimationSpeed(): void {
-    let idx = AnimationSpeeds.indexOf(this.animationSpeed);
-    idx = (idx + 1) % AnimationSpeeds.length;
-    this.animationSpeed = AnimationSpeeds[idx];
+    // cycle trought the defined speeds
+    let idx = Controller.ANIMATION_SPEEDS.indexOf(this.animationSpeed);
+    idx = (idx + 1) % Controller.ANIMATION_SPEEDS.length;
+    this.animationSpeed = Controller.ANIMATION_SPEEDS[idx];
 
     document.dispatchEvent(
       new CustomEvent<IControllerSpeedEvent>('controller:speed', {
@@ -134,55 +133,9 @@ export class Controller {
   }
 
   /**
-   * Used to check if play button should be disabled
-   * @param totalSteps
-   */
-  private shouldDisablePlay(totalSteps: number): boolean {
-    return !this.enablePlayEventDispatched && this.currentStep >= totalSteps;
-  }
-
-  /**
-   * Used to enable play button
-   */
-  private enablePlay(direction: AnimationDirection): void {
-    document.dispatchEvent(
-      new CustomEvent<IControllerEvent>('controller:play', {
-        detail: { value: true, direction: direction }
-      })
-    );
-    this.enablePlayEventDispatched = false;
-  }
-
-  /**
-   * Used to disable play button
-   */
-  private disablePlay(direction: AnimationDirection): void {
-    this.clock.stop();
-    document.dispatchEvent(
-      new CustomEvent<IControllerEvent>('controller:play', {
-        detail: { value: false, direction: direction }
-      })
-    );
-    this.enablePlayEventDispatched = true;
-  }
-
-  /**
    * Used to update the origami
    */
   public update(): void {
-    if (this.shouldDisablePlay(this.origami.meshInstructions.length)) {
-      this.disablePlay(AnimationDirection.Forward);
-    } else if (this.shouldDisablePlay(Controller.INITIAL_STEP)) {
-      this.disablePlay(AnimationDirection.Reverse);
-    } else {
-      this.handleAnimation();
-    }
-  }
-
-  /**
-   * Used to handle animation
-   */
-  private handleAnimation(): void {
     switch (this.currentState) {
       case ControllerState.Playing:
         !this.clock.running && this.clock.start();
