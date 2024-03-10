@@ -20,17 +20,17 @@ export enum AnimationDirection {
 }
 
 export class Controller {
-  public currentState: ControllerState = ControllerState.Stopped;
+  private currentState: ControllerState = ControllerState.Stopped;
 
   private static INITIAL_STEP = 0;
 
   private static ANIMATION_SPEEDS: number[] = [0.5, 1, 1.5, 2];
 
-  public currentStep: number = 0;
+  private currentStep: number = 0;
 
   private clock: THREE.Clock;
 
-  private animationSpeed: number = 1;
+  public animationSpeed: number = 1;
 
   private origami: Origami;
 
@@ -61,9 +61,16 @@ export class Controller {
   public finishAnimation(direction: AnimationDirection): void {
     this.clock.stop();
     this.currentState = ControllerState.Finished;
+    this.currentStep += direction === AnimationDirection.Reverse ? -1 : 1;
     document.dispatchEvent(
       new CustomEvent('controller:pause', {
         detail: { value: false, direction: direction },
+        cancelable: true
+      })
+    );
+    document.dispatchEvent(
+      new CustomEvent<IControllerStepEvent>('controller:step', {
+        detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
         cancelable: true
       })
     );
@@ -119,31 +126,17 @@ export class Controller {
   }
 
   /**
-   * Used to set animation to a specific step
-   */
-  public increaseStepBy(step: number): void {
-    this.currentStep += step;
-
-    document.dispatchEvent(
-      new CustomEvent<IControllerStepEvent>('controller:step', {
-        detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
-        cancelable: true
-      })
-    );
-  }
-
-  /**
    * Used to update the origami
    */
   public update(): void {
     switch (this.currentState) {
       case ControllerState.Playing:
         !this.clock.running && this.clock.start();
-        this.origami.playAnimationStep(this.animationSpeed, AnimationDirection.Forward);
+        this.origami.playAnimationStep(this.currentStep, AnimationDirection.Forward);
         break;
       case ControllerState.Playing_Reverse:
         !this.clock.running && this.clock.start();
-        this.origami.playAnimationStep(this.animationSpeed, AnimationDirection.Reverse);
+        this.origami.playAnimationStep(this.currentStep - 1, AnimationDirection.Reverse);
         break;
       case ControllerState.Paused:
         this.clock.start();
