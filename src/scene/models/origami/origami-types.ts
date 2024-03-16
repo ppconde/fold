@@ -85,3 +85,9 @@ export interface IPolygonLabel {
     theta?: number,
     t?: number
 };
+
+export interface IFaceLabels {
+    rotate: boolean[];
+    dontRotate: boolean[];
+    divide: boolean[];
+}

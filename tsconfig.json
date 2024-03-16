@@ -30,6 +30,7 @@
     "src",
     "declarations",
     "src/types",
+    "test.ts"
   ],
   "references": [
     {

@@ -5,7 +5,7 @@ import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
 import foldInstructionsText from '../../../instructions/test-1.text'
-import { PolygonIntersectionHelper } from './polygon-intersection-helper'  // Just for test
+import { PolygonIntersectionHelper } from '../../../tests/intersect-polygons'  // Just for test
 
 
 export class Origami extends THREE.Group {
@@ -68,6 +68,8 @@ export class Origami extends THREE.Group {
     this.vertices = this.generateVertices();
 
     // this.meshes = this.generateMeshes();
+
+    // PolygonIntersectionHelper.test();
 
     const foldInstructions = this.getFoldInstructions();
 
