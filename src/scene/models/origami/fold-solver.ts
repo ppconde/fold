@@ -2,7 +2,6 @@ import { join } from 'path';
 import { MathHelpers } from './math-helpers';
 import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, IFaceGraph, IFaceLabels} from './origami-types';
 
-
 export class FoldSolver {
 
 	public static solveTranslation(origamiCoordinates: IOrigamiCoordinates, instruction: string, translation: IParseTranslation, tolerance: number): [IOrigamiCoordinates, IFaceRotationInstruction] {
@@ -1092,6 +1091,39 @@ export class FoldSolver {
 
 	// 	}
 	// }
+
+
+
+
+
+	// 		const faceId = MathHelpers.findPositionOfArrayInArray(startFaces[0], origamiCoordinates.faces);
+	//      
+
+	public static sweepOverlaidFacesBeforePlane(directRotationFaces: string[][], origamiCoordinates: IOrigamiCoordinates, plane: IPlane, intersectionLines: IintersectionLine[], rotationAxis: string[], planeSide: number, axisSense: number) {
+		// Unpack origami coordinates
+		const faces = origamiCoordinates.faces;
+		const faceOrder = origamiCoordinates.faceOrder;
+		// Set array to store sweeping information
+		const sweptFaceLabels = new Array(faces.length).fill(false);
+		// Convert start faces to ids to improve performance
+		let startFaceIds: number[] = [];
+		let overlaidFaceIds: number[] = [];
+		directRotationFaces.forEach((e) => startFaceIds.push(MathHelpers.findPositionOfArrayInArray(e, faces)))
+		while (startFaceIds.length > 0) {
+			const startFaceId = startFaceIds.shift() as number;
+			sweptFaceLabels[startFaceId] = true;
+			const [_, contactFaceIds] = this.findOverlaidNeighborFacesBeforePlane(startFaceId, origamiCoordinates, plane, rotationAxis, planeSide, axisSense)
+			for (let i = 0; i < contactFaceIds.length; i++) {
+				if (sweptFaceLabels[contactFaceIds[i]] === false) {
+					startFaceIds.push(contactFaceIds[i]);
+					overlaidFaceIds.push(contactFaceIds[i])
+				}
+			}
+		}
+		// return MathHelpers.logicallyIndexArray(faces, sweptFaceLabels);
+		return MathHelpers.indexArray(faces, overlaidFaceIds);  // This is to output strictly the faces that are overlaid! (not the start no-overlaid ones as well)
+
+	}
 
 
 
