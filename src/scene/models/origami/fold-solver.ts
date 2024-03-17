@@ -8,29 +8,100 @@ export class FoldSolver {
 		// Get instruction values
 		const { startNodes, endNodes, sense } = this.getFoldInstructionValues(['from', 'to', 'sense'], translation, instruction);
 
-		// Finds plane between from and to points
+		// Find plane between start and end points
 		const plane = this.findPlaneBetweenNodes(origamiCoordinates.points, startNodes, endNodes);
 
 		// Find rotation faces, axis and angle
-		const faceRotationInstructions = this.createFaceRotationInstructions(origamiCoordinates, startNodes, endNodes, sense, plane);
+		const faceRotationInstruction = this.createFaceRotationInstructions(origamiCoordinates, startNodes, endNodes, sense, plane);
 
-		origamiCoordinates  = this.rotateFaces(origamiCoordinates, faceRotationInstructions);
+		// Rotate points
+		origamiCoordinates = this.rotateFaces(origamiCoordinates, faceRotationInstruction);
 
-		
-		// // Intersects plane with origami, yielding intersection lines
-		// const intersectionLines = this.findIntersectionBetweenPlaneAndEdges(origamiCoordinates, plane);
+		return [origamiCoordinates, faceRotationInstruction];
+	}
 
+	public static rotateFaces(origamiCoordinates: IOrigamiCoordinates, faceRotationInstructions: IFaceRotationInstruction) {
 
-		// Adds crease points
-		// [origamiCoordinates, axisLines] = this.creaseOrigami(origamiCoordinates, plane, axisLines);
+		const points = origamiCoordinates.points;
 
-		// Rotates points 
-		// [origamiCoordinates, rotationReport] = this.rotateOrigami(origamiCoordinates, sense, plane, axisLines);
+		// Unpack face rotation instructions
+		const rotationFaces = faceRotationInstructions.faces;
+		const rotationAxis = faceRotationInstructions.axis;
+		const rotationAngle = faceRotationInstructions.angle;
 
-		// Set place-holder
-		// const faceRotationInstructions = { faces: [['a', 'e', 'b', 'd']], axis: ['a', 'b'], angle: 90 };
+		// Find rotation points
+		const rotationNodes: string[] = [];
+		const rotationPoints: number[][] = [];
+		for (const rotationFace of rotationFaces) {
+			for (const rotationNode of rotationFace) {
+				if (!MathHelpers.checkIfArrayContainsAnyElement(rotationNodes, [rotationNode])) {
+					rotationNodes.push(rotationNode);
+					rotationPoints.push(points[rotationNode]);
+				}
+			}
+		}
 
-		return [origamiCoordinates, faceRotationInstructions];
+		// Rotate points
+		const rotationLine = [points[rotationAxis[0]], points[rotationAxis[1]]];
+		const rotatedPoints = this.rotatePointsAroundLine(rotationPoints, rotationLine, rotationAngle);
+
+		// Update origami coordinates
+		for (let i = 0; i < rotationNodes.length; i++) {
+			origamiCoordinates.points[rotationNodes[i]] = rotatedPoints[i];
+		}
+
+		return origamiCoordinates;
+
+	}
+
+	// (https://www.eng.uc.edu/~beaucag/Classes/Properties/OptionalProjects/CoordinateTransformationCode/Rotate%20about%20an%20arbitrary%20axis%20(3%20dimensions).html)
+	// https://github.com/ppconde/fold/commit/5ae13c8dd27d948237d44f5f40425a6a079d5aa9
+	// https://stackoverflow.com/questions/6721544/circular-rotation-around-an-arbitrary-axis/6721649#6721649
+	public static rotatePointsAroundLine(points: number[][], line: number[][], angle: number) {
+
+		// Find point matrix
+		let rotationPointsMatrix = [];
+		for (const point of points) {
+			rotationPointsMatrix.push([...point, 1]);
+		}
+		rotationPointsMatrix = MathHelpers.transposeMatrix(rotationPointsMatrix);
+
+		// Find translation matrices
+		const translationPoint = line[0];
+		const T = this.findTranlationMatrix(MathHelpers.multiplyArray(translationPoint, -1));
+		const Ti = this.findTranlationMatrix(translationPoint);
+
+		// Find rotation matrix
+		const lineVersor = MathHelpers.findVersorBetweenPoints(line[0], line[1]);
+		const rotationMatrix = this.findRotationMatrix(lineVersor, angle);
+
+		// Rotate point matrix
+		let rotatedPointsMatrix = MathHelpers.multiplyMatrix(Ti, MathHelpers.multiplyMatrix(rotationMatrix, MathHelpers.multiplyMatrix(T, rotationPointsMatrix)));
+
+		// Get rotated points
+		rotatedPointsMatrix = MathHelpers.transposeMatrix(rotatedPointsMatrix);
+		let rotatedPoints = [];
+		for (let i = 0; i < rotatedPointsMatrix.length; i++) {
+			rotatedPoints.push([rotatedPointsMatrix[i][0], rotatedPointsMatrix[i][1], rotatedPointsMatrix[i][2]]);
+		}
+
+		return rotatedPoints;
+	}
+
+	public static findTranlationMatrix(point: number[]) {
+		return  [[1,0,0,point[0]],[0,1,0,point[1]],[0,0,1,point[2]],[0,0,0,1]];
+	}
+
+	public static findRotationMatrix(versor: number[], angle: number) {
+		const ux = versor[0];
+		const uy = versor[1];
+		const uz = versor[2];
+		const theta = angle / 180 * Math.PI;
+		const R = [[Math.cos(theta)+(ux**2)*(1-Math.cos(theta)), ux*uy*(1-Math.cos(theta))-uz*Math.sin(theta), ux*uz*(1-Math.cos(theta))+uy*Math.sin(theta), 0],
+				   [uy*ux*(1-Math.cos(theta))+uz*Math.sin(theta), Math.cos(theta)+(uy**2)*(1-Math.cos(theta)), uy*uz*(1-Math.cos(theta))-ux*Math.sin(theta), 0],
+				   [uz*ux*(1-Math.cos(theta))-uy*Math.sin(theta), uz*uy*(1-Math.cos(theta))+ux*Math.sin(theta), Math.cos(theta)+(uz**2)*(1-Math.cos(theta)), 0],
+				   [0, 0, 0, 1]];
+		return R;
 	}
 
 	// Extract values from instruction
@@ -1459,14 +1530,6 @@ export class FoldSolver {
 	// public static findRotationAxis(firstIntersectionLine: string[]): string[] {
 	// 	return [firstIntersectionLine[0], firstIntersectionLine[firstIntersectionLine.length-1]];
 	// }
-
-
-
-
-	public static rotateFaces(origamiCoordinates: IOrigamiCoordinates, faceRotationInstruction: IFaceRotationInstruction): IOrigamiCoordinates {
-
-		return origamiCoordinates;
-	}
 
 
 	public static solveRotation(origamiCoordinates: IOrigamiCoordinates, instruction: string, rotation: IParseRotation, tolerance: number): [IOrigamiCoordinates, IFaceRotationInstruction] {

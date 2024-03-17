@@ -150,7 +150,7 @@ export class MathHelpers {
   }
 
 
-  public static checkIfArrayContainsAnyElement(a: Array<any>, b: Array<unknown>) {
+  public static checkIfArrayContainsAnyElement(a: Array<any>, b: Array<any>) {
     return b.some(e => a.includes(e));
   }
 
