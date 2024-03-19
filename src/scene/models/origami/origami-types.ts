@@ -32,6 +32,7 @@ export interface IParseRotation {
 }
 
 export type TranslationKeys = keyof Pick<IParseTranslation, 'from' | 'to' | 'sense'>;
+export type RotationKeys = keyof Pick<IParseRotation, 'from' | 'axis' | 'sense' | 'angle'>;
 
 export interface TranslationValues {
     startNodes: string[];

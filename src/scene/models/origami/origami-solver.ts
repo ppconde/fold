@@ -95,6 +95,14 @@ export class OrigamiSolver {
 		return parsingInstructions;
 	}
 
+	// public static setParsingInstructions(): IParsingInstruction{
+	// 	const parsingInstructions = {
+	// 		translation: { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] },
+	// 		rotation: { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)/, from: [2, 3, 9], axis: [5, 6, 11, 12], sense: [7, 13], angle: [8, 14] }
+	// 	};
+	// 	return parsingInstructions;
+	// }
+
 	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string, tolerance: number): [IOrigamiCoordinates, IFaceRotationInstruction]{
 		// Set rotation report
 		let rotationReport: IFaceRotationInstruction;
