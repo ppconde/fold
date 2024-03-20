@@ -463,8 +463,9 @@ export class MathHelpers {
   }
 
   public static findPlaneNormalVersor(coplanarPoints: number[][]) {
-    const AB = this.findVectorBetweenPoints(coplanarPoints[0], coplanarPoints[1]);
-    const AC = this.findVectorBetweenPoints(coplanarPoints[0], coplanarPoints[2]);
+    const [A, B, C] = this.pickThreeNonCollinearPoints(coplanarPoints);
+    const AB = this.findVectorBetweenPoints(A, B);
+    const AC = this.findVectorBetweenPoints(A, C);
     const u = this.cross(AB, AC);
     return this.findVectorVersor(u);
   }

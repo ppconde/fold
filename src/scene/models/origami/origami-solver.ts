@@ -22,7 +22,7 @@ export class OrigamiSolver {
 		// Execute fold instructions
 		for (const instruction of foldInstructions) {
 			// Execute fold instruction
-			[origamiCoordinates, faceRotationInstruction] = this.solveInstruction(origamiCoordinates, parsingInstructions, instruction, tolerance);
+			[origamiCoordinates, faceRotationInstruction] = this.solveInstruction(origamiCoordinates, parsingInstructions, instruction);
 
 			// Save instruction used to rotate points
 			faceRotationInstructions.push(faceRotationInstruction);
@@ -32,6 +32,15 @@ export class OrigamiSolver {
 		const meshInstructions = this.createMeshInstructions(meshes, faceRotationInstructions);
 		return [meshes, meshInstructions];
 	}
+
+
+	origamiCoordinates = {points: {'a':[0,0,0],'b':[12,0,0],'c':[12,6,0],'d':[0,6,0],'e':[6,0,0],'f':[6,6,0],'g':[3,0,0],'h':[3,6,0],'i':[9,0,0],'j':[9,6,0]}, 
+						  faces: [['a','g','h','d'],['g','e','f','h'],['e','i','j','f'],['i','b','c','j']],
+						  pattern: {'a':[0,0],'b':[12,0],'c':[12,6],'d':[0,6],'e':[6,0],'f':[6,6],'g':[3,0],'h':[3,6],'i':[9,0],'j':[9,6]},
+						  faceOrder: {0: {},  1: {}, 2: {}, 3: {}}}
+
+	faceRotationInstructions = [{faces: [['a', 'e', 'f', 'd']], axis: ['e', 'f'], angle: 180},
+								{faces: [['e','f','h','g'], ['i','j','f','e']], axis: ['i','j'], angle: 180}]
 
 	// test-1.text
 	// public static generateOrigamiCoordinates(width: number, length: number): IOrigamiCoordinates{
@@ -103,9 +112,9 @@ export class OrigamiSolver {
 	// 	return parsingInstructions;
 	// }
 
-	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string, tolerance: number): [IOrigamiCoordinates, IFaceRotationInstruction]{
+	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string): [IOrigamiCoordinates, IFaceRotationInstruction]{
 		// Set rotation report
-		let rotationReport: IFaceRotationInstruction;
+		let faceRotationInstruction: IFaceRotationInstruction;
 
 		// Unpack parsing instructions
 		const translation = parsingInstructions.translation;
@@ -113,17 +122,17 @@ export class OrigamiSolver {
 
 		// Execute translation
 		if (this.isInstruction(instruction, translation)) {
-			[origamiCoordinates, rotationReport] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation, tolerance)
+			[origamiCoordinates, faceRotationInstruction] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation)
 
 		// Execute rotation
 		} else if (this.isInstruction(instruction, rotation)) {
-			[origamiCoordinates, rotationReport] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation, tolerance);
+			[origamiCoordinates, faceRotationInstruction] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation);
 
 		// In the case it's neither, thow an error
 		} else {
 			throw new Error('The instruction is neither a translation nor a rotation!');
 		}
-		return [origamiCoordinates, rotationReport];
+		return [origamiCoordinates, faceRotationInstruction];
 	}
 
 	public static isInstruction(instruction: string, type: IParseTranslation | IParseRotation) {
