@@ -44,7 +44,7 @@
     "sass": "^1.72.0",
     "supabase": "^1.123.4",
     "typescript": "^5.0.2",
-    "vite": "^5.1.6",
+    "vite": "^5.2.0",
     "vite-plugin-svgr": "^4.2.0"
   }
 }
