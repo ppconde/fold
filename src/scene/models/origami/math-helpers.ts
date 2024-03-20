@@ -619,8 +619,14 @@ export class MathHelpers {
   }
 
   public static checkIfLineSegmentsHaveTheSameSense(a: [number, number], b: [number, number], c: [number, number], d: [number, number]) {
+    const u = MathHelpers.findVersorBetweenPoints(a, b);
+    const v = MathHelpers.findVersorBetweenPoints(c, d);
+    return MathHelpers.checkIfVersorsHaveTheSameSense(u, v);
+  }
+
+  public static checkIfVersorsHaveTheSameSense(u: number[], v: number[]) {
     const tolerance = 0.0001;
-    return MathHelpers.dot(MathHelpers.findVersorBetweenPoints(a, b), MathHelpers.findVersorBetweenPoints(c, d)) > (1 - tolerance);
+    return MathHelpers.dot(u, v) > (1 - tolerance);
   }
 
   public static checkIfNonParallelLineSegmentInteriorsIntersect(a: [number, number], b: [number, number], c: [number, number], d: [number, number]) {

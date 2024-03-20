@@ -30,12 +30,11 @@ export class FoldSolver {
 
 	public static solveRotation(origamiCoordinates: IOrigamiCoordinates, instruction: string, rotation: IParseRotation): [IOrigamiCoordinates, IFaceRotationInstruction] {
 
-
 		const [startNodes, axisNodes, sense, rotationAngle]= this.getFoldInstructionValues(rotation, instruction);
 
 		const plane = this.findPlaneAtAxis(origamiCoordinates.points, startNodes, axisNodes);
 
-		const rotationAxisNodes = this.orientRotationAxis(origamiCoordinates, plane, sense);
+		const rotationAxisNodes = this.orientRotationAxis(origamiCoordinates, axisNodes, sense, plane);
 
 		const rotationAxisCoordinates = MathHelpers.indexObject(origamiCoordinates.points, rotationAxisNodes);
 
@@ -51,12 +50,36 @@ export class FoldSolver {
 
 	}
 
-	public static findPlaneAtAxis() {
 
-
+	public static findPlaneAtAxis(points: IVertices, startNodes: string[], axisNodes: string[]){
+		const startNode = startNodes[0];
+		const startPoint = points[startNode];
+		const axisSegment = [points[axisNodes[0]], points[axisNodes[1]]];
+		const projectedStartPoint = MathHelpers.projectPointOntoLine(startPoint, axisSegment[0], axisSegment[1]);
+		const plane_vector = MathHelpers.findVectorBetweenPoints(startPoint, projectedStartPoint);
+		const plane_versor = MathHelpers.findVectorVersor(plane_vector);  // In theory, as long as plane contains axis line, it could have any orientation (I think)
+		const plane_point = projectedStartPoint;
+		const plane = { point: plane_point, versor: plane_versor };
+		return plane;
 	}
 
-	public static orientRotationAxis() {
+	public static orientRotationAxis(origamiCoordinates: IOrigamiCoordinates, axisNodes: string[], sense: 'M'|'V', plane: IPlane) {
+
+		// Unpack origami coordinates
+		const points = structuredClone(origamiCoordinates.points);
+		const faces = origamiCoordinates.faces;
+		const pattern = origamiCoordinates.pattern;
+
+		// Find plane-origami intersection lines
+		const intersectionLines = this.findIntersectionBetweenPlaneAndEdges(origamiCoordinates, plane);
+
+
+		debugger;
+
+		// Maybe find intersection lines
+		// See which ones contain axis nodes
+		// Pick a face containing two of the intersection Nodes
+		// Orient axis according to sense of rotation of that face (careful since it depends on which side of the plane it is)
 
 
 	}
@@ -496,11 +519,11 @@ export class FoldSolver {
 		// Find plane-origami intersection lines
 		const intersectionLines = this.findIntersectionBetweenPlaneAndEdges(origamiCoordinates, plane);
 
-		// Pick first intersection line as axis line
+		// Pick first intersection line as axis line (it's assumed that first intersection line is in a face with the correct orientation 'M'|'V' refers to (the last line should also be))
 		const origamiGraph = this.convertOrigamiCoordinatesToGraph(origamiCoordinates);
 		const shortestPath = this.findShortestPath(origamiGraph, startNode, endNode);
 		const firstIntersectionLine = this.findFirstIntersectionLine(shortestPath, intersectionLines);
-		const rotationAxisCoordinates = [firstIntersectionLine[0].coord, firstIntersectionLine[firstIntersectionLine.length-1].coord];;
+		const rotationAxisCoordinates = [firstIntersectionLine[0].coord, firstIntersectionLine[firstIntersectionLine.length-1].coord];
 
 		// Orient axis line
 		// Pick first intersected face
@@ -838,12 +861,17 @@ export class FoldSolver {
 	};
 
 	public static findIntersectionBetweenPlaneAndEdges(origamiCoordinates: IOrigamiCoordinates, plane: IPlane): {edge: string[]; coord: number[]}[][] {
+
+		// Unpack origami coordinates
+		const points = origamiCoordinates.points;
+		const faces = origamiCoordinates.faces;
+
 		// Find intersection between plane and the origami edges
-		const edges = this.findEdgesFromFaces(origamiCoordinates.faces);
+		const edges = this.findEdgesFromFaces(faces);
 		let intersectionPoints =  [];
 		const intersectedVertices: string[] = [];
 		for (const edge of edges) {
-			const lineSegment = { startPoint: origamiCoordinates.points[edge[0]], endPoint: origamiCoordinates.points[edge[1]] };
+			const lineSegment = { startPoint: points[edge[0]], endPoint: points[edge[1]] };
 			const [planeIntersectsLine, intersectionCoord, intersectedVerticeIndex] = MathHelpers.findIntersectionBetweenLineSegmentAndPlane(lineSegment, plane);
 			if (planeIntersectsLine) {
 				// This garantees that if the intersection point is a vertice, it is only added once:
@@ -857,9 +885,10 @@ export class FoldSolver {
 		}
 
 		// Pick first intersection point randomly, find direction of its intersection line, and sort all intersection points along that direction
+		let intersectionPointsFitToLine = new Array(intersectionPoints.length).fill(0);
 		const firstIntersectionPoint = intersectionPoints[0];
 		for (let i = 0; i < intersectionPoints.length; i++) {
-			if (!MathHelpers.checkIfEdgesAreEqual(firstIntersectionPoint.edge, intersectionPoints[i].edge) && this.checkIfEdgesBelongToSameFace(origamiCoordinates.faces, [firstIntersectionPoint.edge, intersectionPoints[i].edge])) {
+			if (this.checkIfIntersectionPointsFormNewEdge(points, faces, intersectionPoints, 0, i, intersectionPointsFitToLine)) {
 				const intersectionVersor = MathHelpers.findVersorBetweenPoints(firstIntersectionPoint.coord, intersectionPoints[i].coord);
 				intersectionPoints.sort(function (p1, p2) { return MathHelpers.dot(p1.coord,intersectionVersor) - MathHelpers.dot(p2.coord,intersectionVersor)});
 			}
@@ -867,17 +896,15 @@ export class FoldSolver {
 		
 		// Find intersection lines
 		const intersectionLines = [];
-		let intersectionPointsFitToLine = new Array(intersectionPoints.length).fill(0);
 		while (intersectionPointsFitToLine.some(e => e === 0)) {
 			// Add first point to intersection line
 			let intersectionPoint;
 			let intersectionPointPosition;
 			const intersectionLine: IintersectionLine = [];
 			for (let i = 0; i < intersectionPoints.length; i++) {
-				if (intersectionPointsFitToLine[i] === 0) {
+				if (this.checkIfIntersectionPointFitsToNewLine(points, faces, intersectionPoints, i, intersectionPointsFitToLine)) {
 					intersectionPoint = intersectionPoints[i];
 					intersectionLine.push(intersectionPoint);
-					intersectionPointsFitToLine[i] = 1;
 					intersectionPointPosition = i;
 					break;
 				}
@@ -892,7 +919,7 @@ export class FoldSolver {
 			// Find intersection line versor
 			let intersectionLineVersor;
 			for (let i = 0; i < intersectionPoints.length; i++) {
-				if (!MathHelpers.checkIfEdgesAreEqual(intersectionPoint.edge, intersectionPoints[i].edge) && this.checkIfEdgesBelongToSameFace(origamiCoordinates.faces, [intersectionPoint.edge, intersectionPoints[i].edge])) {
+				if (this.checkIfIntersectionPointsFormNewEdge(points, faces, intersectionPoints, intersectionPointPosition, i, intersectionPointsFitToLine)) {
 					intersectionLineVersor = MathHelpers.findVersorBetweenPoints(intersectionPoint.coord, intersectionPoints[i].coord);
 					intersectionLineVersor = MathHelpers.multiplyArray(intersectionLineVersor, Math.sign(i - intersectionPointPosition));
 					break;
@@ -900,27 +927,94 @@ export class FoldSolver {
 			}
 
 			// Find the rest of the intersection line, in case there is a line versor (if not, then the line is the already added single point)
-			const tolerance = 0.0001;
 			let intersectionPointsVersor;
 			if (intersectionLineVersor !== undefined) {
 				for (let i = 0; i < intersectionPoints.length; i++) {
 					intersectionPointsVersor = MathHelpers.findVersorBetweenPoints(intersectionPoint.coord, intersectionPoints[i].coord);
 					intersectionPointsVersor = MathHelpers.multiplyArray(intersectionPointsVersor, Math.sign(i - intersectionPointPosition));
-					if (this.checkIfEdgesBelongToSameFace(origamiCoordinates.faces, [intersectionPoints[i].edge, intersectionPoint.edge]) && MathHelpers.dot(intersectionLineVersor, intersectionPointsVersor) > 1 - tolerance) {
-						if (i < intersectionPointPosition) {
-							intersectionLine.unshift(intersectionPoints[i]);
-						} else {
-							intersectionLine.push(intersectionPoints[i]);
-							intersectionPoint = intersectionPoints[i];
-							intersectionPointPosition = i;
-							intersectionPointsFitToLine[i] = 1;
-						}
+					if (this.checkIfIntersectionPointsFormNewEdge(points, faces, intersectionPoints, intersectionPointPosition, i, intersectionPointsFitToLine) && MathHelpers.checkIfVersorsHaveTheSameSense(intersectionLineVersor, intersectionPointsVersor)) {
+						intersectionPoint = intersectionPoints[i];
+						intersectionLine.push(intersectionPoint);
+						intersectionPointPosition = i;
+						// intersectionPointsFitToLine[i] = 1;
 					}
 				}
 			}
+
+			// Mark intersection line points
+			for (let i = 0; i < intersectionLine.length; i++) {
+				for (let j = 0; j < intersectionPoints.length; j++) {
+					if (intersectionLine[i] === intersectionPoints[j] ) {
+						intersectionPointsFitToLine[j] = 1;
+						break;
+					}
+				}
+			}
+
 			intersectionLines.push(intersectionLine);
 		}
 		return intersectionLines;
+	}
+
+	public static checkIfIntersectionPointsBelongToSameFace(points: IVertices, faces: string[][], intersectionPoints: {edge: string[]; coord: number[]}[]) {
+		const intersectionPointsNeighbors: string[] = [];
+		for (let i = 0; i < intersectionPoints.length; i++) {
+			intersectionPointsNeighbors.push(...this.findIntersectionPointNeighborNodes(points, intersectionPoints[i]));
+		}
+		return this.checkIfNodesBelongToSameFace(faces, intersectionPointsNeighbors);
+	}
+
+	public static checkIfIntersectionPointFitsToNewLine(points: IVertices, faces: string[][], intersectionPoints: {edge: string[]; coord: number[]}[], i: number, intersectionPointsFitToLine: number[]) {
+		if (this.checkIfIntersectionPointFitsToNewEdge(points, faces, intersectionPoints, i, intersectionPointsFitToLine)) return true; // Point fits to new edge
+		if (intersectionPointsFitToLine[i] === 0) return true; // Point fits to single-point line
+		return false;
+	}
+
+	public static checkIfIntersectionPointFitsToNewEdge(points: IVertices, faces: string[][], intersectionPoints: {edge: string[]; coord: number[]}[], i: number, intersectionPointsFitToLine: number[]) {
+		for (let j = 0; j < intersectionPoints.length; j++) {
+			if (this.checkIfIntersectionPointsFormNewEdge(points, faces, intersectionPoints, i, j, intersectionPointsFitToLine)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static checkIfIntersectionPointsFormNewEdge(points: IVertices, faces: string[][], intersectionPoints: {edge: string[]; coord: number[]}[], i: number, j: number, intersectionPointsFitToLine: number[]) {
+		if (!MathHelpers.checkIfEdgesAreEqual(intersectionPoints[i].edge, intersectionPoints[j].edge) && this.checkIfIntersectionPointsBelongToSameFace(points, faces, [intersectionPoints[i], intersectionPoints[j]]) && (intersectionPointsFitToLine[i] === 0 || intersectionPointsFitToLine[j] === 0)) {
+			return true;
+		}
+		return false;
+	}
+
+	// this.findIntersectionPointNeighborNodes();
+
+	// this.checkIfNodesBelongToSameFace()
+
+	// MathHelpers.checkIfArrayContainsElements
+
+	public static checkIfNodesBelongToSameFace(faces: string[][], nodes: string[]) {
+		for (const face of faces) {
+			if (MathHelpers.checkIfArrayContainsElements(face, nodes)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+
+	public static findIntersectionPointNeighborNodes(points: IVertices, intersectionPoint: {edge: string[]; coord: number[]}) {
+		const neighborNodes = [];
+		// If intersection point is at node, return node
+		for (let i = 0; i < intersectionPoint.edge.length; i++) {
+			if (MathHelpers.checkIfPointsAreEqual(points[intersectionPoint.edge[i]], intersectionPoint.coord)) {
+				neighborNodes.push(intersectionPoint.edge[i]);
+				return neighborNodes;
+			}
+		}
+		for (let i = 0; i < intersectionPoint.edge.length; i++) {
+			neighborNodes.push(intersectionPoint.edge[i]);
+		}
+		return neighborNodes;
 	}
 
 
@@ -972,7 +1066,7 @@ export class FoldSolver {
 		for (const key of keys) {
 			if (key !== 'regex') {
 				let found = false;
-				if (key === 'from' || key === 'to'){
+				if (key === 'from' || key === 'to' || key === 'axis'){
 					const valueArray = [];
 					for (const position of parseInstruction[key]) {
 						if (match?.[position]) {
