@@ -5,6 +5,7 @@
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-20-bullseye",
   "waitFor": "onCreateCommand",
+  "onCreateCommand": "npm i -g npm",
   "updateContentCommand": "npm install",
   "postAttachCommand": "npm run dev",
   "shutdownAction": "stopContainer",
