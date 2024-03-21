@@ -370,6 +370,8 @@ export class MathHelpers {
   }
 
   public static cross(u: number[], v: number[]): number[] {
+    if (u.length === 2) u = [...u, 0];
+    if (v.length === 2) v = [...v, 0];
     return [u[1] * v[2] - u[2] * v[1], -(u[0] * v[2] - u[2] * v[0]), u[0] * v[1] - u[1] * v[0]];
   }
 
@@ -707,7 +709,7 @@ export class MathHelpers {
     const C = horizontalLinePoint;
     const AyCyBy = (((A[1] - tolerance) < C[1]) && ((B[1] - tolerance) > C[1])); // This checks if horizontal line crosses line segment (with a positive margin below and a negative margin above)
     const ByCyAy = (((A[1] - tolerance) > C[1]) && (B[1] - tolerance < C[1]));
-    return (AyCyBy || ByCyAy) && (C[0] < ((B[0] - A[0]) * (C[1] - A[1]) / (A[1] - B[1]) + B[0] - tolerance));  // If line crosses line segment to the right
+    return (AyCyBy || ByCyAy) && (C[0] < ((B[0] - A[0]) * (C[1] - A[1]) / (B[1] - A[1]) + A[0] - tolerance));
   }
 
   public static checkIfNumberIsOdd(n: number) {

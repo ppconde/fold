@@ -5,7 +5,7 @@ export class PolygonIntersectionHelper{
         let polygon1: [number, number][];
         let polygon2: [number, number][];
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 11; i++) {
 
             if (i === 0) {
                 polygon1 = [[0,0],[1,0],[1,1],[0,1]];
@@ -47,6 +47,10 @@ export class PolygonIntersectionHelper{
                 polygon1 = [[0,4], [2,4], [2,1], [3,1], [3,4], [4,4], [4,5], [0,5]];
                 polygon2 = [[2,2],[3,2],[3,3],[2,3]];  // true (T)
             } 
+            else if (i === 10) {
+                polygon1 = [[0,0],[2,0],[6,0],[0,3.75]];
+                polygon2 = [[6,0],[9,9],[3,10],[2,9],[-2,5]];  // false
+            }
             else {
                 return 0;
             }
@@ -146,7 +150,7 @@ export class PolygonIntersectionHelper{
         const C = horizontalLinePoint;
         const AyCyBy = (((A[1] - tolerance) < C[1]) && ((B[1] - tolerance) > C[1])); // This checks if horizontal line crosses line segment (with a positive margin below and a negative margin above)
         const ByCyAy = (((A[1] - tolerance) > C[1]) && (B[1] - tolerance < C[1]));
-        return ( AyCyBy || ByCyAy ) &&  (C[0] < ((B[0] - A[0]) * (C[1] - A[1]) / (A[1] - B[1]) + B[0] - tolerance));  // If line crosses line segment to the right
+        return (AyCyBy || ByCyAy) && (C[0] < ((B[0] - A[0]) * (C[1] - A[1]) / (B[1] - A[1]) + A[0] - tolerance));  // If line crosses line segment to the right
     }
 
     public static checkIfNumberIsOdd(n: number) {
