@@ -40,7 +40,7 @@ export interface TranslationValues {
     sense: 'V' | 'M';
 }
 
-export type IFaceGraph = Record<number, Record<number, 1|-1>>;
+export type IFaceGraph = Record<number, Record<number, 1 | -1>>;
 
 export interface IOrigamiCoordinates {
     points: IVertices,
@@ -50,7 +50,7 @@ export interface IOrigamiCoordinates {
 }
 
 export interface IintersectionPoint {
-    edge: string[], 
+    edge: string[],
     coord: number[]
 }
 
@@ -75,7 +75,7 @@ export interface IParsingInstruction {
 
 // export type IPolygonPoint = Record<string,number>
 
-export interface IPolygonPoint {x: any, y: any, t?: any};
+export interface IPolygonPoint { x: any, y: any, t?: any };
 
 export type IPolygonEdge = [IPolygonPoint, IPolygonPoint]
 

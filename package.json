@@ -7,6 +7,9 @@
   "scripts": {
     "dev": "vite",
     "watch": "tsc --noEmit --watch",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "coverage": "vitest run --coverage",
     "build": "tsc && vite build --base=./",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
@@ -14,7 +17,6 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "earcut": "^2.2.4",
     "gsap": "^3.12.3",
     "lil-gui": "^0.19.1",
     "react": "^18.2.0",
@@ -31,6 +33,8 @@
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
+    "@vitest/coverage-v8": "^1.4.0",
+    "@vitest/ui": "^1.4.0",
     "eslint": "^8.45.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
@@ -39,6 +43,7 @@
     "typescript": "^5.0.2",
     "vite": "^4.4.5",
     "vite-plugin-plain-text": "^1.4.2",
-    "vite-plugin-svgr": "^4.2.0"
+    "vite-plugin-svgr": "^4.2.0",
+    "vitest": "^1.4.0"
   }
 }

@@ -5,7 +5,6 @@ import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
 import foldInstructionsText from '../../../instructions/test-1.text'
-import { PolygonIntersectionHelper } from '../../../tests/intersect-polygons'  // Just for test
 
 
 export class Origami extends THREE.Group {
@@ -67,6 +66,39 @@ export class Origami extends THREE.Group {
 
     this.vertices = this.generateVertices();
 
+    this.meshes = OrigamiSolver.createFaceMeshes({
+      points: {
+        'a': [0, 0, 0],
+        'b': [12, 0, 0],
+        'c': [12, 6, 0],
+        'd': [0, 6, 0],
+        'e': [6, 0, 0],
+        'f': [6, 6, 0],
+        'g': [3, 0, 0],
+        'h': [3, 6, 0],
+        'i': [9, 0, 0],
+        'j': [9, 6, 0]
+      },
+      faces: [
+        ['a', 'g', 'h', 'd'],
+        ['g', 'e', 'f', 'h'],
+        ['e', 'i', 'j', 'f'],
+        ['i', 'b', 'c', 'j']
+      ],
+      pattern: {
+        'a': [0, 0],
+        'b': [12, 0],
+        'c': [12, 6],
+        'd': [0, 6],
+        'e': [6, 0],
+        'f': [6, 6],
+        'g': [3, 0],
+        'h': [3, 6],
+        'i': [9, 0],
+        'j': [9, 6]
+      },
+      faceOrder: { 0: {}, 1: {}, 2: {}, 3: {} }
+    });
     // this.meshes = this.generateMeshes();
 
     // PolygonIntersectionHelper.test();
@@ -79,7 +111,7 @@ export class Origami extends THREE.Group {
     //   { x: 300, y: 150  },
     //   { x: 300, y: 250  }
     // ];
-    
+
     // let fig2 = [
     //   { x: 200, y: 100  },
     //   { x: 200, y: 300  },
@@ -102,7 +134,7 @@ export class Origami extends THREE.Group {
 
     // const intersection = PolygonIntersectionHelper.intersect(fig1, fig2);
 
-    [this.meshes, this.meshInstructions] = OrigamiSolver.solveOrigami(width, length, foldInstructions);
+    // [this.meshes, this.meshInstructions] = OrigamiSolver.solveOrigami(width, length, foldInstructions);
 
     this.meshesRotation = this.meshes.map((mesh) => mesh.rotation.clone());
 
