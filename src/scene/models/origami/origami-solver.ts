@@ -4,7 +4,6 @@ import {
 	IMeshInstruction, IParseTranslation, IParseRotation, IOrigamiCoordinates,
 	IOrigamiMesh, IFaceRotationInstruction, IParsingInstruction
 } from './origami-types';
-import { PlaneGeometry } from '../plane-geometry';
 
 
 export class OrigamiSolver {
@@ -152,27 +151,15 @@ export class OrigamiSolver {
 		const facePoints = origamiCoordinates.faces.map(face => face.map(point => origamiCoordinates.points[point]));
 
 		return facePoints.map(face => {
-			const { height, width } = this.calculateFaceDimensions(face);
-			return new THREE.Mesh(new PlaneGeometry(face, width, height), material);
+			const geometry = new THREE.ShapeGeometry(new THREE.Shape(face.map(([x, y]) => new THREE.Vector2(x, y))));
+			geometry.computeVertexNormals();
+
+			return new THREE.Mesh(geometry, material);
 		});
 	}
 
 	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[] {
 		return [{ meshIds: [0], axis: ['e', 'f'], angle: 180 }];
-	}
-
-	private static calculateFaceDimensions(face: number[][]): { width: number, height: number, depth: number } {
-		const { x, y, z } = face.reduce((acc, [px, py, pz]) => ({
-			x: [...acc.x, px],
-			y: [...acc.y, py],
-			z: [...acc.z, pz]
-		}), { x: [], y: [], z: [] } as { x: number[], y: number[], z: number[] })
-
-		return {
-			width: Math.max(...x) - Math.min(...x),
-			height: Math.max(...y) - Math.min(...y),
-			depth: Math.max(...z) - Math.min(...z),
-		}
 	}
 
 }
