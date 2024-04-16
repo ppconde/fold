@@ -4,8 +4,10 @@ import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
-import foldInstructionsText from '../../../instructions/test-1.text'
-import { PolygonIntersectionHelper } from '../../../tests/intersect-polygons'  // Just for test
+// import { PolygonIntersectionHelper } from '../../../tests/check-if-polygons-intersect'  // Just for test
+import { PolygonIntersectionHelper } from '../../../tests/find-intersection-between-polygons'  // Just for test
+import { PolygonUnionHelper } from '../../../tests/inclusion-exclusion-principle'  // Just for test
+import foldInstructionsText from '../../../instructions/test-5.text'
 
 
 export class Origami extends THREE.Group {
@@ -69,38 +71,11 @@ export class Origami extends THREE.Group {
 
     // this.meshes = this.generateMeshes();
 
-    // PolygonIntersectionHelper.test();
-
     const foldInstructions = this.getFoldInstructions();
 
+    // PolygonIntersectionHelper.test();
 
-    // let fig1 = [
-    //   { x: 100, y: 200  },
-    //   { x: 300, y: 150  },
-    //   { x: 300, y: 250  }
-    // ];
-    
-    // let fig2 = [
-    //   { x: 200, y: 100  },
-    //   { x: 200, y: 300  },
-    //   { x: 350, y: 300  },
-    //   { x: 350, y: 100  }
-    // ];
-
-
-    // let fig1 = [[100,200],[300,150],[300,250]];
-    // let fig2 = [[200,100],[200,300],[350,300],[350,100]];
-
-    // for (let i = 0; i<fig2.length; i++) {
-    //   fig2[i][0] += 100;
-
-    // }
-
-
-    // const intersection =  MathHelpers.checkIfCoplanarFacesIntersect(fig1, fig2);
-
-
-    // const intersection = PolygonIntersectionHelper.intersect(fig1, fig2);
+    // PolygonUnionHelper.test();
 
     [this.meshes, this.meshInstructions] = OrigamiSolver.solveOrigami(width, length, foldInstructions);
 

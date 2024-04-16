@@ -5,7 +5,7 @@ export class PolygonIntersectionHelper{
         let polygon1: [number, number][];
         let polygon2: [number, number][];
 
-        for (let i = 0; i < 11; i++) {
+        for (let i = 0; i < 18; i++) {
 
             if (i === 0) {
                 polygon1 = [[0,0],[1,0],[1,1],[0,1]];
@@ -50,6 +50,34 @@ export class PolygonIntersectionHelper{
             else if (i === 10) {
                 polygon1 = [[0,0],[2,0],[6,0],[0,3.75]];
                 polygon2 = [[6,0],[9,9],[3,10],[2,9],[-2,5]];  // false
+            }
+            else if (i == 11) {
+                polygon1 = [[0,0],[4,0],[4,3],[4,6],[0,6]];
+                polygon2 = [[2,1],[4,3],[2,5],[2,4],[4,3],[2,2]];  // true
+            }
+            else if (i == 12) {
+                polygon1 = [[0,0],[6,0],[3,5],[6,10],[0,10],[3,5]];
+                polygon2 = [[2,1],[4,1],[3,5],[5,9],[4,9],[3,5],[2,9],[1,9],[3,5]];  // true
+            }
+            else if (i == 13) {
+                polygon1 = [[0,0],[6,0],[3,5],[6,10],[0,10],[3,5]];
+                polygon2 = [[2,1],[4,1],[3,5],[4,9],[2,9],[3,5],[-1,6],[-1,4],[3,5]];  // true
+            }
+            else if (i == 14) {
+                polygon1 = [[2,1],[4,1],[4,6],[2,6]];
+                polygon2 = [[0,0],[5,0],[5,3],[1,3],[1,4],[4,3],[1,5],[1,6],[4,3],[5,7],[0,7]];  // true
+            }
+            else if (i == 15) {
+                polygon1 = [[2,1],[4,1],[4,6],[2,6]];
+                polygon2 = [[0,0],[5,0],[5,3],[1,3],[1,4],[2.5,4],[1,5],[1,6],[4,3],[5,7],[0,7]];  // true
+            }
+            else if (i == 16) {
+                polygon1 = [[0,0],[1,0],[1,1],[0,1]];
+                polygon2 = [[0,0],[1,0],[1,1],[0,1]];  // true
+            }
+            else if (i == 17) {
+                polygon1 = [[0,0],[1,0],[1,1],[0,1]];
+                polygon2 = [[0,0],[0.5,0],[0.5,1],[0,1]];  // true
             }
             else {
                 return 0;
@@ -141,7 +169,7 @@ export class PolygonIntersectionHelper{
           points1D.push(this.dot(v,lineAxis.u));
         }
         return points1D;
-      }
+    }
 
     public static checkIfHorizontalLineCrossesNonCollinearLineSegmentToTheRight(horizontalLinePoint: [number, number], lineSegment: [number, number][]) {
         const tolerance = 0.0001;
