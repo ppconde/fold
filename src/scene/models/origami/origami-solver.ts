@@ -11,7 +11,7 @@ export class OrigamiSolver {
 		const tolerance = width / 100;
 
 		// Set origami coordinates
-		let origamiCoordinates = OrigamiGenerator.generateOrigamiCoordinates(width, length, 5);
+		let origamiCoordinates = OrigamiGenerator.generateOrigamiCoordinates(width, length, 8);
 
 		// Set parsing instructions
 		const parsingInstructions = this.setParsingInstructions();
@@ -37,7 +37,7 @@ export class OrigamiSolver {
 	public static setParsingInstructions(): IParsingInstruction{
 		const parsingInstructions = {
 			translation: { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] },
-			rotation: { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) *(\d*)/, from: [2, 3, 9], axis: [5, 6, 11, 12], sense: [7, 13], angle: [8, 14] }
+			rotation: { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) +(\d*)( +pin +(\w+))*|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) +(\d*)( +pin +(\w+))*/, from: [2, 3, 11], axis: [5, 6, 13, 14], sense: [7, 15], angle: [8, 16], pin: [10,18] }
 		};
 		return parsingInstructions;
 	}
@@ -70,11 +70,23 @@ export class OrigamiSolver {
 	}
 
 	// Use faces and pattern!:
-	public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
-		return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
-	}
+	// public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
+	// 	return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
+	// }
 
 	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[]{
 		return [{meshIds: [0], axis: ['e', 'f'], angle: 180}];
+	}
+
+	public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
+		const material = new THREE.MeshStandardMaterial({ color: 0xFF0000, side: THREE.DoubleSide });
+		const facePoints = origamiCoordinates.faces.map(face => face.map(point => origamiCoordinates.points[point]));
+
+		return facePoints.map(face => {
+			const geometry = new THREE.ShapeGeometry(new THREE.Shape(face.map(([x, y]) => new THREE.Vector2(x, y))));
+			geometry.computeVertexNormals();
+
+			return new THREE.Mesh(geometry, material);
+		});
 	}
 }

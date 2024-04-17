@@ -63,6 +63,30 @@ export class OrigamiGenerator {
                     pattern: {'a':[0,0],'b':[10,0],'c':[10,3],'d':[0,3],'e':[4,0],'f':[4,3],'g':[2,0],'h':[2,2],'i':[4,2],'j':[3,3]},
                     faceOrder: {0: {1: 1, 2: 1, 3: 1, 4: 1}, 1: {0: 1}, 2: {0: 1}, 3: {0: 1}, 4: {0: 1}},
                 };
+        // same of test-1.text I think
+        } else if (i === 7) {
+                origamiCoordinates = {
+                    points: { 'a': [0, 0, 0], 'b': [-2, 5, 0], 'c': [3, 10, 0], 'd': [0, 9, 0], 'e': [6, 0, 0], 'f': [9, 9, 0], 'g': [2, 0, 0], 'h': [9, -2, 0], 'i': [7, -1, 0], 'j': [6, 4, 0], 'k': [2, 9, 0], 'l': [-2, 10, 0], 'm': [-3, 11, 0], 'n': [-1, 5, 0] },
+                    faces: [['a', 'g', 'e', 'f', 'd'], ['e', 'b', 'k', 'c', 'f'], ['a', 'h', 'i', 'g'], ['h', 'j', 'i'], ['k', 'l', 'm', 'c'], ['l', 'n', 'm']],
+                    pattern: { 'a': [0, 0], 'b': [15.4, -0.8], 'c': [14.4, 6.2], 'd': [0, 9], 'e': [6, 0], 'f': [9, 9], 'g': [2, 0], 'h': [9, -2], 'i': [7, -1], 'j': [6, 4], 'k': [14.6, 4.8], 'l': [18.4, 3.2], 'm': [19.8, 4], 'n': [14.6, -0.2] },  // Not accurate
+                    faceOrder: { 0: { 1: 1 }, 1: { 0: 1, 3: -1, 5: -1 }, 2: {}, 3: { 1: -1 }, 4: {}, 5: { 1: 1 } },
+                };
+        // start state of createFaceMeshes github issue example (to be used with test-7.text)
+        } else if (i === 8) {
+            origamiCoordinates = {
+                points: {'a':[0,0,0],'b':[12,0,0],'c':[12,6,0],'d':[0,6,0]}, 
+                faces: [['a','b','c','d']],
+                pattern: {'a':[0,0],'b':[12,0],'c':[12,6],'d':[0,6]},
+                faceOrder: {0: {},  1: {}, 2: {}, 3: {}}
+                };
+        // end state of createFaceMeshes github issue example
+        } else if (i === 9) {
+            origamiCoordinates = {
+                points: {'a':[0,0,0],'b':[12,0,0],'c':[12,6,0],'d':[0,6,0],'e':[6,0,0],'f':[6,6,0],'g':[3,0,0],'h':[3,6,0],'i':[9,0,0],'j':[9,6,0]}, 
+                faces: [['a','g','h','d'],['g','e','f','h'],['e','i','j','f'],['i','b','c','j']],
+                pattern: {'a':[0,0],'b':[12,0],'c':[12,6],'d':[0,6],'e':[6,0],'f':[6,6],'g':[3,0],'h':[3,6],'i':[9,0],'j':[9,6]},
+                faceOrder: {0: {},  1: {}, 2: {}, 3: {}}
+                };
         } else {
             throw new Error('Origami example number i was not found!');
         }

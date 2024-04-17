@@ -30,7 +30,7 @@ export class FoldSolver {
 
 	public static solveRotation(origamiCoordinates: IOrigamiCoordinates, instruction: string, rotation: IParseRotation): [IOrigamiCoordinates, IFaceRotationInstruction] {
 
-		const [startNodes, axisNodes, sense, rotationAngle] = this.getFoldInstructionValues(rotation, instruction);
+		const [startNodes, axisNodes, sense, rotationAngle, pinNodes] = this.getFoldInstructionValues(rotation, instruction);
 
 		const plane = this.findPlaneAtAxis(origamiCoordinates.points, startNodes, axisNodes);
 
@@ -40,7 +40,7 @@ export class FoldSolver {
 
 		const rotationAxisCoordinates = MathHelpers.indexObject(origamiCoordinates.points, rotationAxisNodes);
 
-		const endNodes = this.findRotationEndNodes(origamiCoordinates, allRotationAxisNodes, plane);
+		const endNodes = this.findRotationEndNodes(origamiCoordinates, allRotationAxisNodes, startNodes, pinNodes);
 
 		const [rotationFaces, origamiCoordinatesWithCreases] = this.findRotationFaces(origamiCoordinates, startNodes, endNodes, rotationAxisCoordinates, plane);
 
@@ -54,20 +54,28 @@ export class FoldSolver {
 
 	}
 
-	public static findRotationEndNodes(origamiCoordinates: IOrigamiCoordinates, allRotationAxisNodes: string[], plane: IPlane) {
+	public static findRotationEndNodes(origamiCoordinates: IOrigamiCoordinates, allRotationAxisNodes: string[], startNodes: string[], pinNodes: string[]) {
 
-		const points = origamiCoordinates.points;
+		const startNode = startNodes[0];
 		const edges = this.findEdgesFromFaces(origamiCoordinates.faces);
-		const endNodes: string[] = [];
+		const endNodes: string[] = pinNodes;
 		const edgeIndexes = [0, 1];
 
 		for (let i = 0; i < edges.length; i++) {
 			const edge = edges[i];
 			for (let j of edgeIndexes) {
 				const theOtherIndex = (j + 1) % edgeIndexes.length;
-				if (allRotationAxisNodes.includes(edge[j]) && MathHelpers.findPointSideOfPlane(points[edge[theOtherIndex]], plane) === 1 && !endNodes.includes(edge[theOtherIndex])) {
-					endNodes.push(edge[theOtherIndex]);
-					break;
+				if (MathHelpers.checkIfArrayContainsElement(allRotationAxisNodes, edge[j]) && !MathHelpers.checkIfArrayContainsElement(allRotationAxisNodes, edge[theOtherIndex])) {
+					if (!MathHelpers.checkIfArrayContainsElement(endNodes, edge[theOtherIndex])) {
+						const lineNeighborNode = edge[theOtherIndex];
+						const origamiGraph = this.convertOrigamiCoordinatesToGraph(origamiCoordinates);
+						const shortestPath = this.findShortestPath(origamiGraph, startNode, lineNeighborNode);
+						if (MathHelpers.checkIfArrayContainsAnyElement(shortestPath, allRotationAxisNodes)) {
+							endNodes.push(lineNeighborNode);
+							break;
+						}
+					}
+
 				}
 			}
 		}
@@ -489,6 +497,12 @@ export class FoldSolver {
 
 	public static findRotationFaces(origamiCoordinates: IOrigamiCoordinates, startNodes: string[], endNodes: string[], rotationAxis: number[][], plane: IPlane): [string[][], IOrigamiCoordinates] {
 		// Find start and end faces
+		// const startFaces: string[][] = [];
+		// for (const startNode of startNodes) {
+		// 	const nodeSideOfPlane = MathHelpers.findPointSideOfPlane(origamiCoordinates.points[startNode], plane);
+		// 	startFaces.push(...this.findFacesUntilPlaneThatContainNodes(origamiCoordinates.points, origamiCoordinates.faces, startNodes, plane, -1));
+		// }
+		
 		const startFaces = this.findFacesUntilPlaneThatContainNodes(origamiCoordinates.points, origamiCoordinates.faces, startNodes, plane, -1);
 		const endFaces = this.findFacesUntilPlaneThatContainNodes(origamiCoordinates.points, origamiCoordinates.faces, endNodes, plane, 1);
 
@@ -514,6 +528,8 @@ export class FoldSolver {
 		// Find rotation faces, axis and angle
 		const rotateFaces = MathHelpers.logicallyIndexArray(origamiCoordinates.faces, faceLabels.rotate);
 		return [rotateFaces, origamiCoordinates];
+
+		
 	}
 
 	public static sweepNeighborFaces(origamiCoordinates: IOrigamiCoordinates, currentFaceLabels: boolean[], previousFaceLabels: boolean[]) {
@@ -564,7 +580,6 @@ export class FoldSolver {
 		let faceOrder = origamiCoordinates.faceOrder;
 		// Set new origami coordinates
 		let newFaces = [];
-		let newPattern = {};
 		let newFaceOrder: IFaceGraph = {};
 		let subFaces;
 		// Set division variables
@@ -574,7 +589,7 @@ export class FoldSolver {
 		const dontDivideFaceIds = MathHelpers.convertLogicalPositionsToPositions(faceLabels.divide.map(e => !e));
 		// Divide faces into subfaces and save correspondence
 		for (const f of divideFaceIds) {
-			[subFaces, points, faces, newPattern] = this.divideFace(faces[f], points, faces, pattern, plane);
+			[subFaces, points, faces, pattern] = this.divideFace(faces[f], points, faces, pattern, plane);
 			faceToNewFaceCorrespondence[f] = [];
 			for (let j = 0; j < subFaces.length; j++) {
 				newFaces.push(subFaces[j]);
@@ -640,7 +655,7 @@ export class FoldSolver {
 		// const creaseLines = this.findCreaseLinesFromIntersectionNodes(points, faces, intersectionNodes);
 		// Update origami coordinates (effectively crease)
 		origamiCoordinates.points = points;
-		origamiCoordinates.pattern = newPattern;
+		origamiCoordinates.pattern = pattern;
 		origamiCoordinates.faces = newFaces;
 		origamiCoordinates.faceOrder = newFaceOrder;
 		return [origamiCoordinates, newFaceLabels];
@@ -768,12 +783,28 @@ export class FoldSolver {
 	}
 
 
+	// public static findFacesUntilPlaneThatContainNodes(points: IVertices, faces: string[][], nodes: string[], plane: IPlane, planeSide: -1|1) {
+	// 	const facesThatContainNodes = [];
+	// 	for (const face of faces) {
+	// 		if (MathHelpers.checkIfArrayContainsAnyElement(face, nodes)) {
+	// 			if (MathHelpers.findFaceSideOfPlane(face, points, plane) === 0 || MathHelpers.findFaceSideOfPlane(face, points, plane) === planeSide) {
+	// 				facesThatContainNodes.push(face);
+	// 			}
+	// 		}
+	// 	}
+	// 	return facesThatContainNodes;
+	// }
+
 	public static findFacesUntilPlaneThatContainNodes(points: IVertices, faces: string[][], nodes: string[], plane: IPlane, planeSide: -1|1) {
 		const facesThatContainNodes = [];
 		for (const face of faces) {
-			if (MathHelpers.checkIfArrayContainsAnyElement(face, nodes)) {
-				if (MathHelpers.findFaceSideOfPlane(face, points, plane) === 0 || MathHelpers.findFaceSideOfPlane(face, points, plane) === planeSide) {
-					facesThatContainNodes.push(face);
+			for (const node of nodes) {
+				if (MathHelpers.checkIfArrayContainsElement(face, node)) {
+					const nodeSideOfPlane = MathHelpers.findPointSideOfPlane(points[node], plane);
+					if (MathHelpers.findFaceSideOfPlane(face, points, plane) === 0 || MathHelpers.findFaceSideOfPlane(face, points, plane) === nodeSideOfPlane) {
+						facesThatContainNodes.push(face);
+						break;
+					}
 				}
 			}
 		}
@@ -1433,7 +1464,7 @@ export class FoldSolver {
 		for (const key of keys) {
 			if (key !== 'regex') {
 				let found = false;
-				if (key === 'from' || key === 'to' || key === 'axis'){
+				if (key === 'from' || key === 'to' || key === 'axis' || key === 'pin'){
 					const valueArray = [];
 					for (const position of parseInstruction[key]) {
 						if (match?.[position]) {
@@ -1454,6 +1485,8 @@ export class FoldSolver {
 				if (found === false) {
 					if (key === 'angle') {
 						values.push(180);
+					} else if (key === 'pin') {
+						values.push([]);
 					} else{
 						throw new Error('Could not find all the necessary information in the fold instruction!')
 					}
