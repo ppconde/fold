@@ -196,13 +196,11 @@ export class FoldSolver {
 						let rotatedFaceIndex;
 						let nonRotatedFaceIndex;
 						let rotationVersor;
-						let rotatedToNonRotatedFaceVersor;
 						for (let k = 0; k < faceIndexes.length; k++) {
 							if (MathHelpers.checkIfArrayContainsElement(rotationFacesIndexes, faceIndexes[k])) {
 								rotatedFaceIndex = faceIndexes[k];
 								nonRotatedFaceIndex = faceIndexes[(k + 1) % faceIndexes.length];
-								rotationVersor = this.findRotationFaceVersor(points, faces[rotatedFaceIndex], rotationAxis);
-								// rotatedToNonRotatedFaceVersor = ;  // todo: find it and replace rotationVersor
+								rotationVersor = this.findRotationVersor(points, faces, rotationAxis, rotatedFaceIndex, nonRotatedFaceIndex);
 								break;
 							}
 						}
@@ -222,9 +220,61 @@ export class FoldSolver {
 		return newFaceOrder;
 	}
 
-	public static findRotationFaceVersor(points: IVertices, rotatedFace: string[], rotationAxis: string[]) {
+	public static findRotationVersor(points: IVertices, faces: IFace[], rotationAxis: string[], rotatedFaceIndex: number, nonRotatedFaceIndex: number) {
+		// Find face that does not cross axis line
+		const coplanarFaces = [faces[rotatedFaceIndex], faces[nonRotatedFaceIndex]];
+		const axisLine = [points[rotationAxis[0]], points[rotationAxis[1]]];
+		let faceNotCrossingAxis;
+		for (const face of coplanarFaces) {
+			if (!this.checkIfFaceCrossesLine(MathHelpers.indexObject(points, face), axisLine)) {
+				faceNotCrossingAxis = face;
+			}
+		}
+		if (faceNotCrossingAxis === undefined) {
+			throw new Error('Both rotated and non-rotated face cross axis line! This should not be possible.');
+		}
+		// Find rotation versor (versor that defines the sense with each the rotated face hit the non-rotated face)
+		const rotationVersor = this.findRotationFaceVersor(points, faceNotCrossingAxis, rotationAxis);
+		return rotationVersor;
+	}
+
+	public static checkIfFaceCrossesLine(face: number[][], line: number[][]) {
+
+		const tolerance = 0.0001;
+		// Find a vector from line to a face point
+		let referenceFacePointVersor;
+		for (const point of face) {
+			const pointLineProjection = MathHelpers.projectPointOntoLine(point, line[0], line[1]);
+			const linePointVector = MathHelpers.findVectorBetweenPoints(pointLineProjection, point);
+			const linePointVectorNorm = MathHelpers.findVectorNorm(linePointVector);
+			if (linePointVectorNorm > tolerance) {
+				referenceFacePointVersor = MathHelpers.findVectorVersor(linePointVector);
+				break;
+			}
+		}
+		if  (referenceFacePointVersor === undefined) {
+			throw new Error('Could not find a face point outside the axis line!')
+		}
+		// Check if all vectors follow the same sense. If not, face crosses line
+		let faceCrossesLine = false;
+		for (const point of face) {
+			const pointLineProjection = MathHelpers.projectPointOntoLine(point, line[0], line[1]);
+			const linePointVector = MathHelpers.findVectorBetweenPoints(pointLineProjection, point);
+			const linePointVectorNorm = MathHelpers.findVectorNorm(linePointVector);
+			if (linePointVectorNorm > tolerance) {
+				const linePointVersor = MathHelpers.findVectorVersor(linePointVector);
+				if (!MathHelpers.checkIfVersorsHaveTheSameSense(linePointVersor, referenceFacePointVersor)) {
+					faceCrossesLine = true;
+					break;
+				}
+			}
+		}
+		return faceCrossesLine;
+	}
+
+	public static findRotationFaceVersor(points: IVertices, face: string[], rotationAxis: string[]) {
 		const axisSegment = [points[rotationAxis[0]], points[rotationAxis[1]]];
-		const faceCenterPoint = MathHelpers.findAveragePoint(MathHelpers.indexObject(points, rotatedFace));
+		const faceCenterPoint = MathHelpers.findAveragePoint(MathHelpers.indexObject(points, face));
 		const faceCenterPointProjection = MathHelpers.projectPointOntoLine(faceCenterPoint, axisSegment[0], axisSegment[1]);
 		const faceCenterToAxisVersor = MathHelpers.findVersorBetweenPoints(faceCenterPoint, faceCenterPointProjection);
 		const axisVersor = MathHelpers.findVersorBetweenPoints(axisSegment[0], axisSegment[1]);
