@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { FoldSolver } from './fold-solver'
-import { IMeshInstruction, IParseTranslation, IParseRotation, IOrigamiCoordinates, IOrigamiMesh, IFaceRotationInstruction, IParsingInstruction} from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, IOrigamiCoordinates, IOrigamiMesh, IFaceRotationInstruction, IParsingInstruction } from './origami-types';
 import { OrigamiGenerator } from './origami-coordinates-generator'
 
 
@@ -34,15 +34,15 @@ export class OrigamiSolver {
 		return [meshes, meshInstructions];
 	}
 
-	public static setParsingInstructions(): IParsingInstruction{
+	public static setParsingInstructions(): IParsingInstruction {
 		const parsingInstructions = {
 			translation: { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] },
-			rotation: { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) +(\d*)( +pin +(\w+))*|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) +(\d*)( +pin +(\w+))*/, from: [2, 3, 11], axis: [5, 6, 13, 14], sense: [7, 15], angle: [8, 16], pin: [10,18] }
+			rotation: { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) +(\d*)( +pin +(\w+))*|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) +(\d*)( +pin +(\w+))*/, from: [2, 3, 11], axis: [5, 6, 13, 14], sense: [7, 15], angle: [8, 16], pin: [10, 18] }
 		};
 		return parsingInstructions;
 	}
 
-	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string): [IOrigamiCoordinates, IFaceRotationInstruction]{
+	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string): [IOrigamiCoordinates, IFaceRotationInstruction] {
 		// Set rotation report
 		let faceRotationInstruction: IFaceRotationInstruction;
 
@@ -54,11 +54,11 @@ export class OrigamiSolver {
 		if (this.checkIfInstructionIs(instruction, translation)) {
 			[origamiCoordinates, faceRotationInstruction] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation);
 
-		// Execute rotation
+			// Execute rotation
 		} else if (this.checkIfInstructionIs(instruction, rotation)) {
 			[origamiCoordinates, faceRotationInstruction] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation);
 
-		// In the case it's neither, throw an error
+			// In the case it's neither, throw an error
 		} else {
 			throw new Error('The instruction is neither a translation nor a rotation!');
 		}
@@ -74,15 +74,21 @@ export class OrigamiSolver {
 	// 	return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
 	// }
 
-	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[]{
-		return [{meshIds: [0], axis: ['e', 'f'], angle: 180}];
+	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[] {
+		return [{ meshIds: [0], axis: ['e', 'f'], angle: 180 }];
 	}
 
 	public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
 		const material = new THREE.MeshStandardMaterial({ color: 0xFF0000, side: THREE.DoubleSide });
-		const facePoints = origamiCoordinates.faces.map(face => face.map(point => origamiCoordinates.points[point]));
+		const facePoints = origamiCoordinates.faces.map(face => face.map(point => origamiCoordinates.pattern[point]));
 
 		return facePoints.map(face => {
+			/**
+			* Shape geometry internally triangulates the face, you can check the second code example in this link
+			* https://threejs.org/docs/#api/en/core/BufferGeometry
+			* You store the vertices positions in the position array and then you have the index array
+			* that tells you how to connect the vertices to form the triangulated faces
+			 */
 			const geometry = new THREE.ShapeGeometry(new THREE.Shape(face.map(([x, y]) => new THREE.Vector2(x, y))));
 			geometry.computeVertexNormals();
 

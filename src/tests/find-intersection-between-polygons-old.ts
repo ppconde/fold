@@ -1,5 +1,3 @@
-import { basename } from "path/win32";
-
 export class PolygonIntersectionHelper {
 
 
@@ -23,27 +21,25 @@ export class PolygonIntersectionHelper {
     }
 
     public static findIntersectionBetweenPolygons(polygon1: [number, number][], polygon2: [number, number][]) {
-
-        let polygonIntersection;
-        polygonIntersection = this.findIntersectionOfPolygonWithPolygon(polygon1, polygon2) ? [] : this.findIntersectionOfPolygonWithPolygon(polygon2, polygon1);
-        return polygonIntersection;
-
+        return this.findIntersectionOfPolygonWithPolygon(polygon1, polygon2)
+            ? []
+            : this.findIntersectionOfPolygonWithPolygon(polygon2, polygon1);
     }
 
     public static findIntersectionOfPolygonWithPolygon(polygon1: [number, number][], polygon2: [number, number][]) {
 
-        const polygons: Record<number, [number, number][]> = {0: polygon1, 1: polygon2};
+        const polygons: Record<number, [number, number][]> = { 0: polygon1, 1: polygon2 };
 
-        const startEdges: {polygonId: number, edgeId: number, lineSegment: [number, number][]}[] = [{polygonId: 0, edgeId: 0, lineSegment: this.findEdgeCoords(polygons, 0, 0)}];
-        const previousEdges: {polygonId: number, edgeId: number, lineSegment: [number, number][]}[] = [];
+        const startEdges: { polygonId: number, edgeId: number, lineSegment: [number, number][] }[] = [{ polygonId: 0, edgeId: 0, lineSegment: this.findEdgeCoords(polygons, 0, 0) }];
+        const previousEdges: { polygonId: number, edgeId: number, lineSegment: [number, number][] }[] = [];
 
         const intersectionPolygons = [];
 
         while (!this.checkIfArrayIsEmpty(startEdges)) {
 
             // Select current edge
-            let currentEdge = startEdges.shift() as  {polygonId: number, edgeId: number, lineSegment: [number, number][]};  // This should be unecessary since startEdgeIds cannot be empty at this point.
-            
+            let currentEdge = startEdges.shift() as { polygonId: number, edgeId: number, lineSegment: [number, number][] };  // This should be unecessary since startEdgeIds cannot be empty at this point.
+
             const intersectionPolygon = [];
 
             // Maybe do in one line:
@@ -58,7 +54,7 @@ export class PolygonIntersectionHelper {
                 if (!this.checkIfArrayIsEmpty(intersectionPoints)) {
 
                     // Pick first intersection point
-                    intersectionPoints.sort((a,b) => this.findDistanceBetweenPoints(currentEdge.lineSegment[0], a.coord) - this.findDistanceBetweenPoints(currentEdge.lineSegment[0], b.coord));
+                    intersectionPoints.sort((a, b) => this.findDistanceBetweenPoints(currentEdge.lineSegment[0], a.coord) - this.findDistanceBetweenPoints(currentEdge.lineSegment[0], b.coord));
                     const intersectionPoint = intersectionPoints[0];
 
                     // Add point to intersection polygon
@@ -82,7 +78,7 @@ export class PolygonIntersectionHelper {
                 } else {
 
                     // Select current point
-                    const currentPoint = {polygonId: currentEdge.polygonId, edgeId: currentEdge.edgeId, coord: currentEdge.lineSegment[1]};
+                    const currentPoint = { polygonId: currentEdge.polygonId, edgeId: currentEdge.edgeId, coord: currentEdge.lineSegment[1] };
 
                     // If current point lies inside other polygon, add it to intersection polygon
                     const otherPolygon = this.findOtherPolygon(polygons, currentEdge.polygonId);
@@ -100,21 +96,21 @@ export class PolygonIntersectionHelper {
 
             // Add intersection polygon
             if (!this.checkIfArrayIsEmpty(intersectionPolygon)) {
-                intersectionPolygons.push(intersectionPolygon); 
+                intersectionPolygons.push(intersectionPolygon);
             }
         }
         return intersectionPolygons;
     }
 
-    public static findNextPolygonEdge(polygons: Record<number, [number, number][]>, currentEdge: {polygonId: number, edgeId: number, lineSegment: [number, number][]}) {
+    public static findNextPolygonEdge(polygons: Record<number, [number, number][]>, currentEdge: { polygonId: number, edgeId: number, lineSegment: [number, number][] }) {
         const currentPolygon = polygons[currentEdge.polygonId];
         const nextEdgeId = (currentEdge.edgeId + 1) % currentPolygon.length;
         const nextLineSegment = this.findEdgeCoords(polygons, currentEdge.polygonId, nextEdgeId);
-        const nextEdge = {polygonId: currentEdge.polygonId, edgeId: nextEdgeId, lineSegment: nextLineSegment};
+        const nextEdge = { polygonId: currentEdge.polygonId, edgeId: nextEdgeId, lineSegment: nextLineSegment };
         return nextEdge;
     }
 
-    public static sliceEdgeAtIntersection(edge: {polygonId: number, edgeId: number, lineSegment: [number, number][]}, intersectionPoint: {polygonId: number, edgeId: number, coord: [number, number]}){
+    public static sliceEdgeAtIntersection(edge: { polygonId: number, edgeId: number, lineSegment: [number, number][] }, intersectionPoint: { polygonId: number, edgeId: number, coord: [number, number] }) {
         const firstSlice = edge;
         const secondSlice = edge;
         firstSlice.lineSegment[1] = intersectionPoint.coord;
@@ -126,7 +122,7 @@ export class PolygonIntersectionHelper {
         return [polygons[polygonId][edgeId], polygons[polygonId][(edgeId + 1) % Object.keys(polygons).length]];
     }
 
-    public static findNextEdgeSegment(polygons: Record<number, [number, number][]>, currentEdge: {polygonId: number, edgeId: number, lineSegment: [number, number][]}, intersectionPoint: {polygonId: number, edgeId: number, coord: [number, number]}) {
+    public static findNextEdgeSegment(polygons: Record<number, [number, number][]>, currentEdge: { polygonId: number, edgeId: number, lineSegment: [number, number][] }, intersectionPoint: { polygonId: number, edgeId: number, coord: [number, number] }) {
         // Find current and other line segment
         const currentLineSegment = this.findEdgeCoords(polygons, currentEdge.polygonId, currentEdge.edgeId);
         const otherLineSegment = this.findEdgeCoords(polygons, intersectionPoint.polygonId, intersectionPoint.edgeId);
@@ -157,14 +153,14 @@ export class PolygonIntersectionHelper {
         return (currentPolygonIndex + 1) % Object.keys(polygons).length;
     }
 
-    public static findIntersectionBetweenLineSegmentAndPolygonEdgesAndCorners(edge: {polygonId: number, edgeId: number, lineSegment: [number, number][]}, polygons: Record<number, [number, number][]>) {
-        let intersectionPoints = [];
+    public static findIntersectionBetweenLineSegmentAndPolygonEdgesAndCorners(edge: { polygonId: number, edgeId: number, lineSegment: [number, number][] }, polygons: Record<number, [number, number][]>) {
+        const intersectionPoints = [];
         intersectionPoints.push(...this.findIntersectionBetweenLineSegmentAndPolygonEdges(polygons, edge));
         intersectionPoints.push(...this.findIntersectionBetweenLineSegmentAndPolygonCorners(polygons, edge));
         return intersectionPoints;
     }
 
-    public static findIntersectionBetweenLineSegmentAndPolygonEdges(polygons: Record<number, [number, number][]>, edge: {polygonId: number, edgeId: number, lineSegment: [number, number][]}): {polygonId: number, edgeId: number, coord: [number, number]}[] {
+    public static findIntersectionBetweenLineSegmentAndPolygonEdges(polygons: Record<number, [number, number][]>, edge: { polygonId: number, edgeId: number, lineSegment: [number, number][] }): { polygonId: number, edgeId: number, coord: [number, number] }[] {
         const otherPolygonId = this.findOtherPolygonId(polygons, edge.polygonId);
         const otherPolygon = polygons[otherPolygonId];
         const intersectionPoints = [];
@@ -172,21 +168,21 @@ export class PolygonIntersectionHelper {
             const otherLineSegment = [otherPolygon[i], otherPolygon[(i + 1) % otherPolygon.length]];
             const intersectionPoint = this.findIntersectionBetweenLineSegments(edge.lineSegment, otherLineSegment) as number[];
             if (!this.checkIfArrayIsEmpty(intersectionPoint)) {
-                intersectionPoints.push({polygonId: otherPolygonId, edgeId: i, coord: intersectionPoint as [number, number]})
+                intersectionPoints.push({ polygonId: otherPolygonId, edgeId: i, coord: intersectionPoint as [number, number] })
             }
         }
         return intersectionPoints;
     }
 
-    public static findIntersectionBetweenLineSegmentAndPolygonCorners(polygons: Record<number, [number, number][]>, edge: {polygonId: number, edgeId: number, lineSegment: [number, number][]}) {
+    public static findIntersectionBetweenLineSegmentAndPolygonCorners(polygons: Record<number, [number, number][]>, edge: { polygonId: number, edgeId: number, lineSegment: [number, number][] }) {
         const otherPolygonId = this.findOtherPolygonId(polygons, edge.polygonId);
         const otherPolygon = polygons[otherPolygonId];
         const intersectionPoints = [];
         for (let i = 0; i < otherPolygon.length; i++) {
-            const otherPolygonCorner = {polygonId: otherPolygonId, cornerId: i, coords: this.findCornerCoords(polygons, otherPolygonId, i)};
+            const otherPolygonCorner = { polygonId: otherPolygonId, cornerId: i, coords: this.findCornerCoords(polygons, otherPolygonId, i) };
             const intersectionPoint = this.findIntersectionBetweenLineSegmentAndPolygonCorner(polygons, edge, otherPolygonCorner) as number[];
             if (!this.checkIfArrayIsEmpty(intersectionPoint)) {
-                intersectionPoints.push({polygonId: otherPolygonId, edgeId: i, coord: intersectionPoint as [number, number]});
+                intersectionPoints.push({ polygonId: otherPolygonId, edgeId: i, coord: intersectionPoint as [number, number] });
             }
         }
         return intersectionPoints;
@@ -199,16 +195,16 @@ export class PolygonIntersectionHelper {
         return [otherPolygon[(cornerId - 1 + otherPolygon.length) % otherPolygon.length], otherPolygon[cornerId], otherPolygon[(cornerId + 1) % otherPolygon.length]];
     }
 
-    public static findIntersectionBetweenLineSegmentAndPolygonCorner(polygons: Record<number, [number, number][]>, edge: {polygonId: number, edgeId: number, lineSegment: [number, number][]}, corner: {polygonId: number, cornerId: number, coords: [number, number][]}) {
+    public static findIntersectionBetweenLineSegmentAndPolygonCorner(polygons: Record<number, [number, number][]>, edge: { polygonId: number, edgeId: number, lineSegment: [number, number][] }, corner: { polygonId: number, cornerId: number, coords: [number, number][] }) {
         const tolerance = 0.0001;  // It's important that this tolerance is the same as MathHelpers.checkIfPointsAreEqual tolerance. In fact, all linear tolerances should be the same!
         const lineSegment = edge.lineSegment;
         const currentPolygon = polygons[edge.polygonId];
         const i = edge.edgeId;
         const cornerCoords = corner.coords;
         let intersectionPoint: [number, number] | [] = [];
-        if (this.checkIfPointsAreCollinear([lineSegment[0],lineSegment[1],cornerCoords[1]])) {
-            const lineAxis = {o: lineSegment[0], u: this.findVersorBetweenPoints(lineSegment[0], lineSegment[1])};
-            const [A, B, C] = this.convertCollinearPointsTo1D([lineSegment[0],lineSegment[1],cornerCoords[1]], lineAxis);
+        if (this.checkIfPointsAreCollinear([lineSegment[0], lineSegment[1], cornerCoords[1]])) {
+            const lineAxis = { o: lineSegment[0], u: this.findVersorBetweenPoints(lineSegment[0], lineSegment[1]) };
+            const [A, B, C] = this.convertCollinearPointsTo1D([lineSegment[0], lineSegment[1], cornerCoords[1]], lineAxis);
             // If edge intersects point
             if (A < (C + tolerance) && (C - tolerance) < B) {
                 let polygonCornerCoords;
@@ -242,24 +238,24 @@ export class PolygonIntersectionHelper {
         const corner2Vector2 = this.findVectorBetweenPoints(corner2[1], corner2[2]) as [number, number];
         const corner2Angle = this.findCounterClockwiseAngleBetweenVectors(corner2Vector2, corner2Vector1);
         const corner2BisectorVersor = this.findBisectorVersor(corner2Vector2, corner2Vector1);
-        
+
         const bisectorVersorsAngle = this.findSmallestAngleBetweenVectors(corner1BisectorVersor, corner2BisectorVersor);
         const maximumAngle = corner1Angle / 2 + corner2Angle / 2;
         return bisectorVersorsAngle < maximumAngle;
     }
 
     public static findBisectorVersor(u: [number, number], v: [number, number]) {
-        const angle = this.findCounterClockwiseAngleBetweenVectors(u,v);
-        const bisectorVersor = this.rotateVectorCounterClockwise(u, angle/2);
+        const angle = this.findCounterClockwiseAngleBetweenVectors(u, v);
+        const bisectorVersor = this.rotateVectorCounterClockwise(u, angle / 2);
         return bisectorVersor;
     }
 
     public static findSmallestAngleBetweenVectors(u: number[], v: number[]) {
-        const angle = Math.acos(this.dot(this.findVectorVersor(u), this.findVectorVersor(v)))  / Math.PI * 180;
+        const angle = Math.acos(this.dot(this.findVectorVersor(u), this.findVectorVersor(v))) / Math.PI * 180;
         return angle;
     }
 
-    public static rotateVectorCounterClockwise(u: [number, number], a: number){
+    public static rotateVectorCounterClockwise(u: [number, number], a: number) {
         a = a * Math.PI / 180;
         const v = [u[0] * Math.cos(a) - u[1] * Math.sin(a), u[0] * Math.sin(a) + u[1] * Math.cos(a)];
         return v;
@@ -288,13 +284,13 @@ export class PolygonIntersectionHelper {
 
     public static addArray(a: number[], c: number[] | number): number[] {
         if (!Array.isArray(c)) {
-          c = Array(a.length).fill(c);
+            c = Array(a.length).fill(c);
         }
         return a.map((element, i) => element + (c as [])[i]);
-      }
+    }
 
 
-    public static findEdgeIdLineSegment(polygons: Record<number, [number, number][]>, edgeId: {polygonId: number, polygonEdgeId: number}) {
+    public static findEdgeIdLineSegment(polygons: Record<number, [number, number][]>, edgeId: { polygonId: number, polygonEdgeId: number }) {
         const polygon = polygons[edgeId.polygonId];
         const polygonEdgeId = edgeId.polygonEdgeId;
         const lineSegment = [polygon[polygonEdgeId], polygon[(polygonEdgeId + 1) % polygon[polygonEdgeId].length]];
@@ -319,16 +315,16 @@ export class PolygonIntersectionHelper {
 
     public static findIntersectionOfPolygonWithPolygonOld(polygon1: [number, number][], polygon2: [number, number][]) {
 
-        const polygons: Record<number, [number, number][]> = {0: polygon1, 1: polygon2};
-        let currentEdgeId: Record<string, number> = { polygonId: 0, polygonEdgeId: 0 };
+        const polygons: Record<number, [number, number][]> = { 0: polygon1, 1: polygon2 };
+        const currentEdgeId: Record<string, number> = { polygonId: 0, polygonEdgeId: 0 };
 
         let currentPolygon = polygons[currentEdgeId.polygonId];
-        let currentLineSegment = [currentPolygon[currentEdgeId.polygonEdgeId], currentPolygon[(currentEdgeId.polygonEdgeId + 1) % currentPolygon.length]];
+        const currentLineSegment = [currentPolygon[currentEdgeId.polygonEdgeId], currentPolygon[(currentEdgeId.polygonEdgeId + 1) % currentPolygon.length]];
 
-        let intersectionPolygon = [];
+        const intersectionPolygon = [];
 
-        let intersectionStartEdgeId = undefined;
-        let intersectionStartEdgeCoords = undefined;
+        const intersectionStartEdgeId = undefined;
+        const intersectionStartEdgeCoords = undefined;
 
 
 
@@ -344,15 +340,15 @@ export class PolygonIntersectionHelper {
             const otherPolygonId = (currentPolygonId + 1) % Object.keys(polygons).length;
             const otherPolygon = polygons[otherPolygonId];
 
-            
-            let currentPoint = currentLineSegment[0];
+
+            const currentPoint = currentLineSegment[0];
 
 
             // Check if current point is inside other polygon
             if (this.checkIfPolygonInteriorContainsPoint(otherPolygon, currentPoint)) {
                 intersectionPolygon.push(currentPoint);
 
-                
+
 
                 // Check if current edge intersects an "other polygon"'s edge
                 const intersectionPoints: [number, number][] = [];
@@ -367,14 +363,14 @@ export class PolygonIntersectionHelper {
 
                 if (!this.checkIfArrayIsEmpty(intersectionPoints)) {
 
-                    intersectionOtherPolygonEdgeIds.sort((a, b) =>  this.findDistanceBetweenPoints(intersectionPoints[intersectionOtherPolygonEdgeIds.indexOf(a)], intersectionPoints[intersectionOtherPolygonEdgeIds.indexOf(b)]));
+                    intersectionOtherPolygonEdgeIds.sort((a, b) => this.findDistanceBetweenPoints(intersectionPoints[intersectionOtherPolygonEdgeIds.indexOf(a)], intersectionPoints[intersectionOtherPolygonEdgeIds.indexOf(b)]));
                     intersectionPoints.sort(e => this.findDistanceBetweenPoints(currentPoint, e));
                     const intersectionPoint = intersectionPoints[0];
                     const intersectionOtherPolygonEdgeId = intersectionOtherPolygonEdgeIds[0]
                     intersectionPolygon.push(intersectionPoint);
 
                     const otherPolygonLineSegment = [otherPolygon[intersectionOtherPolygonEdgeId], otherPolygon[(intersectionOtherPolygonEdgeId + 1) % otherPolygon.length]]
-                    const currentToOtherCorner = [currentPoint, intersectionPoint,  otherPolygonLineSegment[1]];
+                    const currentToOtherCorner = [currentPoint, intersectionPoint, otherPolygonLineSegment[1]];
 
                     const cornerVector1 = this.findVectorBetweenPoints(currentToOtherCorner[1], currentToOtherCorner[0]) as [number, number];
                     const cornerVector2 = this.findVectorBetweenPoints(currentToOtherCorner[1], currentToOtherCorner[2]) as [number, number];
@@ -383,7 +379,7 @@ export class PolygonIntersectionHelper {
                     const currentToOtherCornerAngle = this.findCounterClockwiseAngleBetweenVectors(cornerVector2, cornerVector1);
 
                     if (currentToOtherCornerAngle < currentLineSegmentAngle) {
-                        nextEdgeId =  { polygonId: otherPolygonId, polygonEdgeId: intersectionOtherPolygonEdgeId };
+                        nextEdgeId = { polygonId: otherPolygonId, polygonEdgeId: intersectionOtherPolygonEdgeId };
                         nextLineSegment = [intersectionPoint, otherPolygon[(intersectionOtherPolygonEdgeId + 1) % otherPolygon.length]];
 
                     } else {
@@ -392,8 +388,8 @@ export class PolygonIntersectionHelper {
                         nextLineSegment = [intersectionPoint, currentPolygon[(currentPolygonEdgeId + 1) % currentPolygon.length]];
                     }
 
-    
-                } 
+
+                }
                 else {
 
                     nextEdgeId = currentEdgeId;
@@ -429,7 +425,7 @@ export class PolygonIntersectionHelper {
         u = this.findVectorVersor(u) as [number, number];
         v = this.findVectorVersor(v) as [number, number];
         const dot = this.dot(u, v);
-        const det = u[0] * v[1] - u[1] * v[0]; 
+        const det = u[0] * v[1] - u[1] * v[0];
         const angle = (Math.atan2(det, dot) * 180 / Math.PI + 360) % 360;  // In degrees
         return angle;
     }
@@ -440,8 +436,8 @@ export class PolygonIntersectionHelper {
     }
 
     public static checkIfEdgeIntersectsEdge(a: [number, number], b: [number, number], c: [number, number], d: [number, number]) {
-        if (!this.checkIfLinesAreParallel(a,b,c,d)) {
-            if (this.checkIfNonParallelLineSegmentInteriorsIntersect(a,b,c,d)) {
+        if (!this.checkIfLinesAreParallel(a, b, c, d)) {
+            if (this.checkIfNonParallelLineSegmentInteriorsIntersect(a, b, c, d)) {
                 return true;
             }
         }
@@ -514,7 +510,7 @@ export class PolygonIntersectionHelper {
 
     public static convertCollinearPointsTo1D(a: number[][], lineAxis: { o: number[], u: number[] }) {
         const points1D = [];
-        for (let p of a) {
+        for (const p of a) {
             const v = this.findVectorBetweenPoints(lineAxis.o, p);
             points1D.push(this.dot(v, lineAxis.u));
         }
@@ -551,7 +547,7 @@ export class PolygonIntersectionHelper {
     }
 
     public static checkIfPointsContainPoint(points: number[][], point: number[]) {
-        for (let p of points) {
+        for (const p of points) {
             if (this.checkIfPointsAreEqual(p, point)) {
                 return true;
             }
@@ -576,9 +572,9 @@ export class PolygonIntersectionHelper {
         for (let i = 0; i < polygon.length; i++) {
             const lineSegment = [polygon[i], polygon[(i + 1) % polygon.length]];
             // If edge contains point, polygon interior does not contain point
-            if (this.checkIfPointsAreCollinear([lineSegment[0],lineSegment[1],point])) {
-                const lineAxis = {o: lineSegment[0], u: this.findVersorBetweenPoints(lineSegment[0], lineSegment[1])};
-                const [A, B, C] = this.convertCollinearPointsTo1D([lineSegment[0],lineSegment[1],point], lineAxis);
+            if (this.checkIfPointsAreCollinear([lineSegment[0], lineSegment[1], point])) {
+                const lineAxis = { o: lineSegment[0], u: this.findVersorBetweenPoints(lineSegment[0], lineSegment[1]) };
+                const [A, B, C] = this.convertCollinearPointsTo1D([lineSegment[0], lineSegment[1], point], lineAxis);
                 const tolerance = 0.0001;
                 if (A < (C + tolerance) && (C - tolerance) < B) {
                     return false;
@@ -605,7 +601,7 @@ export class PolygonIntersectionHelper {
 
     public static checkIfNumberIsOdd(n: number) {
         return Math.abs(n % 2) == 1;
-     }
+    }
 
 
 }
