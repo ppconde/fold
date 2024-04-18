@@ -1,17 +1,10 @@
 import * as THREE from 'three';
 
-export class OrigamiPlaneGeometry extends THREE.BufferGeometry<THREE.NormalBufferAttributes>{
+export class OrigamiPlaneGeometry extends THREE.BufferGeometry<THREE.NormalBufferAttributes> {
 
     constructor(points: number[][]) {
         super();
 
-        /**
-         * We'll need to triangulate the geometries in order to proper UV mapping
-         * Check this link - https://www.cs.ucr.edu/~shinar/courses/cs130-winter-2019/content/texture-mapping.pdf
-         * Barycentric coordinates - https://mathworld.wolfram.com/BarycentricCoordinates.html
-         * 
-         * Alternatively we can use shaders -  I think
-         */
         this.setAttribute(
             'position',
             new THREE.BufferAttribute(this.generateGeometry(points), 3)
