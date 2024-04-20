@@ -5,6 +5,7 @@ import { MathHelper } from '../../helpers/math-helper';
 import { PlaneGeometry } from '../plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 import { Outline } from '../line';
+import { Point } from '../point';
 
 export class Origami extends THREE.Group {
   private clock = new THREE.Clock();
@@ -115,8 +116,10 @@ export class Origami extends THREE.Group {
     return planeVertices.map((vertices) => {
       const geometry = new PlaneGeometry(vertices, this.width, this.height);
       const outline = new Outline(geometry);
+      const point = new Point(geometry);
       const mesh = new THREE.Mesh(geometry, this.material);
       mesh.add(outline);
+      mesh.add(point);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
 
