@@ -18,27 +18,48 @@ export type IFace = string[];
 
 export interface IParseTranslation {
     regex: RegExp;
-    from: number[];
-    to: number[];
-    sense: number[];
+    from: number;
+    to: number;
+    sense: number;
+    carry: number;
+    pin: number;
 }
 
 export interface IParseRotation {
     regex: RegExp;
-    from: number[];
-    axis: number[];
-    sense: number[];
-    angle: number[];
+    from: number;
+    axis: number;
+    angle: number;
+    carry: number;
+    pin: number;
 }
 
-export type TranslationKeys = keyof Pick<IParseTranslation, 'from' | 'to' | 'sense'>;
-export type RotationKeys = keyof Pick<IParseRotation, 'from' | 'axis' | 'sense' | 'angle'>;
+export type TranslationKeys = keyof Pick<IParseTranslation, 'from' | 'to' | 'sense' | 'carry' | 'pin'>;
+export type RotationKeys = keyof Pick<IParseRotation, 'from' | 'axis' | 'angle' | 'carry' | 'pin'>;
+
+// export interface TranslationValues {
+//     startNodes: string[];
+//     endNodes: string[];
+//     sense: 'V' | 'M';
+// }
+
 
 export interface TranslationValues {
     startNodes: string[];
+    targetSideOfEndFace: 1|-1;
     endNodes: string[];
-    sense: 'V' | 'M';
+    carryNodes: string[];
+    pinNodes: string[];
 }
+
+export interface RotationValues {
+    startNodes: string[];
+    axisNodes: string[];
+    rotationAngle: number;
+    carryNodes: string[];
+    pinNodes: string[];
+}
+
 
 export type IFaceGraph = Record<number, Record<number, 1 | -1>>;
 

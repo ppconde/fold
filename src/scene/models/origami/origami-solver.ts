@@ -36,8 +36,8 @@ export class OrigamiSolver {
 
 	public static setParsingInstructions(): IParsingInstruction {
 		const parsingInstructions = {
-			translation: { regex: /(\[(\w+),(\w+)\]) +to +(\[(\w+),(\w+)\]) +(\w+)|(\w+) +to +(\w+) +(\w+)|(\w+) +to +(\[(\w+),(\w+)\]) +(\w+)/, from: [2, 3, 8, 11], to: [5, 6, 9, 13, 14], sense: [7, 10, 15] },
-			rotation: { regex: /(\[(\w+),(\w+)\]) +around +(\[(\w+),(\w+)\]) +(\w+) +(\d*)( +pin +(\w+))*|(\w+) +around +(\[(\w+),(\w+)\]) +(\w+) +(\d*)( +pin +(\w+))*/, from: [2, 3, 11], axis: [5, 6, 13, 14], sense: [7, 15], angle: [8, 16], pin: [10, 18] }
+			translation: { regex: /fold \[(.+?)\] to (top|bottom) of \[(.+?)\]( carry \[(.+?)\])?( pin \[(.+?)\])?/, from: 1, sense: 2, to: 3, carry: 5, pin: 7 },
+			rotation: { regex: /fold \[(.+?)\] around \[(.+?)\]( (\d+))?( carry \[(.+?)\])?( pin \[(.+?)\])?/, from: 1, axis: 2, angle: 4, carry: 6, pin: 8 },
 		};
 		return parsingInstructions;
 	}
@@ -69,14 +69,14 @@ export class OrigamiSolver {
 		return instruction.match(type.regex) !== null;
 	}
 
+	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[] {
+		return [{ meshIds: [0], axis: ['e', 'f'], angle: 180 }];
+	}
+
 	// Use faces and pattern!:
 	// public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
 	// 	return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
 	// }
-
-	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[] {
-		return [{ meshIds: [0], axis: ['e', 'f'], angle: 180 }];
-	}
 
 	public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
 		const material = new THREE.MeshStandardMaterial({ color: 0xFF0000, side: THREE.DoubleSide });

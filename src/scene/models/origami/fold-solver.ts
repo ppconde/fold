@@ -1,17 +1,16 @@
 import { MathHelpers } from './math-helpers';
-import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, IFaceGraph, IFaceLabels, RotationKeys, IFace} from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, TranslationKeys, IVertices, TranslationValues, IOrigamiCoordinates, IPlane, IOrigamiGraph, IintersectionLine, IFaceRotationInstruction, IFaceGraph, IFaceLabels, RotationKeys, IFace, RotationValues} from './origami-types';
 
 
 export class FoldSolver {
 
-
 	public static solveTranslation(origamiCoordinates: IOrigamiCoordinates, instruction: string, translation: IParseTranslation): [IOrigamiCoordinates, IFaceRotationInstruction] {
 
-		const [startNodes, endNodes, sense] = this.getFoldInstructionValues(translation, instruction);
+		const {startNodes, targetSideOfEndFace, endNodes, carryNodes, pinNodes} = this.getTranslationInstructionValues(translation, instruction);
 
 		const plane = this.findPlaneBetweenNodes(origamiCoordinates.points, startNodes, endNodes);
 
-		const rotationAxisCoordinates = this.findRotationAxisCoordinates(origamiCoordinates, startNodes, endNodes, sense, plane);
+		const rotationAxisCoordinates = this.findRotationAxisCoordinates(origamiCoordinates, startNodes, endNodes, targetSideOfEndFace, plane);
 
 		const rotationAngle = this.findRotationAngle(origamiCoordinates.points, startNodes, endNodes, rotationAxisCoordinates);
 
@@ -30,7 +29,7 @@ export class FoldSolver {
 
 	public static solveRotation(origamiCoordinates: IOrigamiCoordinates, instruction: string, rotation: IParseRotation): [IOrigamiCoordinates, IFaceRotationInstruction] {
 
-		const [startNodes, axisNodes, sense, rotationAngle, pinNodes] = this.getFoldInstructionValues(rotation, instruction);
+		const {startNodes, axisNodes, rotationAngle, carryNodes, pinNodes} = this.getRotationInstructionValues(rotation, instruction);
 
 		const plane = this.findPlaneAtAxis(origamiCoordinates.points, startNodes, axisNodes);
 
@@ -890,7 +889,8 @@ export class FoldSolver {
 			
 		}
 
-		// Find face rotation versor
+
+		// Find face rotation versor. Fix this. I should use start face maybe. There is not enough info otherwise!
 		let faceNormalVersor;
 		if ((sense === 'V' && faceSideOfPlane === -1) || (sense === 'M' && faceSideOfPlane === +1)) {
 			faceNormalVersor = MathHelpers.findPlaneNormalVersor(MathHelpers.indexObject(points, intersectedFace));
@@ -1456,44 +1456,153 @@ export class FoldSolver {
 		return false;
 	}
 
-	// Extract values from instruction
-	public static getFoldInstructionValues(parseInstruction: IParseTranslation| IParseRotation, instruction: string) {
-		const keys = Object.keys(parseInstruction);
-		const match = instruction.match(parseInstruction.regex);
-		const values = [];
-		for (const key of keys) {
-			if (key !== 'regex') {
-				let found = false;
-				if (key === 'from' || key === 'to' || key === 'axis' || key === 'pin'){
-					const valueArray = [];
-					for (const position of parseInstruction[key]) {
-						if (match?.[position]) {
-							valueArray.push(match[position]);
-							found = true;
-						}
-					}
-					values.push(valueArray);
-				} else {
-				for (const position of parseInstruction[key]) {
-					if (match?.[position]) {
-						values.push(match[position]);
-						found = true;
-						break;
-					}
-				}
-				}
-				if (found === false) {
-					if (key === 'angle') {
-						values.push(180);
-					} else if (key === 'pin') {
-						values.push([]);
-					} else{
-						throw new Error('Could not find all the necessary information in the fold instruction!')
-					}
-				}
+	public static getTranslationInstructionValues(parseInstruction: IParseTranslation, instruction: string): TranslationValues {
+		// Parse instruction
+		const match = this.parseInstruction(instruction, parseInstruction.regex);
+
+		// Get keys
+		const keys: TranslationKeys[] = Object.keys(parseInstruction).filter(key => key !== 'regex') as  TranslationKeys[];
+
+		// Set values
+		const values = {} as TranslationValues;
+
+		// Parse key values
+		for (const key of keys) { 
+			const capturedString = match[parseInstruction[key]];
+			if (key === 'from') {
+				values.startNodes = this.parseMandatoryArray(capturedString);
+			}
+			else if (key === 'to') {
+				values.endNodes = this.parseMandatoryArray(capturedString);
+			}
+			else if (key === 'sense') {
+				values.targetSideOfEndFace = this.parseTranslationSense(capturedString);
+			}
+			else if (key === 'carry') {
+				values.carryNodes = this.parseOptionalArray(capturedString);
+			}
+			else if (key === 'pin') {
+				values.pinNodes = this.parseOptionalArray(capturedString);
+			} else {
+				throw new Error('Looked for an unknown key.')
 			}
 		}
+
+		// Check if all values were updated
+		let key: keyof TranslationValues;
+		for (key in values) {
+			if (values[key] === undefined) {
+				throw new Error('Could not parse all necessary values from instruction.')
+			}
+		}
+
 		return values;
+	}
+
+	public static getRotationInstructionValues(parseInstruction: IParseRotation, instruction: string): RotationValues {
+		// Parse instruction
+		const match = this.parseInstruction(instruction, parseInstruction.regex);
+
+		// Get keys
+		const keys: RotationKeys[] = Object.keys(parseInstruction).filter(key => key !== 'regex') as  RotationKeys[];
+
+		// Set values
+		const values = {} as RotationValues;
+
+		// Parse key values
+		for (const key of keys) { 
+			const capturedString = match[parseInstruction[key]];
+			if (key === 'from') {
+				values.startNodes = this.parseMandatoryArray(capturedString);
+			}
+			else if (key === 'axis') {
+				values.axisNodes = this.parseMandatoryArray(capturedString);
+			}
+			else if (key === 'angle') {
+				values.rotationAngle = this.parseRotationAngle(capturedString);
+			}
+			else if (key === 'carry') {
+				values.carryNodes = this.parseOptionalArray(capturedString);
+			}
+			else if (key === 'pin') {
+				values.pinNodes = this.parseOptionalArray(capturedString);
+			} else {
+				throw new Error('Looked for an unknown key.')
+			}
+		}
+
+		// Check if all values were updated
+		let key: keyof RotationValues;
+		for (key in values) {
+			if (values[key] === undefined) {
+				throw new Error('Could not parse all necessary values from instruction.')
+			}
+		}
+
+		return values;
+	}
+
+	public static parseRotationAngle(capturedString: string) {
+		const regex = /\w+/g;
+		let angle = 180;
+		if (capturedString !== undefined) {
+			const res = capturedString.match(regex);
+			if (res === null) {
+				throw new Error('Could not parse necessary value.');
+			}
+			angle = Number(res[0])
+		}
+		return angle;
+	}
+
+
+
+	public static parseInstruction(instruction: string, regex: RegExp) {
+		const match = instruction.match(regex);
+		if (match !== null) {
+			return match;
+		}
+		throw new Error('Could not parse instruction.');
+	}
+
+
+	public static parseMandatoryArray(capturedString: string) {
+		if (capturedString !== undefined) {
+			const array = this.parseArray(capturedString);
+			if (array !== null) {
+				return array;
+			}
+		}
+		throw new Error('Could not parse necessary value.');
+	}
+
+	public static parseOptionalArray(capturedString: string) {
+		let array: string[] = [];
+		if (capturedString !== undefined) {
+			array = this.parseArray(capturedString);
+			if (array === null) {
+				throw new Error('Could not parse necessary value.');
+				
+			}
+		}
+		return array;
+	}
+
+	public static parseTranslationSense(capturedString: string) {
+		if (capturedString !== undefined) {
+			if (capturedString === 'top') {
+				return 1;
+			}
+			if (capturedString === 'bottom') {
+				return -1;
+			}
+		}
+		throw new Error('Could not find sense in translation instruction!');
+	}
+
+	public static parseArray(capturedString: string) {
+		const regex = /\w+/g;
+		return capturedString.match(regex) as string[];
 	}
 
 	public static findPlaneBetweenNodes(points: IVertices, from: string[], to: string[]): IPlane {

@@ -5,7 +5,9 @@ import { IMeshInstruction, IVertices } from './origami-types';
 import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
 // import { PolygonIntersectionHelper } from '../../../tests/check-if-polygons-intersect'  // Just for test
-import foldInstructionsText from '../../../instructions/test-7.text'
+import { PolygonIntersectionHelper } from '../../../tests/find-intersection-between-polygons'  // Just for test
+import { PolygonUnionHelper } from '../../../tests/inclusion-exclusion-principle'  // Just for test
+import foldInstructionsText from '../../../instructions/test-8.text'
 
 
 export class Origami extends THREE.Group {
