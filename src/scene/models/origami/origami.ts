@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { Controller } from '../../controllers/controller';
-import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
 import { OrigamiSolver } from './origami-solver';
 import foldInstructionsText from '../../../instructions/paper-plane.text'
@@ -11,26 +10,12 @@ export class Origami extends THREE.Group {
 
   private scene: THREE.Scene;
 
-  /**
-   * @todo - It should be set in the constructor
-   */
-  public meshInstructions: IMeshInstruction[] = [
-    {
-      meshIds: [0, 1],
-      axis: ['a', 'd'],
-      angle: THREE.MathUtils.degToRad(90),
-    },
-    {
-      meshIds: [2],
-      axis: ['d', 'a'],
-      angle: THREE.MathUtils.degToRad(90),
-    },
-  ];
-
   private meshes: THREE.Mesh<
     THREE.BufferGeometry<THREE.NormalBufferAttributes>,
     THREE.MeshStandardMaterial
   >[];
+
+  public meshInstructions: IMeshInstruction[];
 
   private meshesRotation: THREE.Euler[];
 
@@ -70,42 +55,8 @@ export class Origami extends THREE.Group {
     this.scene.add(...this.meshes);
   }
 
-  
   private getFoldInstructions(): string[] {
     return this.foldInstructionsText.split('\n');
-  }
-
-  /**
-   * Generates meshes for each plane geometry and returns and array of meshes
-   */
-  private generateMeshes(): THREE.Mesh<OrigamiPlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
-    const geometry1 = new OrigamiPlaneGeometry([this.vertices.a, this.vertices.b, this.vertices.c]);
-    const mesh1 = new THREE.Mesh(
-      geometry1,
-      new THREE.MeshStandardMaterial({
-        color: 0xff0000,
-        side: THREE.DoubleSide,
-      })
-    );
-    const geometry2 = new OrigamiPlaneGeometry([this.vertices.c, this.vertices.d, this.vertices.b]);
-    const mesh2 = new THREE.Mesh(
-      geometry2,
-      new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
-        side: THREE.DoubleSide,
-      })
-    );
-    const geometry3 = new OrigamiPlaneGeometry([this.vertices.a, this.vertices.e, this.vertices.d]);
-    const mesh3 = new THREE.Mesh(
-      geometry3,
-      new THREE.MeshStandardMaterial({
-        color: 0x0000ff,
-        side: THREE.DoubleSide,
-      })
-    );
-    [geometry1, geometry2, geometry3].forEach((geometry) => geometry.computeVertexNormals());
-
-    return [mesh1, mesh2, mesh3];
   }
 
   /**
