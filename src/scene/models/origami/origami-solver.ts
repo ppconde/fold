@@ -1,13 +1,13 @@
 import * as THREE from 'three';
 import { FoldSolver } from './fold-solver'
-import { IMeshInstruction, IParseTranslation, IParseRotation, IOrigamiCoordinates, IOrigamiMesh, IFaceRotationInstruction, IParsingInstruction } from './origami-types';
+import { IMeshInstruction, IParseTranslation, IParseRotation, IOrigamiCoordinates, IOrigamiMesh, IFaceRotationInstruction, IParsingInstruction, IFaceGraph } from './origami-types';
 import { OrigamiGenerator } from './origami-coordinates-generator'
 
 
 export class OrigamiSolver {
 
 	public static solveOrigami(foldInstructions: string[]): [IOrigamiMesh[], IMeshInstruction[]] {
-		
+
 		// Set parsing instructions
 		const parsingInstructions = this.setParsingInstructions();
 
@@ -30,6 +30,10 @@ export class OrigamiSolver {
 			// Save instruction used to rotate points
 			faceRotationInstructions.push(faceRotationInstruction);
 		}
+
+		// Unfold origami into original state
+		origamiCoordinates = this.unfoldOrigami(origamiCoordinates);
+
 		// Create face meshes and rotation instructions
 		const meshes = this.createFaceMeshes(origamiCoordinates);
 		const meshInstructions = this.createMeshInstructions(meshes, faceRotationInstructions);
@@ -99,8 +103,23 @@ export class OrigamiSolver {
 		return instruction.match(type.regex) !== null;
 	}
 
-	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[] {
-		return [{ meshIds: [0], axis: ['e', 'f'], angle: 180 }];
+	public static unfoldOrigami(origamiCoordinates: IOrigamiCoordinates) {
+		// Update point coordinates
+		const nodes = Object.keys(origamiCoordinates.points);
+		const xi = 0;
+		const yi = 1;
+		const zi = 2;
+		for (const node of nodes) {
+			origamiCoordinates.points[node][xi] = origamiCoordinates.pattern[node][xi];
+			origamiCoordinates.points[node][yi] = origamiCoordinates.pattern[node][yi];
+			origamiCoordinates.points[node][zi] = 0;
+		}
+		// Update face order
+		const faces = origamiCoordinates.faces;
+		for (let i = 0; i < faces.length; i++) {
+			origamiCoordinates.faceOrder[i] = {};
+		}
+		return origamiCoordinates;
 	}
 
 	// Use faces and pattern!:
@@ -124,5 +143,9 @@ export class OrigamiSolver {
 
 			return new THREE.Mesh(geometry, material);
 		});
+	}
+
+	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[] {
+		return [{ meshIds: [0], axis: ['e', 'f'], angle: 180 }];
 	}
 }
