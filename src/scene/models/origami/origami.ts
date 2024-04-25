@@ -7,8 +7,7 @@ import { OrigamiSolver } from './origami-solver';
 // import { PolygonIntersectionHelper } from '../../../tests/check-if-polygons-intersect'  // Just for test
 import { PolygonIntersectionHelper } from '../../../tests/find-intersection-between-polygons'  // Just for test
 import { PolygonUnionHelper } from '../../../tests/inclusion-exclusion-principle'  // Just for test
-import foldInstructionsText from '../../../instructions/test-8.text'
-
+import foldInstructionsText from '../../../instructions/paper-plane.text'
 
 export class Origami extends THREE.Group {
 

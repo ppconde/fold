@@ -1,4 +1,4 @@
 fold [a] to top of [b]
 fold [e] to top of [b]
-fold [e] around [h, g]
+fold [e] around [j, i] pin [a]
 fold [a] around [f, e]

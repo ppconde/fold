@@ -46,7 +46,7 @@ export type RotationKeys = keyof Pick<IParseRotation, 'from' | 'axis' | 'angle' 
 
 export interface TranslationValues {
     startNodes: string[];
-    targetSideOfEndFace: 1|-1;
+    endFaceTargetSide: 1|-1;
     endNodes: string[];
     carryNodes: string[];
     pinNodes: string[];

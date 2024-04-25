@@ -1,4 +1,4 @@
-import { uint } from 'three/examples/jsm/nodes/Nodes.js';
+import { abs, uint } from 'three/examples/jsm/nodes/Nodes.js';
 import { TypeGuards } from '../../../guards/type-guards';
 import { IVertices, IPlane, Point, LineSegment, Corner, Polygon, PolygonRecord, IEdge, ICorner, IIntersectionEdgePoint, IIntersectionCornerPoint, IntersectionPoint, Vector } from './origami-types';
 import * as THREE from 'three';
@@ -290,7 +290,8 @@ export class MathHelpers {
     return false;
   }
 
-  public static findIntersectionBetweenLineSegmentAndPlane(lineSegment: Record<string, number[]>, plane: IPlane): [boolean, number[], number] {
+  // The comment below proved to be incorrect at least for one case. THREE is giving results I do not expect. Switched to general approach.
+  public static findIntersectionBetweenLineSegmentAndPlaneOld(lineSegment: Record<string, number[]>, plane: IPlane): [boolean, number[], number] {
     const lineTHREE = new THREE.Line3(new THREE.Vector3(...lineSegment.startPoint), new THREE.Vector3(...lineSegment.endPoint));  // Line3
     const planeTHREE = new THREE.Plane();
     planeTHREE.setFromNormalAndCoplanarPoint(new THREE.Vector3(...plane.versor), new THREE.Vector3(...plane.point));
@@ -324,6 +325,25 @@ export class MathHelpers {
     return [planeIntersectsLine, intersectionPointTHREE.toArray(), intersectedVerticeIndex];
   }
 
+  // https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
+  public static findIntersectionBetweenLineSegmentAndPlane(lineSegment: number[][], plane: IPlane): number[] {
+    const tolerance = 0.0001;
+    let intersectionPoint: number[] = [];
+    const u = this.findVectorBetweenPoints(lineSegment[0], lineSegment[1]);
+    const norm = this.findVectorNorm(u);
+    const dot = this.dot(plane.versor, u);
+    // If plane intersects line
+    if (Math.abs(dot) > tolerance) {
+      const w = this.findVectorBetweenPoints(plane.point, lineSegment[0],);
+      const fac = -this.dot(plane.versor, w) / dot;
+      // If plane intersects line segments
+      if (((fac * norm) > (0 - tolerance)) && ((fac * norm) < (norm + tolerance))) {
+        const v = this.multiplyArray(u, fac);
+        intersectionPoint = this.addArray(lineSegment[0], v);
+      }
+    }
+    return intersectionPoint;
+  }
   
   public static convertCollinearPointsTo1D(a: number[][], lineAxis: { o: number[], u: number[] }) {
     const points1D = [];
@@ -458,6 +478,13 @@ export class MathHelpers {
       c = Array(a.length).fill(c);
     }
     return a.map((element, i) => element + (c as [])[i]);
+  }
+
+  public static subtractArray(a: number[], c: number[] | number): number[] {
+    if (!Array.isArray(c)) {
+      c = Array(a.length).fill(c);
+    }
+    return a.map((element, i) => element - (c as [])[i]);
   }
 
   public static findArrayDimensions(a: any): Array<any> {
@@ -905,8 +932,14 @@ export class MathHelpers {
   }
 
   public static findSmallestAngleBetweenVectors(u: number[], v: number[]) {
-    const angle = Math.acos(this.dot(this.findVectorVersor(u), this.findVectorVersor(v))) / Math.PI * 180;
+    const dot = this.dot(this.findVectorVersor(u), this.findVectorVersor(v));
+    const limitedDot = this.limitNumber(dot, 0, 1);  // dot( [0.8314696123025455, -0.5555702330196021] , [0.8314696123025453, -0.5555702330196022] ) was giving = 1.0000000000000002, whose acos was NaN.
+    const angle = Math.acos(limitedDot) / Math.PI * 180;
     return angle;
+  }
+
+  public static limitNumber(a: number, min: number, max: number) {
+    return Math.max(Math.min(a, max),min);
   }
 
   public static rotateVectorCounterClockwise(u: [number, number], a: number) {
@@ -1025,14 +1058,18 @@ export class MathHelpers {
             }
         }
 
+        // If the first and last points are equal, remove last. It would be better if it was not necessary.
+        if (intersectionPolygon.length > 2) {
+          if (this.checkIfPointsAreEqual(intersectionPolygon[0], intersectionPolygon[intersectionPolygon.length-1])) {
+            intersectionPolygon.pop();
+          }
+        }
+
         // If polygon has at least 3 points, add it
         if (intersectionPolygon.length > 2) {
-            // If the first and last points are equal, remove last. It would be better if it was not necessary.
-            if (this.checkIfPointsAreEqual(intersectionPolygon[0], intersectionPolygon[intersectionPolygon.length-1])) {
-                intersectionPolygon.pop();
-            }
-            intersectionPolygons.push(intersectionPolygon); 
+          intersectionPolygons.push(intersectionPolygon); 
         }
+
     }
     return intersectionPolygons;
 }
@@ -1367,7 +1404,11 @@ public static checkIfTouchingCornersInteriorsIntersect(corner1: Corner, corner2:
     return bisectorVersorsAngle < maximumAngle;
 }
 
+// https://stackoverflow.com/questions/9043805/test-if-two-lines-intersect-javascript-function
 public static findIntersectionBetweenLineSegments(lineSegment1: [number, number][], lineSegment2: [number, number][]) {
+    const tolerance = 0.0001;
+    const norm1 = this.findVectorNorm(this.findVectorBetweenPoints(lineSegment1[0], lineSegment1[1]));
+    const norm2 = this.findVectorNorm(this.findVectorBetweenPoints(lineSegment2[0], lineSegment2[1]));
     const a = lineSegment1[0];
     const b = lineSegment1[1];
     const c = lineSegment2[0];
@@ -1376,7 +1417,7 @@ public static findIntersectionBetweenLineSegments(lineSegment1: [number, number]
     if (det !== 0) {
         const lambda = ((d[1] - c[1]) * (d[0] - a[0]) + (c[0] - d[0]) * (d[1] - a[1])) / det;
         const gamma = ((a[1] - b[1]) * (d[0] - a[0]) + (b[0] - a[0]) * (d[1] - a[1])) / det;
-        if ((0 < lambda && lambda < 1) && (0 < gamma && gamma < 1)) {
+        if (((0 + tolerance) < (lambda * norm1) && (lambda * norm1) < (norm1 - tolerance)) && ((0 + tolerance) < (gamma * norm2) && (gamma * norm2) < (norm2 - tolerance))) {
             const ab = this.findVectorBetweenPoints(a, b)
             return this.addArray(a, this.multiplyArray(ab, lambda));
         }
