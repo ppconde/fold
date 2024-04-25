@@ -16,6 +16,11 @@ export type IVertices = {
 
 export type IFace = string[];
 
+export interface IParsePaperDimensions {
+    regex: RegExp;
+    dimensions: number;
+}
+
 export interface IParseTranslation {
     regex: RegExp;
     from: number;
@@ -88,6 +93,7 @@ export interface IPlane {
 }
 
 export interface IParsingInstruction {
+    paperDimensions: IParsePaperDimensions
     translation: IParseTranslation,
     rotation: IParseRotation,
 }

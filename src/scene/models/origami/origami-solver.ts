@@ -6,15 +6,17 @@ import { OrigamiGenerator } from './origami-coordinates-generator'
 
 export class OrigamiSolver {
 
-	public static solveOrigami(width: number, length: number, foldInstructions: string[]): [IOrigamiMesh[], IMeshInstruction[]] {
-		// Set tolerance for math calculations
-		const tolerance = width / 100;
-
-		// Set origami coordinates
-		let origamiCoordinates = OrigamiGenerator.generateOrigamiCoordinates(width, length, 8);
-
+	public static solveOrigami(foldInstructions: string[]): [IOrigamiMesh[], IMeshInstruction[]] {
+		
 		// Set parsing instructions
 		const parsingInstructions = this.setParsingInstructions();
+
+		// Parse paper dimensions
+		const paperDimensionsInstruction = foldInstructions.shift() as string;
+		const [xDim, yDim] = this.parsePaperDimensions(paperDimensionsInstruction, parsingInstructions);
+
+		// Set origami coordinates
+		let origamiCoordinates = OrigamiGenerator.generateOrigamiCoordinates(xDim, yDim, 0);  // 8
 
 		// Set rotation reports
 		let faceRotationInstruction: IFaceRotationInstruction;
@@ -36,10 +38,38 @@ export class OrigamiSolver {
 
 	public static setParsingInstructions(): IParsingInstruction {
 		const parsingInstructions = {
+			paperDimensions: { regex: /paper dimensions: \[(.+?)\]/, dimensions: 1},
 			translation: { regex: /fold \[(.+?)\] to (top|bottom) of \[(.+?)\]( carry \[(.+?)\])?( pin \[(.+?)\])?/, from: 1, sense: 2, to: 3, carry: 5, pin: 7 },
 			rotation: { regex: /fold \[(.+?)\] around \[(.+?)\]( (\d+))?( carry \[(.+?)\])?( pin \[(.+?)\])?/, from: 1, axis: 2, angle: 4, carry: 6, pin: 8 },
 		};
 		return parsingInstructions;
+	}
+
+	public static parsePaperDimensions(paperDimensionsInstruction: string, parsingInstructions: IParsingInstruction): [number, number] {
+
+		// Parse dimensions
+		const parseInstruction = parsingInstructions.paperDimensions;
+		const match = FoldSolver.parseInstruction(paperDimensionsInstruction, parseInstruction.regex);
+		const capturedString = match[parseInstruction.dimensions];
+		const dimensions = FoldSolver.parseMandatoryNumberArray(capturedString);
+
+		// Find dimensions ratio
+		let ratio;
+		if (dimensions.length === 1) {
+			ratio = dimensions[0];
+		}
+		else if (dimensions.length === 2) {
+			ratio = dimensions[0] / dimensions[1];
+		} else {
+			throw new Error('Paper dimensions were not specified correctly. They should be either a X/Y ratio (one value), or the X and Y dimensions (two values).')
+		}
+
+		// Make paper dimensions (1) have specified ration; (2) make specified constant area
+		const paperArea = 60;
+		const xDim = Math.sqrt(paperArea * ratio);
+		const yDim = Math.sqrt(paperArea / ratio);
+
+		return [xDim, yDim];
 	}
 
 	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string): [IOrigamiCoordinates, IFaceRotationInstruction] {

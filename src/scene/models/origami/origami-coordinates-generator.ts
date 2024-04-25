@@ -3,16 +3,16 @@ import { IOrigamiCoordinates } from './origami-types';
 
 export class OrigamiGenerator {
 
-    public static generateOrigamiCoordinates(width: number, length: number, i: number) {
+    public static generateOrigamiCoordinates(xDim: number, yDim: number, i: number) {
 
         let origamiCoordinates: IOrigamiCoordinates;
 
         // Real example
         if (i === 0) {
             origamiCoordinates = {
-                points: { 'a': [0, 0, 0], 'b': [length, 0, 0], 'c': [length, width, 0], 'd': [0, width, 0] },
+                points: { 'a': [0, 0, 0], 'b': [yDim, 0, 0], 'c': [yDim, xDim, 0], 'd': [0, xDim, 0] },
                 faces: [['a', 'b', 'c', 'd']],
-                pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width] },
+                pattern: { 'a': [0, 0], 'b': [yDim, 0], 'c': [yDim, xDim], 'd': [0, xDim] },
                 faceOrder: { 0: {} },
             };
             // test-1.text
@@ -26,17 +26,17 @@ export class OrigamiGenerator {
             // test-2.text
         } else if (i === 2) {
             origamiCoordinates = {
-                points: { 'a': [0, 0, 0], 'b': [length, 0, 0], 'c': [length, width, 0], 'd': [0, width, 0], 'e': [0, width * 2 / 5, 0], 'f': [length * 5 / 10, 0, 0], 'g': [length * 5 / 10, width * 1 / 5, 0], 'h': [length * 8 / 10, width * 1 / 5, 0], 'i': [length * 8 / 10, width * 4 / 5, 0], 'j': [length * 5 / 10, width * 4 / 5, 0], 'k': [length * 5 / 10, width * 3 / 5, 0], 'l': [length * 7 / 10, width * 3 / 5, 0], 'm': [length * 7 / 10, width * 2 / 5, 0] },
+                points: { 'a': [0, 0, 0], 'b': [yDim, 0, 0], 'c': [yDim, xDim, 0], 'd': [0, xDim, 0], 'e': [0, xDim * 2 / 5, 0], 'f': [yDim * 5 / 10, 0, 0], 'g': [yDim * 5 / 10, xDim * 1 / 5, 0], 'h': [yDim * 8 / 10, xDim * 1 / 5, 0], 'i': [yDim * 8 / 10, xDim * 4 / 5, 0], 'j': [yDim * 5 / 10, xDim * 4 / 5, 0], 'k': [yDim * 5 / 10, xDim * 3 / 5, 0], 'l': [yDim * 7 / 10, xDim * 3 / 5, 0], 'm': [yDim * 7 / 10, xDim * 2 / 5, 0] },
                 faces: [['a', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'e'], ['f', 'b', 'c', 'd', 'e', 'm', 'l', 'k', 'j', 'i', 'h', 'g']],
-                pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [0, width * 2 / 5], 'f': [length * 5 / 10, 0], 'g': [length * 5 / 10, width * 1 / 5], 'h': [length * 8 / 10, width * 1 / 5], 'i': [length * 8 / 10, width * 4 / 5], 'j': [length * 5 / 10, width * 4 / 5], 'k': [length * 5 / 10, width * 3 / 5], 'l': [length * 7 / 10, width * 3 / 5], 'm': [length * 7 / 10, width * 2 / 5] },
+                pattern: { 'a': [0, 0], 'b': [yDim, 0], 'c': [yDim, xDim], 'd': [0, xDim], 'e': [0, xDim * 2 / 5], 'f': [yDim * 5 / 10, 0], 'g': [yDim * 5 / 10, xDim * 1 / 5], 'h': [yDim * 8 / 10, xDim * 1 / 5], 'i': [yDim * 8 / 10, xDim * 4 / 5], 'j': [yDim * 5 / 10, xDim * 4 / 5], 'k': [yDim * 5 / 10, xDim * 3 / 5], 'l': [yDim * 7 / 10, xDim * 3 / 5], 'm': [yDim * 7 / 10, xDim * 2 / 5] },
                 faceOrder: { 0: {}, 1: {} },
             };
             // test-3.text
         } else if (i === 3) {
             origamiCoordinates = {
-                points: { 'a': [0, 0, 0], 'b': [length, 0, 0], 'c': [length, width, 0], 'd': [0, width, 0], 'e': [length / 2, 0, 0], 'f': [length / 2, width, 0] },
+                points: { 'a': [0, 0, 0], 'b': [yDim, 0, 0], 'c': [yDim, xDim, 0], 'd': [0, xDim, 0], 'e': [yDim / 2, 0, 0], 'f': [yDim / 2, xDim, 0] },
                 faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
-                pattern: { 'a': [0, 0], 'b': [length, 0], 'c': [length, width], 'd': [0, width], 'e': [length / 2, 0], 'f': [length / 2, width] },
+                pattern: { 'a': [0, 0], 'b': [yDim, 0], 'c': [yDim, xDim], 'd': [0, xDim], 'e': [yDim / 2, 0], 'f': [yDim / 2, xDim] },
                 faceOrder: { 0: {}, 1: {} },
             };
             // test-1.text with j not overlapping

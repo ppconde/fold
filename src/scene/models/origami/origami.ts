@@ -2,11 +2,7 @@ import * as THREE from 'three';
 import { Controller } from '../../controllers/controller';
 import { OrigamiPlaneGeometry } from './origami-plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
-import { MathHelpers } from './math-helpers';
 import { OrigamiSolver } from './origami-solver';
-// import { PolygonIntersectionHelper } from '../../../tests/check-if-polygons-intersect'  // Just for test
-import { PolygonIntersectionHelper } from '../../../tests/find-intersection-between-polygons'  // Just for test
-import { PolygonUnionHelper } from '../../../tests/inclusion-exclusion-principle'  // Just for test
 import foldInstructionsText from '../../../instructions/paper-plane.text'
 
 export class Origami extends THREE.Group {
@@ -44,40 +40,23 @@ export class Origami extends THREE.Group {
 
   private angleRotated = 0; // in radians
 
-  /**
-   * Paper width
-   */
-  private width: number;
-
-  /**
-   * Paper height
-   */
-  private length: number;
-
   private foldInstructionsText: string;
 
   private controller: Controller = new Controller(this, this.clock);
 
-  constructor(scene: THREE.Scene, width: number, length: number) {
+  constructor(scene: THREE.Scene) {
     super();
     this.scene = scene;
-    this.width = width;
-    this.length = length;
+
+    // Get fold instructions
     this.foldInstructionsText = foldInstructionsText;
-    // this.foldInstructionsText = 'a to e V\nc around [e,b] M';
-
-    this.vertices = this.generateVertices();
-
-    // this.meshes = this.generateMeshes();
-
     const foldInstructions = this.getFoldInstructions();
 
-    // PolygonIntersectionHelper.test();
+    // Find animation instructions
+    [this.meshes, this.meshInstructions] = OrigamiSolver.solveOrigami(foldInstructions);
+    this.vertices = {a: [0,0,0]}; // Set placeholder. This information should come from OrigamiSolver.solveOrigami(). Grouped with the meshes?
 
-    // PolygonUnionHelper.test();
-
-    [this.meshes, this.meshInstructions] = OrigamiSolver.solveOrigami(width, length, foldInstructions);
-
+    // Save meshes original position
     this.meshesRotation = this.meshes.map((mesh) => mesh.rotation.clone());
 
     /**
@@ -91,25 +70,9 @@ export class Origami extends THREE.Group {
     this.scene.add(...this.meshes);
   }
 
+  
   private getFoldInstructions(): string[] {
     return this.foldInstructionsText.split('\n');
-  }
-
-  /**
-   * Generates the vertices of the origami
-   */
-  private generateVertices(): IVertices {
-    return MathHelpers.shiftPoints(
-      {
-        a: [0, 0, 0],
-        b: [0, this.length, 0],
-        c: [this.width / 2, this.length / 2, 0],
-        d: [this.width, this.length, 0],
-        e: [this.width, 0, 0],
-      },
-      -this.width / 2,
-      -this.length / 2,
-    );
   }
 
   /**

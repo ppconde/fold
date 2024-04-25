@@ -1704,10 +1704,10 @@ export class FoldSolver {
 		for (const key of keys) { 
 			const capturedString = match[parseInstruction[key]];
 			if (key === 'from') {
-				values.startNodes = this.parseMandatoryArray(capturedString);
+				values.startNodes = this.parseMandatoryStringArray(capturedString);
 			}
 			else if (key === 'to') {
-				values.endNodes = this.parseMandatoryArray(capturedString);
+				values.endNodes = this.parseMandatoryStringArray(capturedString);
 			}
 			else if (key === 'sense') {
 				values.endFaceTargetSide = this.parseTranslationSense(capturedString);
@@ -1747,10 +1747,10 @@ export class FoldSolver {
 		for (const key of keys) { 
 			const capturedString = match[parseInstruction[key]];
 			if (key === 'from') {
-				values.startNodes = this.parseMandatoryArray(capturedString);
+				values.startNodes = this.parseMandatoryStringArray(capturedString);
 			}
 			else if (key === 'axis') {
-				values.axisNodes = this.parseMandatoryArray(capturedString);
+				values.axisNodes = this.parseMandatoryStringArray(capturedString);
 			}
 			else if (key === 'angle') {
 				values.rotationAngle = this.parseRotationAngle(capturedString);
@@ -1800,9 +1800,9 @@ export class FoldSolver {
 	}
 
 
-	public static parseMandatoryArray(capturedString: string) {
+	public static parseMandatoryStringArray(capturedString: string) {
 		if (capturedString !== undefined) {
-			const array = this.parseArray(capturedString);
+			const array = this.parseStringArray(capturedString);
 			if (array !== null) {
 				return array;
 			}
@@ -1813,7 +1813,7 @@ export class FoldSolver {
 	public static parseOptionalArray(capturedString: string) {
 		let array: string[] = [];
 		if (capturedString !== undefined) {
-			array = this.parseArray(capturedString);
+			array = this.parseStringArray(capturedString);
 			if (array === null) {
 				throw new Error('Could not parse necessary value.');
 				
@@ -1834,10 +1834,29 @@ export class FoldSolver {
 		throw new Error('Could not find sense in translation instruction!');
 	}
 
-	public static parseArray(capturedString: string) {
+	public static parseStringArray(capturedString: string) {
 		const regex = /\w+/g;
 		return capturedString.match(regex) as string[];
 	}
+
+	public static parseMandatoryNumberArray(capturedString: string) {
+		if (capturedString !== undefined) {
+			const array = this.parseNumberArray(capturedString);
+			if (array !== null) {
+				const numberArray = array.map(Number);
+				if ((numberArray !== null) && !(numberArray.some((e) => isNaN(e)))) {
+					return numberArray;
+				}
+			}
+		}
+		throw new Error('Could not parse necessary value.');
+	}
+
+	public static parseNumberArray(capturedString: string) {
+		const regex = /\d+(?:\.?\d+)?/g;
+		return capturedString.match(regex);
+	}
+
 
 	public static findPlaneBetweenNodes(points: IVertices, from: string[], to: string[]): [IPlane, string, string] {
 		const [startCoord, endCoord, startNode, endNode] = this.findTranslationStartAndEndCoord(points, from, to)
