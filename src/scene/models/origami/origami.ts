@@ -28,6 +28,37 @@ export class Origami extends THREE.Group {
     }
   ];
 
+  public pointInstructions: string[][] = [
+    ['a', 'e', 'd', 'b'],
+    ['a', 'e', 'd', 'b'],
+    ['a', 'e', 'd', 'b']
+  ];
+
+  public lineInstructions: string[][][] = [
+    [
+      ['a', 'e'],
+      ['e', 'd'],
+      ['d', 'b'],
+      ['b', 'a']
+    ],
+    [
+      ['a', 'e'],
+      ['e', 'd'],
+      ['d', 'b'],
+      ['b', 'a'],
+      ['a', 'c'],
+      ['c', 'd']
+    ],
+    [
+      ['a', 'e'],
+      ['e', 'd'],
+      ['d', 'b'],
+      ['b', 'a'],
+      ['a', 'c'],
+      ['c', 'd']
+    ]
+  ];
+
   public material = new THREE.MeshStandardMaterial({
     side: THREE.DoubleSide,
     roughness: 0.95,
@@ -108,15 +139,23 @@ export class Origami extends THREE.Group {
    */
   private generateMeshes(): THREE.Mesh<PlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
     const planeVertices = [
-      [this.vertices.a, this.vertices.b, this.vertices.c],
-      [this.vertices.c, this.vertices.d, this.vertices.b],
-      [this.vertices.a, this.vertices.e, this.vertices.d]
+      [{ a: this.vertices.a }, { b: this.vertices.b }, { c: this.vertices.c }],
+      [{ c: this.vertices.c }, { d: this.vertices.d }, { b: this.vertices.b }],
+      [{ a: this.vertices.a }, { e: this.vertices.e }, { d: this.vertices.d }]
     ];
 
     return planeVertices.map((vertices) => {
-      const geometry = new PlaneGeometry(vertices, this.width, this.height);
+      const nodesName: string[] = [];
+      const nodesCoord: number[][] = [];
+      for (let index = 0; index < vertices.length; index++) {
+        const key = Object.keys(vertices[index])[0];
+        nodesName.push(key);
+        nodesCoord.push(vertices[index][key]);
+      }
+
+      const geometry = new PlaneGeometry(nodesCoord, this.width, this.height);
       const outline = new Outline(geometry, this.width, this.height);
-      const point = new Point(geometry);
+      const point = new Point(nodesCoord, nodesName);
       const mesh = new THREE.Mesh(geometry, this.material);
       mesh.add(outline);
       mesh.add(point);
