@@ -1,33 +1,24 @@
 import * as THREE from 'three';
 
-export class Outline extends THREE.Object3D {
-  public geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>;
-  private width: number;
-  private height: number;
+export class Outlines extends THREE.Object3D {
+  private lineWidth: number;
+  private vertices: THREE.Vector3[] = [];
 
-  public lineWidth: number;
-
-  public vertices: THREE.Vector3[] = [];
-
-  constructor(geometry: THREE.BufferGeometry, width: number, height: number, lineWidth: number = 0.02) {
+  constructor(coords: number[][], names: string[], width: number, height: number, lineWidth: number = 0.02) {
     super();
     this.name = 'Outline';
-    this.geometry = geometry;
-    this.width = width;
-    this.height = height;
     this.lineWidth = lineWidth;
 
-    this.calculateVertices();
-    this.generateLines();
+    this.calculateVertices(coords);
+    this.generateLines(names, width, height);
   }
 
   /**
    * Generates the vertices vectors from the geometry
    */
-  private calculateVertices(): void {
-    const position = this.geometry.getAttribute('position').array;
-    for (let i = 0; i < position.length; i += 3) {
-      const vec = new THREE.Vector3(position[i], position[i + 1], position[i + 2]);
+  private calculateVertices(coords: number[][]): void {
+    for (let i = 0; i < coords.length; i += 1) {
+      const vec = new THREE.Vector3(coords[i][0], coords[i][1], coords[i][2]);
       this.vertices.push(vec);
     }
   }
@@ -35,17 +26,17 @@ export class Outline extends THREE.Object3D {
   /**
    * Generates the lines for the outline
    */
-  private generateLines() {
+  private generateLines(names: string[], width: number, height: number) {
     for (let i = 0; i < this.vertices.length; i++) {
       const len = this.vertices.length;
       // Circular array access
-      const vec = this.vertices[((i % len) + len) % len];
-      const nextVec = this.vertices[(((i + 1) % len) + len) % len];
+      const vec = this.vertices[i];
+      const nextVec = this.vertices[(i + 1) % len];
 
       const lineVector = nextVec.clone().sub(vec);
       const border =
-        lineVector.x != 0 && lineVector.x != this.width
-          ? lineVector.y != 0 && lineVector.y != this.height
+        lineVector.x != 0 && lineVector.x != width
+          ? lineVector.y != 0 && lineVector.y != height
             ? false
             : true
           : true;
@@ -67,20 +58,24 @@ export class Outline extends THREE.Object3D {
       pivot.position.add(halfLineLength);
       pivot.lookAt(nextVec);
       line.rotation.x = Math.PI / 2.0;
+      pivot.name = [names[i], names[(i + 1) % len]].sort();
 
       pivot.visible = border;
       this.add(pivot);
     }
   }
 
-  public changeVisibility(visible: boolean, index: number = -1) {
-    // if no index if define, change the visilibity to all lines
-    if (index == -1) {
-      for (let index = 0; index < this.children.length; index++) {
-        this.children[index].visible = visible;
+  public getOutline(array: string[]) {
+    if (array.length != 2) return undefined;
+    array.sort();
+
+    for (let index = 0; index < this.children.length; index++) {
+      // both arrays are sorted, so we just need to compare the same indexes
+      if (this.children[index].name[0] == array[0] && this.children[index].name[1] === array[1]) {
+        return this.children[index];
       }
-    } else if (index >= 0 && index <= 2) {
-      this.children[index].visible = visible;
     }
+
+    return undefined;
   }
 }
