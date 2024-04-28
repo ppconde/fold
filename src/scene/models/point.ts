@@ -23,6 +23,10 @@ export class Point extends THREE.Object3D {
     );
   }
 
+  private onBeforeRender(_renderer, _scene, camera, _geometry, _material) {
+    this.lookAt(camera.position);
+  }
+
   /**
    * Generates the points from the geometry
    */
@@ -45,6 +49,8 @@ export class Point extends THREE.Object3D {
 
         new THREE.MeshBasicMaterial({ color: 0xc92027 })
       );
+      text.onBeforeRender = this.onBeforeRender;
+      text.position.z = 0.4;
 
       const pivot = new THREE.Group();
       pivot.add(point);
