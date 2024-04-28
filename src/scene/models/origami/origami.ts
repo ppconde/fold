@@ -4,8 +4,8 @@ import { Controller } from '../../controllers/controller';
 import { MathHelper } from '../../helpers/math-helper';
 import { PlaneGeometry } from '../plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
-import { Outline } from '../line';
-import { Point } from '../point';
+import { Outlines } from '../line';
+import { Points } from '../point';
 
 export class Origami extends THREE.Group {
   private clock = new THREE.Clock();
@@ -137,7 +137,8 @@ export class Origami extends THREE.Group {
   /**
    * Generates meshes for each plane geometry and returns and array of meshes
    */
-  private generateMeshes(): THREE.Mesh<PlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
+  // private generateMeshes(): THREE.Mesh<PlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
+  private generateMeshes(): THREE.Group[] {
     const planeVertices = [
       [{ a: this.vertices.a }, { b: this.vertices.b }, { c: this.vertices.c }],
       [{ c: this.vertices.c }, { d: this.vertices.d }, { b: this.vertices.b }],
@@ -154,15 +155,39 @@ export class Origami extends THREE.Group {
       }
 
       const geometry = new PlaneGeometry(nodesCoord, this.width, this.height);
-      const outline = new Outline(geometry, this.width, this.height);
-      const point = new Point(nodesCoord, nodesName);
+      const outline = new Outlines(nodesCoord, nodesName, this.width, this.height);
+      const point = new Points(nodesCoord, nodesName);
       const mesh = new THREE.Mesh(geometry, this.material);
-      mesh.add(outline);
-      mesh.add(point);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      mesh.name = 'Mesh';
 
-      return mesh;
+      const group = new THREE.Group();
+      group.add(mesh);
+      group.add(outline);
+      group.add(point);
+
+      // if you change the order of the add, also change the indexes bellow
+      group.indexes = {
+        MESH: 0,
+        OUTLINES: 1,
+        POINTS: 2
+      };
+
+      group.getOutlines = () => {
+        return group.children[group.indexes.OUTLINES];
+      };
+
+      group.getPoints = () => {
+        return group.children[group.indexes.POINTS];
+      };
+
+      group.pointsNames = group
+        .getPoints()
+        .children.map((x) => x.name)
+        .sort();
+
+      return group;
     });
   }
 
