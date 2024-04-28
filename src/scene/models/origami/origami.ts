@@ -115,7 +115,7 @@ export class Origami extends THREE.Group {
 
     return planeVertices.map((vertices) => {
       const geometry = new PlaneGeometry(vertices, this.width, this.height);
-      const outline = new Outline(geometry);
+      const outline = new Outline(geometry, this.width, this.height);
       const point = new Point(geometry);
       const mesh = new THREE.Mesh(geometry, this.material);
       mesh.add(outline);
