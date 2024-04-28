@@ -3,20 +3,22 @@ import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 export class Point extends THREE.Object3D {
-  public geometry: THREE.BufferGeometry<THREE.NormalBufferAttributes>;
-
+  public coords: number[][];
+  public names: string[];
   public pointRadius: number;
 
-  constructor(geometry: THREE.BufferGeometry, pointRadius = 0.1) {
+  constructor(coords: number[][], names: string[], pointRadius = 0.1) {
     super();
-    this.geometry = geometry;
+    this.name = 'Points';
     this.pointRadius = pointRadius;
+    this.coords = coords;
+    this.names = names;
 
     const loader = new FontLoader();
     loader.load(
       'fonts/helvetiker_bold.typeface.json',
       function (font) {
-        this.generatePoints(font);
+        this.generatePoints(this.coords, this.names, font);
       }.bind(this)
     );
   }
@@ -24,17 +26,16 @@ export class Point extends THREE.Object3D {
   /**
    * Generates the points from the geometry
    */
-  private generatePoints(font) {
-    const position = this.geometry.getAttribute('position').array;
-    for (let i = 0; i < position.length; i += 3) {
-      const vec = new THREE.Vector3(position[i], position[i + 1], position[i + 2]);
+  private generatePoints(coords, names, font) {
+    for (let i = 0; i < coords.length; i += 1) {
+      const vec = new THREE.Vector3(coords[i][0], coords[i][1], coords[i][2]);
 
       const point = new THREE.Mesh(
         new THREE.SphereGeometry(this.pointRadius),
         new THREE.MeshBasicMaterial({ color: 0xc92027 })
       );
       const text = new THREE.Mesh(
-        new TextGeometry('A', {
+        new TextGeometry(names[i].toUpperCase(), {
           font: font,
 
           size: 0.5,
@@ -50,6 +51,7 @@ export class Point extends THREE.Object3D {
       pivot.add(text);
 
       pivot.position.copy(vec);
+      pivot.name = names[i].toUpperCase();
 
       this.add(pivot);
     }

@@ -11,6 +11,7 @@ export class Outline extends THREE.Object3D {
 
   constructor(geometry: THREE.BufferGeometry, width: number, height: number, lineWidth: number = 0.02) {
     super();
+    this.name = 'Outline';
     this.geometry = geometry;
     this.width = width;
     this.height = height;
