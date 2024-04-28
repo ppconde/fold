@@ -2,10 +2,8 @@ import * as THREE from 'three';
 import { AnimationDirection } from '../../controllers/controller';
 import { Controller } from '../../controllers/controller';
 import { MathHelper } from '../../helpers/math-helper';
-import { PlaneGeometry } from '../plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
-import { Outlines } from '../line';
-import { Points } from '../point';
+import { Face } from '../face';
 
 export class Origami extends THREE.Group {
   private clock = new THREE.Clock();
@@ -154,40 +152,7 @@ export class Origami extends THREE.Group {
         nodesCoord.push(vertices[index][key]);
       }
 
-      const geometry = new PlaneGeometry(nodesCoord, this.width, this.height);
-      const outline = new Outlines(nodesCoord, nodesName, this.width, this.height);
-      const point = new Points(nodesCoord, nodesName);
-      const mesh = new THREE.Mesh(geometry, this.material);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.name = 'Mesh';
-
-      const group = new THREE.Group();
-      group.add(mesh);
-      group.add(outline);
-      group.add(point);
-
-      // if you change the order of the add, also change the indexes bellow
-      group.indexes = {
-        MESH: 0,
-        OUTLINES: 1,
-        POINTS: 2
-      };
-
-      group.getOutlines = () => {
-        return group.children[group.indexes.OUTLINES];
-      };
-
-      group.getPoints = () => {
-        return group.children[group.indexes.POINTS];
-      };
-
-      group.pointsNames = group
-        .getPoints()
-        .children.map((x) => x.name)
-        .sort();
-
-      return group;
+      return new Face(nodesCoord, nodesName, this.material, this.width, this.height);
     });
   }
 
