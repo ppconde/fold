@@ -57,12 +57,16 @@ export class Origami extends THREE.Group {
     ]
   ];
 
-  public material = new THREE.MeshStandardMaterial({
-    side: THREE.DoubleSide,
-    roughness: 0.95,
-    metalness: 0.1,
-    color: 0xfbf6ef
-  });
+  private debugOptions = {
+    enablePoints: true,
+    animateOutlines: true,
+    material: new THREE.MeshStandardMaterial({
+      side: THREE.DoubleSide,
+      roughness: 0.95,
+      metalness: 0.1,
+      color: 0xfbf6ef
+    })
+  };
 
   private meshes: THREE.Group[];
 
@@ -153,7 +157,7 @@ export class Origami extends THREE.Group {
         nodesCoord.push(vertices[index][key]);
       }
 
-      return new Face(nodesCoord, nodesName, this.material, this.width, this.height);
+      return new Face(nodesCoord, nodesName, this.debugOptions.material, this.width, this.height);
     });
   }
 
@@ -162,9 +166,11 @@ export class Origami extends THREE.Group {
    */
   private addDebug(): void {
     const origamiFolder = this.debug.ui!.addFolder('Origami ');
-    origamiFolder.add(this.material, 'roughness').min(0).max(1).step(0.01);
-    origamiFolder.add(this.material, 'metalness').min(0).max(1).step(0.01);
-    origamiFolder.addColor(this.material, 'color');
+    origamiFolder.add(this.debugOptions.material, 'roughness').min(0).max(1).step(0.01);
+    origamiFolder.add(this.debugOptions.material, 'metalness').min(0).max(1).step(0.01);
+    origamiFolder.addColor(this.debugOptions.material, 'color');
+    origamiFolder.add(this.debugOptions, 'enablePoints');
+    origamiFolder.add(this.debugOptions, 'animateOutlines');
   }
 
   public checkPointsOutlines(step: number) {

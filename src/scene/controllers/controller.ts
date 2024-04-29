@@ -83,6 +83,7 @@ export class Controller {
   private resetAnimation(): void {
     this.currentState = ControllerState.Stopped;
     this.currentStep = Controller.INITIAL_STEP;
+    this.origami.checkPointsOutlines(this.currentStep);
     document.dispatchEvent(
       new CustomEvent<IControllerEvent>('controller:pause', {
         detail: { value: false, direction: AnimationDirection.Both },
