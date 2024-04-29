@@ -1151,9 +1151,10 @@ export class FoldSolver {
 
 		// Add intersection points to face
 		let intersectionPointIds = [];
-		[face, points, pattern, intersectionPointIds] = this.addIntersectionPoints(face, points, pattern, plane);
+		let intersectedNodesIds = [];
+		[face, points, pattern, intersectionPointIds, intersectedNodesIds] = this.addIntersectionPoints(face, points, pattern, plane);
 		// Update other faces with new intersection points
-		faces = this.addIntersectionPointsToAdjacentFaces(faces, face, intersectionPointIds);
+		faces = this.addIntersectionPointsToAdjacentFaces(faces, face, intersectionPointIds, intersectedNodesIds);
 		// Divide face
 		const currentFaceNodeId = 0;
 		const previousFaceNodeId = -1;
@@ -1165,10 +1166,11 @@ export class FoldSolver {
 	}
 
 
-	public static addIntersectionPoints(face: string[], points: IVertices, pattern: IVertices, plane: IPlane): [string[], IVertices, IVertices, number[]] {
+	public static addIntersectionPoints(face: string[], points: IVertices, pattern: IVertices, plane: IPlane): [string[], IVertices, IVertices, number[], number[]] {
 		let newFace: string[] = [];
 		let intersectionPointIds: number[] = [];
 		const intersectedNodes: string[] = [];
+		const intersectedNodesIds: number[] = [];
 		for (let i = 0; i < face.length; i++) {
 			newFace.push(face[i]);
 			const edge = [face[i], face[(i + 1) % face.length]];
@@ -1187,6 +1189,7 @@ export class FoldSolver {
 						if (!MathHelpers.checkIfArrayContainsElement(intersectedNodes, node)) {
 							intersectionPointIds.push((newFace.length - 1 + i));
 							intersectedNodes.push(node);
+							intersectedNodesIds.push((newFace.length - 1 + i));
 						}
 						planeIntersectsNode = true;
 						break;
@@ -1213,20 +1216,23 @@ export class FoldSolver {
 			const intersectionVersor = MathHelpers.findVersorBetweenPoints(points[newFace[intersectionPointIds[0]]], points[newFace[intersectionPointIds[1]]]);
 			intersectionPointIds.sort(function (p1, p2) {return MathHelpers.dot(points[newFace[p1]],intersectionVersor) - MathHelpers.dot(points[newFace[p2]],intersectionVersor)});
 		}
-		return [newFace, points, pattern, intersectionPointIds];
+		return [newFace, points, pattern, intersectionPointIds, intersectedNodesIds];
 	}
 
-	public static addIntersectionPointsToAdjacentFaces(faces: string[][], divideFace: string[], intersectionPointIds: number[]) {
+	public static addIntersectionPointsToAdjacentFaces(faces: string[][], divideFace: string[], intersectionPointIds: number[], intersectedNodesIds: number[]) {
 		for (let i = 0; i < faces.length; i++) {
 			const face = faces[i];
 			const newFace = [];
 			for (let j = 0; j < faces[i].length; j++) {
 				const edge = [faces[i][j], faces[i][(j + 1) % face.length]];
 				newFace.push(edge[0]);
-				for (let i = 0; i < intersectionPointIds.length; i++) {
-					const divideFaceEdge = [divideFace[(intersectionPointIds[i] - 1 + divideFace.length) % divideFace.length], divideFace[(intersectionPointIds[i] + 1) % divideFace.length]];
-					if (MathHelpers.checkIfEdgesAreEqual(edge, divideFaceEdge)) {
-						newFace.push(divideFace[intersectionPointIds[i]]);
+				for (let k = 0; k < intersectionPointIds.length; k++) {
+					// If intersection point is not at a pre-existing node
+					if (!MathHelpers.checkIfArrayContainsElement(intersectedNodesIds, intersectionPointIds[k])) {
+						const divideFaceEdge = [divideFace[(intersectionPointIds[k] - 1 + divideFace.length) % divideFace.length], divideFace[(intersectionPointIds[k] + 1) % divideFace.length]];
+						if (MathHelpers.checkIfEdgesAreEqual(edge, divideFaceEdge)) {
+							newFace.push(divideFace[intersectionPointIds[k]]);
+						}
 					}
 				}
 			}
@@ -1678,6 +1684,15 @@ export class FoldSolver {
 			edgeMatches[i] = this.checkIfFaceContainsEdge(face, edges[i]);
 		}
 		return edgeMatches.every(e => e === true);
+	}
+
+	public static checkIfFaceContainsAnyEdge(face: string[], edges: string[][]) {
+		for (let i = 0; i < edges.length; i++) {
+			if (this.checkIfFaceContainsEdge(face, edges[i])) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static checkIfFaceContainsEdge(face: string[], edge: string[]) {

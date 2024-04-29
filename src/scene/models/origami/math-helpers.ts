@@ -177,7 +177,11 @@ export class MathHelpers {
   // GRAPH THEORY  /////////////////////////////////////////////////////////////////////////////////////////////
 
   public static checkIfEdgesAreEqual(a: Array<any>, b: Array<any>) {
-    return (JSON.stringify(a) == JSON.stringify(b) || JSON.stringify(a) == JSON.stringify(b.reverse()));
+    return (JSON.stringify(a) == JSON.stringify(b) || JSON.stringify(a) == JSON.stringify(this.invertEdgeSense(b)));
+  }
+
+  public static invertEdgeSense(a: string[]) {
+    return [...a].reverse();
   }
 
   public static checkIfArraysOfFacesAreEqual(a: number[][][], b: number[][][]) {
@@ -326,6 +330,7 @@ export class MathHelpers {
   }
 
   // https://stackoverflow.com/questions/5666222/3d-line-plane-intersection
+  // It counts the limit points as well
   public static findIntersectionBetweenLineSegmentAndPlane(lineSegment: number[][], plane: IPlane): number[] {
     const tolerance = 0.0001;
     let intersectionPoint: number[] = [];
