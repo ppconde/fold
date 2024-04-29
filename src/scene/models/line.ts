@@ -34,12 +34,6 @@ export class Outlines extends THREE.Object3D {
       const nextVec = this.vertices[(i + 1) % len];
 
       const lineVector = nextVec.clone().sub(vec);
-      const border =
-        lineVector.x != 0 && lineVector.x != width
-          ? lineVector.y != 0 && lineVector.y != height
-            ? false
-            : true
-          : true;
 
       const lineLength = lineVector.length();
       const normalizedVec = lineVector.clone().normalize();
@@ -59,8 +53,8 @@ export class Outlines extends THREE.Object3D {
       pivot.lookAt(nextVec);
       line.rotation.x = Math.PI / 2.0;
       pivot.name = [names[i], names[(i + 1) % len]].sort();
+      pivot.visible = false;
 
-      pivot.visible = border;
       this.add(pivot);
     }
   }
@@ -77,5 +71,11 @@ export class Outlines extends THREE.Object3D {
     }
 
     return undefined;
+  }
+
+  public disableVisibility() {
+    for (let index = 0; index < this.children.length; index++) {
+      this.children[index].visible = false;
+    }
   }
 }

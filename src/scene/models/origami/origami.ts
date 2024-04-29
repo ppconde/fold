@@ -64,7 +64,7 @@ export class Origami extends THREE.Group {
     color: 0xfbf6ef
   });
 
-  private meshes: THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>[];
+  private meshes: THREE.Group[];
 
   private meshesRotation: THREE.Euler[];
 
@@ -97,6 +97,7 @@ export class Origami extends THREE.Group {
     this.vertices = this.generateVertices();
 
     this.meshes = this.generateMeshes();
+    this.checkPointsOutlines(-1);
 
     this.meshesRotation = this.meshes.map((mesh) => mesh.rotation.clone());
 
@@ -164,6 +165,34 @@ export class Origami extends THREE.Group {
     origamiFolder.add(this.material, 'roughness').min(0).max(1).step(0.01);
     origamiFolder.add(this.material, 'metalness').min(0).max(1).step(0.01);
     origamiFolder.addColor(this.material, 'color');
+  }
+
+  public checkPointsOutlines(step: number) {
+    for (let index = 0; index < this.meshes.length; index++) {
+      this.meshes[index].disableVisibility();
+    }
+
+    const visiblePoints = this.pointInstructions[step + 1];
+    for (let i = 0; i < visiblePoints.length; i++) {
+      for (let index = 0; index < this.meshes.length; index++) {
+        const point = this.meshes[index].getPoint(visiblePoints[i]);
+        if (point !== undefined) {
+          point.visible = true;
+          break;
+        }
+      }
+    }
+
+    const visibleLines = this.lineInstructions[step + 1];
+    for (let i = 0; i < visibleLines.length; i++) {
+      for (let index = 0; index < this.meshes.length; index++) {
+        const point = this.meshes[index].getOutline(visibleLines[i]);
+        if (point !== undefined) {
+          point.visible = true;
+          break;
+        }
+      }
+    }
   }
 
   /**

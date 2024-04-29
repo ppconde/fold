@@ -50,4 +50,17 @@ export class Face extends THREE.Group {
   public getPoints() {
     return this.children[this.indexes.POINTS];
   }
+
+  public getOutline(o: string) {
+    return this.getOutlines().getOutline(o);
+  }
+
+  public getPoint(p: string) {
+    return this.getPoints().getPoint(p);
+  }
+
+  public disableVisibility() {
+    this.getOutlines().disableVisibility();
+    this.getPoints().disableVisibility();
+  }
 }

@@ -43,6 +43,7 @@ export class Points extends THREE.Object3D {
 
       pivot.position.copy(vec);
       pivot.name = names[i].toUpperCase();
+      pivot.visible = false;
 
       this.add(pivot);
     }
@@ -75,5 +76,11 @@ export class Points extends THREE.Object3D {
     }
 
     return undefined;
+  }
+
+  public disableVisibility() {
+    for (let index = 0; index < this.children.length; index++) {
+      this.children[index].visible = false;
+    }
   }
 }

@@ -62,6 +62,7 @@ export class Controller {
     this.clock.stop();
     this.currentState = ControllerState.Finished;
     this.currentStep += direction === AnimationDirection.Reverse ? -1 : 1;
+    this.origami.checkPointsOutlines(this.currentStep);
     document.dispatchEvent(
       new CustomEvent('controller:pause', {
         detail: { value: false, direction: direction },
