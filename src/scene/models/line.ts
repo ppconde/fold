@@ -4,13 +4,13 @@ export class Outlines extends THREE.Object3D {
   private lineWidth: number;
   private vertices: THREE.Vector3[] = [];
 
-  constructor(coords: number[][], names: string[], width: number, height: number, lineWidth: number = 0.02) {
+  constructor(coords: number[][], names: string[], lineWidth: number = 0.02) {
     super();
     this.name = 'Outline';
     this.lineWidth = lineWidth;
 
     this.calculateVertices(coords);
-    this.generateLines(names, width, height);
+    this.generateLines(names);
   }
 
   /**
@@ -26,7 +26,7 @@ export class Outlines extends THREE.Object3D {
   /**
    * Generates the lines for the outline
    */
-  private generateLines(names: string[], width: number, height: number) {
+  private generateLines(names: string[]) {
     for (let i = 0; i < this.vertices.length; i++) {
       const len = this.vertices.length;
       // Circular array access

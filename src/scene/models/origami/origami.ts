@@ -97,7 +97,7 @@ export class Origami extends THREE.Group {
     this.vertices = this.generateVertices();
 
     this.meshes = this.generateMeshes();
-    this.checkPointsOutlines(-1);
+    this.checkPointsOutlines(0);
 
     this.meshesRotation = this.meshes.map((mesh) => mesh.rotation.clone());
 
@@ -172,7 +172,7 @@ export class Origami extends THREE.Group {
       this.meshes[index].disableVisibility();
     }
 
-    const visiblePoints = this.pointInstructions[step + 1];
+    const visiblePoints = this.pointInstructions[step];
     for (let i = 0; i < visiblePoints.length; i++) {
       for (let index = 0; index < this.meshes.length; index++) {
         const point = this.meshes[index].getPoint(visiblePoints[i]);
@@ -183,7 +183,7 @@ export class Origami extends THREE.Group {
       }
     }
 
-    const visibleLines = this.lineInstructions[step + 1];
+    const visibleLines = this.lineInstructions[step];
     for (let i = 0; i < visibleLines.length; i++) {
       for (let index = 0; index < this.meshes.length; index++) {
         const point = this.meshes[index].getOutline(visibleLines[i]);

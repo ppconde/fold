@@ -23,7 +23,7 @@ export class Face extends THREE.Group {
     mesh.receiveShadow = true;
     mesh.name = 'Mesh';
 
-    const outline = new Outlines(coords, names, width, height);
+    const outline = new Outlines(coords, names);
     const point = new Points(coords, names);
 
     {
