@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 export class Points extends THREE.Object3D {
@@ -15,29 +15,24 @@ export class Points extends THREE.Object3D {
     this.generatePoints(coords, names);
 
     const loader = new FontLoader();
-    loader.load(
-      'fonts/helvetiker_bold.typeface.json',
-      function (font) {
-        this.generateText(font);
-      }.bind(this)
-    );
+    loader.load('fonts/helvetiker_bold.typeface.json', (font) => this.generateText(font));
   }
 
-  private onBeforeRender(_renderer, _scene, camera, _geometry, _material) {
+  public onBeforeRender(_renderer, _scene, camera, _geometry, _material) {
     this.lookAt(camera.position);
   }
 
   /**
    * Generates the points from the geometry
    */
-  private generatePoints(coords, names) {
+  private generatePoints(coords: number[][], names: string[]) {
+    const geometry = new THREE.SphereGeometry(this.pointRadius);
+    const material = new THREE.MeshBasicMaterial({ color: 0xc92027 });
+
     for (let i = 0; i < coords.length; i += 1) {
       const vec = new THREE.Vector3(coords[i][0], coords[i][1], coords[i][2]);
 
-      const point = new THREE.Mesh(
-        new THREE.SphereGeometry(this.pointRadius),
-        new THREE.MeshBasicMaterial({ color: 0xc92027 })
-      );
+      const point = new THREE.Mesh(geometry, material);
       const pivot = new THREE.Group();
       pivot.add(point);
 
@@ -49,7 +44,7 @@ export class Points extends THREE.Object3D {
     }
   }
 
-  private generateText(font) {
+  private generateText(font: Font) {
     for (let i = 0; i < this.children.length; i += 1) {
       const text = new THREE.Mesh(
         new TextGeometry(this.names[i].toUpperCase(), {
@@ -68,19 +63,11 @@ export class Points extends THREE.Object3D {
     }
   }
 
-  public getPoint(name) {
-    for (let index = 0; index < this.children.length; index++) {
-      if (this.children[index].name === name.toUpperCase()) {
-        return this.children[index];
-      }
-    }
-
-    return undefined;
+  public getPoint(name: string) {
+    return this.children.find((child) => child.name === name.toUpperCase());
   }
 
   public disableVisibility() {
-    for (let index = 0; index < this.children.length; index++) {
-      this.children[index].visible = false;
-    }
+    this.children.forEach((child) => (child.visible = false));
   }
 }

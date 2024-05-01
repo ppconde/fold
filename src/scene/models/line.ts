@@ -63,19 +63,10 @@ export class Outlines extends THREE.Object3D {
     if (array.length != 2) return undefined;
     array.sort();
 
-    for (let index = 0; index < this.children.length; index++) {
-      // both arrays are sorted, so we just need to compare the same indexes
-      if (this.children[index].name[0] == array[0] && this.children[index].name[1] === array[1]) {
-        return this.children[index];
-      }
-    }
-
-    return undefined;
+    return this.children.find((child) => child.name[0] === array[0] && child.name[1] === array[1]);
   }
 
   public disableVisibility() {
-    for (let index = 0; index < this.children.length; index++) {
-      this.children[index].visible = false;
-    }
+    this.children.forEach((child) => (child.visible = false));
   }
 }

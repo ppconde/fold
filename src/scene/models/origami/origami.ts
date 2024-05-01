@@ -174,14 +174,12 @@ export class Origami extends THREE.Group {
   }
 
   public checkPointsOutlines(step: number) {
-    for (let index = 0; index < this.meshes.length; index++) {
-      this.meshes[index].disableVisibility();
-    }
+    this.meshes.forEach((mesh) => mesh.disableVisibility());
 
     const visiblePoints = this.pointInstructions[step];
-    for (let i = 0; i < visiblePoints.length; i++) {
-      for (let index = 0; index < this.meshes.length; index++) {
-        const point = this.meshes[index].getPoint(visiblePoints[i]);
+    for (const pointIndex of visiblePoints) {
+      for (const mesh of this.meshes) {
+        const point = mesh.getPoint(pointIndex);
         if (point !== undefined) {
           point.visible = true;
           break;
@@ -190,9 +188,9 @@ export class Origami extends THREE.Group {
     }
 
     const visibleLines = this.lineInstructions[step];
-    for (let i = 0; i < visibleLines.length; i++) {
-      for (let index = 0; index < this.meshes.length; index++) {
-        const point = this.meshes[index].getOutline(visibleLines[i]);
+    for (const lineIndex of visibleLines) {
+      for (const mesh of this.meshes) {
+        const point = mesh.getOutline(lineIndex);
         if (point !== undefined) {
           point.visible = true;
           break;
