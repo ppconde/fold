@@ -1,4 +1,4 @@
-@use "../../scss/colors.scss" as colors;
+@use '../../scss/colors.scss' as colors;
 
 .origami-preview {
   align-items: center;
@@ -14,7 +14,7 @@
   }
 
   .text {
-    font-family: "Roboto", sans-serif;
+    font-family: 'Roboto', sans-serif;
     font-size: 18px;
     width: 94px;
     color: colors.$secondary-color;

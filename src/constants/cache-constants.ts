@@ -1,3 +1,3 @@
 export const CACHE = {
-	ORIGAMI: 'origami'
-}
+  ORIGAMI: 'origami'
+};
