@@ -196,6 +196,43 @@ describe('OrigamiSolver', () => {
             });
         });
 
+        describe('when we have a shape that is defined in the 3D space', () => {
+            const origamiCoordinates: IOrigamiCoordinates = {
+                points: {
+                    'a': [0, 0, 0],
+                    'b': [4, 0, 4],
+                    'c': [4, 4, 4],
+                    'd': [0, 4, 0],
+                    'e': [4, 0, 0],
+                    'f': [4, 4, 0]
+                },
+                faces: [['a', 'e', 'f', 'd'], ['e', 'b', 'c', 'f']],
+                pattern: {
+                    'a': [0, 0],
+                    'b': [8, 0],
+                    'c': [8, 4],
+                    'd': [0, 4],
+                    'e': [4, 0],
+                    'f': [4, 4]
+                },
+                faceOrder: { 0: {}, 1: {} }
+            };
+
+            it.only('returns an array of a single mesh that represents the shape', () => {
+                const positions = [
+                    new Float32Array([0, 0, 0, 4, 0, 0, 4, 4, 0, 0, 4, 0]),
+                    new Float32Array([4, 0, 0, 4, 0, 4, 4, 4, 4, 4, 4, 0]),
+                ];
+                const result = OrigamiSolver.createFaceMeshes(origamiCoordinates);
+                result.forEach((mesh, i) => {
+                    expect(mesh).toBeInstanceOf(THREE.Mesh);
+                    expect(mesh.geometry.getAttribute('position').itemSize).toEqual(3);
+                    expect(mesh.geometry.getAttribute('position').array).toEqual(positions[i]);
+                });
+                expect(result.length).toBe(2);
+            });
+        });
+
     });
 
     describe.todo('.createMeshInstructions')

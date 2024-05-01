@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import earcut from 'earcut';
 
 export class PlaneGeometry extends THREE.BufferGeometry<THREE.NormalBufferAttributes> {
   public width: number;
@@ -30,13 +31,16 @@ export class PlaneGeometry extends THREE.BufferGeometry<THREE.NormalBufferAttrib
    * @param points
    */
   private generateGeometry(points: number[][]): Float32Array {
-    const positions = new Float32Array(points.length * 3);
-    for (let i = 0; i < points.length; i++) {
+    const triangulatedPoints = this.triangulate(points);
+    const positions = new Float32Array(triangulatedPoints.length * 3);
+
+    for (let i = 0; i < triangulatedPoints.length; i++) {
       const i3 = i * 3;
-      positions[i3] = points[i][0];
-      positions[i3 + 1] = points[i][1];
-      positions[i3 + 2] = points[i][2];
+      positions[i3] = triangulatedPoints[i][0];
+      positions[i3 + 1] = triangulatedPoints[i][1];
+      positions[i3 + 2] = triangulatedPoints[i][2];
     }
+
     return positions;
   }
 
@@ -52,4 +56,14 @@ export class PlaneGeometry extends THREE.BufferGeometry<THREE.NormalBufferAttrib
     }
     return uvs;
   }
+
+  /**
+   * Triangulates points - converts points to triangles
+   * @param points
+   */
+  private triangulate(points: number[][]): number[][] {
+    const verticesIndexes = earcut(points.flat(), [], 3);
+    return verticesIndexes.map((index) => points[index]);
+  }
+
 }

@@ -60,6 +60,22 @@ export class Origami extends THREE.Group {
 
     // this.vertices = {a: [0,0,0]}; // Set placeholder. This information should come from OrigamiSolver.solveOrigami(). Grouped with the meshes?
 
+    // const instructionMaxId = 6;
+    // [this.meshes, this.meshInstructions, this.lineInstructions, this.pointInstructions, this.origamiCoordinatesSave] = OrigamiSolver.solveOrigami(MathHelpers.indexArray(foldInstructions, [...Array(instructionMaxId+1).keys()]));
+
+    // this.vertices = {a: [0,0,0]}; // Set placeholder. This information should come from OrigamiSolver.solveOrigami(). Grouped with the meshes?
+
+    this.meshInstructions = [];
+    // Exemplo de input 3
+    const origamiCoordinates = {
+      points: { 'a': [0, 0, 0], 'b': [2, 0, 0], 'c': [2, 2, 0], 'd': [1, 2, 0], 'e': [1, 1, 0], 'f': [0, 1, 0], 'g': [2, 0, 2], 'h': [2, 2, 2] },
+      faces: [['a', 'b', 'c', 'd', 'e', 'f'], ['b', 'g', 'h', 'c']],
+      pattern: { 'a': [0, 0], 'b': [2, 0], 'c': [2, 2], 'd': [1, 2], 'e': [1, 1], 'f': [0, 1], 'g': [4, 0], 'h': [4, 2] },
+      faceOrder: { 0: {}, 1: {} }
+    };
+
+    this.meshes = OrigamiSolver.createFaceMeshes(origamiCoordinates);
+
     this.vertices = {};
 
     // Save meshes original position
