@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export type Lights = THREE.Light | THREE.DirectionalLight | THREE.AmbientLight | THREE.PointLight | THREE.SpotLight;
 
 export type LightsHelpers = THREE.DirectionalLightHelper | THREE.PointLightHelper | THREE.SpotLightHelper;

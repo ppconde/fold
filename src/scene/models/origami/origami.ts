@@ -1,31 +1,17 @@
 import * as THREE from 'three';
 import { AnimationDirection } from '../../controllers/controller';
 import { Controller } from '../../controllers/controller';
-import { MathHelper } from '../../helpers/math-helper';
-import { PlaneGeometry } from '../plane-geometry';
 import { IMeshInstruction, IVertices } from './origami-types';
-import { Outline } from '../line';
+import { OrigamiSolver } from './origami-solver';
+import foldInstructionsText from '../../../instructions/envelope.text';
+import { MathHelpers } from './math-helpers';
 
 export class Origami extends THREE.Group {
   private clock = new THREE.Clock();
 
   private scene: THREE.Scene;
 
-  /**
-   * @todo - It should be set in the constructor
-   */
-  public meshInstructions: IMeshInstruction[] = [
-    {
-      meshIds: [0, 1],
-      axis: ['a', 'd'],
-      angle: THREE.MathUtils.degToRad(90)
-    },
-    {
-      meshIds: [2],
-      axis: ['d', 'a'],
-      angle: THREE.MathUtils.degToRad(90)
-    }
-  ];
+  private meshes: THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>[];
 
   public material = new THREE.MeshStandardMaterial({
     side: THREE.DoubleSide,
@@ -34,7 +20,11 @@ export class Origami extends THREE.Group {
     color: 0xfbf6ef
   });
 
-  private meshes: THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>[];
+  public meshInstructions: IMeshInstruction[] = [];
+
+  public lineInstructions: string[][][];
+
+  public pointInstructions: string[][];
 
   private meshesRotation: THREE.Euler[];
 
@@ -44,30 +34,35 @@ export class Origami extends THREE.Group {
 
   private angleRotated = 0; // in radians
 
-  private debug = window.debug;
-
-  /**
-   * Paper width
-   */
-  private width: number;
-
-  /**
-   * Paper height
-   */
-  private height: number;
+  private foldInstructionsText: string;
 
   private controller: Controller = new Controller(this, this.clock);
 
-  constructor(scene: THREE.Scene, width: number, height: number) {
+  private debug = window.debug;
+
+  constructor(scene: THREE.Scene) {
     super();
     this.scene = scene;
-    this.width = width;
-    this.height = height;
 
-    this.vertices = this.generateVertices();
+    // Get fold instructions
+    this.foldInstructionsText = foldInstructionsText;
+    const foldInstructions = this.getFoldInstructions();
 
-    this.meshes = this.generateMeshes();
+    // Test
+    // meshInstructionCreator.test();
 
+    // Find animation instructions
+    // const instructionMaxId = foldInstructions.length - 1;
+    const instructionMaxId = 6;
+    const foldInstructionsSelection = MathHelpers.indexArray(foldInstructions, [...Array(instructionMaxId + 1).keys()]);
+    [this.meshes, this.meshInstructions, this.lineInstructions, this.pointInstructions] =
+      OrigamiSolver.solveOrigami(foldInstructionsSelection);
+
+    // this.vertices = {a: [0,0,0]}; // Set placeholder. This information should come from OrigamiSolver.solveOrigami(). Grouped with the meshes?
+
+    this.vertices = {};
+
+    // Save meshes original position
     this.meshesRotation = this.meshes.map((mesh) => mesh.rotation.clone());
 
     /**
@@ -85,43 +80,8 @@ export class Origami extends THREE.Group {
     }
   }
 
-  /**
-   * Generates the vertices of the origami
-   */
-  private generateVertices(): IVertices {
-    return MathHelper.shiftPoints(
-      {
-        a: [0, 0, 0],
-        b: [0, this.height, 0],
-        c: [this.width / 2, this.height / 2, 0],
-        d: [this.width, this.height, 0],
-        e: [this.width, 0, 0]
-      },
-      -this.width / 2,
-      -this.height / 2
-    );
-  }
-
-  /**
-   * Generates meshes for each plane geometry and returns and array of meshes
-   */
-  private generateMeshes(): THREE.Mesh<PlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
-    const planeVertices = [
-      [this.vertices.a, this.vertices.b, this.vertices.c],
-      [this.vertices.c, this.vertices.d, this.vertices.b],
-      [this.vertices.a, this.vertices.e, this.vertices.d]
-    ];
-
-    return planeVertices.map((vertices) => {
-      const geometry = new PlaneGeometry(vertices, this.width, this.height);
-      const outline = new Outline(geometry);
-      const mesh = new THREE.Mesh(geometry, this.material);
-      mesh.add(outline);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-
-      return mesh;
-    });
+  private getFoldInstructions(): string[] {
+    return this.foldInstructionsText.split('\n');
   }
 
   /**
@@ -168,9 +128,13 @@ export class Origami extends THREE.Group {
     }
 
     for (const i of instruction.meshIds) {
-      this.meshes[i].position.sub(vecA);
+      this.meshes[i].translateX(vecA.x);
+      this.meshes[i].translateY(vecA.y);
+      this.meshes[i].translateZ(vecA.z);
       this.meshes[i].rotateOnWorldAxis(vec, angle);
-      this.meshes[i].position.add(vecA);
+      this.meshes[i].translateX(-vecA.x);
+      this.meshes[i].translateY(-vecA.y);
+      this.meshes[i].translateZ(-vecA.z);
     }
   }
 

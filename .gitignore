@@ -26,3 +26,7 @@ html
 *.njsproj
 *.sln
 *.sw?
+
+# test coverage
+html
+coverage

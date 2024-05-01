@@ -1,2 +1,0 @@
-[a,d] to [b,c] V
-[a,d] around [f,o] V
