@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import {
   IControllerEvent,
   IControllerStepEvent,
@@ -49,7 +50,7 @@ export class Controller {
 
     document.dispatchEvent(
       new CustomEvent<IControllerStepEvent>('controller:step', {
-        detail: { currentStep: 0, totalSteps: this.origami.meshInstructions.length },
+        detail: { currentStep: 0, totalSteps: this.origami.faceInstructions.length },
         cancelable: true
       })
     );
@@ -71,7 +72,7 @@ export class Controller {
     );
     document.dispatchEvent(
       new CustomEvent<IControllerStepEvent>('controller:step', {
-        detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
+        detail: { currentStep: this.currentStep, totalSteps: this.origami.faceInstructions.length },
         cancelable: true
       })
     );
@@ -92,7 +93,7 @@ export class Controller {
     );
     document.dispatchEvent(
       new CustomEvent<IControllerStepEvent>('controller:step', {
-        detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
+        detail: { currentStep: this.currentStep, totalSteps: this.origami.faceInstructions.length },
         cancelable: true
       })
     );

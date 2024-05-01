@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { PlaneGeometry } from '../models/plane-geometry';
 import { Outlines } from '../models/line';
 import { Points } from '../models/point';
 
@@ -7,17 +6,19 @@ export class Face extends THREE.Group {
   public indexes: { [key: string]: number };
   public pointsNames: string[];
 
-  constructor(
-    coords: number[][],
-    names: string[],
-    material: THREE.MeshStandardMaterial,
-    width: number,
-    height: number
-  ) {
+  constructor(coords: number[][], names: string[], material: THREE.MeshStandardMaterial) {
     super();
     this.name = 'Face';
 
-    const geometry = new PlaneGeometry(coords, width, height);
+    /**
+     * Shape geometry internally triangulates the face, you can check the second code example in this link
+     * https://threejs.org/docs/#api/en/core/BufferGeometry
+     * You store the vertices positions in the position array and then you have the index array
+     * that tells you how to connect the vertices to form the triangulated faces
+     */
+    const shape = new THREE.Shape(coords.map(([x, y]) => new THREE.Vector2(x, y)));
+    const geometry = new THREE.ShapeGeometry(shape);
+    geometry.computeVertexNormals();
     const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
@@ -43,7 +44,7 @@ export class Face extends THREE.Group {
       .sort();
   }
 
-  public getOutlines() {
+  public getOutlines(): Outlines {
     return this.children[this.indexes.OUTLINES];
   }
 
@@ -62,5 +63,11 @@ export class Face extends THREE.Group {
   public disableVisibility() {
     this.getOutlines().disableVisibility();
     this.getPoints().disableVisibility();
+  }
+
+  public dispose() {
+    this.children.forEach((child) => {
+      child.dispose();
+    });
   }
 }

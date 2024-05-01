@@ -43,7 +43,7 @@ $transition-time: 0.3s;
     }
   }
 
- .pagination {
+  .pagination {
     background-color: transparent;
     color: colors.$secondary-color;
     text-align: center;
@@ -51,5 +51,5 @@ $transition-time: 0.3s;
     user-select: none;
     font-size: 16px;
     font-weight: bold;
- }
+  }
 }

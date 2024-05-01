@@ -1,61 +1,15 @@
 import * as THREE from 'three';
 import { AnimationDirection } from '../../controllers/controller';
 import { Controller } from '../../controllers/controller';
-import { MathHelper } from '../../helpers/math-helper';
-import { IMeshInstruction, IVertices } from './origami-types';
-import { Face } from '../face';
+import { MathHelpers } from './math-helpers';
+import { IFaceInstruction as IFaceInstruction, IPoint } from './origami-types';
+import { OrigamiSolver } from './origami-solver';
+import foldInstructionsText from '../../../instructions/envelope.text';
 
 export class Origami extends THREE.Group {
   private clock = new THREE.Clock();
 
   private scene: THREE.Scene;
-
-  /**
-   * @todo - It should be set in the constructor
-   */
-  public meshInstructions: IMeshInstruction[] = [
-    {
-      meshIds: [0, 1],
-      axis: ['a', 'd'],
-      angle: THREE.MathUtils.degToRad(90)
-    },
-    {
-      meshIds: [2],
-      axis: ['d', 'a'],
-      angle: THREE.MathUtils.degToRad(90)
-    }
-  ];
-
-  public pointInstructions: string[][] = [
-    ['a', 'e', 'd', 'b'],
-    ['a', 'e', 'd', 'b'],
-    ['a', 'e', 'd', 'b']
-  ];
-
-  public lineInstructions: string[][][] = [
-    [
-      ['a', 'e'],
-      ['e', 'd'],
-      ['d', 'b'],
-      ['b', 'a']
-    ],
-    [
-      ['a', 'e'],
-      ['e', 'd'],
-      ['d', 'b'],
-      ['b', 'a'],
-      ['a', 'c'],
-      ['c', 'd']
-    ],
-    [
-      ['a', 'e'],
-      ['e', 'd'],
-      ['d', 'b'],
-      ['b', 'a'],
-      ['a', 'c'],
-      ['c', 'd']
-    ]
-  ];
 
   private debugOptions = {
     enablePoints: true,
@@ -68,97 +22,67 @@ export class Origami extends THREE.Group {
     })
   };
 
-  private meshes: THREE.Group[];
+  private faces: THREE.Group[];
+  public faceInstructions: IFaceInstruction[] = [];
 
-  private meshesRotation: THREE.Euler[];
+  public lineInstructions: string[][][];
 
-  private vertices: IVertices;
+  public pointInstructions: string[][];
+
+  private facesRotation: THREE.Euler[];
+
+  private vertices: IPoint;
 
   private angularSpeed = Math.PI / 2;
 
   private angleRotated = 0; // in radians
 
+  private foldInstructionsText: string;
+
+  private controller: Controller;
+
   private debug = window.debug;
 
-  /**
-   * Paper width
-   */
-  private width: number;
-
-  /**
-   * Paper height
-   */
-  private height: number;
-
-  private controller: Controller = new Controller(this, this.clock);
-
-  constructor(scene: THREE.Scene, width: number, height: number) {
+  constructor(scene: THREE.Scene) {
     super();
     this.scene = scene;
-    this.width = width;
-    this.height = height;
 
-    this.vertices = this.generateVertices();
+    // Get fold instructions
+    this.foldInstructionsText = foldInstructionsText;
+    const foldInstructions = this.getFoldInstructions();
 
-    this.meshes = this.generateMeshes();
+    // Find animation instructions
+    // const instructionMaxId = foldInstructions.length - 1;
+    const instructionMaxId = 6;
+    const foldInstructionsSelection = MathHelpers.indexArray(foldInstructions, [...Array(instructionMaxId + 1).keys()]);
+    [this.faces, this.faceInstructions, this.lineInstructions, this.pointInstructions] =
+      OrigamiSolver.solveOrigami(foldInstructionsSelection);
     this.checkPointsOutlines(0);
 
-    this.meshesRotation = this.meshes.map((mesh) => mesh.rotation.clone());
+    this.controller = new Controller(this, this.clock);
+
+    this.vertices = this.getAllPoints();
+
+    // Save faces original position
+    this.facesRotation = this.faces.map((face) => face.rotation.clone());
 
     /**
-     * Adds the meshes to the group
+     * Adds the faces to the group
      */
-    this.add(...this.meshes);
+    this.add(...this.faces);
 
     /**
-     * Adds the meshes to the scene
+     * Adds the faces to the scene
      */
-    this.scene.add(...this.meshes);
+    this.scene.add(...this.faces);
 
     if (this.debug.active) {
       this.addDebug();
     }
   }
 
-  /**
-   * Generates the vertices of the origami
-   */
-  private generateVertices(): IVertices {
-    return MathHelper.shiftPoints(
-      {
-        a: [0, 0, 0],
-        b: [0, this.height, 0],
-        c: [this.width / 2, this.height / 2, 0],
-        d: [this.width, this.height, 0],
-        e: [this.width, 0, 0]
-      },
-      -this.width / 2,
-      -this.height / 2
-    );
-  }
-
-  /**
-   * Generates meshes for each plane geometry and returns and array of meshes
-   */
-  // private generateMeshes(): THREE.Mesh<PlaneGeometry, THREE.MeshStandardMaterial, THREE.Object3DEventMap>[] {
-  private generateMeshes(): THREE.Group[] {
-    const planeVertices = [
-      [{ a: this.vertices.a }, { b: this.vertices.b }, { c: this.vertices.c }],
-      [{ c: this.vertices.c }, { d: this.vertices.d }, { b: this.vertices.b }],
-      [{ a: this.vertices.a }, { e: this.vertices.e }, { d: this.vertices.d }]
-    ];
-
-    return planeVertices.map((vertices) => {
-      const nodesName: string[] = [];
-      const nodesCoord: number[][] = [];
-      for (let index = 0; index < vertices.length; index++) {
-        const key = Object.keys(vertices[index])[0];
-        nodesName.push(key);
-        nodesCoord.push(vertices[index][key]);
-      }
-
-      return new Face(nodesCoord, nodesName, this.debugOptions.material, this.width, this.height);
-    });
+  private getFoldInstructions(): string[] {
+    return this.foldInstructionsText.split('\n');
   }
 
   /**
@@ -173,13 +97,29 @@ export class Origami extends THREE.Group {
     origamiFolder.add(this.debugOptions, 'animateOutlines');
   }
 
+  private getAllPoints() {
+    const vertices = {};
+
+    this.faces.forEach((face) => {
+      const points = face.getPoints();
+
+      points.children.forEach((point) => {
+        if (!Object.keys(vertices).includes(point.name)) {
+          vertices[point.name.toLowerCase()] = point.position;
+        }
+      });
+    });
+
+    return vertices;
+  }
+
   public checkPointsOutlines(step: number) {
-    this.meshes.forEach((mesh) => mesh.disableVisibility());
+    this.faces.forEach((face) => face.disableVisibility());
 
     const visiblePoints = this.pointInstructions[step];
     for (const pointIndex of visiblePoints) {
-      for (const mesh of this.meshes) {
-        const point = mesh.getPoint(pointIndex);
+      for (const face of this.faces) {
+        const point = face.getPoint(pointIndex);
         if (point !== undefined) {
           point.visible = true;
           break;
@@ -189,8 +129,8 @@ export class Origami extends THREE.Group {
 
     const visibleLines = this.lineInstructions[step];
     for (const lineIndex of visibleLines) {
-      for (const mesh of this.meshes) {
-        const point = mesh.getOutline(lineIndex);
+      for (const face of this.faces) {
+        const point = face.getOutline(lineIndex);
         if (point !== undefined) {
           point.visible = true;
           break;
@@ -203,7 +143,7 @@ export class Origami extends THREE.Group {
    * Plays the animation
    */
   public playAnimationStep(step: number, direction: AnimationDirection): void {
-    const instruction = this.meshInstructions[step];
+    const instruction = this.faceInstructions[step];
     const deltaTime = this.clock.getDelta();
     let angle_to_rotate = this.angularSpeed * deltaTime * this.controller.speedMultiplier;
 
@@ -219,12 +159,12 @@ export class Origami extends THREE.Group {
   }
 
   /**
-   * Rotates the meshes
+   * Rotates the faces
    * @param angle
    */
-  public rotate(angle: number, instruction: IMeshInstruction, direction: AnimationDirection): void {
-    const vecA = new THREE.Vector3(...this.vertices[instruction.axis[0]]);
-    const vecB = new THREE.Vector3(...this.vertices[instruction.axis[1]]);
+  public rotate(angle: number, instruction: IFaceInstruction, direction: AnimationDirection): void {
+    const vecA = this.vertices[instruction.axis[0]];
+    const vecB = this.vertices[instruction.axis[1]];
     const vec = new THREE.Vector3();
     vec.copy(vecB).sub(vecA).normalize();
 
@@ -233,9 +173,13 @@ export class Origami extends THREE.Group {
     }
 
     for (const i of instruction.meshIds) {
-      this.meshes[i].position.sub(vecA);
-      this.meshes[i].rotateOnWorldAxis(vec, angle);
-      this.meshes[i].position.add(vecA);
+      this.faces[i].translateX(vecA.x);
+      this.faces[i].translateY(vecA.y);
+      this.faces[i].translateZ(vecA.z);
+      this.faces[i].rotateOnWorldAxis(vec, angle);
+      this.faces[i].translateX(-vecA.x);
+      this.faces[i].translateY(-vecA.y);
+      this.faces[i].translateZ(-vecA.z);
     }
   }
 
@@ -243,7 +187,7 @@ export class Origami extends THREE.Group {
    * Resets the origami to its initial state
    */
   public resetOrigami(): void {
-    this.meshesRotation.forEach(({ x, y, z, order }, i) => this.meshes[i].rotation.set(x, y, z, order));
+    this.facesRotation.forEach(({ x, y, z, order }, i) => this.faces[i].rotation.set(x, y, z, order));
     this.angleRotated = 0;
   }
 
@@ -259,9 +203,8 @@ export class Origami extends THREE.Group {
    * These need to be disposed to avoid memory leaks
    */
   public dispose(): void {
-    this.meshes.forEach((mesh) => {
-      mesh.geometry.dispose();
-      mesh.material.dispose();
+    this.faces.forEach((face) => {
+      face.dispose();
     });
   }
 }

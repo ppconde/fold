@@ -18,7 +18,13 @@ export class Points extends THREE.Object3D {
     loader.load('fonts/helvetiker_bold.typeface.json', (font) => this.generateText(font));
   }
 
-  public onBeforeRender(_renderer, _scene, camera, _geometry, _material) {
+  public onBeforeRender(
+    _renderer: THREE.WebGLRenderer,
+    _scene: THREE.Scene,
+    camera: THREE.Camera,
+    _geometry: THREE.BufferGeometry,
+    _material: THREE.Material
+  ) {
     this.lookAt(camera.position);
   }
 
@@ -45,6 +51,7 @@ export class Points extends THREE.Object3D {
   }
 
   private generateText(font: Font) {
+    const material = new THREE.MeshBasicMaterial({ color: 0xc92027, depthTest: false });
     for (let i = 0; i < this.children.length; i += 1) {
       const text = new THREE.Mesh(
         new TextGeometry(this.names[i].toUpperCase(), {
@@ -54,8 +61,7 @@ export class Points extends THREE.Object3D {
           depth: 0.1,
           curveSegments: 10
         }),
-
-        new THREE.MeshBasicMaterial({ color: 0xc92027, depthTest: false })
+        material
       );
       text.onBeforeRender = this.onBeforeRender;
 
@@ -69,5 +75,12 @@ export class Points extends THREE.Object3D {
 
   public disableVisibility() {
     this.children.forEach((child) => (child.visible = false));
+  }
+
+  public dispose() {
+    this.children.forEach((child) => {
+      child.children[0].geometry.dispose();
+      child.children[1].geometry.dispose();
+    });
   }
 }

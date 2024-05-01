@@ -52,7 +52,7 @@ export class Outlines extends THREE.Object3D {
       pivot.position.add(halfLineLength);
       pivot.lookAt(nextVec);
       line.rotation.x = Math.PI / 2.0;
-      pivot.name = [names[i], names[(i + 1) % len]].sort();
+      pivot.userData.name = [names[i], names[(i + 1) % len]].sort();
       pivot.visible = false;
 
       this.add(pivot);
@@ -63,10 +63,16 @@ export class Outlines extends THREE.Object3D {
     if (array.length != 2) return undefined;
     array.sort();
 
-    return this.children.find((child) => child.name[0] === array[0] && child.name[1] === array[1]);
+    return this.children.find((child) => child.userData.name[0] === array[0] && child.userData.name[1] === array[1]);
   }
 
-  public disableVisibility() {
+  public disableVisibility(): void {
     this.children.forEach((child) => (child.visible = false));
+  }
+
+  public dispose(): void {
+    this.children.forEach((child) => {
+      child.geometry.dispose();
+    });
   }
 }
