@@ -382,8 +382,8 @@ export class OrigamiSolver {
     const facePointsCoords = origamiCoordinates.faces.map((face) => face.map((key) => origamiCoordinates.points[key]));
     const faceNormal = new THREE.Vector3();
     /**
-     * We make sure that the origami face will be facing up and all Z values will be 0 after applying the quaternion
-     * which means that we can create the Shape from the 2D points
+     * We make sure that the origami face will be facing the screen and all Z values will be 0
+     * after applying the quaternion which means that we can create the Shape from the 2D points
      */
     const baseNormal = new THREE.Vector3(0, 0, 1);
     return facePointsCoords.map((facePointCoords) => {
