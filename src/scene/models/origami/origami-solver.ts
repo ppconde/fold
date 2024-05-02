@@ -1,190 +1,434 @@
 import * as THREE from 'three';
-import { FoldSolver } from './fold-solver'
-import { IMeshInstruction, IParseTranslation, IParseRotation, IOrigamiCoordinates, IOrigamiMesh, IFaceRotationInstruction, IParsingInstruction, IFaceGraph } from './origami-types';
-import { OrigamiGenerator } from './origami-coordinates-generator'
-
+import { FoldSolver } from './fold-solver';
+import {
+  IMeshInstruction,
+  IParseTranslation,
+  IParseRotation,
+  IOrigamiCoordinates,
+  IOrigamiMesh,
+  IFaceRotationInstruction,
+  IParsingInstruction
+} from './origami-types';
+import { OrigamiGenerator } from './origami-coordinates-generator';
+import { MathHelpers } from './math-helpers';
 
 export class OrigamiSolver {
+  public static solveOrigami(
+    foldInstructions: string[]
+  ): [IOrigamiMesh[], IMeshInstruction[], string[][][], string[][], IOrigamiCoordinates[]] {
+    // Set parsing instructions
+    const parsingInstructions = this.setParsingInstructions();
 
-	public static solveOrigami(foldInstructions: string[]): [IOrigamiMesh[], IMeshInstruction[]] {
+    // Parse paper dimensions
+    const paperDimensionsInstruction = foldInstructions.shift() as string;
+    const [xDim, yDim] = this.parsePaperDimensions(paperDimensionsInstruction, parsingInstructions);
 
-		// Set parsing instructions
-		const parsingInstructions = this.setParsingInstructions();
+    // Set origami coordinates
+    let origamiCoordinates = OrigamiGenerator.generateOrigamiCoordinates(xDim, yDim, 0); // 8
 
-		// Parse paper dimensions
-		const paperDimensionsInstruction = foldInstructions.shift() as string;
-		const [xDim, yDim] = this.parsePaperDimensions(paperDimensionsInstruction, parsingInstructions);
+    // Set rotation reports
+    let faceRotationInstruction: IFaceRotationInstruction;
+    let faceRotationInstructions = [];
 
-		// Set origami coordinates
-		let origamiCoordinates = OrigamiGenerator.generateOrigamiCoordinates(xDim, yDim, 0);  // 8
+    const origamiCoordinatesSave: IOrigamiCoordinates[] = [];
+    const pointInstructions = [this.getOrigamiCoordinatesNodes(origamiCoordinates)];
 
-		// Set rotation reports
-		let faceRotationInstruction: IFaceRotationInstruction;
-		const faceRotationInstructions = [];
+    // Execute fold instructions
+    for (const instruction of foldInstructions) {
+      console.log(instruction);
 
-		// Execute fold instructions
-		for (const instruction of foldInstructions) {
-			// Execute fold instruction
-			[origamiCoordinates, faceRotationInstruction] = this.solveInstruction(origamiCoordinates, parsingInstructions, instruction);
+      // Execute fold instruction
+      [origamiCoordinates, faceRotationInstruction] = this.solveInstruction(
+        origamiCoordinates,
+        parsingInstructions,
+        instruction
+      );
 
-			// Save instruction used to rotate points
-			faceRotationInstructions.push(faceRotationInstruction);
-		}
+      // Save instruction used to rotate points
+      faceRotationInstructions.push(faceRotationInstruction);
 
-		// Unfold origami into original state
-		origamiCoordinates = this.unfoldOrigami(origamiCoordinates);
+      // Save origami coordinates until we don't have a way to save points with meshes
+      origamiCoordinatesSave.push(structuredClone(origamiCoordinates));
 
-		// Create face meshes and rotation instructions
-		const meshes = this.createFaceMeshes(origamiCoordinates);
-		const meshInstructions = this.createMeshInstructions(meshes, faceRotationInstructions);
-		return [meshes, meshInstructions];
-	}
+      // Save current points (these may be displayed in the animation step by step)
+      pointInstructions.push(this.getOrigamiCoordinatesNodes(origamiCoordinates));
+    }
 
-	public static setParsingInstructions(): IParsingInstruction {
-		const parsingInstructions = {
-			paperDimensions: { regex: /paper dimensions: \[(.+?)\]/, dimensions: 1 },
-			translation: { regex: /fold \[(.+?)\] to (top|bottom) of \[(.+?)\]( carry \[(.+?)\])?( pin \[(.+?)\])?/, from: 1, sense: 2, to: 3, carry: 5, pin: 7 },
-			rotation: { regex: /fold \[(.+?)\] around \[(.+?)\]( (\d+))?( carry \[(.+?)\])?( pin \[(.+?)\])?/, from: 1, axis: 2, angle: 4, carry: 6, pin: 8 },
-		};
-		return parsingInstructions;
-	}
+    // Update faces meant to rotate with faces that were created inside them meanwhile
+    faceRotationInstructions = this.updateFaceRotationInstructionFaces(origamiCoordinates, faceRotationInstructions);
 
-	public static parsePaperDimensions(paperDimensionsInstruction: string, parsingInstructions: IParsingInstruction): [number, number] {
+    // Unfold origami into original state
+    origamiCoordinates = this.unfoldOrigami(origamiCoordinates);
 
-		// Parse dimensions
-		const parseInstruction = parsingInstructions.paperDimensions;
-		const match = FoldSolver.parseInstruction(paperDimensionsInstruction, parseInstruction.regex);
-		const capturedString = match[parseInstruction.dimensions];
-		const dimensions = FoldSolver.parseMandatoryNumberArray(capturedString);
+    // Create face meshes and rotation instructions
+    const meshes = this.createFaceMeshes(origamiCoordinates);
+    const meshInstructions = this.createMeshInstructions(origamiCoordinates, faceRotationInstructions);
+    const lineInstructions = this.createLineInstructions(origamiCoordinates, faceRotationInstructions);
 
-		// Find dimensions ratio
-		let ratio;
-		if (dimensions.length === 1) {
-			ratio = dimensions[0];
-		}
-		else if (dimensions.length === 2) {
-			ratio = dimensions[0] / dimensions[1];
-		} else {
-			throw new Error('Paper dimensions were not specified correctly. They should be either a X/Y ratio (one value), or the X and Y dimensions (two values).')
-		}
+    return [meshes, meshInstructions, lineInstructions, pointInstructions, origamiCoordinatesSave];
+  }
 
-		// Make paper dimensions (1) have specified ration; (2) make specified constant area
-		const paperArea = 60;
-		const xDim = Math.sqrt(paperArea * ratio);
-		const yDim = Math.sqrt(paperArea / ratio);
+  public static getOrigamiCoordinatesNodes(origamiCoordinates: IOrigamiCoordinates) {
+    return Object.keys(origamiCoordinates.points);
+  }
 
-		return [xDim, yDim];
-	}
+  public static createLineInstructions(
+    origamiCoordinates: IOrigamiCoordinates,
+    faceRotationInstructions: IFaceRotationInstruction[]
+  ) {
+    const faces = origamiCoordinates.faces;
+    const paperLimitEdges = this.findPaperLimitEdges(faces);
+    const lineInstructions = [paperLimitEdges];
+    for (let i = 0; i < faceRotationInstructions.length; i++) {
+      const lastLineInstruction = lineInstructions[lineInstructions.length - 1];
+      const currentLineInstruction = [...lastLineInstruction];
+      const faceRotationInstruction = faceRotationInstructions[i];
+      const facesToRotate = faceRotationInstruction.faces;
+      for (const faceToRotate of facesToRotate) {
+        for (let j = 0; j < faceToRotate.length; j++) {
+          const edge = [faceToRotate[j], faceToRotate[(j + 1) % faceToRotate.length]];
+          const invertedEdge = MathHelpers.invertEdgeSense(edge);
+          for (const face of faces) {
+            if (
+              !MathHelpers.checkIfArrayContainsArray(facesToRotate, face) &&
+              MathHelpers.checkIfFaceContainsDirectionalEdge(face, invertedEdge) &&
+              !MathHelpers.checkIfArrayContainsArray(currentLineInstruction, edge)
+            ) {
+              currentLineInstruction.push(edge);
+            }
+          }
+        }
+      }
+      lineInstructions.push(currentLineInstruction);
+    }
+    return lineInstructions;
+  }
 
-	public static solveInstruction(origamiCoordinates: IOrigamiCoordinates, parsingInstructions: IParsingInstruction, instruction: string): [IOrigamiCoordinates, IFaceRotationInstruction] {
-		// Set rotation report
-		let faceRotationInstruction: IFaceRotationInstruction;
+  public static findPaperLimitEdges(faces: string[][]) {
+    const paperLimitEdges = [];
+    const edges = FoldSolver.findEdgesFromFaces(faces);
+    for (const edge of edges) {
+      const edgeFaces = FoldSolver.findFacesFromEdge(faces, edge);
+      if (edgeFaces.length === 1) {
+        paperLimitEdges.push(edge);
+      }
+    }
+    return paperLimitEdges;
+  }
 
-		// Unpack parsing instructions
-		const translation = parsingInstructions.translation;
-		const rotation = parsingInstructions.rotation;
+  public static updateFaceRotationInstructionFaces(
+    origamiCoordinates: IOrigamiCoordinates,
+    faceRotationInstructions: IFaceRotationInstruction[]
+  ) {
+    for (let i = 0; i < faceRotationInstructions.length; i++) {
+      const faces = [];
+      for (const outlineFace of faceRotationInstructions[i].faces) {
+        const [innerFaces, _] = this.findFacesInsideOutline(origamiCoordinates, outlineFace);
+        faces.push(...innerFaces);
+      }
+      faceRotationInstructions[i].faces = faces;
+    }
+    return faceRotationInstructions;
+  }
 
-		// Execute translation
-		if (this.checkIfInstructionIs(instruction, translation)) {
-			[origamiCoordinates, faceRotationInstruction] = FoldSolver.solveTranslation(origamiCoordinates, instruction, translation);
+  public static findFacesInsideOutline(origamiCoordinates: IOrigamiCoordinates, outline: string[]) {
+    const faces = origamiCoordinates.faces;
+    const outlineEdges = this.findOutlineEdges(origamiCoordinates, outline);
+    const outlineFaces = this.findOutlineFaces(faces, outlineEdges);
+    const outlineFaceIds = this.convertFacesToFaceIds(faces, outlineFaces);
+    const previousFaceIds = [...outlineFaceIds];
+    const currentFaceIds = [...outlineFaceIds];
+    while (currentFaceIds.length > 0) {
+      const currentFaceId = currentFaceIds.shift() as number;
+      const [_, neighborFaceIds] = this.findSideNeighborFaces(faces[currentFaceId], faces);
+      for (const neighborFaceId of neighborFaceIds) {
+        if (
+          !FoldSolver.checkIfFaceContainsAnyEdge(faces[neighborFaceId], outlineEdges) &&
+          !MathHelpers.checkIfArrayContainsElement(previousFaceIds, neighborFaceId)
+        ) {
+          previousFaceIds.push(neighborFaceId);
+          currentFaceIds.push(neighborFaceId);
+        }
+      }
+    }
+    return [MathHelpers.indexArray(faces, previousFaceIds), previousFaceIds];
+  }
 
-			// Execute rotation
-		} else if (this.checkIfInstructionIs(instruction, rotation)) {
-			[origamiCoordinates, faceRotationInstruction] = FoldSolver.solveRotation(origamiCoordinates, instruction, rotation);
+  public static createMeshInstructions(
+    origamiCoordinates: IOrigamiCoordinates,
+    faceRotationInstructions: IFaceRotationInstruction[]
+  ): IMeshInstruction[] {
+    const faces = origamiCoordinates.faces;
+    const meshInstructions = [];
+    for (const faceRotationInstruction of faceRotationInstructions) {
+      const rotationFaces = faceRotationInstruction.faces;
+      const axis = faceRotationInstruction.axis;
+      const angle = THREE.MathUtils.degToRad(faceRotationInstruction.angle);
+      const meshIds = [];
+      for (const rotationFace of rotationFaces) {
+        for (let i = 0; i < faces.length; i++) {
+          if (MathHelpers.checkIfArraysAreEqual(rotationFace, faces[i])) {
+            meshIds.push(i);
+          }
+        }
+      }
+      meshInstructions.push({ meshIds: meshIds, axis: axis, angle: angle });
+    }
+    return meshInstructions;
+  }
 
-			// In the case it's neither, throw an error
-		} else {
-			throw new Error('The instruction is neither a translation nor a rotation!');
-		}
-		return [origamiCoordinates, faceRotationInstruction];
-	}
+  public static createMeshInstructionsOld(
+    origamiCoordinates: IOrigamiCoordinates,
+    faceRotationInstructions: IFaceRotationInstruction[]
+  ): IMeshInstruction[] {
+    const meshInstructions = [];
+    for (const faceRotationInstruction of faceRotationInstructions) {
+      const axis = faceRotationInstruction.axis;
+      const angle = THREE.MathUtils.degToRad(faceRotationInstruction.angle);
+      const meshIds = [];
+      for (const outlineFace of faceRotationInstruction.faces) {
+        const [_, facesInsideOutlineIds] = this.findFacesInsideOutline(origamiCoordinates, outlineFace);
+        meshIds.push(...facesInsideOutlineIds);
+      }
+      meshInstructions.push({ meshIds: meshIds, axis: axis, angle: angle });
+    }
+    return meshInstructions;
+  }
 
-	public static checkIfInstructionIs(instruction: string, type: IParseTranslation | IParseRotation) {
-		return instruction.match(type.regex) !== null;
-	}
+  public static setParsingInstructions(): IParsingInstruction {
+    const parsingInstructions = {
+      paperDimensions: { regex: /paper dimensions: \[(.+?)\]/, dimensions: 1 },
+      translation: {
+        regex: /fold \[(.+?)\] to (top|bottom) of \[(.+?)\]( carry \[(.+?)\])?( pin \[(.+?)\])?/,
+        from: 1,
+        sense: 2,
+        to: 3,
+        carry: 5,
+        pin: 7
+      },
+      rotation: {
+        regex: /fold \[(.+?)\] around \[(.+?)\]( (\d+))?( carry \[(.+?)\])?( pin \[(.+?)\])?/,
+        from: 1,
+        axis: 2,
+        angle: 4,
+        carry: 6,
+        pin: 8
+      }
+    };
+    return parsingInstructions;
+  }
 
-	public static unfoldOrigami(origamiCoordinates: IOrigamiCoordinates) {
-		// Update point coordinates
-		const nodes = Object.keys(origamiCoordinates.points);
-		const xi = 0;
-		const yi = 1;
-		const zi = 2;
-		for (const node of nodes) {
-			origamiCoordinates.points[node][xi] = origamiCoordinates.pattern[node][xi];
-			origamiCoordinates.points[node][yi] = origamiCoordinates.pattern[node][yi];
-			origamiCoordinates.points[node][zi] = 0;
-		}
-		// Update face order
-		const faces = origamiCoordinates.faces;
-		for (let i = 0; i < faces.length; i++) {
-			origamiCoordinates.faceOrder[i] = {};
-		}
-		return origamiCoordinates;
-	}
+  public static parsePaperDimensions(
+    paperDimensionsInstruction: string,
+    parsingInstructions: IParsingInstruction
+  ): [number, number] {
+    // Parse dimensions
+    const parseInstruction = parsingInstructions.paperDimensions;
+    const match = FoldSolver.parseInstruction(paperDimensionsInstruction, parseInstruction.regex);
+    const capturedString = match[parseInstruction.dimensions];
+    const dimensions = FoldSolver.parseMandatoryNumberArray(capturedString);
 
-	// Use faces and pattern!:
-	// public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
-	// 	return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
-	// }
+    // Find dimensions ratio
+    let ratio;
+    if (dimensions.length === 1) {
+      ratio = dimensions[0];
+    } else if (dimensions.length === 2) {
+      ratio = dimensions[0] / dimensions[1];
+    } else {
+      throw new Error(
+        'Paper dimensions were not specified correctly. They should be either a X/Y ratio (one value), or the X and Y dimensions (two values).'
+      );
+    }
 
-	public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
-		const material = new THREE.MeshStandardMaterial({ color: 0xFF0000, side: THREE.DoubleSide });
-		const coords = origamiCoordinates.faces.map((face) => {
-			return face.reduce((acc, key) => {
-				acc.facePointsCoords.push(origamiCoordinates.points[key]);
-				acc.facePatternCoords.push(origamiCoordinates.pattern[key]);
-				return acc;
-			}, { facePointsCoords: [] as number[][], facePatternCoords: [] as number[][] })
-		});
+    // Make paper dimensions (1) have specified ration; (2) make specified constant area
+    const paperArea = 60;
+    const xDim = Math.sqrt(paperArea * ratio);
+    const yDim = Math.sqrt(paperArea / ratio);
 
+    return [xDim, yDim];
+  }
 
-		/**
-		 * Hi guys, so I have a question. I have these points and pattern, the points are the coordinates of the face
-		 * and the pattern is the coordinates of the face in the unfolded paper. I want to create a mesh from these
-		 * coordinates, but I'm not sure how to do it. I tried to use ShapeGeometry, but it didn't work. I'm not sure
-		 * if I'm doing something wrong or if I should use another approach. I would appreciate any help. Thanks!
-		 * I think I might need to convert the points to a 2D plane and then use ShapeGeometry, but I'm not sure how to
-		 */
-		return coords.map((coord) => {
-			const { facePointsCoords, facePatternCoords } = coord;
-			/**
-			* Shape geometry internally triangulates the face, you can check the second code example in this link
-			* https://threejs.org/docs/#api/en/core/BufferGeometry
-			* You store the vertices positions in the position array and then you have the index array
-			* that tells you how to connect the vertices to form the triangulated faces
-			 */
-			const pointsVec3 = facePointsCoords.map(([x, y, z]) => new THREE.Vector3(x, y, z));
-			const pointsVec2 = facePatternCoords.map(([x, y]) => new THREE.Vector2(x, y));
+  public static solveInstruction(
+    origamiCoordinates: IOrigamiCoordinates,
+    parsingInstructions: IParsingInstruction,
+    instruction: string
+  ): [IOrigamiCoordinates, IFaceRotationInstruction] {
+    // Set rotation report
+    let faceRotationInstruction: IFaceRotationInstruction;
 
-			// Create custom geometry from points
-			const customGeometry = new THREE.BufferGeometry();
-			customGeometry.setAttribute(
-				'position',
-				new THREE.BufferAttribute(new Float32Array(facePointsCoords.flat()), 3)
-			);
-			customGeometry.computeVertexNormals();
+    // Unpack parsing instructions
+    const translation = parsingInstructions.translation;
+    const rotation = parsingInstructions.rotation;
 
+    // Execute translation
+    if (this.checkIfInstructionIs(instruction, translation)) {
+      [origamiCoordinates, faceRotationInstruction] = FoldSolver.solveTranslation(
+        origamiCoordinates,
+        instruction,
+        translation
+      );
 
-			const shape = new THREE.Shape(pointsVec2);
+      // Execute rotation
+    } else if (this.checkIfInstructionIs(instruction, rotation)) {
+      [origamiCoordinates, faceRotationInstruction] = FoldSolver.solveRotation(
+        origamiCoordinates,
+        instruction,
+        rotation
+      );
 
-			/**
-			 * @todo - geometry can't triangulate and because of that we don't see a mesh right now
-			 * if we use pattern we can triangulate the face and create a mesh, but then I need to change the face
-			 * position to match the points coordinates
-			 */
-			const geometry = new THREE.ShapeGeometry(shape);
-			const newPositions = new Float32Array(face.flat());
-			// newPositions.set(face.flat());
-			const position = new THREE.BufferAttribute(newPositions, 3);
-			// geometry.setAttribute('position', position);
-			// position.needsUpdate = true;
-			geometry.computeVertexNormals();
-			const mesh = new THREE.Mesh(geometry, material);
-			return mesh;
-		});
-	}
+      // In the case it's neither, throw an error
+    } else {
+      throw new Error('The instruction is neither a translation nor a rotation!');
+    }
+    return [origamiCoordinates, faceRotationInstruction];
+  }
 
-	public static createMeshInstructions(meshes: IOrigamiMesh[], rotationReports: IFaceRotationInstruction[]): IMeshInstruction[] {
-		return [{ meshIds: [0], axis: ['e', 'f'], angle: 180 }];
-	}
+  public static checkIfInstructionIs(instruction: string, type: IParseTranslation | IParseRotation) {
+    return instruction.match(type.regex) !== null;
+  }
+
+  public static unfoldOrigami(origamiCoordinates: IOrigamiCoordinates) {
+    // Update point coordinates
+    const nodes = Object.keys(origamiCoordinates.points);
+    const xi = 0;
+    const yi = 1;
+    const zi = 2;
+    for (const node of nodes) {
+      origamiCoordinates.points[node][xi] = origamiCoordinates.pattern[node][xi];
+      origamiCoordinates.points[node][yi] = origamiCoordinates.pattern[node][yi];
+      origamiCoordinates.points[node][zi] = 0;
+    }
+    // Update face order
+    const faces = origamiCoordinates.faces;
+    for (let i = 0; i < faces.length; i++) {
+      origamiCoordinates.faceOrder[i] = {};
+    }
+    return origamiCoordinates;
+  }
+
+  public static findSideNeighborFaces(startFace: string[], faces: string[][]): [string[][], number[]] {
+    const neighborFaces = [];
+    const neighborFaceIds = [];
+    for (let i = 0; i < faces.length; i++) {
+      const face = faces[i];
+      if (!MathHelpers.checkIfArraysAreEqual(face, startFace)) {
+        const edges = FoldSolver.findEdgesFromFaces([face]);
+        for (const edge of edges) {
+          if (MathHelpers.checkIfFaceContainsEdge(startFace, edge)) {
+            neighborFaces.push(face);
+            neighborFaceIds.push(i);
+            break;
+          }
+        }
+      }
+    }
+    return [neighborFaces, neighborFaceIds];
+  }
+
+  public static findNeighborFaces(startFace: string[], faces: string[][]): [string[][], number[]] {
+    const neighborFaces = [];
+    const neighborFaceIds = [];
+    for (let i = 0; i < faces.length; i++) {
+      const face = faces[i];
+      if (
+        MathHelpers.checkIfArrayContainsAnyElement(face, startFace) &&
+        !MathHelpers.checkIfArraysAreEqual(face, startFace)
+      ) {
+        neighborFaces.push(face);
+        neighborFaceIds.push(i);
+      }
+    }
+    return [neighborFaces, neighborFaceIds];
+  }
+
+  public static findOutlineEdges(origamiCoordinates: IOrigamiCoordinates, outline: string[]) {
+    const origamiGraph = FoldSolver.convertOrigamiCoordinatesToGraph(origamiCoordinates);
+    const outlineEdges = [];
+    for (let i = 0; i < outline.length; i++) {
+      const outlineSide = [outline[i], outline[(i + 1) % outline.length]];
+      const shortestPath = FoldSolver.findShortestPath(origamiGraph, outlineSide[0], outlineSide[1]);
+      for (let j = 0; j < shortestPath.length - 1; j++) {
+        const outlineEdge = [shortestPath[j], shortestPath[j + 1]];
+        outlineEdges.push(outlineEdge);
+      }
+    }
+    return outlineEdges;
+  }
+
+  public static findOutlineFaces(faces: string[][], outlineEdges: string[][]) {
+    const outlineFaces = [];
+    for (const face of faces) {
+      for (const edge of outlineEdges) {
+        // Since a directioly edge belongs to one face only, it should not be necessary to loop through those that were already added (maybe this function performance could be optimized by removing those when added)
+        if (MathHelpers.checkIfFaceContainsDirectionalEdge(face, edge)) {
+          outlineFaces.push(face);
+          break;
+        }
+      }
+    }
+    return outlineFaces;
+  }
+
+  public static convertFacesToFaceIds(origamiFaces: string[][], faces: string[][]) {
+    const faceIds = [];
+    for (const face of faces) {
+      faceIds.push(MathHelpers.findPositionOfArrayInArray(face, origamiFaces));
+    }
+    return faceIds;
+  }
+
+  public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
+    const material = new THREE.MeshStandardMaterial({ color: 0xff0000, side: THREE.DoubleSide });
+    const coords = origamiCoordinates.faces.map((face) => {
+      return face.reduce(
+        (acc, key) => {
+          acc.facePointsCoords.push(origamiCoordinates.points[key]);
+          acc.facePatternCoords.push(origamiCoordinates.pattern[key]);
+          return acc;
+        },
+        { facePointsCoords: [] as number[][], facePatternCoords: [] as number[][] }
+      );
+    });
+
+    /**
+     * Hi guys, so I have a question. I have these points and pattern, the points are the coordinates of the face
+     * and the pattern is the coordinates of the face in the unfolded paper. I want to create a mesh from these
+     * coordinates, but I'm not sure how to do it. I tried to use ShapeGeometry, but it didn't work. I'm not sure
+     * if I'm doing something wrong or if I should use another approach. I would appreciate any help. Thanks!
+     * I think I might need to convert the points to a 2D plane and then use ShapeGeometry, but I'm not sure how to
+     */
+    return coords.map((coord) => {
+      const { facePointsCoords, facePatternCoords } = coord;
+      /**
+       * Shape geometry internally triangulates the face, you can check the second code example in this link
+       * https://threejs.org/docs/#api/en/core/BufferGeometry
+       * You store the vertices positions in the position array and then you have the index array
+       * that tells you how to connect the vertices to form the triangulated faces
+       */
+      const pointsVec3 = facePointsCoords.map(([x, y, z]) => new THREE.Vector3(x, y, z));
+      const pointsVec2 = facePatternCoords.map(([x, y]) => new THREE.Vector2(x, y));
+
+      // Create custom geometry from points
+      const customGeometry = new THREE.BufferGeometry();
+      customGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(facePointsCoords.flat()), 3));
+      customGeometry.computeVertexNormals();
+
+      const shape = new THREE.Shape(pointsVec2);
+
+      /**
+       * @todo - geometry can't triangulate and because of that we don't see a mesh right now
+       * if we use pattern we can triangulate the face and create a mesh, but then I need to change the face
+       * position to match the points coordinates
+       */
+      const geometry = new THREE.ShapeGeometry(shape);
+      const newPositions = new Float32Array(face.flat());
+      // newPositions.set(face.flat());
+      const position = new THREE.BufferAttribute(newPositions, 3);
+      // geometry.setAttribute('position', position);
+      // position.needsUpdate = true;
+      geometry.computeVertexNormals();
+      const mesh = new THREE.Mesh(geometry, material);
+      return mesh;
+    });
+  }
 }

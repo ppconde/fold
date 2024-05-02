@@ -1,0 +1,11 @@
+Model Information:
+* title:	3D Origami crane
+* source:	https://sketchfab.com/3d-models/3d-origami-crane-38fe6bfec0664af3b7660b2d18cfaf94
+* author:	JuanG3D (https://sketchfab.com/juang3d)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "3D Origami crane" (https://sketchfab.com/3d-models/3d-origami-crane-38fe6bfec0664af3b7660b2d18cfaf94) by JuanG3D (https://sketchfab.com/juang3d) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

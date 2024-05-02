@@ -42,7 +42,12 @@ export class Canvas {
    * Recursively calls render for each frame render
    */
   public render(): void {
+    // Used for checking app performance
+    window.debug.stats?.begin();
+
     requestAnimationFrame(this.render.bind(this));
     this.sceneManager.update();
+
+    window.debug.stats?.end();
   }
 }

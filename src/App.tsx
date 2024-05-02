@@ -8,6 +8,7 @@ import { cacheService } from './services/cache-service';
 import { supabaseService } from './services/db-service';
 import { IOrigami } from './types/origami-db.types';
 import useEventListener from './hooks/use-event-listener';
+import { Debug } from './helpers/debug';
 
 export const App = () => {
   const [showSideMenu, setShowSideMenu] = useState(false);
@@ -15,9 +16,9 @@ export const App = () => {
   const [loading, setLoading] = useState(true);
 
   /**
-* Adds a click event listener when there's a click on top of side menu
-* it closes the side menu when the click is outside the menu
-*/
+   * Adds a click event listener when there's a click on top of side menu
+   * it closes the side menu when the click is outside the menu
+   */
   useEventListener('click', ({ target }: Event) => {
     const element = document.querySelector('.side-menu');
     const isClickedInsideSideMenu = element !== target && element?.contains(target as Node);
@@ -44,9 +45,13 @@ export const App = () => {
       } catch (error) {
         console.error('Error initializing:', error);
       }
-    }
-
+    };
+    window.debug = new Debug();
     init();
+
+    return () => {
+      window.debug.ui?.destroy();
+    };
   }, []);
 
   /**
@@ -54,12 +59,7 @@ export const App = () => {
    */
   const renderSideMenu = () => {
     return showSideMenu ? (
-      <SideMenuComponent
-        key={menuType}
-        menuType={menuType}
-        activateSideMenu={activateSideMenu}
-        loading={loading}
-      />
+      <SideMenuComponent key={menuType} menuType={menuType} activateSideMenu={activateSideMenu} loading={loading} />
     ) : null;
   };
 

@@ -3,21 +3,16 @@ import { IOrigami } from '../types/origami-db.types';
 import { Database } from '../types/database';
 
 class SupabaseService {
-
   private client: SupabaseClient;
 
   constructor() {
-    this.client = createClient<Database>(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_KEY,
-      {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: false,
-        }
+    this.client = createClient<Database>(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        persistSession: true,
+        detectSessionInUrl: false
       }
-    );
+    });
   }
 
   /**
@@ -40,9 +35,7 @@ class SupabaseService {
    */
   public async getOrigamiImage(name: string) {
     try {
-      const { data } = this.client.storage
-        .from('images')
-        .getPublicUrl(`${name.toLowerCase()}.jpg`);
+      const { data } = this.client.storage.from('images').getPublicUrl(`${name.toLowerCase()}.jpg`);
       return data.publicUrl;
     } catch (e) {
       console.error('Error fetching origami library data: ', e);

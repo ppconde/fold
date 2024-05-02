@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { LightsManager } from './lights/lights';
 import { Origami } from './models/origami/origami';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { OrigamiTexture } from './models/origami/origami-texture';
 import { SceneObjects } from './scene-types';
-import { debug } from '../helpers/debug';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { LightsManager } from './lights/lights';
+import { OBJECT_NAMES } from './constants/object-names.constants';
 
 /**
  * Create scene, renderer, camera
@@ -26,11 +26,19 @@ export class SceneManager {
 
   private controls!: OrbitControls;
 
+  private debug = window.debug;
+
+  private debugObject = {
+    paperCrane: {
+      visible: false
+    }
+  };
+
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.screenDimensions = {
       width: this.canvas.width,
-      height: this.canvas.height,
+      height: this.canvas.height
     };
     this.init();
   }
@@ -42,8 +50,8 @@ export class SceneManager {
     this.setRenderer();
     this.setSceneObjects();
     this.setCamera();
-    if (debug.active) {
-      this.addDebugCube();
+    if (this.debug.active) {
+      this.addDebugObject();
       this.setAxisHelper();
       this.setCameraHelper();
     }
@@ -57,7 +65,7 @@ export class SceneManager {
     this.renderer = new THREE.WebGLRenderer({
       antialias: true,
       canvas: this.canvas,
-      alpha: true,
+      alpha: true
     });
     this.renderer.shadowMap.enabled = true;
     const DPR = window.devicePixelRatio ? window.devicePixelRatio : 1;
@@ -91,7 +99,7 @@ export class SceneManager {
    * Adds a debug interface for the camera
    */
   private setCameraHelper(): void {
-    const cameraFolder = debug.ui!.addFolder('Camera');
+    const cameraFolder = this.debug.ui!.addFolder('Camera');
     cameraFolder.add(this.camera.position, 'x', -50, 50, 1);
     cameraFolder.add(this.camera.position, 'y', -50, 50, 1);
     cameraFolder.add(this.camera.position, 'z', -50, 50, 1);
@@ -101,27 +109,74 @@ export class SceneManager {
    * Sets each scene object in the scene
    */
   private setSceneObjects(): void {
-    const width = 9;
-    const length = 12.5;
-    this.sceneObjects.set('LightsManager', new LightsManager(this.scene));
-    this.sceneObjects.set('Origami', new Origami(this.scene, width, length));
+    this.sceneObjects.set(OBJECT_NAMES.LIGHTS_MANAGER, new LightsManager(this.scene));
+    this.sceneObjects.set(OBJECT_NAMES.ORIGAMI, new Origami(this.scene));
   }
 
   /**
-   * Adds a debug cube to the scene
+   * Adds a debug object to the scene
    * @todo - remove when not needed
    */
-  private addDebugCube(): void {
-    const debugCube = new THREE.Mesh(
-      new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshStandardMaterial({
-        ...OrigamiTexture.loadTexture(),
-      })
-    );
-    debugCube.visible = false;
-    this.scene.add(debugCube);
-    const cubeFolder = debug.ui!.addFolder('Cube');
-    cubeFolder.add(debugCube, 'visible');
+  private addDebugObject(): void {
+    const gltfLoader = new GLTFLoader();
+    gltfLoader.load('/models/3d_origami_crane/scene.gltf', (gltf) => {
+      const paperCrane = gltf.scene.children[0].children[0].children[1] as THREE.Mesh;
+      paperCrane.name = OBJECT_NAMES.PAPER_CRANE;
+      const boundingBox = new THREE.Box3().setFromObject(paperCrane);
+      const boundingBoxSize = boundingBox.getSize(new THREE.Vector3());
+      paperCrane.geometry.scale(boundingBoxSize.x * 2, boundingBoxSize.y * 2, boundingBoxSize.z * 2);
+      paperCrane.geometry.rotateY(Math.PI * 2);
+      paperCrane.geometry.rotateX(-Math.PI * 0.5);
+      paperCrane.geometry.translate(0, 6, 0);
+      paperCrane.visible = this.debugObject.paperCrane.visible;
+      this.scene.add(paperCrane);
+
+      const wireframeGeometry = new THREE.WireframeGeometry(paperCrane.geometry);
+      const line = new THREE.LineSegments(wireframeGeometry);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (line.material as any).color = 0x181818;
+      line.visible = this.debugObject.paperCrane.visible;
+      this.scene.add(line);
+
+      paperCrane.material = new THREE.MeshStandardMaterial({
+        metalness: 0.1,
+        roughness: 0.95,
+        color: 0xfbf6ef
+      });
+
+      this.updateAllMaterials();
+
+      const paperCraneFolder = this.debug.ui!.addFolder('PaperCrane');
+      paperCraneFolder.add(paperCrane, 'visible').onChange((value: boolean) => {
+        line.visible = value;
+      });
+      paperCraneFolder
+        .add(paperCrane.position, 'x')
+        .min(-50)
+        .max(50)
+        .step(1)
+        .onChange(() => {
+          line.position.x = paperCrane.position.x;
+        });
+      paperCraneFolder
+        .add(paperCrane.position, 'y')
+        .min(-50)
+        .max(50)
+        .step(1)
+        .onChange(() => {
+          line.position.y = paperCrane.position.y;
+        });
+      paperCraneFolder
+        .add(paperCrane.position, 'z')
+        .min(-50)
+        .max(50)
+        .step(1)
+        .onChange(() => {
+          line.position.z = paperCrane.position.z;
+        });
+      paperCraneFolder.add(paperCrane.material, 'roughness').min(0).max(1).step(0.001);
+      paperCraneFolder.add(paperCrane.material, 'metalness').min(0).max(1).step(0.001);
+    });
   }
 
   /**
@@ -131,7 +186,7 @@ export class SceneManager {
     const axesHelper = new THREE.AxesHelper(5);
     axesHelper.visible = false;
     this.scene.add(axesHelper);
-    const axesFolder = debug.ui!.addFolder('Axes');
+    const axesFolder = this.debug.ui!.addFolder('Axes');
     axesFolder.add(axesHelper, 'visible');
   }
 
@@ -154,5 +209,37 @@ export class SceneManager {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height);
+  }
+
+  /**
+   * Disposes of all scene elements
+   */
+  public dispose(): void {
+    this.renderer.dispose();
+    this.controls.dispose();
+    this.scene.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        child.material.dispose();
+      }
+    });
+    /**
+     * @todo - Dispose helpers / lights / sceneObjects / etc
+     */
+  }
+
+  /**
+   * Updates all materials in the scene
+   */
+  private updateAllMaterials(): void {
+    this.scene.traverse((child) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((child as any).isMesh && (child as any).material.isMeshStandardMaterial) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (child as any).material.needsUpdate = true;
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
   }
 }
