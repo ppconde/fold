@@ -53,32 +53,6 @@ export class Origami extends THREE.Group {
     // this.vertices = {a: [0,0,0]}; // Set placeholder. This information should come from OrigamiSolver.solveOrigami(). Grouped with the meshes?
 
     this.meshInstructions = [];
-    const origamiCoordinates = {
-      points: {
-        a: [0, 0, 0],
-        b: [4, 0, 4],
-        c: [4, 4, 4],
-        d: [0, 4, 0],
-        e: [4, 0, 0],
-        f: [4, 4, 0]
-      },
-      faces: [
-        // ['a', 'e', 'f', 'd'],
-        ['e', 'b', 'c', 'f']
-      ],
-
-      pattern: {
-        a: [0, 0],
-        b: [8, 0],
-        c: [8, 4],
-        d: [0, 4],
-        e: [4, 0],
-        f: [4, 4]
-      },
-      faceOrder: { 0: {}, 1: {} }
-    };
-
-    this.meshes = OrigamiSolver.createFaceMeshes(origamiCoordinates);
 
     const instructionMaxId = 6;
     const foldInstructionsSelection = MathHelpers.indexArray(foldInstructions, [...Array(instructionMaxId + 1).keys()]);

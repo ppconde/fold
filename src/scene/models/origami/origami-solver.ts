@@ -379,55 +379,37 @@ export class OrigamiSolver {
 
   public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
     const material = new THREE.MeshStandardMaterial({ color: 0xff0000, side: THREE.DoubleSide });
-    const coords = origamiCoordinates.faces.map((face) => {
-      return face.reduce(
-        (acc, key) => {
-          acc.facePointsCoords.push(origamiCoordinates.points[key]);
-          acc.facePatternCoords.push(origamiCoordinates.pattern[key]);
-          return acc;
-        },
-        { facePointsCoords: [] as number[][], facePatternCoords: [] as number[][] }
-      );
-    });
-
+    const facePointsCoords = origamiCoordinates.faces.map((face) => face.map((key) => origamiCoordinates.points[key]));
+    const faceNormal = new THREE.Vector3();
     /**
-     * Hi guys, so I have a question. I have these points and pattern, the points are the coordinates of the face
-     * and the pattern is the coordinates of the face in the unfolded paper. I want to create a mesh from these
-     * coordinates, but I'm not sure how to do it. I tried to use ShapeGeometry, but it didn't work. I'm not sure
-     * if I'm doing something wrong or if I should use another approach. I would appreciate any help. Thanks!
-     * I think I might need to convert the points to a 2D plane and then use ShapeGeometry, but I'm not sure how to
+     * We make sure that the origami face will be facing up and all Z values will be 0 after applying the quaternion
+     * which means that we can create the Shape from the 2D points
      */
-    return coords.map((coord) => {
-      const { facePointsCoords, facePatternCoords } = coord;
+    const baseNormal = new THREE.Vector3(0, 0, 1);
+    return facePointsCoords.map((facePointCoords) => {
+      const pointsVec3 = facePointCoords.map(([x, y, z]) => new THREE.Vector3(x, y, z));
+
+      // Create a vector from the normal of the origami face
+      faceNormal.fromArray(MathHelpers.findPlaneNormalVersor(facePointCoords));
+
+      // Calculates quaternions for the rotation of the face and back to the original position
+      const quaternion = new THREE.Quaternion().setFromUnitVectors(faceNormal, baseNormal);
+      const quaternionBack = new THREE.Quaternion().setFromUnitVectors(baseNormal, faceNormal);
+
+      // Apply the rotation to the points
+      const transformedPointsVec3 = pointsVec3.map((point) => point.clone().applyQuaternion(quaternion));
+      // Z values are 0 so we can remove them and create the 2D shape
+      const transformedPointsVec2 = transformedPointsVec3.map(([x, y]) => new THREE.Vector2(x, y));
       /**
        * Shape geometry internally triangulates the face, you can check the second code example in this link
        * https://threejs.org/docs/#api/en/core/BufferGeometry
        * You store the vertices positions in the position array and then you have the index array
        * that tells you how to connect the vertices to form the triangulated faces
        */
-      const pointsVec3 = facePointsCoords.map(([x, y, z]) => new THREE.Vector3(x, y, z));
-      const pointsVec2 = facePatternCoords.map(([x, y]) => new THREE.Vector2(x, y));
-
-      // Create custom geometry from points
-      const customGeometry = new THREE.BufferGeometry();
-      customGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(facePointsCoords.flat()), 3));
-      customGeometry.computeVertexNormals();
-
-      const shape = new THREE.Shape(pointsVec2);
-
-      /**
-       * @todo - geometry can't triangulate and because of that we don't see a mesh right now
-       * if we use pattern we can triangulate the face and create a mesh, but then I need to change the face
-       * position to match the points coordinates
-       */
-      const geometry = new THREE.ShapeGeometry(shape);
-      const newPositions = new Float32Array(face.flat());
-      // newPositions.set(face.flat());
-      const position = new THREE.BufferAttribute(newPositions, 3);
-      // geometry.setAttribute('position', position);
-      // position.needsUpdate = true;
+      const geometry = new THREE.ShapeGeometry(new THREE.Shape(transformedPointsVec2));
       geometry.computeVertexNormals();
       const mesh = new THREE.Mesh(geometry, material);
+      mesh.applyQuaternion(quaternionBack);
       return mesh;
     });
   }
