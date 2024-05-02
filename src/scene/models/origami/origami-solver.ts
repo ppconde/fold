@@ -424,4 +424,5 @@ export class OrigamiSolver {
     }
     return faceIds;
   }
+
 }
