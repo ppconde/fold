@@ -20,7 +20,7 @@
     "**/*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.42.7",
+    "@supabase/supabase-js": "^2.43.2",
     "gsap": "^3.12.3",
     "lil-gui": "^0.19.1",
     "react": "^18.3.1",
@@ -31,12 +31,12 @@
   },
   "devDependencies": {
     "@types/node": "^20.12.11",
-    "@types/react": "^18.3.1",
+    "@types/react": "^18.3.2",
     "@types/react-dom": "^18.3.0",
     "@types/three": "^0.164.0",
     "@types/webgl2": "^0.0.11",
     "@typescript-eslint/eslint-plugin": "^7.7.1",
-    "@typescript-eslint/parser": "^7.7.1",
+    "@typescript-eslint/parser": "^7.9.0",
     "@vitejs/plugin-react-swc": "^3.3.2",
     "@vitest/coverage-v8": "^1.6.0",
     "@vitest/ui": "^1.6.0",
