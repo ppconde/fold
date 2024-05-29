@@ -286,7 +286,7 @@ export class OrigamiSolver {
   public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
     const material = new THREE.MeshStandardMaterial({ color: 0xff0000, side: THREE.DoubleSide, wireframe: true });
 
-    return origamiCoordinates.faces.map(face => {
+    return origamiCoordinates.faces.map((face) => {
       const vertices: number[] = [];
       const indices: number[] = [];
 
@@ -329,30 +329,6 @@ export class OrigamiSolver {
     }
     return origamiCoordinates;
   }
-
-  // Use faces and pattern!:
-  // public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
-  // 	return [new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ color: 0xFF0000 }))];
-  // }
-
-  // public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
-  //   const material = new THREE.MeshStandardMaterial({ color: 0xff0000, side: THREE.DoubleSide, wireframe: true });
-  //   const facePoints = origamiCoordinates.faces.map((face) => face.map((point) => origamiCoordinates.pattern[point]));
-
-  //   return facePoints.map((face) => {
-  //     /**
-  //      * Shape geometry internally triangulates the face, you can check the second code example in this link
-  //      * https://threejs.org/docs/#api/en/core/BufferGeometry
-  //      * You store the vertices positions in the position array and then you have the index array
-  //      * that tells you how to connect the vertices to form the triangulated faces
-  //      */
-  //     const shape = new THREE.Shape(face.map(([x, y]) => new THREE.Vector2(x, y)));
-  //     const geometry = new THREE.ShapeGeometry(shape);
-  //     geometry.computeVertexNormals();
-
-  //     return new THREE.Mesh(geometry, material);
-  //   });
-  // }
 
   public static findSideNeighborFaces(startFace: string[], faces: string[][]): [string[][], number[]] {
     const neighborFaces = [];
@@ -424,5 +400,4 @@ export class OrigamiSolver {
     }
     return faceIds;
   }
-
 }

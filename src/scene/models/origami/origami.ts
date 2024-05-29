@@ -50,8 +50,6 @@ export class Origami extends THREE.Group {
 
     this.meshInstructions = [];
 
-    // Find animation instructions
-    // const instructionMaxId = foldInstructions.length - 1;
     const instructionMaxId = 6;
     const foldInstructionsSelection = MathHelpers.indexArray(foldInstructions, [...Array(instructionMaxId + 1).keys()]);
     [this.meshes, this.meshInstructions, this.lineInstructions, this.pointInstructions] =
@@ -67,9 +65,21 @@ export class Origami extends THREE.Group {
     this.meshInstructions = [];
     // Exemplo de input 3
     const origamiCoordinates = {
-      points: { 'a': [0, 0, 0], 'b': [2, 0, 0], 'c': [2, 2, 0], 'd': [1, 2, 0], 'e': [1, 1, 0], 'f': [0, 1, 0], 'g': [2, 0, 2], 'h': [2, 2, 2] },
-      faces: [['a', 'b', 'c', 'd', 'e', 'f'], ['b', 'g', 'h', 'c']],
-      pattern: { 'a': [0, 0], 'b': [2, 0], 'c': [2, 2], 'd': [1, 2], 'e': [1, 1], 'f': [0, 1], 'g': [4, 0], 'h': [4, 2] },
+      points: {
+        a: [0, 0, 0],
+        b: [2, 0, 0],
+        c: [2, 2, 0],
+        d: [1, 2, 0],
+        e: [1, 1, 0],
+        f: [0, 1, 0],
+        g: [2, 0, 2],
+        h: [2, 2, 2]
+      },
+      faces: [
+        ['a', 'b', 'c', 'd', 'e', 'f'],
+        ['b', 'g', 'h', 'c']
+      ],
+      pattern: { a: [0, 0], b: [2, 0], c: [2, 2], d: [1, 2], e: [1, 1], f: [0, 1], g: [4, 0], h: [4, 2] },
       faceOrder: { 0: {}, 1: {} }
     };
 
