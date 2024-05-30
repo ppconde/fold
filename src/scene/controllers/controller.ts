@@ -50,7 +50,7 @@ export class Controller {
 
     document.dispatchEvent(
       new CustomEvent<IControllerStepEvent>('controller:step', {
-        detail: { currentStep: 0, totalSteps: this.origami.meshInstructions.length },
+        detail: { currentStep: 0, totalSteps: this.origami.faceInstructions.length },
         cancelable: true
       })
     );
@@ -63,6 +63,7 @@ export class Controller {
     this.clock.stop();
     this.currentState = ControllerState.Finished;
     this.currentStep += direction === AnimationDirection.Reverse ? -1 : 1;
+    this.origami.checkPointsOutlines(this.currentStep);
     document.dispatchEvent(
       new CustomEvent('controller:pause', {
         detail: { value: false, direction: direction },
@@ -71,7 +72,7 @@ export class Controller {
     );
     document.dispatchEvent(
       new CustomEvent<IControllerStepEvent>('controller:step', {
-        detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
+        detail: { currentStep: this.currentStep, totalSteps: this.origami.faceInstructions.length },
         cancelable: true
       })
     );
@@ -83,6 +84,7 @@ export class Controller {
   private resetAnimation(): void {
     this.currentState = ControllerState.Stopped;
     this.currentStep = Controller.INITIAL_STEP;
+    this.origami.checkPointsOutlines(this.currentStep);
     document.dispatchEvent(
       new CustomEvent<IControllerEvent>('controller:pause', {
         detail: { value: false, direction: AnimationDirection.Both },
@@ -91,7 +93,7 @@ export class Controller {
     );
     document.dispatchEvent(
       new CustomEvent<IControllerStepEvent>('controller:step', {
-        detail: { currentStep: this.currentStep, totalSteps: this.origami.meshInstructions.length },
+        detail: { currentStep: this.currentStep, totalSteps: this.origami.faceInstructions.length },
         cancelable: true
       })
     );

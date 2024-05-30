@@ -1,21 +1,22 @@
 import * as THREE from 'three';
 import { FoldSolver } from './fold-solver';
 import {
-  IMeshInstruction,
+  IFaceInstruction,
   IParseTranslation,
   IParseRotation,
   IOrigamiCoordinates,
-  IOrigamiMesh,
+  IOrigamiFace,
   IFaceRotationInstruction,
   IParsingInstruction
 } from './origami-types';
 import { OrigamiGenerator } from './origami-coordinates-generator';
 import { MathHelpers } from './math-helpers';
+import { Face } from '../face';
 
 export class OrigamiSolver {
   public static solveOrigami(
     foldInstructions: string[]
-  ): [IOrigamiMesh[], IMeshInstruction[], string[][][], string[][], IOrigamiCoordinates[]] {
+  ): [IOrigamiFace[], IFaceInstruction[], string[][][], string[][], IOrigamiCoordinates[]] {
     // Set parsing instructions
     const parsingInstructions = this.setParsingInstructions();
 
@@ -157,7 +158,7 @@ export class OrigamiSolver {
   public static createMeshInstructions(
     origamiCoordinates: IOrigamiCoordinates,
     faceRotationInstructions: IFaceRotationInstruction[]
-  ): IMeshInstruction[] {
+  ): IFaceInstruction[] {
     const faces = origamiCoordinates.faces;
     const meshInstructions = [];
     for (const faceRotationInstruction of faceRotationInstructions) {
@@ -180,7 +181,7 @@ export class OrigamiSolver {
   public static createMeshInstructionsOld(
     origamiCoordinates: IOrigamiCoordinates,
     faceRotationInstructions: IFaceRotationInstruction[]
-  ): IMeshInstruction[] {
+  ): IFaceInstruction[] {
     const meshInstructions = [];
     for (const faceRotationInstruction of faceRotationInstructions) {
       const axis = faceRotationInstruction.axis;
@@ -283,28 +284,13 @@ export class OrigamiSolver {
     return [origamiCoordinates, faceRotationInstruction];
   }
 
-  public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiMesh[] {
+  public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): Face[] {
     const material = new THREE.MeshStandardMaterial({ color: 0xff0000, side: THREE.DoubleSide, wireframe: true });
 
-    return origamiCoordinates.faces.map((face) => {
-      const vertices: number[] = [];
-      const indices: number[] = [];
+    const facePoints = origamiCoordinates.faces.map((face) => face.map((point) => origamiCoordinates.pattern[point]));
+    const faceNames = origamiCoordinates.faces.map((face) => face.map((point) => point));
 
-      face.forEach((point, idx) => {
-        const vertex = origamiCoordinates.points[point];
-        vertices.push(vertex[0], vertex[1], vertex[2]);
-        if (idx > 1) {
-          indices.push(0, idx - 1, idx);
-        }
-      });
-
-      const geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      geometry.setIndex(indices);
-      geometry.computeVertexNormals();
-
-      return new THREE.Mesh(geometry, material);
-    });
+    return facePoints.map((face, index) => new Face(origamiCoordinates, face, faceNames[index], material));
   }
 
   public static checkIfInstructionIs(instruction: string, type: IParseTranslation | IParseRotation) {

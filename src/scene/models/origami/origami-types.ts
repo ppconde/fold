@@ -1,6 +1,6 @@
-import * as THREE from 'three';
+import { Face } from '../face';
 
-export interface IMeshInstruction {
+export interface IFaceInstruction {
   meshIds: number[];
   axis: string[];
   angle: number;
@@ -12,9 +12,7 @@ export interface IFaceRotationInstruction {
   angle: number;
 }
 
-export type IVertices = {
-  [key in string]: number[];
-};
+export type IPoint<T> = Record<string, T>;
 
 export type IFace = string[];
 
@@ -63,9 +61,9 @@ export interface RotationValues {
 export type IFaceGraph = Record<number, Record<number, 1 | -1>>;
 
 export interface IOrigamiCoordinates {
-  points: IVertices;
+  points: IPoint<number[]>;
   faces: string[][];
-  pattern: IVertices;
+  pattern: IPoint<number[]>;
   faceOrder: IFaceGraph;
 }
 
@@ -78,7 +76,7 @@ export type IintersectionLine = IintersectionPoint[];
 
 export type IOrigamiGraph = Record<string, Record<string, number>>;
 
-export type IOrigamiMesh = THREE.Mesh<THREE.BufferGeometry<THREE.NormalBufferAttributes>, THREE.MeshStandardMaterial>;
+export type IOrigamiFace = Face;
 
 export interface IPlane {
   point: number[];
