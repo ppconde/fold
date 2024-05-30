@@ -290,12 +290,6 @@ export class OrigamiSolver {
     const facePoints = origamiCoordinates.faces.map((face) => face.map((point) => origamiCoordinates.pattern[point]));
     const faceNames = origamiCoordinates.faces.map((face) => face.map((point) => point));
 
-    // return origamiCoordinates.faces.map((face) => {
-    //   const vertices: number[] = [];
-    //   const indices: number[] = [];
-
-    //   // return new THREE.Mesh(geometry, material);
-    // });
     return facePoints.map((face, index) => new Face(origamiCoordinates, face, faceNames[index], material));
   }
 

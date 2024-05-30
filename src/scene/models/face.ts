@@ -14,32 +14,8 @@ export class Face extends THREE.Group {
   ) {
     super();
     this.name = 'Face';
-    const vertices: number[] = [];
-    const indices: number[] = [];
-    faceNames.forEach((point, idx) => {
-      const vertex = origamiCoordinates.points[point];
-      vertices.push(vertex[0], vertex[1], vertex[2]);
-      if (idx > 1) {
-        indices.push(0, idx - 1, idx);
-      }
-    });
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    geometry.setIndex(indices);
-    geometry.computeVertexNormals();
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.name = 'Mesh';
-
-    const outline = new Outline(face, faceNames);
-    const point = new Point(face, faceNames);
-
-    this.add(mesh);
-    this.add(outline);
-    this.add(point);
-    // if you change the order of the adds, also change the indexes bellow
+    this.createFace(origamiCoordinates, face, faceNames, material);
 
     this.pointsNames = this.getPoints()
       .children.map((mesh) => mesh.name)
@@ -65,5 +41,49 @@ export class Face extends THREE.Group {
   public disableVisibility() {
     this.getOutlines().disableVisibility();
     this.getPoints().disableVisibility();
+  }
+
+  private createFace(
+    origamiCoordinates: IOrigamiCoordinates,
+    face: number[][],
+    faceNames: string[],
+    material: THREE.MeshStandardMaterial
+  ): void {
+    const mesh = new THREE.Mesh(this.createGeometry(faceNames, origamiCoordinates), material);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
+    mesh.name = 'Mesh';
+
+    const outline = new Outline(face, faceNames);
+    const point = new Point(face, faceNames);
+
+    this.add(mesh);
+    this.add(outline);
+    this.add(point);
+  }
+
+  /**
+   * Creates the geometry for the face
+   * @param faceNames
+   * @param origamiCoordinates
+   */
+  private createGeometry(faceNames: string[], origamiCoordinates: IOrigamiCoordinates): THREE.BufferGeometry {
+    const { vertices, indices } = faceNames.reduce(
+      (acc, point, i) => {
+        acc.vertices.push(...origamiCoordinates.points[point]);
+        if (i > 1) {
+          acc.indices.push(0, i - 1, i);
+        }
+        return acc;
+      },
+      { vertices: [] as number[], indices: [] as number[] }
+    );
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+
+    return geometry;
   }
 }

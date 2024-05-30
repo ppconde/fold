@@ -64,7 +64,7 @@ export class Point extends THREE.Object3D {
   }
 
   public getPoint(name: string) {
-    return this.children.find((child) => child.name === name.toUpperCase());
+    return this.getObjectByName(name.toUpperCase());
   }
 
   public disableVisibility() {

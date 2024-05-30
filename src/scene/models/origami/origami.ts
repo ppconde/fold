@@ -24,6 +24,7 @@ export class Origami extends THREE.Group {
   };
 
   private faces: Face[];
+
   public faceInstructions: IFaceInstruction[] = [];
 
   public lineInstructions: string[][][];
