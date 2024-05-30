@@ -47,11 +47,18 @@ describe('OrigamiSolver', () => {
           new Float32Array([6, 6, 0, 9, 6, 0, 9, 0, 0, 6, 0, 0]),
           new Float32Array([9, 6, 0, 12, 6, 0, 12, 0, 0, 9, 0, 0])
         ];
+        const rotations = [
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray()
+        ];
         const result = OrigamiSolver.createFaceMeshes(origamiCoordinates);
         result.forEach((mesh, i) => {
           expect(mesh).toBeInstanceOf(THREE.Mesh);
           expect(mesh.geometry.getAttribute('position').itemSize).toEqual(3);
           expect(mesh.geometry.getAttribute('position').array).toEqual(positions[i]);
+          expect(mesh.rotation.toArray()).toEqual(rotations[i]);
         });
         expect(result.length).toBe(4);
       });
@@ -90,14 +97,19 @@ describe('OrigamiSolver', () => {
 
       it('returns an array of meshes for that shape', () => {
         const positions = [
-          new Float32Array([4, -2, 0, 2, -2, 0, 2, -4, 0, -2, -4, 0, -2, -2, 0, -4, 0, 0]),
+          new Float32Array([4, 0, 0, 2, -2, 0, 2, -4, 0, -2, -4, 0, -2, -2, 0, -4, -2, 0]),
           new Float32Array([-4, 0, 0, -2, 4, 0, 2, 4, 0, 4, 2, 0, 4, -2, 0])
+        ];
+        const rotations = [
+          new THREE.Euler(3.141592653589793, 0, 3.141592653589793, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray()
         ];
         const result = OrigamiSolver.createFaceMeshes(origamiCoordinates);
         result.forEach((mesh, i) => {
           expect(mesh).toBeInstanceOf(THREE.Mesh);
           expect(mesh.geometry.getAttribute('position').itemSize).toEqual(3);
           expect(mesh.geometry.getAttribute('position').array).toEqual(positions[i]);
+          expect(mesh.rotation.toArray()).toEqual(rotations[i]);
         });
         expect(result.length).toBe(2);
       });
@@ -133,11 +145,21 @@ describe('OrigamiSolver', () => {
         const positions = [
           new Float32Array([0, 4, 0, 1, 1, 0, 4, 0, 0, 1, -1, 0, 0, -4, 0, -1, -1, 0, -4, 0, 0, -1, 1, 0])
         ];
+        const rotations = [
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray()
+        ];
         const result = OrigamiSolver.createFaceMeshes(origamiCoordinates);
         result.forEach((mesh, i) => {
           expect(mesh).toBeInstanceOf(THREE.Mesh);
           expect(mesh.geometry.getAttribute('position').itemSize).toEqual(3);
-          expect(mesh.geometry.getAttribute('position').array).toEqual(positions[i]);
+          expect(mesh.geometry.getAttribute('position').array.map((val: number) => parseFloat(val.toFixed(2)))).toEqual(
+            positions[i]
+          );
+          expect(mesh.rotation.toArray()).toEqual(rotations[i]);
         });
         expect(result.length).toBe(1);
       });
@@ -183,16 +205,77 @@ describe('OrigamiSolver', () => {
           new Float32Array([-1, -1, 0, -4, 0, 0, -1, 1, 0]),
           new Float32Array([1, 1, 0, 1, -1, 0, -1, -1, 0, -1, 1, 0])
         ];
+        const rotations = [
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray()
+        ];
         const result = OrigamiSolver.createFaceMeshes(origamiCoordinates);
         result.forEach((mesh, i) => {
           expect(mesh).toBeInstanceOf(THREE.Mesh);
           expect(mesh.geometry.getAttribute('position').itemSize).toEqual(3);
-          expect(mesh.geometry.getAttribute('position').array).toEqual(positions[i]);
+          expect(mesh.geometry.getAttribute('position').array.map((val: number) => parseFloat(val.toFixed(2)))).toEqual(
+            positions[i]
+          );
+          expect(mesh.rotation.toArray()).toEqual(rotations[i]);
         });
         expect(result.length).toBe(5);
       });
     });
-  });
 
-  describe.todo('.createMeshInstructions');
+    describe('when we have a shape that is defined in the 3D space', () => {
+      const origamiCoordinates: IOrigamiCoordinates = {
+        points: {
+          a: [0, 0, 0],
+          b: [4, 0, 4],
+          c: [4, 4, 4],
+          d: [0, 4, 0],
+          e: [4, 0, 0],
+          f: [4, 4, 0]
+        },
+        faces: [
+          ['a', 'e', 'f', 'd'],
+          ['e', 'b', 'c', 'f']
+        ],
+        pattern: {
+          a: [0, 0],
+          b: [8, 0],
+          c: [8, 4],
+          d: [0, 4],
+          e: [4, 0],
+          f: [4, 4]
+        },
+        faceOrder: { 0: {}, 1: {} }
+      };
+
+      it('returns an array of a single mesh that represents the shape', () => {
+        const positions = [
+          new Float32Array([0, 4, 0, 4, 4, 0, 4, 0, 0, 0, 0, 0]),
+          new Float32Array([0, 4, 0, 4, 4, 0, 4, 0, 0, 0, 0, 0])
+        ];
+        const rotations = [
+          new THREE.Euler(-0, 0, -0, 'XYZ').toArray(),
+          // Approximate value of (- PI / 2)
+          new THREE.Euler(0, -1.5707963057214724, 0, 'XYZ').toArray()
+        ];
+
+        const result = OrigamiSolver.createFaceMeshes(origamiCoordinates);
+        result.forEach((mesh, i) => {
+          expect(mesh).toBeInstanceOf(THREE.Mesh);
+          expect(mesh.geometry.getAttribute('position').itemSize).toEqual(3);
+          /**
+           * Needed to round the values to 2 decimal places just to overcome
+           * the floating point precision issue when comparing the values
+           */
+          expect(mesh.geometry.getAttribute('position').array.map((val: number) => parseFloat(val.toFixed(2)))).toEqual(
+            positions[i]
+          );
+          expect(mesh.rotation.toArray()).toEqual(rotations[i]);
+        });
+        expect(result.length).toBe(2);
+      });
+    });
+  });
 });

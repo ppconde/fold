@@ -2,13 +2,13 @@ import * as THREE from 'three';
 import { Font, FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
-export class Points extends THREE.Object3D {
+export class Point extends THREE.Object3D {
   private names: string[];
   private pointRadius: number;
 
   constructor(coords: number[][], names: string[], pointRadius = 0.1) {
     super();
-    this.name = 'Points';
+    this.name = 'Point';
     this.pointRadius = pointRadius;
     this.names = names;
 
@@ -18,13 +18,7 @@ export class Points extends THREE.Object3D {
     loader.load('fonts/helvetiker_bold.typeface.json', (font) => this.generateText(font));
   }
 
-  public onBeforeRender(
-    _renderer: THREE.WebGLRenderer,
-    _scene: THREE.Scene,
-    camera: THREE.Camera,
-    _geometry: THREE.BufferGeometry,
-    _material: THREE.Material
-  ) {
+  public onBeforeRender(_renderer: THREE.WebGLRenderer, _scene: THREE.Scene, camera: THREE.Camera) {
     this.lookAt(camera.position);
   }
 
@@ -75,12 +69,5 @@ export class Points extends THREE.Object3D {
 
   public disableVisibility() {
     this.children.forEach((child) => (child.visible = false));
-  }
-
-  public dispose() {
-    this.children.forEach((child) => {
-      child.children[0].geometry.dispose();
-      child.children[1].geometry.dispose();
-    });
   }
 }

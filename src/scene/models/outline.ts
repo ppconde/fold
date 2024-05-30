@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export class Outlines extends THREE.Object3D {
+export class Outline extends THREE.Object3D {
   private lineWidth: number;
   private vertices: THREE.Vector3[] = [];
 
@@ -68,11 +68,5 @@ export class Outlines extends THREE.Object3D {
 
   public disableVisibility(): void {
     this.children.forEach((child) => (child.visible = false));
-  }
-
-  public dispose(): void {
-    this.children.forEach((child) => {
-      child.geometry.dispose();
-    });
   }
 }

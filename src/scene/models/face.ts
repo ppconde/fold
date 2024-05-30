@@ -1,58 +1,60 @@
 import * as THREE from 'three';
-import { Outlines } from '../models/line';
-import { Points } from '../models/point';
+import { Outline } from './outline';
+import { Point } from '../models/point';
+import { IOrigamiCoordinates } from './origami/origami-types';
 
 export class Face extends THREE.Group {
-  public indexes: { [key: string]: number };
   public pointsNames: string[];
 
-  constructor(coords: number[][], names: string[], material: THREE.MeshStandardMaterial) {
+  constructor(
+    origamiCoordinates: IOrigamiCoordinates,
+    face: number[][],
+    faceNames: string[],
+    material: THREE.MeshStandardMaterial
+  ) {
     super();
     this.name = 'Face';
+    const vertices: number[] = [];
+    const indices: number[] = [];
+    faceNames.forEach((point, idx) => {
+      const vertex = origamiCoordinates.points[point];
+      vertices.push(vertex[0], vertex[1], vertex[2]);
+      if (idx > 1) {
+        indices.push(0, idx - 1, idx);
+      }
+    });
 
-    /**
-     * Shape geometry internally triangulates the face, you can check the second code example in this link
-     * https://threejs.org/docs/#api/en/core/BufferGeometry
-     * You store the vertices positions in the position array and then you have the index array
-     * that tells you how to connect the vertices to form the triangulated faces
-     */
-    const shape = new THREE.Shape(coords.map(([x, y]) => new THREE.Vector2(x, y)));
-    const geometry = new THREE.ShapeGeometry(shape);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+    geometry.setIndex(indices);
     geometry.computeVertexNormals();
     const mesh = new THREE.Mesh(geometry, material);
     mesh.castShadow = true;
     mesh.receiveShadow = true;
     mesh.name = 'Mesh';
 
-    const outline = new Outlines(coords, names);
-    const point = new Points(coords, names);
+    const outline = new Outline(face, faceNames);
+    const point = new Point(face, faceNames);
 
-    {
-      this.add(mesh);
-      this.add(outline);
-      this.add(point);
-      // if you change the order of the adds, also change the indexes bellow
-      this.indexes = {
-        MESH: 0,
-        OUTLINES: 1,
-        POINTS: 2
-      };
-    }
+    this.add(mesh);
+    this.add(outline);
+    this.add(point);
+    // if you change the order of the adds, also change the indexes bellow
 
     this.pointsNames = this.getPoints()
-      .children.map((x) => x.name)
+      .children.map((mesh) => mesh.name)
       .sort();
   }
 
-  public getOutlines(): Outlines {
-    return this.children[this.indexes.OUTLINES];
+  public getOutlines(): Outline {
+    return this.getObjectByName('Outline') as Outline;
   }
 
-  public getPoints() {
-    return this.children[this.indexes.POINTS];
+  public getPoints(): Point {
+    return this.getObjectByName('Point') as Point;
   }
 
-  public getOutline(o: string) {
+  public getOutline(o: string[]) {
     return this.getOutlines().getOutline(o);
   }
 
@@ -63,11 +65,5 @@ export class Face extends THREE.Group {
   public disableVisibility() {
     this.getOutlines().disableVisibility();
     this.getPoints().disableVisibility();
-  }
-
-  public dispose() {
-    this.children.forEach((child) => {
-      child.dispose();
-    });
   }
 }

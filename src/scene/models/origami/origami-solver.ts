@@ -284,6 +284,21 @@ export class OrigamiSolver {
     return [origamiCoordinates, faceRotationInstruction];
   }
 
+  public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): Face[] {
+    const material = new THREE.MeshStandardMaterial({ color: 0xff0000, side: THREE.DoubleSide, wireframe: true });
+
+    const facePoints = origamiCoordinates.faces.map((face) => face.map((point) => origamiCoordinates.pattern[point]));
+    const faceNames = origamiCoordinates.faces.map((face) => face.map((point) => point));
+
+    // return origamiCoordinates.faces.map((face) => {
+    //   const vertices: number[] = [];
+    //   const indices: number[] = [];
+
+    //   // return new THREE.Mesh(geometry, material);
+    // });
+    return facePoints.map((face, index) => new Face(origamiCoordinates, face, faceNames[index], material));
+  }
+
   public static checkIfInstructionIs(instruction: string, type: IParseTranslation | IParseRotation) {
     return instruction.match(type.regex) !== null;
   }
@@ -305,20 +320,6 @@ export class OrigamiSolver {
       origamiCoordinates.faceOrder[i] = {};
     }
     return origamiCoordinates;
-  }
-
-  public static createFaceMeshes(origamiCoordinates: IOrigamiCoordinates): IOrigamiFace[] {
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xfbf6ef,
-      side: THREE.DoubleSide,
-      roughness: 0.95,
-      metalness: 0.1,
-      wireframe: false
-    });
-    const facePoints = origamiCoordinates.faces.map((face) => face.map((point) => origamiCoordinates.pattern[point]));
-    const faceNames = origamiCoordinates.faces.map((face) => face.map((point) => point));
-
-    return facePoints.map((face, index) => new Face(face, faceNames[index], material));
   }
 
   public static findSideNeighborFaces(startFace: string[], faces: string[][]): [string[][], number[]] {

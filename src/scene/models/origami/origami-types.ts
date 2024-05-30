@@ -1,4 +1,3 @@
-import * as THREE from 'three';
 import { Face } from '../face';
 
 export interface IFaceInstruction {
@@ -13,13 +12,7 @@ export interface IFaceRotationInstruction {
   angle: number;
 }
 
-export type IVertices = {
-  [key in string]: number[];
-};
-
-export type IPoint = {
-  [key in string]: THREE.Vector3;
-};
+export type IPoint<T> = Record<string, T>;
 
 export type IFace = string[];
 
@@ -68,9 +61,9 @@ export interface RotationValues {
 export type IFaceGraph = Record<number, Record<number, 1 | -1>>;
 
 export interface IOrigamiCoordinates {
-  points: IVertices;
+  points: IPoint<number[]>;
   faces: string[][];
-  pattern: IVertices;
+  pattern: IPoint<number[]>;
   faceOrder: IFaceGraph;
 }
 

@@ -1,5 +1,4 @@
 import {
-  IVertices,
   IPlane,
   Point,
   LineSegment,
@@ -11,7 +10,8 @@ import {
   IIntersectionEdgePoint,
   IIntersectionCornerPoint,
   IntersectionPoint,
-  Vector
+  Vector,
+  IPoint
 } from './origami-types';
 import * as THREE from 'three';
 
@@ -583,11 +583,14 @@ export class MathHelpers {
    * @param shiftX
    * @param shiftY
    */
-  public static shiftPoints(points: IVertices, shiftX: number, shiftY: number): IVertices {
-    return Object.keys(points).reduce((acc, key) => {
-      acc[key] = [points[key][0] + shiftX, points[key][1] + shiftY, 0];
-      return acc;
-    }, {} as IVertices);
+  public static shiftPoints(points: IPoint<number[]>, shiftX: number, shiftY: number): IPoint<number[]> {
+    return Object.keys(points).reduce(
+      (acc, key) => {
+        acc[key] = [points[key][0] + shiftX, points[key][1] + shiftY, 0];
+        return acc;
+      },
+      {} as IPoint<number[]>
+    );
   }
 
   public static findAngleBetweenVectors(u: number[], v: number[]) {
@@ -615,7 +618,7 @@ export class MathHelpers {
     return this.findVectorVersor(u);
   }
 
-  public static checkIfFacesAreCoplanar(points: IVertices, faceA: string[], faceB: string[]) {
+  public static checkIfFacesAreCoplanar(points: IPoint<number[]>, faceA: string[], faceB: string[]) {
     const versorA = this.findFaceNormalVersor(points, faceA);
     const versorB = this.findFaceNormalVersor(points, faceB);
     // Check if faces are parallel
@@ -632,7 +635,7 @@ export class MathHelpers {
     return false;
   }
 
-  public static findFaceNormalVersor(points: IVertices, face: string[]) {
+  public static findFaceNormalVersor(points: IPoint<number[]>, face: string[]) {
     const ABC = MathHelpers.pickThreeNonCollinearPoints(MathHelpers.indexObject(points, face));
     return MathHelpers.findPlaneNormalVersor(ABC);
   }
@@ -652,7 +655,7 @@ export class MathHelpers {
     return d > tolerance ? 1 : d < -tolerance ? -1 : 0;
   }
 
-  public static findFaceSideOfPlane(face: string[], points: IVertices, plane: IPlane) {
+  public static findFaceSideOfPlane(face: string[], points: IPoint<number[]>, plane: IPlane) {
     const nodeSides = face.map((e) => this.findPointSideOfPlane(points[e], plane));
     // const faceSide = nodeSides.every((e) => e === 1) ? 1 : nodeSides.every((e) => e === -1) ? -1 : 0;
     const faceSide = !nodeSides.some((e) => e === -1) ? 1 : !nodeSides.some((e) => e === 1) ? -1 : 0;

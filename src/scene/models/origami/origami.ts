@@ -5,6 +5,7 @@ import { MathHelpers } from './math-helpers';
 import { IFaceInstruction as IFaceInstruction, IPoint } from './origami-types';
 import { OrigamiSolver } from './origami-solver';
 import foldInstructionsText from '../../../instructions/envelope.text';
+import { Face } from '../face';
 
 export class Origami extends THREE.Group {
   private clock = new THREE.Clock();
@@ -22,7 +23,7 @@ export class Origami extends THREE.Group {
     })
   };
 
-  private faces: THREE.Group[];
+  private faces: Face[];
   public faceInstructions: IFaceInstruction[] = [];
 
   public lineInstructions: string[][][];
@@ -31,7 +32,7 @@ export class Origami extends THREE.Group {
 
   private facesRotation: THREE.Euler[];
 
-  private vertices: IPoint;
+  private points: IPoint<THREE.Vector3>;
 
   private angularSpeed = Math.PI / 2;
 
@@ -51,8 +52,6 @@ export class Origami extends THREE.Group {
     this.foldInstructionsText = foldInstructionsText;
     const foldInstructions = this.getFoldInstructions();
 
-    // Find animation instructions
-    // const instructionMaxId = foldInstructions.length - 1;
     const instructionMaxId = 6;
     const foldInstructionsSelection = MathHelpers.indexArray(foldInstructions, [...Array(instructionMaxId + 1).keys()]);
     [this.faces, this.faceInstructions, this.lineInstructions, this.pointInstructions] =
@@ -61,7 +60,7 @@ export class Origami extends THREE.Group {
 
     this.controller = new Controller(this, this.clock);
 
-    this.vertices = this.getAllPoints();
+    this.points = this.getAllPoints();
 
     // Save faces original position
     this.facesRotation = this.faces.map((face) => face.rotation.clone());
@@ -97,20 +96,24 @@ export class Origami extends THREE.Group {
     origamiFolder.add(this.debugOptions, 'animateOutlines');
   }
 
-  private getAllPoints() {
-    const vertices = {};
+  private getAllPoints(): IPoint<THREE.Vector3> {
+    const points: { [key: string]: THREE.Vector3 } = {};
 
+    // const x = this.faces.flatMap((face) => face.traverse((obj) => {
+    //   const position = obj.getObjectByName('Point')?.position;
+    //   points['Point']
+    // }));
     this.faces.forEach((face) => {
-      const points = face.getPoints();
+      const facePoints = face.getPoints();
 
-      points.children.forEach((point) => {
-        if (!Object.keys(vertices).includes(point.name)) {
-          vertices[point.name.toLowerCase()] = point.position;
+      facePoints.children.forEach((point) => {
+        if (!Object.keys(points).includes(point.name)) {
+          points[point.name.toLowerCase()] = point.position;
         }
       });
     });
 
-    return vertices;
+    return points;
   }
 
   public checkPointsOutlines(step: number) {
@@ -163,8 +166,8 @@ export class Origami extends THREE.Group {
    * @param angle
    */
   public rotate(angle: number, instruction: IFaceInstruction, direction: AnimationDirection): void {
-    const vecA = this.vertices[instruction.axis[0]];
-    const vecB = this.vertices[instruction.axis[1]];
+    const vecA = this.points[instruction.axis[0]];
+    const vecB = this.points[instruction.axis[1]];
     const vec = new THREE.Vector3();
     vec.copy(vecB).sub(vecA).normalize();
 
@@ -196,15 +199,5 @@ export class Origami extends THREE.Group {
    */
   public update(): void {
     this.controller.update();
-  }
-
-  /**
-   * Disposes both geometry and material of each mesh
-   * These need to be disposed to avoid memory leaks
-   */
-  public dispose(): void {
-    this.faces.forEach((face) => {
-      face.dispose();
-    });
   }
 }

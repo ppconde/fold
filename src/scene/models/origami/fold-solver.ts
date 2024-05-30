@@ -3,7 +3,6 @@ import {
   IParseTranslation,
   IParseRotation,
   TranslationKeys,
-  IVertices,
   TranslationValues,
   IOrigamiCoordinates,
   IPlane,
@@ -14,7 +13,8 @@ import {
   IFaceLabels,
   RotationKeys,
   IFace,
-  RotationValues
+  RotationValues,
+  IPoint
 } from './origami-types';
 
 export class FoldSolver {
@@ -107,7 +107,7 @@ export class FoldSolver {
     return [origamiCoordinates, faceRotationInstruction];
   }
 
-  public static pickRotationStartNode(points: IVertices, startNodes: string[], axisNodes: string[]) {
+  public static pickRotationStartNode(points: IPoint<number[]>, startNodes: string[], axisNodes: string[]) {
     let startNode: string;
     if (startNodes.length === 1) {
       startNode = startNodes[0];
@@ -204,7 +204,7 @@ export class FoldSolver {
     return intersectedNodes;
   }
 
-  public static findPlaneAtAxis(points: IVertices, startNodes: string[], axisNodes: string[]) {
+  public static findPlaneAtAxis(points: IPoint<number[]>, startNodes: string[], axisNodes: string[]) {
     const startNode = startNodes[0];
     const startPoint = points[startNode];
     const axisSegment = [points[axisNodes[0]], points[axisNodes[1]]];
@@ -348,7 +348,7 @@ export class FoldSolver {
   }
 
   public static findRotationVersor(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: IFace[],
     rotationAxis: string[],
     rotatedFaceIndex: number,
@@ -404,7 +404,7 @@ export class FoldSolver {
     return faceCrossesLine;
   }
 
-  public static findRotationFaceVersor(points: IVertices, face: string[], rotationAxis: string[]) {
+  public static findRotationFaceVersor(points: IPoint<number[]>, face: string[], rotationAxis: string[]) {
     const axisSegment = [points[rotationAxis[0]], points[rotationAxis[1]]];
     const faceCenterPoint = MathHelpers.findAveragePoint(MathHelpers.indexObject(points, face));
     const faceCenterPointProjection = MathHelpers.projectPointOntoLine(faceCenterPoint, axisSegment[0], axisSegment[1]);
@@ -415,7 +415,7 @@ export class FoldSolver {
   }
 
   public static checkIfRotatedFaceDirectlyOverlapsFace(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: IFace[],
     faceOrder: IFaceGraph,
     rotatedFaceId: number,
@@ -483,7 +483,7 @@ export class FoldSolver {
   }
 
   public static findFacesAboveFace(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: IFace[],
     faceOrder: IFaceGraph,
     faceId: number,
@@ -523,7 +523,7 @@ export class FoldSolver {
   }
 
   public static findFacesDirectlyAboveFace(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: IFace[],
     faceOrder: IFaceGraph,
     faceId: number,
@@ -549,7 +549,7 @@ export class FoldSolver {
     });
   }
 
-  public static findFaceAboveSide(points: IVertices, face: IFace, aboveVersor: number[]) {
+  public static findFaceAboveSide(points: IPoint<number[]>, face: IFace, aboveVersor: number[]) {
     const faceNonCollinearThreePoints = MathHelpers.pickThreeNonCollinearPoints(MathHelpers.indexObject(points, face));
     const faceNormalVersor = MathHelpers.findPlaneNormalVersor(faceNonCollinearThreePoints); // Points to face order's side 1
     const aboveSide = Math.sign(MathHelpers.dot(faceNormalVersor, aboveVersor));
@@ -904,7 +904,7 @@ export class FoldSolver {
     return [neighborFaces, neighborFaceIds];
   }
 
-  public static findFaceAxis(points: IVertices, face: string[]) {
+  public static findFaceAxis(points: IPoint<number[]>, face: string[]) {
     const ABC = MathHelpers.pickThreeNonCollinearPoints(MathHelpers.indexObject(points, face));
     const o = ABC[0];
     const n = MathHelpers.findPlaneNormalVersor(ABC);
@@ -1063,7 +1063,7 @@ export class FoldSolver {
   public static findNeighborFacesBeforeIntersectionLine(
     startFace: string[],
     faces: string[][],
-    points: IVertices,
+    points: IPoint<number[]>,
     plane: IPlane,
     planeSide: -1 | 1
   ): [string[][], number[]] {
@@ -1090,7 +1090,7 @@ export class FoldSolver {
   public static findNeighborFacesBeforePlane(
     startFace: string[],
     faces: string[][],
-    points: IVertices,
+    points: IPoint<number[]>,
     plane: IPlane,
     planeSide: -1 | 1
   ): [string[][], number[]] {
@@ -1173,7 +1173,7 @@ export class FoldSolver {
     return [newContactFaces, newContactFaceIds];
   }
 
-  public static findFaceOverSide(face: string[], points: IVertices, axis: number[][]) {
+  public static findFaceOverSide(face: string[], points: IPoint<number[]>, axis: number[][]) {
     const faceCenterPoint = MathHelpers.findAveragePoint(MathHelpers.indexObject(points, face));
     const faceNonCollinearThreePoints = MathHelpers.pickThreeNonCollinearPoints(MathHelpers.indexObject(points, face));
     const faceNormalVersor = MathHelpers.findPlaneNormalVersor(faceNonCollinearThreePoints);
@@ -1199,7 +1199,7 @@ export class FoldSolver {
   // }
 
   public static findFacesUntilPlaneThatContainNodes(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: string[][],
     nodes: string[],
     plane: IPlane
@@ -1223,7 +1223,7 @@ export class FoldSolver {
   }
 
   public static findFacesUntilPlaneThatContainNode(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: string[][],
     node: string,
     plane: IPlane,
@@ -1245,7 +1245,7 @@ export class FoldSolver {
   }
 
   public static findRotationAngle(
-    points: IVertices,
+    points: IPoint<number[]>,
     startNode: string,
     endNode: string,
     rotationAxis: number[][]
@@ -1313,7 +1313,7 @@ export class FoldSolver {
   }
 
   public static convertIntersectionLinesToPaths(
-    points: IVertices,
+    points: IPoint<number[]>,
     intersectionLines: IintersectionLine[]
   ): string[][][] {
     const intersectionPaths = [];
@@ -1338,7 +1338,7 @@ export class FoldSolver {
   }
 
   public static orientRotationAxisFromEndFace(
-    points: IVertices,
+    points: IPoint<number[]>,
     endNode: string,
     endFace: string[],
     endFaceTargetSide: 1 | -1,
@@ -1476,11 +1476,11 @@ export class FoldSolver {
 
   public static divideFace(
     face: string[],
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: string[][],
-    pattern: IVertices,
+    pattern: IPoint<number[]>,
     plane: IPlane
-  ): [string[][], IVertices, string[][], IVertices] {
+  ): [string[][], IPoint<number[]>, string[][], IPoint<number[]>] {
     points = structuredClone(points);
     pattern = structuredClone(pattern);
     face = [...face];
@@ -1517,10 +1517,10 @@ export class FoldSolver {
 
   public static addIntersectionPoints(
     face: string[],
-    points: IVertices,
-    pattern: IVertices,
+    points: IPoint<number[]>,
+    pattern: IPoint<number[]>,
     plane: IPlane
-  ): [string[], IVertices, IVertices, number[], number[]] {
+  ): [string[], IPoint<number[]>, IPoint<number[]>, number[], number[]] {
     let newFace: string[] = [];
     let intersectionPointIds: number[] = [];
     const intersectedNodes: string[] = [];
@@ -1615,7 +1615,7 @@ export class FoldSolver {
 
   public static divideFaceHelper(
     face: string[],
-    pattern: IVertices,
+    pattern: IPoint<number[]>,
     intersectionPointIds: number[],
     currentId: number,
     previousId: number,
@@ -1662,7 +1662,7 @@ export class FoldSolver {
 
   public static findNextCreaseNodeId(
     face: string[],
-    pattern: IVertices,
+    pattern: IPoint<number[]>,
     intersectionPointIds: number[],
     currentId: number,
     previousId: number
@@ -1710,7 +1710,7 @@ export class FoldSolver {
     return -1;
   }
 
-  public static createNewNodeName(points: IVertices) {
+  public static createNewNodeName(points: IPoint<number[]>) {
     const currentNodeNames = Object.keys(points).map((element) => element.charCodeAt(0));
     const newNodeName = String.fromCharCode(Math.max(...currentNodeNames) + 1);
     return newNodeName;
@@ -1718,7 +1718,11 @@ export class FoldSolver {
 
   // This only finds faces intersected twice! Faces intersected at only one vertice are not counted.
   // This is to exclude those at the extremes of the intersection line that may be folded back and hence have an unexpected normal vector.
-  public static findIntersectionLineFaces(points: IVertices, faces: string[][], intersectionLine: IintersectionLine) {
+  public static findIntersectionLineFaces(
+    points: IPoint<number[]>,
+    faces: string[][],
+    intersectionLine: IintersectionLine
+  ) {
     const intersectedFaceIds: number[] = [];
     for (let i = 0; i < intersectionLine.length - 1; i++) {
       const consecutiveEdgesIndexes = [i, i + 1];
@@ -1779,7 +1783,7 @@ export class FoldSolver {
   }
 
   public static findFirstIntersectionLine(
-    points: IVertices,
+    points: IPoint<number[]>,
     shortestPath: string[],
     intersectionLines: IintersectionLine[]
   ) {
@@ -2029,7 +2033,7 @@ export class FoldSolver {
   }
 
   public static checkIfIntersectionPointsBelongToSameFace(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: string[][],
     intersectionPoints: { edge: string[]; coord: number[] }[]
   ) {
@@ -2041,7 +2045,7 @@ export class FoldSolver {
   }
 
   public static checkIfIntersectionPointFitsToNewLine(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: string[][],
     intersectionPoints: { edge: string[]; coord: number[] }[],
     i: number,
@@ -2054,7 +2058,7 @@ export class FoldSolver {
   }
 
   public static checkIfIntersectionPointFitsToNewEdge(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: string[][],
     intersectionPoints: { edge: string[]; coord: number[] }[],
     i: number,
@@ -2071,7 +2075,7 @@ export class FoldSolver {
   }
 
   public static checkIfIntersectionPointsFormNewEdge(
-    points: IVertices,
+    points: IPoint<number[]>,
     faces: string[][],
     intersectionPoints: { edge: string[]; coord: number[] }[],
     i: number,
@@ -2104,7 +2108,7 @@ export class FoldSolver {
   }
 
   public static findIntersectionPointNeighborNodes(
-    points: IVertices,
+    points: IPoint<number[]>,
     intersectionPoint: { edge: string[]; coord: number[] }
   ) {
     const neighborNodes = [];
@@ -2122,7 +2126,7 @@ export class FoldSolver {
   }
 
   public static checkIfIntersectionPointCoincidesWithANode(
-    points: IVertices,
+    points: IPoint<number[]>,
     intersectionPoint: { edge: string[]; coord: number[] }
   ) {
     for (let i = 0; i < intersectionPoint.edge.length; i++) {
@@ -2134,7 +2138,7 @@ export class FoldSolver {
   }
 
   public static findIntersectionPointCoincidentNode(
-    points: IVertices,
+    points: IPoint<number[]>,
     intersectionPoint: { edge: string[]; coord: number[] }
   ) {
     let coincidentNode;
@@ -2357,7 +2361,11 @@ export class FoldSolver {
     return capturedString.match(regex);
   }
 
-  public static findPlaneBetweenNodes(points: IVertices, from: string[], to: string[]): [IPlane, string, string] {
+  public static findPlaneBetweenNodes(
+    points: IPoint<number[]>,
+    from: string[],
+    to: string[]
+  ): [IPlane, string, string] {
     const [startCoord, endCoord, startNode, endNode] = this.findTranslationStartAndEndCoord(points, from, to);
     const plane_vector = MathHelpers.findVectorBetweenPoints(startCoord, endCoord);
     const plane_point = MathHelpers.addVectorToPoint(startCoord, MathHelpers.multiplyArray(plane_vector, 0.5));
@@ -2367,7 +2375,7 @@ export class FoldSolver {
   }
 
   public static findTranslationStartAndEndCoord(
-    points: IVertices,
+    points: IPoint<number[]>,
     from: string[],
     to: string[]
   ): [number[], number[], string, string] {
@@ -2410,7 +2418,7 @@ export class FoldSolver {
     return [startCoord, endCoord, startNode, endNode];
   }
 
-  public static findEdgesSharedPointIndexes(points: IVertices, edge1: string[], edge2: string[]) {
+  public static findEdgesSharedPointIndexes(points: IPoint<number[]>, edge1: string[], edge2: string[]) {
     const sharedPointIndexes = [];
     for (let i = 0; i < edge1.length; i++) {
       for (let j = 0; j < edge2.length; j++) {
@@ -2422,7 +2430,7 @@ export class FoldSolver {
     return sharedPointIndexes;
   }
 
-  public static findTranslationStartAndEndCoordOld(points: IVertices, from: string[], to: string[]) {
+  public static findTranslationStartAndEndCoordOld(points: IPoint<number[]>, from: string[], to: string[]) {
     let startCoord;
     let endCoord;
     if (from.length == 1 && to.length == 1) {
