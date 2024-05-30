@@ -48,17 +48,12 @@ export class Origami extends THREE.Group {
     this.foldInstructionsText = foldInstructionsText;
     const foldInstructions = this.getFoldInstructions();
 
-    // Test
-    // meshInstructionCreator.test();
+    this.meshInstructions = [];
 
-    // Find animation instructions
-    // const instructionMaxId = foldInstructions.length - 1;
     const instructionMaxId = 6;
     const foldInstructionsSelection = MathHelpers.indexArray(foldInstructions, [...Array(instructionMaxId + 1).keys()]);
     [this.meshes, this.meshInstructions, this.lineInstructions, this.pointInstructions] =
       OrigamiSolver.solveOrigami(foldInstructionsSelection);
-
-    // this.vertices = {a: [0,0,0]}; // Set placeholder. This information should come from OrigamiSolver.solveOrigami(). Grouped with the meshes?
 
     this.vertices = {};
 
