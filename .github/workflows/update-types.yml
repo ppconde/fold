@@ -38,7 +38,7 @@ jobs:
         id: git_status
         if: success()
         run: |
-          echo "{status}=$(git status -s)" >> $GITHUB_OUTPUT
+          echo "status=$(git status -s)" >> $GITHUB_OUTPUT
       - name: Commit files
         if: ${{contains(steps.git_status.outputs.status, ' ')}}
         run: |
