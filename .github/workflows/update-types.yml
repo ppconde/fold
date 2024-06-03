@@ -36,6 +36,7 @@ jobs:
       - run: npm run update-types
       - name: check for file changes
         id: git_status
+        if: success()
         run: |
           echo "{status}=$(git status -s)" >> $GITHUB_OUTPUT
       - name: Commit files
