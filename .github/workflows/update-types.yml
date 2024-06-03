@@ -15,10 +15,6 @@ on:
           - info
           - warning
           - debug
-      tags:
-        description: 'Test scenario tags'
-        required: false
-        type: boolean
 
 jobs:
   update:
@@ -27,6 +23,9 @@ jobs:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
       PROJECT_REF: dvwjchfzwfhxuqlixomh
     steps:
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
       - uses: actions/checkout@v2
         with:
           persist-credentials: false
