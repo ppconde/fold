@@ -32,19 +32,20 @@ jobs:
         with:
           node-version: 20
       - run: npm run update-types
-      - name: check for file changes
+      - name: Check for file changes
         id: git_status
         run: |
-          echo "status=$(git status -s)" >> $GITHUB_OUTPUT
+          git_status=$(git status -s | sed 's/%/%25/g; s/\n/%0A/g; s/\r/%0D/g')
+          echo "status=${git_status}" >> $GITHUB_OUTPUT
       - name: Commit files
-        if: ${{contains(steps.git_status.outputs.status, ' ')}}
+        if: ${{ contains(steps.git_status.outputs.status, ' ') }}
         run: |
           git add src/types/database.ts
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "Update database types" -a
       - name: Push changes
-        if: ${{contains(steps.git_status.outputs.status, ' ')}}
+        if: ${{ contains(steps.git_status.outputs.status, ' ') }}
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
