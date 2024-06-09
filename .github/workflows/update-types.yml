@@ -19,13 +19,12 @@ on:
 jobs:
   update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
-      PROJECT_REF: dvwjchfzwfhxuqlixomh
+      PROJECT_REF: ${{ secrets.SUPABASE_REF_ID }}
     steps:
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
       - uses: actions/checkout@v2
         with:
           persist-credentials: false
@@ -34,19 +33,20 @@ jobs:
         with:
           node-version: 20
       - run: npm run update-types
-      - name: check for file changes
+      - name: Check for file changes
         id: git_status
         run: |
-          echo "status=$(git status -s)" >> $GITHUB_OUTPUT
+          git_status=$(git status -s | base64)
+          echo "status=${git_status}" >> $GITHUB_OUTPUT
       - name: Commit files
-        if: ${{contains(steps.git_status.outputs.status, ' ')}}
+        if: ${{ steps.git_status.outputs.status != '' }}
         run: |
           git add src/types/database.ts
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git commit -m "Update database types" -a
       - name: Push changes
-        if: ${{contains(steps.git_status.outputs.status, ' ')}}
+        if: ${{ steps.git_status.outputs.status != '' }}
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
