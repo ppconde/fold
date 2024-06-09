@@ -22,7 +22,7 @@ jobs:
       contents: write
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_TOKEN }}
-      PROJECT_REF: <your-project-id>
+      PROJECT_REF: ${{ secrets.SUPABASE_REF_ID }}
     steps:
       - uses: actions/checkout@v2
         with:
