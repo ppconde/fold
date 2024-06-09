@@ -13,7 +13,7 @@
     "build": "tsc && vite build --base=./",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "update-types": "supabase gen types typescript --project-id \"dvwjchfzwfhxuqlixomh\" > src/types/database.ts",
+    "update-types": "npx supabase gen types typescript --project-id \"dvwjchfzwfhxuqlixomh\" > src/types/database.ts",
     "prepare": "husky"
   },
   "lint-staged": {
