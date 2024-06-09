@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v2.1.5
         with:
-          node-version: 16
+          node-version: 20
       - run: npm run update-types
       - name: check for file changes
         id: git_status
