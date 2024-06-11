@@ -44,7 +44,7 @@ jobs:
           git add src/types/database.ts
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git commit -m "Update database types" -a
+          git commit -m "Update database types" || echo "No changes to commit"
       - name: Push changes
         if: ${{ steps.git_status.outputs.status != '' }}
         uses: ad-m/github-push-action@master
