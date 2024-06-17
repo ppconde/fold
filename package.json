@@ -36,7 +36,7 @@
     "@types/three": "^0.165.0",
     "@types/webgl2": "^0.0.11",
     "@typescript-eslint/eslint-plugin": "^7.13.0",
-    "@typescript-eslint/parser": "^7.12.0",
+    "@typescript-eslint/parser": "^7.13.0",
     "@vitejs/plugin-react-swc": "^3.7.0",
     "@vitest/coverage-v8": "^1.6.0",
     "@vitest/ui": "^1.6.0",
@@ -49,7 +49,7 @@
     "sass": "^1.77.4",
     "supabase": "^1.176.10",
     "typescript": "^5.4.5",
-    "vite": "^5.2.13",
+    "vite": "^5.3.1",
     "vite-plugin-plain-text": "^1.4.2",
     "vite-plugin-svgr": "^4.2.0",
     "vitest": "^1.6.0"
