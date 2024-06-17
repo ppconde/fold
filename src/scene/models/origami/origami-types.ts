@@ -1,5 +1,3 @@
-import { Face } from '../face';
-
 export interface IFaceInstruction {
   meshIds: number[];
   axis: string[];
@@ -75,8 +73,6 @@ export interface IintersectionPoint {
 export type IintersectionLine = IintersectionPoint[];
 
 export type IOrigamiGraph = Record<string, Record<string, number>>;
-
-export type IOrigamiFace = Face;
 
 export interface IPlane {
   point: number[];

@@ -20,9 +20,12 @@
     "**/*": "prettier --write --ignore-unknown"
   },
   "dependencies": {
+    "@react-three/drei": "^9.107.0",
+    "@react-three/fiber": "^8.16.8",
     "@supabase/supabase-js": "^2.43.4",
     "gsap": "^3.12.3",
     "lil-gui": "^0.19.1",
+    "r3f-perf": "^7.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stats.js": "^0.17.0",
@@ -48,6 +51,7 @@
     "prettier": "3.3.2",
     "sass": "^1.77.5",
     "supabase": "^1.176.10",
+    "tailwindcss": "^3.4.4",
     "typescript": "^5.4.5",
     "vite": "^5.3.1",
     "vite-plugin-plain-text": "^1.4.2",
