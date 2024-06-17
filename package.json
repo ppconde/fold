@@ -45,7 +45,7 @@
     "eslint-plugin-react-refresh": "^0.4.7",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.5",
-    "prettier": "3.3.1",
+    "prettier": "3.3.2",
     "sass": "^1.77.4",
     "supabase": "^1.176.10",
     "typescript": "^5.4.5",
