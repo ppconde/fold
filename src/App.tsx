@@ -91,13 +91,12 @@ export const App = () => {
   };
 
   return (
-    <main className="main">
+    <main className="w-screen h-screen">
       <HeaderComponent activateSideMenu={activateSideMenu} />
       {renderSideMenu()}
-      <Canvas>
+      <Canvas camera={{ fov: 65, aspect: 2, near: 0.1, far: 500, position: [0, 0, 20] }} shadows>
         <OrbitControls />
         <Perf />
-        <perspectiveCamera fov={65} aspect={2} near={0.1} far={500} />
         <directionalLight
           name={OBJECT_NAMES.DIRECTIONAL_LIGHT_1}
           intensity={1.8}
@@ -130,7 +129,6 @@ export const App = () => {
           fold [a] around [m, p]`}
         />
       </Canvas>
-      ,
       <ControlsComponent />
     </main>
   );
