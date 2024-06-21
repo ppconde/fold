@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import { Perf } from 'r3f-perf';
 import { ControlsComponent } from './components/controls/controls-component';
 import { HeaderComponent } from './components/header/header.component';
@@ -91,10 +91,11 @@ export const App = () => {
   };
 
   return (
-    <main className="w-screen h-screen">
+    <main className="h-screen w-screen">
       <HeaderComponent activateSideMenu={activateSideMenu} />
       {renderSideMenu()}
-      <Canvas camera={{ fov: 65, aspect: 2, near: 0.1, far: 500, position: [0, 0, 20] }} shadows>
+      <Canvas shadows>
+        <PerspectiveCamera fov={65} aspect={2} near={0.1} far={500} position={[0, 0, 10]} makeDefault />
         <OrbitControls />
         <Perf />
         <directionalLight

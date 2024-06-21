@@ -30,7 +30,12 @@
         "wix.vscode-import-cost",
         "ms-vscode.js-debug-nightly",
         "GitHub.vscode-github-actions",
-        "github.vscode-github-actions"
+        "github.vscode-github-actions",
+        "bradlc.vscode-tailwindcss",
+        "austenc.tailwind-docs",
+        "bourhaouta.tailwindshades",
+        "Zarifprogrammer.tailwind-snippets",
+        "stivo.tailwind-fold"
       ]
     }
   }
