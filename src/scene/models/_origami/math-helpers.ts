@@ -12,7 +12,7 @@ import {
   IntersectionPoint,
   Vector,
   IPoint
-} from './origami-types';
+} from './origami.types';
 import * as THREE from 'three';
 
 export class MathHelpers {

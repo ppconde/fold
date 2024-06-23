@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { AnimationDirection } from '../../controllers/controller';
 import { Controller } from '../../controllers/controller';
 import { MathHelpers } from './math-helpers';
-import { IFaceInstruction as IFaceInstruction, IPoint } from './origami-types';
+import { IFaceInstruction as IFaceInstruction, IPoint } from './origami.types';
 import { OrigamiSolver } from './origami-solver';
 import foldInstructionsText from '../../../instructions/envelope.text';
 import { Face } from '../face';

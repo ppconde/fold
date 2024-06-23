@@ -1,7 +1,7 @@
 import { Face } from '../face/face';
 import { MathHelpers } from '../_origami/math-helpers';
 import { OrigamiSolver } from '../_origami/origami-solver';
-import { OrigamiProps } from './origami.types';
+import { OrigamiProps } from '../origami/origami.types';
 
 export const Origami = (props: OrigamiProps) => {
   const { instructions } = props;

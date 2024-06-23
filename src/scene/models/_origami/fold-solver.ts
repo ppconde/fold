@@ -15,7 +15,7 @@ import {
   IFace,
   RotationValues,
   IPoint
-} from './origami-types';
+} from './origami.types';
 
 export class FoldSolver {
   public static solveTranslation(

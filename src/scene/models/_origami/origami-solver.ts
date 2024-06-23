@@ -7,7 +7,7 @@ import {
   IOrigamiCoordinates,
   IFaceRotationInstruction,
   IParsingInstruction
-} from './origami-types';
+} from './origami.types';
 import { OrigamiGenerator } from './origami-coordinates-generator';
 import { MathHelpers } from './math-helpers';
 import { Face } from '../face';
