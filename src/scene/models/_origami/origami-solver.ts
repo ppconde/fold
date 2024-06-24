@@ -5,10 +5,9 @@ import {
   IParseTranslation,
   IParseRotation,
   IOrigamiCoordinates,
-  IOrigamiFace,
   IFaceRotationInstruction,
   IParsingInstruction
-} from './origami-types';
+} from './origami.types';
 import { OrigamiGenerator } from './origami-coordinates-generator';
 import { MathHelpers } from './math-helpers';
 import { Face } from '../face';
@@ -16,7 +15,7 @@ import { Face } from '../face';
 export class OrigamiSolver {
   public static solveOrigami(
     foldInstructions: string[]
-  ): [IOrigamiFace[], IFaceInstruction[], string[][][], string[][], IOrigamiCoordinates[]] {
+  ): [IOrigamiCoordinates, IFaceInstruction[], string[][][], string[][], IOrigamiCoordinates[]] {
     // Set parsing instructions
     const parsingInstructions = this.setParsingInstructions();
 
@@ -66,7 +65,7 @@ export class OrigamiSolver {
     const meshInstructions = this.createMeshInstructions(origamiCoordinates, faceRotationInstructions);
     const lineInstructions = this.createLineInstructions(origamiCoordinates, faceRotationInstructions);
 
-    return [meshes, meshInstructions, lineInstructions, pointInstructions, origamiCoordinatesSave];
+    return [origamiCoordinates, meshInstructions, lineInstructions, pointInstructions, origamiCoordinatesSave];
   }
 
   public static getOrigamiCoordinatesNodes(origamiCoordinates: IOrigamiCoordinates) {

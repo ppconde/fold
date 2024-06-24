@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Outline } from './outline';
 import { Point } from '../models/point';
-import { IOrigamiCoordinates } from './origami/origami-types';
+import { IOrigamiCoordinates } from './_origami/origami.types';
 
 export class Face extends THREE.Group {
   public pointsNames: string[];

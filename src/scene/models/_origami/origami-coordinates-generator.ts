@@ -1,5 +1,5 @@
 import { MathHelpers } from './math-helpers';
-import { IOrigamiCoordinates } from './origami-types';
+import { IOrigamiCoordinates } from './origami.types';
 
 export class OrigamiGenerator {
   public static generateOrigamiCoordinates(xDim: number, yDim: number, i: number) {

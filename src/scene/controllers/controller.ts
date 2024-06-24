@@ -4,7 +4,7 @@ import {
   IControllerStepEvent,
   IControllerSpeedEvent
 } from '../../components/controls/controls-component';
-import { Origami } from '../models/origami/origami';
+import { Origami } from '../models/_origami/_origami';
 
 export enum ControllerState {
   Playing,

@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { Perf } from 'r3f-perf';
 import { ControlsComponent } from './components/controls/controls-component';
 import { HeaderComponent } from './components/header/header.component';
 import { SideMenuComponent } from './components/side-menu/side-menu.component';
 import { CACHE } from './constants/cache-constants';
-import { Canvas } from './scene/canvas';
 import { cacheService } from './services/cache-service';
 import { supabaseService } from './services/db-service';
 import { IOrigami } from './types/origami-db.types';
 import useEventListener from './hooks/use-event-listener';
-import { Debug } from './helpers/debug';
+import { OBJECT_NAMES } from './scene/constants/object-names.constants';
+import { Origami } from './scene/models/origami/origami';
 
 export const App = () => {
   const [showSideMenu, setShowSideMenu] = useState(false);
@@ -34,7 +37,7 @@ export const App = () => {
      * Initialize the app
      */
     const init = async () => {
-      new Canvas(document.getElementById('canvas') as HTMLCanvasElement);
+      // new Canvas(document.getElementById('canvas') as HTMLCanvasElement);
       try {
         const library = await supabaseService.getOrigamiLibrary();
         if (library.length) {
@@ -46,12 +49,12 @@ export const App = () => {
         console.error('Error initializing:', error);
       }
     };
-    window.debug = new Debug();
+    // window.debug = new Debug();
     init();
 
-    return () => {
-      window.debug.ui?.destroy();
-    };
+    // return () => {
+    //   window.debug.ui?.destroy();
+    // };
   }, []);
 
   /**
@@ -88,10 +91,45 @@ export const App = () => {
   };
 
   return (
-    <main className="main">
+    <main className="h-screen w-screen">
       <HeaderComponent activateSideMenu={activateSideMenu} />
       {renderSideMenu()}
-      <canvas id="canvas"></canvas>
+      <Canvas shadows>
+        <PerspectiveCamera fov={65} aspect={2} near={0.1} far={500} position={[0, 0, 10]} makeDefault />
+        <OrbitControls />
+        <Perf />
+        <directionalLight
+          name={OBJECT_NAMES.DIRECTIONAL_LIGHT_1}
+          intensity={1.8}
+          position={[60, 41, 45]}
+          color="white"
+          castShadow={true}
+          shadow-mapsize={[2048, 2048]}
+          shadow-bias={-0.0001}
+        />
+        <directionalLight
+          name={OBJECT_NAMES.DIRECTIONAL_LIGHT_2}
+          intensity={0.7}
+          position={[-60, -3, -87]}
+          color="white"
+          castShadow={true}
+          shadow-mapsize={[2048, 2048]}
+          shadow-bias={-0.0001}
+        />
+        <ambientLight name={OBJECT_NAMES.AMBIENT_LIGHT_1} intensity={1.5} color={0xfeffeb} />
+        <Origami
+          instructions={`paper dimensions: [1]
+          fold [c] to top of [a]
+          fold [b] to top of [d]
+          fold [b] around [a, e]
+          fold [b] to top of [e]
+          fold [d] to top of [e]
+          fold [g, f] to bottom of [c, f]
+          fold [i, j] to bottom of [c, f]
+          fold [m, p] to bottom of [n, q]
+          fold [a] around [m, p]`}
+        />
+      </Canvas>
       <ControlsComponent />
     </main>
   );

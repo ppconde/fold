@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { Origami } from './models/origami/origami';
+import { Origami } from './models/_origami/_origami';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { SceneObjects } from './scene-types';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
