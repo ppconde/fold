@@ -47,7 +47,7 @@
     "lint-staged": "^15.2.7",
     "prettier": "3.3.3",
     "sass": "^1.77.8",
-    "supabase": "^1.178.2",
+    "supabase": "^1.187.10",
     "typescript": "^5.5.4",
     "vite": "^5.3.5",
     "vite-plugin-plain-text": "^1.4.2",
