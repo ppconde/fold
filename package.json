@@ -26,14 +26,14 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "stats.js": "^0.17.0",
-    "three": "^0.167.1",
+    "three": "^0.168.0",
     "three-orbit-controls": "^82.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.4.1",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@types/three": "^0.167.2",
+    "@types/three": "^0.168.0",
     "@types/webgl2": "^0.0.11",
     "@typescript-eslint/eslint-plugin": "^8.2.0",
     "@typescript-eslint/parser": "^8.3.0",
