@@ -21,7 +21,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.46.1",
-    "gsap": "^3.12.7",
+    "gsap": "^3.13.0",
     "lil-gui": "^0.20.0",
     "react": "^19.0.0",
     "react-dom": "^19.1.0",
