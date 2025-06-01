@@ -30,7 +30,7 @@
     "three-orbit-controls": "^82.1.0"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
+    "@types/node": "^22.15.29",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.4",
     "@types/three": "^0.169.0",
