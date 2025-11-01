@@ -23,7 +23,7 @@
     "@supabase/supabase-js": "^2.56.1",
     "gsap": "^3.13.0",
     "lil-gui": "^0.19.1",
-    "react": "^19.1.1",
+    "react": "^19.2.0",
     "react-dom": "^19.1.1",
     "stats.js": "^0.17.0",
     "three": "^0.179.0",
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.6.1",
-    "@types/react": "^19.1.16",
+    "@types/react": "^19.2.2",
     "@types/react-dom": "^19.1.9",
     "@types/three": "^0.169.0",
     "@types/webgl2": "^0.0.11",
