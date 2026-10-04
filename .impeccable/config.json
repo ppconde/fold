@@ -1,0 +1,125 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "clipped-overflow-container",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/player-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:17:31.704Z",
+        "reason": "Claude: throwaway brainstorm wireframe; phone/desktop frames clip on purpose"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/player-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:17:31.736Z",
+        "reason": "Claude: throwaway brainstorm wireframe; real palette contrast handled in spec"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/player-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:17:42.262Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale; real sizes set in spec"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/player-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:17:42.297Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale; real sizes set in spec"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/player-layout-v2.html"
+        ],
+        "createdAt": "2026-10-04T18:20:12.289Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/player-layout-v2.html"
+        ],
+        "createdAt": "2026-10-04T18:20:12.321Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/player-layout-v2.html"
+        ],
+        "createdAt": "2026-10-04T18:20:12.352Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "clipped-overflow-container",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/player-layout-v2.html"
+        ],
+        "createdAt": "2026-10-04T18:20:12.390Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "tiny-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/library-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:22:18.895Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/library-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:22:18.923Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/library-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:22:18.954Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "clipped-overflow-container",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/library-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:22:18.983Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/12616-1791137812/content/library-layout.html"
+        ],
+        "createdAt": "2026-10-04T18:22:19.012Z",
+        "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      }
+    ]
+  }
+}

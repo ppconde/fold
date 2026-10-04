@@ -1,0 +1,88 @@
+<style>
+  .lb { --ivory:#f7f3ea; --beige:#e9e1d1; --ink:#2b2a28; --terra:#b8613f; --muted:#6f685f; font-family: system-ui, sans-serif; color:var(--ink); }
+  .lb .row { display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; }
+  .lb .desk { width:480px; height:300px; background:var(--ivory); border:1px solid var(--beige); position:relative; overflow:hidden; border-radius:4px; padding:14px; box-sizing:border-box; }
+  .lb .phone { width:150px; height:300px; background:var(--ivory); border:1px solid var(--beige); position:relative; overflow:hidden; border-radius:14px; padding:10px; box-sizing:border-box; }
+  .lb h4 { font-family:Georgia, serif; font-weight:normal; font-size:20px; margin:0 0 8px 34px; }
+  .lb .burger { position:absolute; left:12px; top:14px; width:24px; height:24px; border-radius:50%; background:#fff; border:1px solid var(--beige); font-size:11px; display:flex; align-items:center; justify-content:center; }
+  .lb .search { background:#fff; border:1px solid var(--beige); border-radius:999px; padding:5px 10px; font-size:11px; color:var(--muted); margin-bottom:8px; }
+  .lb .chips { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:10px; font-size:10px; }
+  .lb .chips span { border:1px solid var(--beige); border-radius:999px; padding:2px 8px; background:#fff; }
+  .lb .chips .on { background:var(--ink); color:var(--ivory); border-color:var(--ink); }
+  .lb .grid { display:grid; gap:10px; }
+  .lb .card { background:#fff; border:1px solid var(--beige); box-shadow:0 2px 6px rgba(0,0,0,.05); position:relative; font-size:10px; padding:0 0 6px; clip-path:polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%); }
+  .lb .card .img { height:56px; background:radial-gradient(circle at 50% 60%, #fffdf8, #ece4d4); display:flex; align-items:center; justify-content:center; }
+  .lb .card .tri { width:0; height:0; border-left:14px solid transparent; border-right:14px solid transparent; border-bottom:20px solid var(--terra); opacity:.8; }
+  .lb .card b { font-family:Georgia, serif; font-size:12px; font-weight:normal; display:block; padding:4px 6px 0; }
+  .lb .card .meta { padding:0 6px; color:var(--muted); }
+  .lb .side { position:absolute; left:14px; top:50px; bottom:14px; width:110px; font-size:10px; }
+  .lb .side p { margin:8px 0 3px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .lb .side div { padding:2px 0; }
+</style>
+
+<h2>Library / search</h2>
+<p class="subtitle">How people find a model. Cards show name, Japanese name, difficulty, step count. Search matches name, Japanese name and tags.</p>
+
+<div class="options lb">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Chips on top</h3>
+      <p>Search bar + one row of filter chips (category, difficulty) above a card grid. Same structure on phone, chips scroll sideways. Minimal, one column of attention.</p>
+      <div class="row">
+        <div class="desk">
+          <div class="burger">☰</div><h4>Library</h4>
+          <div class="search">Search crane, tsuru, bird…</div>
+          <div class="chips"><span class="on">All</span><span>Animals</span><span>Flowers</span><span>Objects</span><span>·</span><span>Easy</span><span>Medium</span><span>Hard</span></div>
+          <div class="grid" style="grid-template-columns:repeat(4,1fr)">
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Crane</b><div class="meta">鶴 · ●●○ · 18 steps</div></div>
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Boat</b><div class="meta">舟 · ●○○ · 9 steps</div></div>
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Kabuto</b><div class="meta">兜 · ●○○ · 11 steps</div></div>
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Frog</b><div class="meta">蛙 · ●●○ · 14 steps</div></div>
+          </div>
+        </div>
+        <div class="phone">
+          <div class="burger" style="left:8px; top:10px">☰</div><h4 style="font-size:16px; margin-left:30px">Library</h4>
+          <div class="search">Search…</div>
+          <div class="chips" style="flex-wrap:nowrap"><span class="on">All</span><span>Animals</span><span>Easy</span></div>
+          <div class="grid" style="grid-template-columns:1fr 1fr">
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Crane</b><div class="meta">●●○</div></div>
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Boat</b><div class="meta">●○○</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Filter sidebar</h3>
+      <p>Filters as a calm list on the left, grid on the right. Room for more filter types later (time, paper type). On phone, filters collapse into a "Filters" button opening a sheet.</p>
+      <div class="row">
+        <div class="desk">
+          <div class="burger">☰</div><h4>Library</h4>
+          <div class="side">
+            <div class="search" style="margin:0">Search…</div>
+            <p>Category</p><div>● All</div><div>○ Animals</div><div>○ Flowers</div><div>○ Objects</div>
+            <p>Difficulty</p><div>☐ Easy</div><div>☐ Medium</div><div>☐ Hard</div>
+          </div>
+          <div class="grid" style="position:absolute; left:136px; right:14px; top:50px; grid-template-columns:repeat(3,1fr)">
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Crane</b><div class="meta">鶴 · ●●○ · 18 steps</div></div>
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Boat</b><div class="meta">舟 · ●○○ · 9 steps</div></div>
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Kabuto</b><div class="meta">兜 · ●○○ · 11 steps</div></div>
+          </div>
+        </div>
+        <div class="phone">
+          <div class="burger" style="left:8px; top:10px">☰</div><h4 style="font-size:16px; margin-left:30px">Library</h4>
+          <div class="search">Search…</div>
+          <div class="chips"><span>⚙ Filters (2)</span></div>
+          <div class="grid" style="grid-template-columns:1fr 1fr">
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Crane</b><div class="meta">●●○</div></div>
+            <div class="card"><div class="img"><div class="tri"></div></div><b>Boat</b><div class="meta">●○○</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
