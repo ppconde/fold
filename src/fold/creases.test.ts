@@ -11,6 +11,10 @@ describe('stepCreases', () => {
     expect(stepCreases(model, 0)).toEqual({ active: [], past: [] });
   });
 
+  it('throws RangeError for a step that does not exist', () => {
+    for (const step of [3, -1, 1.5, Number.NaN]) expect(() => stepCreases(model, step)).toThrow(RangeError);
+  });
+
   it('marks the first crease active in step 1', () => {
     expect(stepCreases(model, 1)).toEqual({ active: [8, 9], past: [] });
   });

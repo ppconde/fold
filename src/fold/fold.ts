@@ -1,4 +1,5 @@
 import { Euler, Matrix4, Quaternion, Vector3 } from 'three';
+import { assertStep } from './assert-step';
 import type { Model, Vec3 } from './types';
 
 export const MAX_RENDER_ANGLE = 178;
@@ -27,7 +28,7 @@ function hinge(model: Model, e: number, g: number, angle: number): Matrix4 {
 type Tree = { order: number[]; parent: number[]; parentEdge: number[]; treeEdges: Set<number> };
 
 const trees = new WeakMap<Model, Tree>();
-// Models are treated as immutable once posed (anchors are cached); create a new Model for each edit.
+// Models from loadModel are frozen, so cached anchors stay valid; an edit must create a new Model.
 const anchors = new WeakMap<Model, Matrix4[]>();
 
 /** One canonical spanning tree per model: BFS from face 0. */
@@ -94,12 +95,6 @@ function modelRotation(model: Model, from: Vec3, to: Vec3, s: number): Matrix4 {
     .makeTranslation(centre)
     .multiply(new Matrix4().makeRotationFromQuaternion(q0.slerp(q1, s)))
     .multiply(new Matrix4().makeTranslation(centre.clone().negate()));
-}
-
-function assertStep(model: Model, step: number) {
-  if (!Number.isInteger(step) || step < 0 || step >= model.steps.length) {
-    throw new RangeError(`Step ${step} does not exist (0–${model.steps.length - 1}).`);
-  }
 }
 
 /** Corners of every face (in `model.faces` order) at progress `t` through `step`. */

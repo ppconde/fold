@@ -26,6 +26,7 @@ export function loadModel(json: unknown): Model {
     if (!Array.isArray(v) || v.length < 2 || !isNum(v[0]) || !isNum(v[1])) {
       throw new FoldError(`Vertex ${i} must have x and y numbers.`);
     }
+    if (v.length > 2 && v[2] !== 0) throw new FoldError(`Vertex ${i} is not flat (z must be 0).`);
     return [v[0], v[1]];
   });
 
@@ -46,12 +47,13 @@ export function loadModel(json: unknown): Model {
     if (!Array.isArray(f) || f.length < 3 || !f.every((v) => isIndex(v, vertices.length))) {
       throw new FoldError(`Face ${i} must list at least three existing vertices.`);
     }
-    return f as number[];
+    return [...f] as number[];
   });
 
   if (faces.length === 0) throw new FoldError('The model has no faces.');
 
   const edgeIndex = new Map(edges.map(([a, b], i) => [edgeKey(a, b), i]));
+  if (edgeIndex.size !== edges.length) throw new FoldError('Two edges join the same pair of vertices.');
   const faceEdges = faces.map((f, i) =>
     f.map((v, j) => {
       const e = edgeIndex.get(edgeKey(v, f[(j + 1) % f.length]));
@@ -103,6 +105,12 @@ export function loadModel(json: unknown): Model {
       throw new FoldError(`Step ${n} needs one fold angle per edge (${edges.length}).`);
     }
 
+    angles.forEach((a, e) => {
+      if (Math.abs(a) > 180) throw new FoldError(`Step ${n} folds edge ${e} past 180°.`);
+      const kind = { B: 'border', F: 'flat line' }[assignments[e] as string];
+      if (a !== 0 && kind) throw new FoldError(`Step ${n} folds edge ${e}, which is a ${kind}, not a crease.`);
+    });
+
     const instruction = frame['foldapp:instruction'];
     if (typeof instruction !== 'string' || !instruction.trim()) throw new FoldError(`Step ${n} has no instruction.`);
 
@@ -116,10 +124,10 @@ export function loadModel(json: unknown): Model {
       throw new FoldError(`Step ${n} rotation must be three numbers.`);
     }
 
-    steps.push({ angles, instruction: instruction.trim(), fixedFace, rotation: rotation as Vec3 });
+    steps.push({ angles: [...angles], instruction: instruction.trim(), fixedFace, rotation: [...rotation] as Vec3 });
   });
 
-  return {
+  return deepFreeze({
     title: typeof json.file_title === 'string' ? json.file_title : 'Untitled',
     paperColor: typeof json['foldapp:paperColor'] === 'string' ? json['foldapp:paperColor'] : '#B8613F',
     vertices,
@@ -131,7 +139,15 @@ export function loadModel(json: unknown): Model {
     faceCentroids,
     center,
     steps
-  };
+  });
+}
+
+function deepFreeze<T>(value: T): T {
+  if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const v of Object.values(value)) deepFreeze(v);
+  }
+  return value;
 }
 
 function assertConnected(faceCount: number, faceEdges: number[][], edgeFaces: number[][]) {

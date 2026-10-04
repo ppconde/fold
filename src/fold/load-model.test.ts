@@ -27,8 +27,26 @@ describe('loadModel', () => {
 
   it('defaults the fixed face to the face nearest the paper centre', () => {
     const json = half();
+    const v = json.vertices_coords as number[][];
+    v[4][0] = 0.3;
+    v[5][0] = 0.3;
+    delete json.file_frames[0]['foldapp:fixedFace'];
+    expect(loadModel(json).steps[1].fixedFace).toBe(1);
+  });
+
+  it('breaks a centre tie toward the first face', () => {
+    const json = half();
     delete json.file_frames[0]['foldapp:fixedFace'];
     expect(loadModel(json).steps[1].fixedFace).toBe(0);
+  });
+
+  it('does not alias the input and freezes the model', () => {
+    const json = half();
+    const model = loadModel(json);
+    expect(model.steps[1].angles).not.toBe(json.file_frames[0].edges_foldAngle);
+    expect(() => {
+      model.steps[1].angles[0] = 90;
+    }).toThrow(TypeError);
   });
 
   it('accepts 3D vertex coordinates by dropping z', () => {
@@ -42,6 +60,36 @@ describe('loadModel', () => {
     ['missing faces', (j) => ({ ...j, faces_vertices: undefined }), /faces_vertices/],
     ['bad vertex', (j) => ({ ...j, vertices_coords: [[0, 'x']] }), /Vertex 0/],
     ['edge to missing vertex', (j) => ({ ...j, edges_vertices: [[0, 99]] }), /Edge 0/],
+    ['non-flat vertex', (j) => ({ ...j, vertices_coords: [[0, 0, 5]] }), /Vertex 0 is not flat/],
+    [
+      'duplicate edge',
+      (j) => ({
+        ...j,
+        edges_vertices: [...(j.edges_vertices as number[][]), [4, 5]],
+        edges_assignment: [...(j.edges_assignment as string[]), 'V'],
+        file_frames: [{ ...j.file_frames[0], edges_foldAngle: [0, 0, 0, 0, 0, 0, 180, 0] }]
+      }),
+      /Two edges join the same pair/
+    ],
+    [
+      'angle past 180',
+      (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], edges_foldAngle: [0, 0, 0, 0, 0, 0, 200] }] }),
+      /Step 1 folds edge 6 past 180°/
+    ],
+    [
+      'angle on a border',
+      (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], edges_foldAngle: [90, 0, 0, 0, 0, 0, 180] }] }),
+      /Step 1 folds edge 0, which is a border, not a crease/
+    ],
+    [
+      'angle on a flat line',
+      (j) => ({
+        ...j,
+        edges_assignment: ['F', 'B', 'B', 'B', 'B', 'B', 'V'],
+        file_frames: [{ ...j.file_frames[0], edges_foldAngle: [90, 0, 0, 0, 0, 0, 180] }]
+      }),
+      /Step 1 folds edge 0, which is a flat line, not a crease/
+    ],
     ['no faces', (j) => ({ ...j, faces_vertices: [] }), /no faces/],
     ['zero-length edge', (j) => ({ ...j, edges_vertices: [[0, 0]] }), /Edge 0 must join two different vertices/],
     [

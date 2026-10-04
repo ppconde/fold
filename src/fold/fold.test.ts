@@ -2,10 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
 import { checkConsistency, foldedPositions } from './fold';
 import { loadModel } from './load-model';
-import type { Vec3 } from './types';
+import type { Model, Step, Vec3 } from './types';
 
 const half = () => loadModel(fixture('fold-in-half'));
 const quarters = () => loadModel(fixture('fold-in-quarters'));
+
+/** A new model with `edit` applied to a copy of each step (loaded models are frozen). */
+const withSteps = (model: Model, edit: (steps: Step[]) => Step[]): Model => ({
+  ...model,
+  steps: edit([...model.steps])
+});
 
 function expectClose(actual: Vec3, expected: Vec3, digits = 3) {
   actual.forEach((v, i) => {
@@ -63,8 +69,9 @@ describe('foldedPositions', () => {
   });
 
   it('anchors the new fixed face where the previous step left it', () => {
-    const model = quarters();
-    model.steps[2].fixedFace = 0; // hold the face that moved in step 1
+    const base = quarters();
+    // hold the face that moved in step 1
+    const model = withSteps(base, (s) => [s[0], s[1], { ...s[2], fixedFace: 0 }]);
     const endOfStep1 = foldedPositions(model, 1, 1);
     const startOfStep2 = foldedPositions(model, 2, 0);
     startOfStep2.forEach((face, f) => {
@@ -75,9 +82,10 @@ describe('foldedPositions', () => {
   });
 
   it('turns the model over with a rotation step, and keeps it turned in later steps', () => {
-    const model = half();
-    model.steps[1] = { ...model.steps[1], angles: model.steps[1].angles.map(() => 0), rotation: [0, 180, 0] };
-    model.steps.push({ ...model.steps[1], instruction: 'Look at it.' });
+    const model = withSteps(half(), (s) => {
+      const turned = { ...s[1], angles: s[1].angles.map(() => 0), rotation: [0, 180, 0] as Vec3 };
+      return [s[0], turned, { ...turned, instruction: 'Look at it.' }];
+    });
     expectClose(foldedPositions(model, 1, 1)[0][0], [1, 0, 0]);
     expectClose(foldedPositions(model, 2, 0)[0][0], [1, 0, 0]);
     expectClose(foldedPositions(model, 2, 1)[0][0], [1, 0, 0]);
@@ -96,25 +104,32 @@ describe('checkConsistency', () => {
   });
 
   it('flags folding only half of a crease line', () => {
-    const model = quarters();
-    model.steps[1].angles = model.steps[1].angles.map((a, e) => (e === 9 ? 0 : a));
+    const model = withSteps(quarters(), (s) => [
+      s[0],
+      { ...s[1], angles: s[1].angles.map((a, e) => (e === 9 ? 0 : a)) },
+      s[2]
+    ]);
     const result = checkConsistency(model, 1);
     expect(result.ok).toBe(false);
   });
 
   it('flags a half-folded second crease with mountain and valley swapped', () => {
-    const model = quarters();
-    model.steps[2].angles = model.steps[2].angles.map((a, e) => (e === 10 ? 90 : e === 11 ? 90 : a));
-    expect(checkConsistency(model, 2).ok).toBe(false);
-    model.steps[2].angles = model.steps[2].angles.map((a, e) => (e === 10 ? -90 : a));
-    expect(checkConsistency(model, 2)).toEqual({ ok: true });
+    const base = quarters();
+    const swapped = (a10: number) =>
+      withSteps(base, (s) => [
+        s[0],
+        s[1],
+        { ...s[2], angles: s[2].angles.map((a, e) => (e === 10 ? a10 : e === 11 ? 90 : a)) }
+      ]);
+    expect(checkConsistency(swapped(90), 2).ok).toBe(false);
+    expect(checkConsistency(swapped(-90), 2)).toEqual({ ok: true });
   });
 });
 
 describe('step joins', () => {
   it('joins every face exactly when the held face changes after a clamped fold', () => {
-    const model = quarters();
-    model.steps.push({ ...model.steps[2], fixedFace: 0, instruction: 'Hold the other side.' });
+    const base = quarters();
+    const model = withSteps(base, (s) => [...s, { ...s[2], fixedFace: 0, instruction: 'Hold the other side.' }]);
     const end = foldedPositions(model, 2, 1);
     const start = foldedPositions(model, 3, 0);
     end.forEach((face, f) => {
@@ -136,7 +151,13 @@ describe('step joins', () => {
     const { 'foldapp:rotation': _, ...rest } = json.file_frames[0];
     json.file_frames.push({ ...rest, 'foldapp:instruction': 'Keep it turned over.' });
     const model = loadModel(json);
+    expect(model.steps[2].rotation).toEqual([0, 180, 0]);
     const a = foldedPositions(model, 1, 1);
+    for (const [f, face] of foldedPositions(model, 2, 1).entries()) {
+      face.forEach((corner, c) => {
+        expectClose(corner, a[f][c], 9);
+      });
+    }
     foldedPositions(model, 2, 0).forEach((face, f) => {
       face.forEach((corner, c) => {
         expectClose(corner, a[f][c], 9);

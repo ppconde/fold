@@ -1,9 +1,11 @@
+import { assertStep } from './assert-step';
 import type { Edge, Model, Vec2 } from './types';
 
 const EPSILON = 1e-9;
 
 export function stepCreases(model: Model, step: number): { active: number[]; past: number[] } {
-  if (step <= 0) return { active: [], past: [] };
+  assertStep(model, step);
+  if (step === 0) return { active: [], past: [] };
   const prev = model.steps[step - 1].angles;
   const active = model.steps[step].angles.flatMap((a, e) => (a !== prev[e] ? [e] : []));
   const isActive = new Set(active);
