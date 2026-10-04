@@ -5,6 +5,8 @@
   // Preview URLs (one per PR build) only exist on workers.dev, so keep it enabled alongside fold.ppconde.com.
   "workers_dev": true,
   "preview_urls": true,
+  // Required by `wrangler preview`, which Workers Builds runs for every branch and pull request.
+  "previews": {},
   "assets": {
     "directory": "./dist",
     // Serve index.html for unknown paths so client-side routes like /library work on reload.
