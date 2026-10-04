@@ -5,6 +5,13 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -19,6 +26,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm biome ci
       - run: pnpm vitest run
+      - run: pnpm build
       # ponytail: cache ~/.cache/ms-playwright keyed on the Playwright version if CI time starts to hurt.
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e

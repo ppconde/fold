@@ -12,7 +12,9 @@ export default defineConfig({
     { name: 'phone', use: { ...devices['Pixel 7'] } }
   ],
   webServer: {
-    command: 'pnpm build && pnpm preview --port 4173 --strictPort',
+    command: process.env.CI
+      ? 'pnpm preview --port 4173 --strictPort'
+      : 'pnpm build && pnpm preview --port 4173 --strictPort',
     url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI
   }

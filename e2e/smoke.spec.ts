@@ -50,7 +50,7 @@ for (const path of ['/nope', '/fold']) {
 test('text size persists across reloads', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('button', { name: 'Larger text' }).click();
+  await page.getByRole('button', { name: /Larger text/ }).click();
   await page.reload();
   const scale = await page.evaluate(() => document.documentElement.style.getPropertyValue('--text-scale'));
   expect(scale).toBe('1.3');
@@ -76,4 +76,13 @@ test('focus ring is visible inside the dark menu', async ({ page }) => {
   await page.keyboard.press('Tab');
   const outline = await page.evaluate(() => getComputedStyle(document.activeElement as Element).outlineColor);
   expect(outline).toBe('rgb(247, 243, 234)');
+});
+
+test('tapping the backdrop closes the menu', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+  const { width, height } = page.viewportSize() ?? { width: 1280, height: 720 };
+  await page.mouse.click(width - 10, height / 2);
+  await expect(page.getByRole('dialog')).toBeHidden();
 });

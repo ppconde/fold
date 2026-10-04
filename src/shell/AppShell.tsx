@@ -28,7 +28,7 @@ export function AppShell() {
           ☰
         </button>
       </header>
-      <dialog ref={menu} className={styles.menu} aria-label="Menu">
+      <dialog ref={menu} className={styles.menu} aria-label="Menu" closedby="any">
         <nav>
           <ul>
             {LINKS.map((link) => (
@@ -46,7 +46,6 @@ export function AppShell() {
             <button
               key={s}
               type="button"
-              aria-label={SCALE_BUTTONS[i].label}
               aria-pressed={scale === s}
               onClick={() => {
                 setTextScale(s);
@@ -54,6 +53,7 @@ export function AppShell() {
               }}
             >
               {SCALE_BUTTONS[i].glyph}
+              <span className="sr-only"> {SCALE_BUTTONS[i].label}</span>
             </button>
           ))}
         </fieldset>
