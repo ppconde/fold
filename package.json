@@ -18,7 +18,9 @@
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@biomejs/biome": "^2.5.15",
+    "@playwright/test": "^1.63.0",
     "@tanstack/router-plugin": "^1.168.42",
     "@types/node": "^26.6.4",
     "@types/react": "^19.3.0",
