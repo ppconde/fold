@@ -110,3 +110,41 @@ describe('checkConsistency', () => {
     expect(checkConsistency(model, 2)).toEqual({ ok: true });
   });
 });
+
+describe('step joins', () => {
+  it('joins every face exactly when the held face changes after a clamped fold', () => {
+    const model = quarters();
+    model.steps.push({ ...model.steps[2], fixedFace: 0, instruction: 'Hold the other side.' });
+    const end = foldedPositions(model, 2, 1);
+    const start = foldedPositions(model, 3, 0);
+    end.forEach((face, f) => {
+      face.forEach((corner, c) => {
+        expectClose(corner, start[f][c], 9);
+      });
+    });
+    const rest = foldedPositions(model, 3, 0)[0];
+    for (const t of [0.5, 1]) {
+      foldedPositions(model, 3, t)[0].forEach((corner, c) => {
+        expectClose(corner, rest[c], 9);
+      });
+    }
+  });
+
+  it('inherits a non-zero rotation into later steps from the file', () => {
+    const json = JSON.parse(JSON.stringify(fixture('fold-in-half')));
+    json.file_frames[0]['foldapp:rotation'] = [0, 180, 0];
+    const { 'foldapp:rotation': _, ...rest } = json.file_frames[0];
+    json.file_frames.push({ ...rest, 'foldapp:instruction': 'Keep it turned over.' });
+    const model = loadModel(json);
+    const a = foldedPositions(model, 1, 1);
+    foldedPositions(model, 2, 0).forEach((face, f) => {
+      face.forEach((corner, c) => {
+        expectClose(corner, a[f][c], 9);
+      });
+    });
+  });
+
+  it('treats a NaN t as 0', () => {
+    expect(foldedPositions(half(), 1, Number.NaN)).toEqual(foldedPositions(half(), 1, 0));
+  });
+});

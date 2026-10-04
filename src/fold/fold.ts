@@ -24,37 +24,68 @@ function hinge(model: Model, e: number, g: number, angle: number): Matrix4 {
     .multiply(new Matrix4().makeTranslation(pivot.clone().negate()));
 }
 
-/** Transform of every face relative to `fixed`, walking a BFS spanning tree of faces. */
-function layout(model: Model, angles: number[], fixed: number) {
-  const transforms: Matrix4[] = [];
-  const tree = new Set<number>();
-  transforms[fixed] = new Matrix4();
-  const queue = [fixed];
-  while (queue.length) {
-    const f = queue.shift() as number;
+type Tree = { order: number[]; parent: number[]; parentEdge: number[]; treeEdges: Set<number> };
+
+const trees = new WeakMap<Model, Tree>();
+// Models are treated as immutable once posed (anchors are cached); create a new Model for each edit.
+const anchors = new WeakMap<Model, Matrix4[]>();
+
+/** One canonical spanning tree per model: BFS from face 0. */
+function tree(model: Model): Tree {
+  let t = trees.get(model);
+  if (t) return t;
+  const parent: number[] = [];
+  const parentEdge: number[] = [];
+  const treeEdges = new Set<number>();
+  const seen = new Set([0]);
+  const order = [0];
+  for (let i = 0; i < order.length; i++) {
+    const f = order[i];
     for (const e of model.faceEdges[f]) {
       for (const g of model.edgeFaces[e]) {
-        if (transforms[g]) continue;
-        transforms[g] = transforms[f].clone().multiply(hinge(model, e, g, angles[e]));
-        tree.add(e);
-        queue.push(g);
+        if (seen.has(g)) continue;
+        seen.add(g);
+        parent[g] = f;
+        parentEdge[g] = e;
+        treeEdges.add(e);
+        order.push(g);
       }
     }
   }
-  return { transforms, tree };
+  t = { order, parent, parentEdge, treeEdges };
+  trees.set(model, t);
+  return t;
 }
 
-/** Pose of step `step`'s fixed face at the end of step `step - 1`, so steps join without a jump. */
-// ponytail: recomputes every earlier step per call, O(steps × faces); memoize per model if long models stutter.
-function anchor(model: Model, step: number): Matrix4 {
-  let pose = new Matrix4();
-  for (let k = 1; k < step; k++) {
-    const { transforms } = layout(model, model.steps[k].angles.map(clampAngle), model.steps[k].fixedFace);
-    pose = pose.clone().multiply(transforms[model.steps[k + 1].fixedFace]);
+/** Transform of every face relative to face 0, for the given fold angles. */
+function rootTransforms(model: Model, angles: number[]): Matrix4[] {
+  const { order, parent, parentEdge } = tree(model);
+  const T: Matrix4[] = [];
+  for (const g of order) {
+    T[g] =
+      g === 0 ? new Matrix4() : T[parent[g]].clone().multiply(hinge(model, parentEdge[g], g, angles[parentEdge[g]]));
   }
-  return pose;
+  return T;
 }
 
+/** Pose of each step's fixed face at the end of the previous step, so steps join without a jump. Index k is step k. */
+function anchorFor(model: Model, step: number): Matrix4 {
+  let list = anchors.get(model);
+  if (!list) {
+    list = [new Matrix4(), new Matrix4()];
+    anchors.set(model, list);
+  }
+  for (let k = list.length - 1; k < step; k++) {
+    const T = rootTransforms(model, model.steps[k].angles.map(clampAngle));
+    list[k + 1] = list[k]
+      .clone()
+      .multiply(T[model.steps[k].fixedFace].clone().invert())
+      .multiply(T[model.steps[k + 1].fixedFace]);
+  }
+  return list[step];
+}
+
+// Rotations slerp along the shortest path, so a 360° turn animates nothing and 180° picks a direction.
 function modelRotation(model: Model, from: Vec3, to: Vec3, s: number): Matrix4 {
   const q0 = new Quaternion().setFromEuler(new Euler(from[0] * DEG, from[1] * DEG, from[2] * DEG));
   const q1 = new Quaternion().setFromEuler(new Euler(to[0] * DEG, to[1] * DEG, to[2] * DEG));
@@ -78,14 +109,16 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
 
   const prev = model.steps[step - 1];
   const cur = model.steps[step];
-  const s = ease(Math.max(0, Math.min(1, t)));
+  const s = ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
   const angles = prev.angles.map((a, e) => clampAngle(a + (cur.angles[e] - a) * s));
-  const { transforms } = layout(model, angles, cur.fixedFace);
-  const world = modelRotation(model, prev.rotation, cur.rotation, s).multiply(anchor(model, step));
+  const T = rootTransforms(model, angles);
+  const world = modelRotation(model, prev.rotation, cur.rotation, s)
+    .multiply(anchorFor(model, step))
+    .multiply(T[cur.fixedFace].clone().invert());
 
   const point = new Vector3();
   return model.faces.map((face, f) => {
-    const m = world.clone().multiply(transforms[f]);
+    const m = world.clone().multiply(T[f]);
     return face.map((v) => point.set(model.vertices[v][0], model.vertices[v][1], 0).applyMatrix4(m).toArray() as Vec3);
   });
 }
@@ -93,16 +126,22 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
 /** At the end of `step`, does every crease off the spanning tree agree with it? (Unclamped angles.) */
 export function checkConsistency(model: Model, step: number): { ok: true } | { ok: false; edges: number[] } {
   assertStep(model, step);
-  const { angles, fixedFace } = model.steps[step];
-  const { transforms, tree } = layout(model, angles, fixedFace);
+  const { angles } = model.steps[step];
+  const { treeEdges } = tree(model);
+  const T = rootTransforms(model, angles);
   const bad: number[] = [];
+  const p = new Vector3();
+  const q = new Vector3();
   model.edgeFaces.forEach((faces, e) => {
-    if (faces.length !== 2 || tree.has(e)) return;
+    if (faces.length !== 2 || treeEdges.has(e)) return;
     const [f, g] = faces;
-    const [cx, cy] = model.faceCentroids[g];
-    const viaTree = new Vector3(cx, cy, 0).applyMatrix4(transforms[g]);
-    const viaEdge = new Vector3(cx, cy, 0).applyMatrix4(transforms[f].clone().multiply(hinge(model, e, g, angles[e])));
-    if (viaTree.distanceTo(viaEdge) > EPSILON) bad.push(e);
+    const viaEdge = T[f].clone().multiply(hinge(model, e, g, angles[e]));
+    const off = model.faces[g].some((v) => {
+      p.set(model.vertices[v][0], model.vertices[v][1], 0);
+      q.copy(p).applyMatrix4(viaEdge);
+      return p.applyMatrix4(T[g]).distanceTo(q) > EPSILON;
+    });
+    if (off) bad.push(e);
   });
   return bad.length ? { ok: false, edges: bad } : { ok: true };
 }
