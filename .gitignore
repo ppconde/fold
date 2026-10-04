@@ -29,4 +29,15 @@ html
 
 # test coverage
 html
-coverage.superpowers/
+coverage
+.superpowers/
+
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
+
+# Playwright test output
+test-results/
+playwright-report/
+
+# Wrangler
+.wrangler/

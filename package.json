@@ -1,57 +1,35 @@
 {
   "name": "fold",
-  "homepage": "https://ppconde.github.io/fold/",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
-    "watch": "tsc --noEmit --watch",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage",
-    "build": "tsc && vite build --base=./",
-    "lint": "eslint --report-unused-disable-directives --max-warnings 0",
+    "build": "vite build && tsc --noEmit",
     "preview": "vite preview",
-    "update-types": "npx supabase gen types typescript --project-id \"dvwjchfzwfhxuqlixomh\" > src/types/database.ts",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "**/*": "prettier --write --ignore-unknown"
+    "test": "vitest",
+    "test:e2e": "playwright test",
+    "check": "biome check --write"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.86.0",
-    "gsap": "^3.13.0",
-    "lil-gui": "^0.19.1",
-    "react": "^19.2.0",
-    "react-dom": "^19.1.1",
-    "stats.js": "^0.17.0",
-    "three": "^0.181.0",
-    "three-orbit-controls": "^82.1.0"
+    "@tanstack/react-router": "^1.170.41",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.1.9",
-    "@types/three": "^0.181.0",
-    "@types/webgl2": "^0.0.11",
-    "@typescript-eslint/eslint-plugin": "^8.38.0",
-    "@typescript-eslint/parser": "^8.35.1",
-    "@vitejs/plugin-react-swc": "^4.3.1",
-    "@vitest/coverage-v8": "^4.1.8",
-    "@vitest/ui": "^4.1.8",
-    "eslint": "^9.39.0",
-    "eslint-plugin-react-hooks": "^7.0.1",
-    "eslint-plugin-react-refresh": "^0.4.22",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.2.6",
-    "prettier": "3.6.2",
-    "sass": "^1.89.2",
-    "supabase": "^2.107.0",
-    "typescript": "^5.9.2",
-    "vite": "^8.0.16",
-    "vite-plugin-plain-text": "^1.4.2",
-    "vite-plugin-svgr": "^4.5.0",
-    "vitest": "^4.1.8"
-  }
+    "@axe-core/playwright": "^4.13.0",
+    "@biomejs/biome": "^2.5.15",
+    "@playwright/test": "^1.63.0",
+    "@tanstack/router-plugin": "^1.168.42",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3",
+    "wrangler": "^4.147.0"
+  },
+  "packageManager": "pnpm@12.9.1"
 }

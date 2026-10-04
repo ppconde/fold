@@ -1,0 +1,72 @@
+.menuButton {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  border: 1px solid var(--beige);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--charcoal);
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+.menu {
+  margin: 0;
+  width: min(20rem, 85vw);
+  height: 100dvh;
+  max-height: none;
+  border: 0;
+  padding: 4rem 2rem 2rem;
+  background: var(--charcoal);
+  color: var(--ivory);
+}
+
+.menu::backdrop {
+  background: rgb(43 42 40 / 0.4);
+}
+
+.menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu a {
+  display: block;
+  padding: 0.5rem 0;
+  color: var(--ivory);
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  text-decoration: none;
+}
+
+.textSize {
+  display: flex;
+  gap: 0.5rem;
+  margin: 2rem 0;
+  border: 0;
+  padding: 0;
+}
+
+.textSize legend {
+  margin-bottom: 0.5rem;
+}
+
+.textSize button,
+.close {
+  border: 1px solid var(--ivory);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ivory);
+  cursor: pointer;
+}
+
+.textSize button[aria-pressed="true"] {
+  background: var(--ivory);
+  color: var(--charcoal);
+}
+
+.menu :focus-visible {
+  outline-color: var(--ivory);
+}
