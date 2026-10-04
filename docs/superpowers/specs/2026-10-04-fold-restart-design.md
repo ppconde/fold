@@ -150,15 +150,15 @@ Rejects:
 1. Interpolate each edge angle from step−1 to step with ease-in-out.
 2. Clamp ±180° to ±178°, so stacked layers fan out slightly instead of z-fighting.
    `// ponytail: angle clamp instead of layer ordering; store faceOrders from rabbit-ear's layer solver if thick models flicker.`
-3. Build a spanning tree of faces from the fixed face (BFS over shared edges).
-4. Accumulate each face's transform as its parent's transform × rotation about the shared edge by that edge's angle.
-5. Anchor the step: compose with the pose the fixed face had at the end of the previous step, so changing `fixedFace` between steps never makes the paper jump.
-6. Centre on the paper's bounding-box centre and apply the slerped whole-model rotation.
+3. Use one canonical spanning tree of faces per model (BFS from face 0 over shared edges), built once and cached.
+4. Accumulate each face's transform `T(f)` along that tree: parent's transform × rotation about the shared edge by that edge's angle.
+5. Hold the fixed face still and anchor the step: `pose(f) = A_k · T(fixed_k)⁻¹ · T(f)`, with `A_1 = I` and `A_{k+1} = A_k · T_k(fixed_k)⁻¹ · T_k(fixed_{k+1})` at step k's end angles. Because every step uses the same tree, every face joins exactly at step boundaries, and changing `fixedFace` never makes the paper jump. Anchors are cached per model, so models are treated as immutable once posed.
+6. Apply the slerped whole-model rotation about the flat paper's bounding-box centre (shortest-path slerp). Known gap: after folding, turning over makes the paper slide sideways; the player milestone decides the pivot/camera fix.
 7. Output per-face vertex copies, so faces stay rigid even if non-tree adjacencies disagree mid-step.
 
 ### `checkConsistency`
 
-At t=1, with unclamped angles, every crease that is not on the spanning tree must agree with it: rebuilding the face on one side from the face on the other side, using that crease's angle, must land it where the tree placed it (within ε). Returns the creases that disagree. Used by the editor to warn about impossible angle combinations. Limitation: at exactly ±180° mountain and valley produce the same pose, so a wrong M/V on a fully folded crease is not detectable.
+At t=1, with unclamped angles, every crease that is not on the spanning tree must agree with it: rebuilding the face on one side from the face on the other side, using that crease's angle, must land every corner where the tree placed it (within ε). Returns the creases that disagree. Used by the editor to warn about impossible angle combinations. Limitation: at exactly ±180° mountain and valley produce the same pose, so a wrong M/V on a fully folded crease is not detectable.
 
 ### `remapAngles`
 
