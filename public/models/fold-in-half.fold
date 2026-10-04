@@ -1,0 +1,21 @@
+{
+  "file_spec": 1.2,
+  "file_creator": "fold.ppconde.com",
+  "file_title": "Fold in half",
+  "file_classes": ["singleModel"],
+  "frame_classes": ["creasePattern"],
+  "foldapp:paperColor": "#B8613F",
+  "vertices_coords": [[0, 0], [1, 0], [1, 1], [0, 1], [0.5, 0], [0.5, 1]],
+  "edges_vertices": [[0, 4], [4, 1], [1, 2], [2, 5], [5, 3], [3, 0], [4, 5]],
+  "edges_assignment": ["B", "B", "B", "B", "B", "B", "V"],
+  "faces_vertices": [[0, 4, 5, 3], [4, 1, 2, 5]],
+  "file_frames": [
+    {
+      "frame_inherit": true,
+      "frame_parent": 0,
+      "edges_foldAngle": [0, 0, 0, 0, 0, 0, 180],
+      "foldapp:instruction": "Fold the left half over onto the right half.",
+      "foldapp:fixedFace": 1
+    }
+  ]
+}
