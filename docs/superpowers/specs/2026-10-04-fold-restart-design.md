@@ -301,7 +301,7 @@ Anything missing is implemented in `src/fold/`. The design is unchanged either w
   - Matching is case-insensitive and accent-insensitive via `normalize('NFD')`.
 - Cards:
   - thumbnail, or a CSS folded-paper placeholder if there is none
-  - name, Japanese name (small, secondary line), difficulty dots with a text label; nothing else
+  - name, Japanese name (small, secondary line; hidden below 600px), difficulty dots with a text label; nothing else
   - clipped folded corner
   - hover lift
 - Empty state: "No folds match. Clear filters."
