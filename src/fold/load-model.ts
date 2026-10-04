@@ -33,6 +33,7 @@ export function loadModel(json: unknown): Model {
     if (!Array.isArray(e) || e.length !== 2 || !e.every((v) => isIndex(v, vertices.length))) {
       throw new FoldError(`Edge ${i} must join two existing vertices.`);
     }
+    if (e[0] === e[1]) throw new FoldError(`Edge ${i} must join two different vertices.`);
     return [e[0], e[1]];
   });
 
@@ -48,6 +49,8 @@ export function loadModel(json: unknown): Model {
     return f as number[];
   });
 
+  if (faces.length === 0) throw new FoldError('The model has no faces.');
+
   const edgeIndex = new Map(edges.map(([a, b], i) => [edgeKey(a, b), i]));
   const faceEdges = faces.map((f, i) =>
     f.map((v, j) => {
@@ -60,6 +63,9 @@ export function loadModel(json: unknown): Model {
   faceEdges.forEach((es, f) => {
     for (const e of es) edgeFaces[e].push(f);
   });
+
+  const crowded = edgeFaces.findIndex((fs) => fs.length > 2);
+  if (crowded !== -1) throw new FoldError(`Edge ${crowded} is shared by more than two faces.`);
 
   const faceCentroids = faces.map(
     (f): Vec2 => [

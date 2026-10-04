@@ -42,6 +42,19 @@ describe('loadModel', () => {
     ['missing faces', (j) => ({ ...j, faces_vertices: undefined }), /faces_vertices/],
     ['bad vertex', (j) => ({ ...j, vertices_coords: [[0, 'x']] }), /Vertex 0/],
     ['edge to missing vertex', (j) => ({ ...j, edges_vertices: [[0, 99]] }), /Edge 0/],
+    ['no faces', (j) => ({ ...j, faces_vertices: [] }), /no faces/],
+    ['zero-length edge', (j) => ({ ...j, edges_vertices: [[0, 0]] }), /Edge 0 must join two different vertices/],
+    [
+      'edge shared by three faces',
+      (j) => ({
+        ...j,
+        faces_vertices: [...(j.faces_vertices as number[][]), [4, 5, 1]],
+        edges_vertices: [...(j.edges_vertices as number[][]), [5, 1]],
+        edges_assignment: [...(j.edges_assignment as string[]), 'B'],
+        file_frames: [{ ...j.file_frames[0], edges_foldAngle: [0, 0, 0, 0, 0, 0, 180, 0] }]
+      }),
+      /shared by more than two faces/
+    ],
     ['assignment count', (j) => ({ ...j, edges_assignment: ['B'] }), /edges_assignment/],
     [
       'face side not an edge',
