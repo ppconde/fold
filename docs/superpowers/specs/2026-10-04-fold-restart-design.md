@@ -95,7 +95,6 @@ type ModelEntry = {
   japaneseName?: string; // e.g. "Kitsune"
   category: 'animals' | 'flowers' | 'objects' | 'geometric';
   difficulty: 'easy' | 'medium' | 'hard';
-  steps: number;
   tags: string[];
   thumbnail?: string;    // path under /models/thumbs/
 };
@@ -302,7 +301,7 @@ Anything missing is implemented in `src/fold/`. The design is unchanged either w
   - Matching is case-insensitive and accent-insensitive via `normalize('NFD')`.
 - Cards:
   - thumbnail, or a CSS folded-paper placeholder if there is none
-  - name, Japanese name (small, secondary), difficulty dots with a text label, step count
+  - name and difficulty dots with a text label, nothing else (the Japanese name stays searchable and shows in the player)
   - clipped folded corner
   - hover lift
 - Empty state: "No folds match. Clear filters."
