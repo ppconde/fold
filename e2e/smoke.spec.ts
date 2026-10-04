@@ -63,3 +63,17 @@ test('menu button does not overlap the heading', async ({ page }) => {
   if (!button || !heading) throw new Error('missing element');
   expect(button.y + button.height).toBeLessThanOrEqual(heading.y);
 });
+
+test('focus ring is visible inside the dark menu', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
+
+  const { violations } = await new AxeBuilder({ page }).analyze();
+  const serious = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+  expect(serious.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+
+  await page.keyboard.press('Tab');
+  const outline = await page.evaluate(() => getComputedStyle(document.activeElement as Element).outlineColor);
+  expect(outline).toBe('rgb(247, 243, 234)');
+});

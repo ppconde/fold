@@ -66,3 +66,7 @@
   background: var(--ivory);
   color: var(--charcoal);
 }
+
+.menu :focus-visible {
+  outline-color: var(--ivory);
+}
