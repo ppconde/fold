@@ -42,9 +42,9 @@ The app is English-first. Japanese names appear as a secondary line only.
 
 `package.json` is rewritten from scratch. All versions are the latest at setup time.
 
-Runtime: `react`, `react-dom`, `three`, `@react-three/fiber`, `@react-three/drei`, `@tanstack/react-router`, `rabbit-ear`.
+Runtime: `react`, `react-dom`, `three`, `@react-three/fiber`, `@react-three/drei`, `@tanstack/react-router`, `rabbit-ear`. Each is installed in the milestone that first uses it.
 
-Dev: `vite`, `@vitejs/plugin-react`, `@tanstack/router-plugin`, `typescript`, `vitest`, `@playwright/test`, `@axe-core/playwright`, `@biomejs/biome`, `@types/react`, `@types/react-dom`, `@types/three`.
+Dev: `vite`, `@vitejs/plugin-react`, `wrangler`, `@tanstack/router-plugin`, `typescript`, `vitest`, `@playwright/test`, `@axe-core/playwright`, `@biomejs/biome`, `@types/react`, `@types/react-dom`, `@types/three`.
 
 `packageManager` pins pnpm. If TypeScript 7 breaks the router plugin or other tooling, fall back to TypeScript 5.9 and note why in the README.
 
@@ -52,7 +52,7 @@ Dev: `vite`, `@vitejs/plugin-react`, `@tanstack/router-plugin`, `typescript`, `v
 
 - Packages: `@supabase/supabase-js`, `supabase`, `gsap`, `lil-gui`, `stats.js`, `three-orbit-controls`, `@types/webgl2`, `@types/node` (unless a config needs it), all ESLint packages, `prettier`, `husky`, `lint-staged`, `sass`, `vite-plugin-svgr`, `vite-plugin-plain-text`, `@vitest/ui`, `@vitest/coverage-v8`, `@vitejs/plugin-react-swc`.
 - Files: `src/scene/**`, `src/services/**`, `src/types/database.ts` and the other old types, `declarations/`, `fonts/`, `public/models/3d_origami_crane/`, `.devcontainer/`, `.eslintrc.cjs`, `.prettierrc`, `.husky/`, `package-lock.json`, `.github/workflows/main.yml`, `.github/workflows/update-types.yml`, old `tests/`.
-- Dependabot stays, switched to the pnpm ecosystem.
+- Dependabot stays unchanged (its `npm` ecosystem also handles pnpm lockfiles).
 - `.superpowers/` is untracked and ignored.
 
 ### Added
@@ -116,7 +116,7 @@ Each `file_frames[k]` is step k+1:
 - `frame_inherit: true` and `frame_parent: 0`
 - `edges_foldAngle`: the angle of every edge at the end of the step, in degrees. Positive is valley, negative is mountain, 0 is flat.
 - `foldapp:instruction` (required string)
-- `foldapp:fixedFace` (optional face index; inherits the previous step's value; defaults to the face containing the paper's centre)
+- `foldapp:fixedFace` (optional face index; inherits the previous step's value; defaults to the face whose centroid is nearest the paper's centre)
 - `foldapp:rotation` (optional `[x, y, z]` degrees for the whole model at the end of the step, used for "turn over" and "rotate 90°"; inherits the previous step's value; defaults to `[0, 0, 0]`)
 
 Step 0 (flat paper) is implicit: all angles 0, rotation `[0, 0, 0]`.
@@ -131,9 +131,9 @@ Pure TypeScript, no React, no DOM. Rabbit Ear is used for parsing and graph oper
 
 ```ts
 loadModel(json: unknown): Model                 // throws FoldError with a readable message
-foldedPositions(model, step, t): Float32Array   // t ∈ [0,1] within step; per-face vertex copies
+foldedPositions(model, step, t): Vec3[][]       // t ∈ [0,1] within step; per face, its corners in 3D
 stepCreases(model, step): { active: number[]; past: number[] }
-checkConsistency(model, step): { ok: true } | { ok: false; vertices: number[] }
+checkConsistency(model, step): { ok: true } | { ok: false; edges: number[] }
 remapAngles(oldGraph, newGraph, angles): number[] // after crease-pattern edits
 ```
 
@@ -152,12 +152,13 @@ Rejects:
    `// ponytail: angle clamp instead of layer ordering; store faceOrders from rabbit-ear's layer solver if thick models flicker.`
 3. Build a spanning tree of faces from the fixed face (BFS over shared edges).
 4. Accumulate each face's transform as its parent's transform × rotation about the shared edge by that edge's angle.
-5. Apply the slerped whole-model rotation.
-6. Output per-face vertex copies, so faces stay rigid even if non-tree adjacencies disagree mid-step.
+5. Anchor the step: compose with the pose the fixed face had at the end of the previous step, so changing `fixedFace` between steps never makes the paper jump.
+6. Centre on the paper's bounding-box centre and apply the slerped whole-model rotation.
+7. Output per-face vertex copies, so faces stay rigid even if non-tree adjacencies disagree mid-step.
 
 ### `checkConsistency`
 
-At t=1, every face copy of a shared vertex must coincide within ε. Used by the editor to warn about impossible angle combinations.
+At t=1, with unclamped angles, every crease that is not on the spanning tree must agree with it: rebuilding the face on one side from the face on the other side, using that crease's angle, must land it where the tree placed it (within ε). Returns the creases that disagree. Used by the editor to warn about impossible angle combinations. Limitation: at exactly ±180° mountain and valley produce the same pose, so a wrong M/V on a fully folded crease is not detectable.
 
 ### `remapAngles`
 
@@ -354,7 +355,7 @@ Rule: v1 models use only valley/mountain folds, turn over and rotate.
 
 Hand-written fixtures for milestones 1–3:
 - `fold-in-half`
-- `cup`
+- `fold-in-quarters` (two steps; the second fold goes through two layers)
 
 Both live in `public/models/` and are also used by the tests.
 
@@ -365,7 +366,7 @@ Both live in `public/models/` and are also used by the tests.
 - `loadModel`:
   - accepts the fixtures
   - rejects each malformed case with a specific message
-- `foldedPositions` on `fold-in-half`:
+- `foldedPositions` on the fixtures:
   - flat at t=0
   - moving half at 90° at t=0.5
   - folded within the 178° clamp at t=1
@@ -401,7 +402,7 @@ Each milestone is one PR to `main`.
 |---|---|---|
 | 0 | Setup | `old_main` pushed. `main` cleaned. pnpm, Biome, TS, Vite, TanStack Router placeholder routes, `AppShell`, LICENSE, CI workflow and Playwright smoke tests in place. Cloudflare connected. `fold.ppconde.com` serves the placeholders. |
 | 1 | Fold engine | `src/fold/` and both fixtures, all unit tests green |
-| 2 | Player | `/fold/fold-in-half` and `/fold/cup` meet section 8 on phone and desktop; e2e flows green |
+| 2 | Player | `/fold/fold-in-half` and `/fold/fold-in-quarters` meet section 8 on phone and desktop; e2e flows green |
 | 3 | Editor | Spike done; section 9 complete; e2e flows green |
 | 4 | Library and content | Section 10 complete; six launch models and thumbnails committed |
 | 5 | Landing and About | Section 11 complete; design and accessibility pass; e2e flows green |
