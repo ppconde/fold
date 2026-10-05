@@ -46,6 +46,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   }, [model]);
   const gradient = useMemo(toonGradient, []);
   const initial = useMemo(() => lineGroups(model, foldedPositions(model, 0, 0), 0, 0), [model]);
+  const borderPoints = useMemo(() => toPoints(initial.borders), [initial]);
   const borders = useRef<LineRef>(null);
   const folded = useRef<LineRef>(null);
   const flat = useRef<LineRef>(null);
@@ -65,6 +66,8 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     setSegments(flat.current, groups.flat);
     invalidate();
   }, [model, step, t, geometry, invalidate]);
+
+  useEffect(() => () => gradient.dispose(), [gradient]);
 
   useEffect(
     () => () => {
@@ -97,7 +100,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
             polygonOffsetUnits={1}
           />
         </mesh>
-        <Line ref={borders} points={toPoints(initial.borders)} segments color={INK} lineWidth={2.5 * scale} />
+        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={2.5 * scale} />
         <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.5 * scale} visible={false} />
         <Line
           ref={flat}

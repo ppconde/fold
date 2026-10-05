@@ -35,8 +35,13 @@ function Scene({ model, step, t, resetCount }: Props) {
     if (!c) return;
     const animate = resetCount > 0;
     void c.setLookAt(0, size * 1.7, size * 1.3, 0, 0, 0, false);
-    void c.fitToBox(box, animate, { paddingTop: 0.15, paddingBottom: 0.15, paddingLeft: 0.15, paddingRight: 0.15 });
-    void c.rotateTo(0, 0.9, animate);
+    // fitToBox always faces the box side-on, so fit first, then tilt and pull in for the final angle.
+    void c
+      .fitToBox(box, false, { paddingTop: 0.15, paddingBottom: 0.15, paddingLeft: 0.15, paddingRight: 0.15 })
+      .then(() => {
+        void c.rotateTo(0, 0.9, false);
+        void c.dollyTo(size * 1.8, animate);
+      });
   }, [box, size, resetCount]);
 
   return (
