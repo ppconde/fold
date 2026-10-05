@@ -1,6 +1,8 @@
 import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tanstack/react-router';
 import { FoldError } from '../fold/load-model';
 import { fetchModel } from '../models/catalog';
+import { CreaseDiagram } from '../player/CreaseDiagram';
+import { Stage } from '../player/Stage';
 
 export const Route = createFileRoute('/fold/$id')({
   validateSearch: (search: Record<string, unknown>): { step?: number } => {
@@ -19,10 +21,16 @@ export const Route = createFileRoute('/fold/$id')({
 });
 
 function FoldPage() {
-  const { entry } = Route.useLoaderData();
+  const { entry, model } = Route.useLoaderData();
+  const { step = model.steps.length - 1 } = Route.useSearch();
+  const shown = Math.min(step, model.steps.length - 1);
   return (
     <main className="page">
       <h1>{entry.name}</h1>
+      <div style={{ height: '60vh' }}>
+        <Stage model={model} step={shown} t={1} resetCount={0} />
+      </div>
+      <CreaseDiagram model={model} step={shown} />
     </main>
   );
 }
