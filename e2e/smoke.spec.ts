@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test';
 const pages = [
   { path: '/', heading: 'Fold' },
   { path: '/library', heading: 'Library' },
-  { path: '/fold/fold-in-half', heading: 'fold-in-half' },
+  { path: '/fold/fold-in-half', heading: 'Fold in half' },
   { path: '/editor', heading: 'Editor' },
   { path: '/about', heading: 'About' }
 ];

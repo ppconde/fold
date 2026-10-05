@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/editor')({ component: Editor });
+export const Route = createFileRoute('/editor')({
+  head: () => ({ meta: [{ title: 'Editor · Fold' }] }),
+  component: Editor
+});
 
 function Editor() {
   return (

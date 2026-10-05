@@ -1,0 +1,16 @@
+[
+  {
+    "id": "fold-in-half",
+    "name": "Fold in half",
+    "category": "geometric",
+    "difficulty": "easy",
+    "tags": ["basic", "practice"]
+  },
+  {
+    "id": "fold-in-quarters",
+    "name": "Fold in quarters",
+    "category": "geometric",
+    "difficulty": "easy",
+    "tags": ["basic", "practice"]
+  }
+]

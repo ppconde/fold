@@ -1,6 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/library')({ component: Library });
+export const Route = createFileRoute('/library')({
+  head: () => ({ meta: [{ title: 'Library · Fold' }] }),
+  component: Library
+});
 
 function Library() {
   return (

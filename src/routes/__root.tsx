@@ -2,6 +2,7 @@ import { createRootRoute, Link } from '@tanstack/react-router';
 import { AppShell } from '../shell/AppShell';
 
 export const Route = createRootRoute({
+  head: () => ({ meta: [{ title: 'Fold' }] }),
   component: AppShell,
   notFoundComponent: NotFound
 });

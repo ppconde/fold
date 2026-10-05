@@ -70,3 +70,7 @@ button {
   white-space: nowrap;
   border: 0;
 }
+
+h1:focus {
+  outline: none;
+}

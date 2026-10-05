@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 
-export const Route = createFileRoute('/')({ component: Home });
+export const Route = createFileRoute('/')({
+  head: () => ({ meta: [{ title: 'Fold' }] }),
+  component: Home
+});
 
 function Home() {
   return (
