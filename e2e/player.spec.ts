@@ -163,3 +163,13 @@ test('an external ?step change on the same model is followed', async ({ page }) 
   });
   await expect(page.locator('main')).toHaveAttribute('data-step', '2');
 });
+
+test('dock buttons explain themselves on hover, and Reset view does not look like a restart', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=1');
+  for (const name of ['Previous step', 'Replay step', 'Next step', 'Speed 1×', 'Reset view']) {
+    await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute('title', name);
+  }
+  const reset = page.getByRole('button', { name: 'Reset view' });
+  await expect(reset).not.toContainText('⟲');
+  await expect(reset.locator('svg')).toBeVisible();
+});

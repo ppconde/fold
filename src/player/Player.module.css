@@ -113,8 +113,18 @@
   padding: 0 0.75rem;
 }
 
-.pill .big {
-  font-size: 1.35rem;
+.icon {
+  display: block;
+  margin: 0 auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.icon circle {
+  fill: currentcolor;
+  stroke: none;
 }
 
 .doneActions button,

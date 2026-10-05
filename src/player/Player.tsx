@@ -121,6 +121,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           <button
             type="button"
             aria-label="Previous step"
+            title="Previous step"
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'prev' })}
           >
@@ -129,6 +130,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           <button
             type="button"
             aria-label="Replay step"
+            title="Replay step"
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'replay' })}
           >
@@ -139,22 +141,32 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             ref={nextRef}
             className={styles.primary}
             aria-label="Next step"
+            title="Next step"
             aria-disabled={state.step === state.last || state.playing}
             onClick={() => dispatch({ type: 'next' })}
           >
             {'\u25B6\uFE0E'}
           </button>
-          <button type="button" aria-label={`Speed ${state.speed}×`} onClick={() => dispatch({ type: 'cycleSpeed' })}>
+          <button
+            type="button"
+            aria-label={`Speed ${state.speed}×`}
+            title={`Speed ${state.speed}×`}
+            onClick={() => dispatch({ type: 'cycleSpeed' })}
+          >
             {state.speed}×
           </button>
           {webgl && (
             <button
               type="button"
-              className={styles.big}
               aria-label="Reset view"
+              title="Reset view"
               onClick={() => setResetCount((n) => n + 1)}
             >
-              ⟲
+              {/* Framing corners, not a circular arrow: this recentres the camera, it does not restart the fold. */}
+              <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" className={styles.icon}>
+                <path d="M2 7V2h5M13 2h5v5M18 13v5h-5M7 18H2v-5" />
+                <circle cx="10" cy="10" r="2" />
+              </svg>
             </button>
           )}
           {!showPanel && (
