@@ -1,4 +1,5 @@
 import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tanstack/react-router';
+import { FoldError } from '../fold/load-model';
 import { fetchModel } from '../models/catalog';
 
 export const Route = createFileRoute('/fold/$id')({
@@ -41,7 +42,7 @@ function ModelError({ error }: ErrorComponentProps) {
   return (
     <main className="page">
       <h1>This model couldn't be read</h1>
-      <p>{error instanceof Error ? error.message : String(error)}</p>
+      <p>{error instanceof FoldError ? error.message : 'Check your connection and try again.'}</p>
       <p>
         <Link to="/library">Browse the library</Link>
       </p>

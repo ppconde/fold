@@ -27,3 +27,13 @@ test('focus moves to the new page heading after navigating', async ({ page }) =>
   await page.getByRole('link', { name: 'About' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
 });
+
+test('focus lands on the model heading after navigating to a page that loads data', async ({ page }) => {
+  await page.goto('/fold/fold-in-half');
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('link', { name: 'About' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('About');
+  await page.goBack();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold in half');
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+});

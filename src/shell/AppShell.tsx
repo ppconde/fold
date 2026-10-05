@@ -20,11 +20,11 @@ export function AppShell() {
   const menu = useRef<HTMLDialogElement>(null);
   const [scale, setScale] = useState<TextScale>(readTextScale);
   const close = () => menu.current?.close();
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const pathname = useRouterState({ select: (s) => s.resolvedLocation?.pathname });
   const shownPath = useRef(pathname);
   useEffect(() => {
     // Screen-reader and keyboard users land on the new page's heading, not where the old page left them.
-    if (shownPath.current === pathname) return;
+    if (!pathname || shownPath.current === pathname) return;
     shownPath.current = pathname;
     const heading = document.querySelector<HTMLElement>('main h1');
     heading?.setAttribute('tabindex', '-1');
