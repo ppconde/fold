@@ -112,3 +112,40 @@ test('without WebGL the diagram and instructions still work', async ({ page }) =
   await next(page);
   await expect(page.locator('main')).toHaveAttribute('data-state', 'done');
 });
+
+test('finishing moves focus to the completion heading, and Fold again focuses Next step', async ({ page }) => {
+  await page.goto('/fold/fold-in-half');
+  await next(page);
+  await expect(page.getByRole('heading', { name: 'Well folded!' })).toBeFocused();
+  await page.getByRole('button', { name: 'Fold again' }).click();
+  await expect(page.getByRole('button', { name: 'Next step' })).toBeFocused();
+});
+
+test('Escape hides the instructions and the choice survives a reload', async ({ page }) => {
+  await page.goto('/fold/fold-in-half');
+  await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
+  await page.reload();
+  await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
+});
+
+test('arrow keys inside the instructions do not change the step', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
+  await page.locator('#instructions').focus();
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(300);
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
+});
+
+test('an external ?step change on the same model is followed', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=0');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
+  // history.pushState + popstate: TanStack Router's history listens to popstate, so this is a client-side navigation.
+  await page.evaluate(() => {
+    history.pushState(history.state, '', '/fold/fold-in-quarters?step=2');
+    dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
+  });
+  await expect(page.locator('main')).toHaveAttribute('data-step', '2');
+});
