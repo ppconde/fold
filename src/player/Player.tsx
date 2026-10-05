@@ -120,6 +120,18 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         <div className={styles.pill}>
           <button
             type="button"
+            aria-label="Start over"
+            title="Start over"
+            aria-disabled={state.step === 0 || state.playing}
+            onClick={() => dispatch({ type: 'goTo', step: 0 })}
+          >
+            <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" className={styles.icon}>
+              <path d="M4 4v12" />
+              <path d="M16 4 7 10l9 6z" className={styles.solid} />
+            </svg>
+          </button>
+          <button
+            type="button"
             aria-label="Previous step"
             title="Previous step"
             aria-disabled={state.step === 0 || state.playing}

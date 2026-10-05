@@ -173,3 +173,25 @@ test('dock buttons explain themselves on hover, and Reset view does not look lik
   await expect(reset).not.toContainText('⟲');
   await expect(reset.locator('svg')).toBeVisible();
 });
+
+test('Start over returns to the flat sheet from any step', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=2');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '2');
+  const startOver = page.getByRole('button', { name: 'Start over' });
+  await expect(startOver).toHaveAttribute('title', 'Start over');
+  await startOver.click();
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
+  await expect(page).toHaveURL(/step=0/);
+  await expect(startOver).toHaveAttribute('aria-disabled', 'true');
+});
+
+test('the dock fits on screen with the steps hidden, even on a 360px phone', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 740 });
+  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.getByRole('button', { name: 'Hide steps' }).click();
+  const dock = await page.getByTestId('dock').locator('> div').boundingBox();
+  const width = page.viewportSize()?.width ?? 0;
+  if (!dock) throw new Error('dock not visible');
+  expect(dock.x).toBeGreaterThanOrEqual(0);
+  expect(dock.x + dock.width).toBeLessThanOrEqual(width);
+});
