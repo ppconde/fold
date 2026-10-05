@@ -2,6 +2,7 @@
   position: fixed;
   inset: 0;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   grid-template-areas: "title" "stage" "panel" "dock";
   background: radial-gradient(circle at 50% 40%, var(--off-white), var(--beige));
@@ -94,7 +95,7 @@
   grid-area: dock;
   display: flex;
   justify-content: center;
-  padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+  padding: 0.75rem 0.5rem calc(0.75rem + env(safe-area-inset-bottom));
 }
 
 .pill {
@@ -112,6 +113,15 @@
   padding: 0 0.75rem;
 }
 
+.pill .big {
+  font-size: 1.35rem;
+}
+
+.doneActions button,
+.doneActions a {
+  white-space: nowrap;
+}
+
 .pill .primary,
 .doneActions .primary {
   border-color: var(--charcoal);
@@ -126,13 +136,14 @@
 
 .count {
   padding: 0 0.75rem;
+  white-space: nowrap;
   color: var(--muted);
 }
 
 .done {
   position: fixed;
   left: 50%;
-  top: 30%;
+  bottom: calc(5rem + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   width: min(22rem, calc(100vw - 2rem));
   padding: 1.5rem;
@@ -178,5 +189,33 @@
     border-left: 1px solid var(--beige);
     border-radius: 0;
     box-shadow: -6px 0 16px rgb(43 42 40 / 0.05);
+  }
+
+  /* the stage runs under the dock so the canvas (and its shadow) reaches the bottom edge */
+  .stage {
+    grid-row: 2 / 4;
+    grid-column: 1;
+  }
+
+  .dock {
+    grid-row: 3;
+    grid-column: 1;
+    z-index: 1;
+    pointer-events: none;
+    background: transparent;
+  }
+
+  .pill {
+    pointer-events: auto;
+  }
+
+  .done {
+    left: auto;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    top: auto;
+    transform: none;
+    width: 19rem;
+    padding: 1.25rem 1rem;
   }
 }

@@ -68,4 +68,10 @@ describe('player state', () => {
     expect(playerStatus(initPlayer(0, 0, false))).toBe('idle');
     expect(playerStatus(run(initPlayer(3, 2, false), { type: 'next' }))).toBe('playing');
   });
+
+  it('ignores a NaN or negative tick', () => {
+    const playing = run(initPlayer(3, 0, false), { type: 'next' }, secs(0.1));
+    expect(playerReducer(playing, secs(Number.NaN))).toBe(playing);
+    expect(playerReducer(playing, secs(-1))).toBe(playing);
+  });
 });

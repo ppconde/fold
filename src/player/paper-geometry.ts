@@ -1,5 +1,5 @@
 import { stepCreases } from '../fold/creases';
-import { anglesAt } from '../fold/fold';
+import { anglesAt, foldedPositions } from '../fold/fold';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 
 export type Extent = {
@@ -23,6 +23,15 @@ export function paperExtent(model: Model): Extent {
   const width = maxX - minX;
   const height = maxY - minY;
   return { minX, minY, maxX, maxY, width, height, size: Math.max(width, height), center: model.center };
+}
+
+/** World (x, z) centre of the paper's bounding box once `step` has settled; paper (x, y) maps to world (x − cx, −(y − cy)). */
+export function endCentre(model: Model, step: number): [number, number] {
+  const points = foldedPositions(model, step, step === 0 ? 0 : 1).flat();
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  const [cx, cy] = model.center;
+  return [(Math.min(...xs) + Math.max(...xs)) / 2 - cx, -((Math.min(...ys) + Math.max(...ys)) / 2 - cy)];
 }
 
 export function triangleCount(model: Model): number {

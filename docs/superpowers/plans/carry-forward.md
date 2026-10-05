@@ -14,3 +14,15 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **Mountain/valley sign mismatch.** The loader accepts a mountain crease with a positive angle and a valley with a negative one, because a precrease can later collapse the other way. The editor should warn about these, not reject them.
 - **`remapAngles` tolerance.** The `onSegment` dot-product tolerance isn't normalised by edge length. There are no tests at 0..400 scale, for √2 diagonal splits, or for a new edge spanning two collinear creases. Settle the epsilon and coordinate scale in the Rabbit Ear spike.
 - **Remaining loader gaps.** `frame_parent` / `frame_inherit` are ignored (steps are sequential). Non-convex faces could flip the M/V side test. Both matter only for third-party uploads.
+- **"Hide steps" pill overlap.** On phones the "Hide steps" pill can sit over the paper. Consider moving it into the sheet header.
+
+## M4 — Library and content
+
+- **`setPositions` line buffer churn.** Each frame re-sends every line segment buffer. Preallocate per crease count before larger models.
+- **`readTextScale()` every render.** Line widths are read on render, so they don't follow a live text-size change.
+
+## M5 — Landing and polish
+
+- **Lazy-load `Stage`.** The route chunk is ~993 kB.
+- **No keyboard camera control.** Only drag, pinch and scroll turn or zoom the view; R resets it.
+- **Aside tab stop.** The instructions aside's `tabIndex` (needed for the scrolling phone sheet) adds a tab stop on desktop.

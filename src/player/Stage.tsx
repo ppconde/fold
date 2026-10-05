@@ -1,12 +1,16 @@
 import { CameraControls, ContactShadows } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, useThree } from '@react-three/fiber';
 import { type ComponentRef, useEffect, useMemo, useRef } from 'react';
-import { Box3, Vector3 } from 'three';
 import type { Model } from '../fold/types';
+import { prefersReducedMotion } from './browser';
 import { Paper } from './Paper';
-import { paperExtent } from './paper-geometry';
+import { endCentre, paperExtent } from './paper-geometry';
 
-type Props = { model: Model; step: number; t: number; resetCount: number };
+/** Camera distance in paper sizes, and its angle from straight down, in radians. */
+const FRAME = 1.8;
+const POLAR = 0.9;
+
+type Props = { model: Model; step: number; t: number; resetCount: number; frameStep: number };
 
 export function Stage(props: Props) {
   return (
@@ -22,27 +26,24 @@ export function Stage(props: Props) {
   );
 }
 
-function Scene({ model, step, t, resetCount }: Props) {
+function Scene({ model, step, t, resetCount, frameStep }: Props) {
   const controls = useRef<ComponentRef<typeof CameraControls>>(null);
-  const { size, width, height } = paperExtent(model);
-  const box = useMemo(
-    () => new Box3(new Vector3(-width / 2, 0, -height / 2), new Vector3(width / 2, size * 0.25, height / 2)),
-    [width, height, size]
-  );
+  const firstFrame = useRef(true);
+  const aspect = useThree((s) => s.size.width / s.size.height);
+  const { size } = paperExtent(model);
+  // frameStep is the last settled step, so the camera never moves while a step plays
+  const [cx, cz] = useMemo(() => endCentre(model, frameStep), [model, frameStep]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resetCount is a trigger, not a value
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
-    const animate = resetCount > 0;
-    void c.setLookAt(0, size * 1.7, size * 1.3, 0, 0, 0, false);
-    // fitToBox always faces the box side-on, so fit first, then tilt and pull in for the final angle.
-    void c
-      .fitToBox(box, false, { paddingTop: 0.15, paddingBottom: 0.15, paddingLeft: 0.15, paddingRight: 0.15 })
-      .then(() => {
-        void c.rotateTo(0, 0.9, false);
-        void c.dollyTo(size * 1.8, animate);
-      });
-  }, [box, size, resetCount]);
+    const animate = !firstFrame.current && !prefersReducedMotion();
+    firstFrame.current = false;
+    // pull back on narrow screens so the paper fits the width, not just the height
+    const d = (size * FRAME) / Math.min(1, aspect / 1.1);
+    void c.setLookAt(cx, d * Math.cos(POLAR), cz + d * Math.sin(POLAR), cx, 0, cz, animate);
+  }, [cx, cz, size, aspect, resetCount]);
 
   return (
     <>

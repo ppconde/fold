@@ -20,6 +20,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const doneRef = useRef<HTMLHeadingElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
   const [resetCount, setResetCount] = useState(0);
+  const [frameStep, setFrameStep] = useState(state.step);
   const [webgl] = useState(hasWebGL);
   const showPanel = panelOpen || !webgl;
   const instruction = state.step === 0 ? FIRST_INSTRUCTION : model.steps[state.step].instruction;
@@ -35,7 +36,9 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
     settleRef.current = onSettle;
   });
   useEffect(() => {
-    if (!state.playing) settleRef.current(state.step);
+    if (state.playing) return;
+    settleRef.current(state.step);
+    setFrameStep(state.step);
   }, [state.playing, state.step]);
 
   useEffect(() => {
@@ -53,7 +56,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
       if (document.querySelector('dialog[open]') || e.altKey || e.ctrlKey || e.metaKey) return;
       const onControl = e.target instanceof Element && e.target.closest('button, a, input, textarea, select');
       const inPanel = e.target instanceof Element && e.target.closest('#instructions');
-      if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && inPanel) return;
+      if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === ' ') && inPanel) return;
       if (e.key === 'ArrowRight') dispatch({ type: 'next' });
       else if (e.key === 'ArrowLeft') dispatch({ type: 'prev' });
       else if (e.key === ' ' && !onControl) {
@@ -83,7 +86,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
       <div className={styles.stage}>
         {webgl ? (
-          <Stage model={model} step={state.step} t={state.t} resetCount={resetCount} />
+          <Stage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
         ) : (
           <p className={styles.noWebgl}>
             The 3D view isn't available on this device. Follow the crease pattern and instructions instead.
@@ -121,7 +124,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'prev' })}
           >
-            ◀
+            {'\u25C0\uFE0E'}
           </button>
           <button
             type="button"
@@ -139,13 +142,18 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             aria-disabled={state.step === state.last || state.playing}
             onClick={() => dispatch({ type: 'next' })}
           >
-            ▶
+            {'\u25B6\uFE0E'}
           </button>
           <button type="button" aria-label={`Speed ${state.speed}×`} onClick={() => dispatch({ type: 'cycleSpeed' })}>
             {state.speed}×
           </button>
           {webgl && (
-            <button type="button" aria-label="Reset view" onClick={() => setResetCount((n) => n + 1)}>
+            <button
+              type="button"
+              className={styles.big}
+              aria-label="Reset view"
+              onClick={() => setResetCount((n) => n + 1)}
+            >
               ⟲
             </button>
           )}

@@ -28,6 +28,7 @@ test('a reload resumes the step from the URL, and bad steps are clamped', async 
   await expect(page.locator('main')).toHaveAttribute('data-step', '1');
   await page.goto('/fold/fold-in-quarters?step=99');
   await expect(page.locator('main')).toHaveAttribute('data-step', '2');
+  await expect(page).toHaveURL(/step=2/);
   await page.goto('/fold/fold-in-quarters?step=abc');
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
 });
@@ -59,6 +60,19 @@ test('finishing shows the completion card, and Fold again starts over', async ({
   await page.getByRole('button', { name: 'Fold again' }).click();
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
   await expect(page.getByRole('link', { name: 'Back to library' })).toBeHidden();
+});
+
+test('the completion card does not cover the middle of the stage', async ({ page }) => {
+  await page.goto('/fold/fold-in-half');
+  await next(page);
+  await expect(page.getByText('Well folded!')).toBeVisible();
+  const canvas = await page.locator('canvas').boundingBox();
+  test.skip(!canvas, 'no canvas');
+  const card = await page.locator('section[aria-labelledby="done-title"]').boundingBox();
+  if (!canvas || !card) throw new Error('missing box');
+  const [x, y] = [canvas.x + canvas.width / 2, canvas.y + canvas.height / 2];
+  const inside = x >= card.x && x <= card.x + card.width && y >= card.y && y <= card.y + card.height;
+  expect(inside).toBe(false);
 });
 
 test('the instructions can be hidden and shown, and the choice survives a reload', async ({ page }) => {

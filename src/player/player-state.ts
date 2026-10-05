@@ -24,7 +24,7 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
     case 'cycleSpeed':
       return { ...state, speed: SPEEDS[(SPEEDS.indexOf(state.speed) + 1) % SPEEDS.length] };
     case 'tick': {
-      if (!state.playing) return state;
+      if (!state.playing || !Number.isFinite(action.dt) || action.dt <= 0) return state;
       const t = state.t + (state.direction * action.dt * state.speed) / STEP_SECONDS;
       if (state.direction === 1 && t >= 1) return { ...state, t: 1, playing: false };
       if (state.direction === -1 && t <= 0)

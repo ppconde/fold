@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fixture } from '../fold/fixtures';
 import { foldedPositions } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
-import { fillTriangles, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import { endCentre, fillTriangles, lineGroups, paperExtent, triangleCount } from './paper-geometry';
 
 const half = () => loadModel(fixture('fold-in-half'));
 const quarters = () => loadModel(fixture('fold-in-quarters'));
@@ -59,5 +59,19 @@ describe('lineGroups', () => {
     const g = lineGroups(model, foldedPositions(model, 2, 0), 2, 0);
     expect(g.folded).toHaveLength(2 * 6);
     expect(g.flat).toHaveLength(2 * 6);
+  });
+});
+
+describe('endCentre', () => {
+  it('centres the flat sheet on the origin', () => {
+    const [x, z] = endCentre(half(), 0);
+    expect(x).toBeCloseTo(0, 9);
+    expect(z).toBeCloseTo(0, 9);
+  });
+
+  it('follows the paper onto the right half once folded', () => {
+    const [x, z] = endCentre(half(), 1);
+    expect(x).toBeCloseTo(0.25, 6);
+    expect(z).toBeCloseTo(0, 6);
   });
 });
