@@ -65,17 +65,17 @@ export function lineGroups(
   faces: Vec3[][],
   step: number,
   t: number
-): { borders: number[]; folded: number[]; flat: number[] } {
+): { borders: number[]; folded: number[]; flat: number[]; active: number[] } {
   const { active, past } = stepCreases(model, step);
   const angles = anglesAt(model, step, t);
   const borders: number[] = [];
   const folded: number[] = [];
   const flat: number[] = [];
+  const highlighted: number[] = [];
   model.assignments.forEach((a, e) => {
     if (a === 'B') borders.push(...segment(model, faces, e));
   });
-  for (const e of [...active, ...past].sort((x, y) => x - y)) {
-    (Math.abs(angles[e]) > FOLDED_DEGREES ? folded : flat).push(...segment(model, faces, e));
-  }
-  return { borders, folded, flat };
+  for (const e of active) highlighted.push(...segment(model, faces, e));
+  for (const e of past) (Math.abs(angles[e]) > FOLDED_DEGREES ? folded : flat).push(...segment(model, faces, e));
+  return { borders, folded, flat, active: highlighted };
 }
