@@ -7,6 +7,7 @@ const DEG = Math.PI / 180;
 const EPSILON = 1e-6;
 
 const ease = (t: number) => t * t * (3 - 2 * t);
+const progress = (t: number) => ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
 const clampAngle = (a: number) => Math.max(-MAX_RENDER_ANGLE, Math.min(MAX_RENDER_ANGLE, a));
 
 /** Rotation of face `g` about edge `e` by `angle` degrees, in flat-paper coordinates. */
@@ -92,7 +93,7 @@ export function anglesAt(model: Model, step: number, t: number): number[] {
   if (step === 0) return model.steps[0].angles.map(() => 0);
   const prev = model.steps[step - 1].angles;
   const cur = model.steps[step].angles;
-  const s = ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
+  const s = progress(t);
   return prev.map((a, e) => a + (cur[e] - a) * s);
 }
 
@@ -157,7 +158,7 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   const cur = model.steps[step];
   const angles = anglesAt(model, step, t).map(clampAngle);
   const T = rootTransforms(model, angles);
-  const s = ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
+  const s = progress(t);
   const world = stepRotation(model, step, s)
     .multiply(anchorFor(model, step))
     .multiply(T[cur.fixedFace].clone().invert());

@@ -1,3 +1,4 @@
+import { Euler, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
 import { anglesAt, checkConsistency, foldedPositions } from './fold';
@@ -249,5 +250,59 @@ describe('seam gap from the 178° clamp', () => {
       }
     }
     expect(worst).toBeLessThan(0.02);
+  });
+});
+
+describe('several turns', () => {
+  const build = (rot: (r: Vec3) => Vec3) =>
+    withSteps(quarters(), (s) => {
+      const r = (v: Vec3) => rot(v);
+      return [
+        s[0],
+        { ...s[1], angles: s[0].angles, rotation: r([0, 180, 0]), fixedFace: 1, instruction: 'Turn over.' },
+        { ...s[1], rotation: r([0, 180, 0]), fixedFace: 2, instruction: 'Fold.' },
+        { ...s[1], rotation: r([90, 0, 30]), fixedFace: 3, instruction: 'Tilt.' },
+        { ...s[1], rotation: r([0, 0, 0]), fixedFace: 0, instruction: 'Turn back.' }
+      ];
+    });
+  const turned = () => build((v) => v);
+  const normal = ([a, b, c]: Vec3[]) =>
+    new Vector3(...b)
+      .sub(new Vector3(...a))
+      .cross(new Vector3(...c).sub(new Vector3(...a)))
+      .normalize();
+
+  it('joins exactly at every step boundary', () => {
+    const m = turned();
+    for (let k = 1; k <= 3; k++) {
+      const end = foldedPositions(m, k, 1);
+      foldedPositions(m, k + 1, 0).forEach((face, f) => {
+        face.forEach((corner, c) => {
+          expectClose(corner, end[f][c], 9);
+        });
+      });
+    }
+  });
+
+  it('ends each step at the file rotation', () => {
+    const ref = build(() => [0, 0, 0]);
+    const q = new Quaternion().setFromEuler(new Euler(Math.PI / 2, 0, (30 * Math.PI) / 180));
+    const a = foldedPositions(turned(), 3, 1);
+    const b = foldedPositions(ref, 3, 1);
+    a.forEach((face, f) => {
+      const want = normal(b[f]).applyQuaternion(q);
+      expect(normal(face).distanceTo(want)).toBeLessThan(1e-9);
+    });
+  });
+
+  it('does not depend on request order', () => {
+    const cold = foldedPositions(turned(), 4, 1);
+    const m = turned();
+    for (let k = 1; k <= 3; k++) foldedPositions(m, k, 1);
+    foldedPositions(m, 4, 1).forEach((face, f) => {
+      face.forEach((corner, c) => {
+        expectClose(corner, cold[f][c], 12);
+      });
+    });
   });
 });
