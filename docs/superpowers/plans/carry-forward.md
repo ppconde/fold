@@ -23,6 +23,8 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 ## M5 — Landing and polish
 
+- **Very small screens.** At 320px wide with the sheet hidden, the dock pill (~332px) overflows and clips ◀; wrap it or hide the step count below ~340px. On desktops under ~700px tall the completion card can cover the bottom of the crease diagram.
+
 - **Lazy-load `Stage`.** The route chunk is ~993 kB.
 - **No keyboard camera control.** Only drag, pinch and scroll turn or zoom the view; R resets it.
 - **Aside tab stop.** The instructions aside's `tabIndex` (needed for the scrolling phone sheet) adds a tab stop on desktop.
