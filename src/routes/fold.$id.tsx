@@ -1,8 +1,8 @@
 import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tanstack/react-router';
+import { useCallback } from 'react';
 import { FoldError } from '../fold/load-model';
 import { fetchModel } from '../models/catalog';
-import { CreaseDiagram } from '../player/CreaseDiagram';
-import { Stage } from '../player/Stage';
+import { Player } from '../player/Player';
 
 export const Route = createFileRoute('/fold/$id')({
   validateSearch: (search: Record<string, unknown>): { step?: number } => {
@@ -22,17 +22,15 @@ export const Route = createFileRoute('/fold/$id')({
 
 function FoldPage() {
   const { entry, model } = Route.useLoaderData();
-  const { step = model.steps.length - 1 } = Route.useSearch();
-  const shown = Math.min(step, model.steps.length - 1);
-  return (
-    <main className="page">
-      <h1>{entry.name}</h1>
-      <div style={{ height: '60vh' }}>
-        <Stage model={model} step={shown} t={1} resetCount={0} />
-      </div>
-      <CreaseDiagram model={model} step={shown} />
-    </main>
+  const { step } = Route.useSearch();
+  const navigate = Route.useNavigate();
+  const onSettle = useCallback(
+    (settled: number) => {
+      if (settled !== step) void navigate({ search: { step: settled }, replace: true });
+    },
+    [navigate, step]
   );
+  return <Player key={entry.id} entry={entry} model={model} initialStep={step ?? 0} onSettle={onSettle} />;
 }
 
 function ModelNotFound() {
