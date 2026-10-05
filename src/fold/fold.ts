@@ -1,4 +1,4 @@
-import { Euler, Matrix4, Quaternion, Vector3 } from 'three';
+import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three';
 import { assertStep } from './assert-step';
 import type { Model, Vec3 } from './types';
 
@@ -86,15 +86,67 @@ function anchorFor(model: Model, step: number): Matrix4 {
   return list[step];
 }
 
+/** Eased, unclamped angle of every edge at progress `t` through `step` (all zeros at step 0). */
+export function anglesAt(model: Model, step: number, t: number): number[] {
+  assertStep(model, step);
+  if (step === 0) return model.steps[0].angles.map(() => 0);
+  const prev = model.steps[step - 1].angles;
+  const cur = model.steps[step].angles;
+  const s = ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
+  return prev.map((a, e) => a + (cur[e] - a) * s);
+}
+
+const rotations = new WeakMap<Model, Matrix4[]>();
+
+const toQuaternion = (r: Vec3) => new Quaternion().setFromEuler(new Euler(r[0] * DEG, r[1] * DEG, r[2] * DEG));
+
+/** Unrotated pose of every face at the start of `step` (clamped angles, anchored). */
+function startPose(model: Model, step: number): Matrix4[] {
+  const T = rootTransforms(model, model.steps[step - 1].angles.map(clampAngle));
+  const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
+  return T.map((m) => base.clone().multiply(m));
+}
+
+/** World-space bounding-box centre of `poses` after `world`. */
+function centreOf(model: Model, poses: Matrix4[], world: Matrix4): Vector3 {
+  const box = new Box3();
+  const p = new Vector3();
+  model.faces.forEach((face, f) => {
+    const m = world.clone().multiply(poses[f]);
+    for (const v of face) box.expandByPoint(p.set(model.vertices[v][0], model.vertices[v][1], 0).applyMatrix4(m));
+  });
+  return box.getCenter(new Vector3());
+}
+
 // Rotations slerp along the shortest path, so a 360° turn animates nothing and 180° picks a direction.
-function modelRotation(model: Model, from: Vec3, to: Vec3, s: number): Matrix4 {
-  const q0 = new Quaternion().setFromEuler(new Euler(from[0] * DEG, from[1] * DEG, from[2] * DEG));
-  const q1 = new Quaternion().setFromEuler(new Euler(to[0] * DEG, to[1] * DEG, to[2] * DEG));
-  const centre = new Vector3(model.center[0], model.center[1], 0);
+// Each step's turn pivots about the paper's centre at the start of that step, so a folded model turns in place.
+function stepRotation(model: Model, step: number, s: number): Matrix4 {
+  const before = rotationAfter(model, step - 1);
+  const from = model.steps[step - 1].rotation;
+  const to = model.steps[step].rotation;
+  if (from[0] === to[0] && from[1] === to[1] && from[2] === to[2]) return before.clone();
+  const delta = new Quaternion().slerpQuaternions(
+    new Quaternion(),
+    toQuaternion(to).multiply(toQuaternion(from).invert()),
+    s
+  );
+  const c = centreOf(model, startPose(model, step), before);
   return new Matrix4()
-    .makeTranslation(centre)
-    .multiply(new Matrix4().makeRotationFromQuaternion(q0.slerp(q1, s)))
-    .multiply(new Matrix4().makeTranslation(centre.clone().negate()));
+    .makeTranslation(c)
+    .multiply(new Matrix4().makeRotationFromQuaternion(delta))
+    .multiply(new Matrix4().makeTranslation(c.clone().negate()))
+    .multiply(before);
+}
+
+/** World rotation at the end of `step` (identity at step 0). Cached per model. */
+function rotationAfter(model: Model, step: number): Matrix4 {
+  let list = rotations.get(model);
+  if (!list) {
+    list = [new Matrix4()];
+    rotations.set(model, list);
+  }
+  for (let k = list.length; k <= step; k++) list[k] = stepRotation(model, k, 1);
+  return list[step];
 }
 
 /** Corners of every face (in `model.faces` order) at progress `t` through `step`. */
@@ -102,12 +154,11 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   assertStep(model, step);
   if (step === 0) return model.faces.map((f) => f.map((v): Vec3 => [...model.vertices[v], 0]));
 
-  const prev = model.steps[step - 1];
   const cur = model.steps[step];
-  const s = ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
-  const angles = prev.angles.map((a, e) => clampAngle(a + (cur.angles[e] - a) * s));
+  const angles = anglesAt(model, step, t).map(clampAngle);
   const T = rootTransforms(model, angles);
-  const world = modelRotation(model, prev.rotation, cur.rotation, s)
+  const s = ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
+  const world = stepRotation(model, step, s)
     .multiply(anchorFor(model, step))
     .multiply(T[cur.fixedFace].clone().invert());
 
