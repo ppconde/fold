@@ -257,3 +257,14 @@
     padding: 1.25rem 1rem;
   }
 }
+
+.stagePlaceholder {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: min(40%, 14rem);
+  aspect-ratio: 1;
+  border-radius: 2px;
+  background: var(--off-white);
+  box-shadow: 0 8px 24px rgb(43 42 40 / 0.08);
+}

@@ -1,15 +1,16 @@
 import { Link } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { Model } from '../fold/types';
 import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, readPanelOpen, writePanelOpen } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
 import styles from './Player.module.css';
 import { playerStatus } from './player-state';
-import { Stage } from './Stage';
 import { usePlayer } from './use-player';
 
 type Props = { entry: ModelEntry; model: Model; initialStep: number; onSettle: (step: number) => void };
+
+const Stage = lazy(() => import('./Stage').then((m) => ({ default: m.Stage })));
 
 const FIRST_INSTRUCTION = 'Start with your sheet of paper, colored side up.';
 
@@ -88,7 +89,9 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
       <div className={styles.stage}>
         {webgl ? (
-          <Stage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
+          <Suspense fallback={<div className={styles.stagePlaceholder} aria-hidden="true" />}>
+            <Stage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
+          </Suspense>
         ) : (
           <p className={styles.noWebgl}>
             The 3D view isn't available on this device. Follow the crease pattern and instructions instead.

@@ -234,3 +234,22 @@ test('the flat sheet has no progress slider', async ({ page }) => {
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
   await expect(page.getByRole('slider', { name: 'Fold progress' })).toHaveCount(0);
 });
+
+test('the controls work before the 3D view has loaded', async ({ page }) => {
+  let release: () => void = () => {};
+  const held = new Promise<void>((r) => {
+    release = r;
+  });
+  await page.route(/\/assets\/Stage-[^/]+\.js$/, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto('/fold/fold-in-quarters');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
+  await expect(page.locator('canvas')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Next step' }).click();
+  await settled(page);
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  release();
+  await expect(page.locator('canvas')).toBeVisible();
+});
