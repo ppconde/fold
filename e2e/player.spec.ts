@@ -106,6 +106,7 @@ test('the dock, the instructions and the title never overlap', async ({ page }) 
 });
 
 test('the player has no serious accessibility violations', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' }); // axe must not sample a mid-fade
   await page.goto('/fold/fold-in-quarters?step=1');
   const { violations } = await new AxeBuilder({ page }).analyze();
   const serious = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
@@ -289,4 +290,22 @@ test('if the 3D view fails to load, the 2D path keeps working and Try again reco
   await page.getByRole('button', { name: 'Try again' }).click();
   await expect(page.locator('canvas')).toBeVisible();
   await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+});
+
+test('the dock hint shows on the first visit and is gone once a step has played', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters');
+  const hint = page.getByText('← back · next → · hover for names');
+  await expect(hint).toBeVisible();
+  await next(page);
+  await expect(hint).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  await expect(hint).toHaveCount(0);
+});
+
+test('every dock button has a non-empty title', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=1');
+  const buttons = page.getByTestId('dock').getByRole('button');
+  await expect(buttons).toHaveCount(6);
+  for (const b of await buttons.all()) expect(((await b.getAttribute('title')) ?? '').length).toBeGreaterThan(0);
 });

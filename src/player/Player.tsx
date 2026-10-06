@@ -6,6 +6,8 @@ import { localized } from '../i18n/lang';
 import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, readPanelOpen, writePanelOpen } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
+import { markHintSeen, shouldShowHint } from './dock-hint';
+import { AgainIcon, BackIcon, NextIcon, StartIcon, ViewIcon } from './icons';
 import { loadStage } from './load-stage';
 import styles from './Player.module.css';
 import { playerStatus } from './player-state';
@@ -28,6 +30,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [frameStep, setFrameStep] = useState(state.step);
   const [webgl] = useState(hasWebGL);
   const [stageFailed, setStageFailed] = useState(false);
+  const [hint, setHint] = useState<'show' | 'fading' | 'gone'>(() => (shouldShowHint() ? 'show' : 'gone'));
   const showPanel = panelOpen || !webgl || stageFailed;
   const instruction = state.step === 0 ? t.firstInstruction : localized(model.steps[state.step].instruction, lang);
 
@@ -51,8 +54,18 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const prevStatus = useRef(status);
   useEffect(() => {
     if (status === 'done' && prevStatus.current === 'playing') doneRef.current?.focus();
+    if (prevStatus.current === 'playing' && status !== 'playing' && state.step >= 1) {
+      markHintSeen();
+      setHint((h) => (h === 'show' ? 'fading' : h));
+    }
     prevStatus.current = status;
-  }, [status]);
+  }, [status, state.step]);
+
+  useEffect(() => {
+    if (hint !== 'fading') return;
+    const id = setTimeout(() => setHint('gone'), 600);
+    return () => clearTimeout(id);
+  }, [hint]);
 
   // follow an external ?step change; while playing, state.step differs from the URL by design
   // biome-ignore lint/correctness/useExhaustiveDependencies: only react to the URL step changing
@@ -109,7 +122,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         {webgl && !stageFailed && (
           <button
             type="button"
-            className={styles.panelToggle}
+            className={`${styles.panelToggle} ink-link`}
             aria-expanded={showPanel}
             aria-controls="instructions"
             onClick={() => togglePanel(!panelOpen)}
@@ -119,8 +132,14 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         )}
       </div>
 
-      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: the sheet scrolls on phones and must be keyboard reachable */}
-      <aside id="instructions" className={styles.panel} aria-label={t.instructions} hidden={!showPanel} tabIndex={0}>
+      <aside
+        id="instructions"
+        className={`${styles.panel} paper`}
+        aria-label={t.instructions}
+        hidden={!showPanel}
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: the sheet scrolls on phones and must be keyboard reachable
+        tabIndex={0}
+      >
         <p className={styles.stepLabel}>{t.stepOf(state.step, state.last)}</p>
         <p className={styles.instruction} aria-live="polite">
           {instruction}
@@ -142,7 +161,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             onChange={(e) => dispatch({ type: 'scrub', t: Number(e.target.value) / 100 })}
           />
         )}
-        <div className={styles.pill}>
+        <div className={styles.dockRow}>
           <button
             type="button"
             aria-label={t.startOver}
@@ -150,10 +169,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'goTo', step: 0 })}
           >
-            <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" className={styles.icon}>
-              <path d="M4 4v12" />
-              <path d="M16 4 7 10l9 6z" className={styles.solid} />
-            </svg>
+            <StartIcon />
           </button>
           <button
             type="button"
@@ -162,7 +178,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'prev' })}
           >
-            {'\u25C0\uFE0E'}
+            <BackIcon />
           </button>
           <button
             type="button"
@@ -171,28 +187,29 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'replay' })}
           >
-            ↻
+            <AgainIcon />
           </button>
           <button
             type="button"
             ref={nextRef}
-            className={styles.primary}
+            className={styles.next}
             aria-label={t.next}
             title={t.next}
             aria-disabled={(state.step === state.last && state.t === 1) || state.playing}
             onClick={() => dispatch({ type: 'next' })}
           >
-            {'\u25B6\uFE0E'}
+            <NextIcon />
           </button>
           <button
             type="button"
+            className={styles.speed}
             aria-label={t.speed(state.speed)}
             title={t.speed(state.speed)}
             onClick={() => dispatch({ type: 'cycleSpeed' })}
           >
             {state.speed}×
           </button>
-          {webgl && (
+          {webgl && !stageFailed ? (
             <button
               type="button"
               aria-label={t.resetView}
@@ -200,18 +217,22 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
               onClick={() => setResetCount((n) => n + 1)}
             >
               {/* Framing corners, not a circular arrow: this recentres the camera, it does not restart the fold. */}
-              <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" className={styles.icon}>
-                <path d="M2 7V2h5M13 2h5v5M18 13v5h-5M7 18H2v-5" />
-                <circle cx="10" cy="10" r="2" />
-              </svg>
+              <ViewIcon />
             </button>
+          ) : (
+            <span aria-hidden="true" />
           )}
-          {!showPanel && <span className={styles.count}>{t.count(state.step, state.last)}</span>}
+          <span className={styles.count}>{t.count(state.step, state.last)}</span>
         </div>
+        {hint !== 'gone' && (
+          <p className={`${styles.hint} ${hint === 'fading' ? styles.hintOut : ''}`} aria-hidden="true">
+            {t.hint}
+          </p>
+        )}
       </div>
 
       {status === 'done' && (
-        <section className={styles.done} aria-labelledby="done-title">
+        <section className={`${styles.done} paper`} aria-labelledby="done-title">
           <h2 id="done-title" ref={doneRef} tabIndex={-1}>
             {t.wellFolded}
           </h2>
@@ -219,7 +240,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           <div className={styles.doneActions}>
             <button
               type="button"
-              className={styles.primary}
+              className="ink-link"
               onClick={() => {
                 dispatch({ type: 'goTo', step: 0 });
                 nextRef.current?.focus();

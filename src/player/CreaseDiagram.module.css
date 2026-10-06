@@ -4,8 +4,10 @@
   max-width: 16rem;
   aspect-ratio: 1;
   margin: 0 auto;
-  background: #fff;
-  box-shadow: 0 4px 12px rgb(43 42 40 / 0.08);
+  background: var(--grain), var(--ivory);
+  rotate: -1deg;
+  outline: 1px solid rgb(51 48 44 / 0.15);
+  box-shadow: 0 10px 22px -14px rgb(51 48 44 / 0.45);
 }
 
 .diagram line {
@@ -28,7 +30,7 @@
 
 .past {
   stroke-width: calc(1.5px * var(--text-scale));
-  opacity: 0.45;
+  opacity: 0.4;
 }
 
 .diagram .active {

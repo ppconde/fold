@@ -16,12 +16,12 @@ export class StageBoundary extends Component<Props, { failed: boolean }> {
   render() {
     if (!this.state.failed) return this.props.children;
     return (
-      <>
+      <div className={styles.fallback}>
         <p className={styles.noWebgl}>{this.props.message}</p>
-        <button type="button" className={styles.retry} onClick={() => location.reload()}>
+        <button type="button" className="ink-link" onClick={() => location.reload()}>
           {this.props.retryLabel}
         </button>
-      </>
+      </div>
     );
   }
 }

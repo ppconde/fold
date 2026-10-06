@@ -33,6 +33,7 @@ test('Portuguese pages have no serious accessibility violations', async ({ page 
   await page.goto('/about');
   await page.evaluate(() => localStorage.setItem('fold:lang', 'pt'));
   for (const path of ['/', '/library', '/about', '/fold/fold-in-quarters?step=1']) {
+    await page.emulateMedia({ reducedMotion: 'reduce' }); // axe must not sample a mid-fade
     await page.goto(path);
     const { violations } = await new AxeBuilder({ page }).analyze();
     expect(violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => v.id)).toEqual([]);

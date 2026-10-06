@@ -5,25 +5,28 @@
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr) auto auto;
   grid-template-areas: "title" "stage" "panel" "dock";
-  background: radial-gradient(circle at 50% 40%, var(--ivory), rgb(51 48 44 / 0.15));
+  background: none;
 }
 
 .title {
   grid-area: title;
   min-height: 4.75rem;
-  padding: 1.1rem 1rem 0 4.5rem;
+  padding: 1.1rem 1rem 0 6rem;
 }
 
 .title h1 {
   margin: 0;
-  font-size: 1.4rem;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 500;
 }
 
 .japanese {
   margin: 0;
   color: var(--muted);
-  font-style: italic;
-  font-size: 0.95rem;
+  font-family: var(--font-brush);
+  font-style: normal;
+  font-size: 1rem;
 }
 
 .stage {
@@ -32,39 +35,18 @@
   min-height: 0;
 }
 
+.fallback {
+  text-align: center;
+}
+
 .noWebgl {
   max-width: 28rem;
   margin: 2rem auto;
   padding: 0 1rem;
   color: var(--muted);
+  font-family: var(--font-serif);
+  font-size: 1.1rem;
   text-align: center;
-}
-
-.retry {
-  display: block;
-  margin: 0 auto;
-  min-height: 44px;
-  padding: 0 1rem;
-  border: 1px solid rgb(51 48 44 / 0.15);
-  border-radius: 999px;
-  background: var(--ivory);
-  font: inherit;
-  cursor: pointer;
-}
-
-.panelToggle,
-.pill button,
-.doneActions button,
-.doneActions a {
-  min-height: 44px;
-  min-width: 44px;
-  padding: 0 1rem;
-  border: 1px solid rgb(51 48 44 / 0.15);
-  border-radius: 999px;
-  background: var(--ivory);
-  color: var(--charcoal);
-  font-size: 1rem;
-  cursor: pointer;
 }
 
 .panelToggle {
@@ -75,14 +57,24 @@
 }
 
 .panel {
+  position: relative;
   grid-area: panel;
   max-height: 42dvh;
   overflow: auto;
-  padding: 1rem;
-  border-top: 1px solid rgb(51 48 44 / 0.15);
-  border-radius: 1rem 1rem 0 0;
-  background: var(--ivory);
-  box-shadow: 0 -6px 16px rgb(43 42 40 / 0.06);
+  padding: 1.75rem 1.5rem;
+  clip-path: polygon(0 1.2%, 30% 0, 62% 0.8%, 100% 0, 100% 100%, 0 100%);
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 62%;
+  width: 1px;
+  background: var(--charcoal);
+  opacity: 0.06;
+  pointer-events: none;
 }
 
 .panel[hidden] {
@@ -92,15 +84,18 @@
 .stepLabel {
   margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
-  letter-spacing: 0.06em;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .instruction {
-  margin: 0.25rem 0 1rem;
+  margin: 0.5rem 0 1rem;
   font-family: var(--font-serif);
-  font-size: 1.25rem;
+  font-size: 1.2rem;
+  line-height: 1.55;
+  color: var(--charcoal);
 }
 
 .dock {
@@ -114,79 +109,125 @@
 }
 
 .progress {
-  width: min(22rem, 100%);
-  min-height: 44px;
+  appearance: none;
+  width: min(18rem, 100%);
+  height: 44px;
+  background: none;
   margin: 0;
-  accent-color: var(--clay);
   cursor: pointer;
 }
 
-.pill {
-  display: flex;
+.progress::-webkit-slider-runnable-track {
+  height: 1px;
+  background: rgb(51 48 44 / 0.45);
+}
+
+.progress::-moz-range-track {
+  height: 1px;
+  background: rgb(51 48 44 / 0.45);
+}
+
+.progress::-webkit-slider-thumb {
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  margin-top: -5px;
+  border-radius: 50%;
+  background: var(--clay);
+}
+
+.progress::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--clay);
+}
+
+/* Seven cells: 3 x 44 + 56 + 3 x 44 = 320px, fits a 360px phone. */
+.dockRow {
+  display: grid;
+  grid-template-columns: repeat(3, 44px) 56px repeat(3, 44px);
+  justify-items: center;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem;
-  border: 1px solid rgb(51 48 44 / 0.15);
-  border-radius: 999px;
-  background: var(--ivory);
-  box-shadow: 0 4px 12px rgb(43 42 40 / 0.08);
 }
 
-.pill button {
-  padding: 0 0.75rem;
+.dockRow button {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--charcoal);
 }
 
-/* Six 44px buttons plus the step count must fit a 360px phone. */
-@media (max-width: 400px) {
-  .pill {
-    gap: 0.2rem;
-  }
-
-  .pill button {
-    padding: 0 0.4rem;
-  }
-
-  .count {
-    padding: 0 0.4rem;
-  }
-}
-
-.icon {
-  display: block;
-  margin: 0 auto;
-  fill: none;
-  stroke: currentcolor;
-  stroke-width: 2;
-  stroke-linecap: round;
-}
-
-.icon circle,
-.icon .solid {
-  fill: currentcolor;
-  stroke: none;
-}
-
-.doneActions button,
-.doneActions a {
-  white-space: nowrap;
-}
-
-.pill .primary,
-.doneActions .primary {
-  border-color: var(--charcoal);
+.dockRow button::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  width: 18px;
+  height: 1px;
+  translate: -50% 0;
   background: var(--charcoal);
-  color: var(--ivory);
+  opacity: 0;
+  transition: opacity 400ms var(--ease);
 }
 
-.pill button[aria-disabled="true"] {
-  opacity: 0.45;
+.dockRow button:hover::after,
+.dockRow button:focus-visible::after {
+  opacity: 1;
+}
+
+.dockRow .next {
+  width: 56px;
+  color: var(--clay);
+}
+
+.dockRow button[aria-disabled="true"] {
+  opacity: 0.35;
   cursor: default;
 }
 
-.count {
-  padding: 0 0.75rem;
-  white-space: nowrap;
+.dockRow .speed {
   color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.count {
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  text-align: center;
+  animation: hint-in 600ms var(--ease) both;
+}
+
+.hintOut {
+  animation: hint-out 600ms var(--ease) forwards;
+}
+
+@keyframes hint-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes hint-out {
+  to {
+    opacity: 0;
+  }
 }
 
 .done {
@@ -196,28 +237,66 @@
   transform: translateX(-50%);
   width: min(22rem, calc(100vw - 2rem));
   padding: 1.5rem;
-  border: 1px solid rgb(51 48 44 / 0.15);
-  background: var(--ivory);
-  box-shadow: 0 12px 32px rgb(43 42 40 / 0.18);
-  clip-path: polygon(0 0, calc(100% - 1.25rem) 0, 100% 1.25rem, 100% 100%, 0 100%);
   text-align: center;
+  animation: done-in 500ms var(--ease) both;
+}
+
+.done::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 22px;
+  height: 22px;
+  background: var(--plaster);
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
+}
+
+.done::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 31px;
+  height: 1px;
+  background: rgb(51 48 44 / 0.25);
+  transform-origin: right top;
+  rotate: 45deg;
+  z-index: 1;
+}
+
+@keyframes done-in {
+  from {
+    opacity: 0;
+  }
 }
 
 .done h2 {
   margin: 0 0 0.5rem;
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-weight: 500;
 }
 
 .doneActions {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 0.75rem;
   margin-top: 1rem;
+}
+
+.doneActions button,
+.doneActions a {
+  white-space: nowrap;
 }
 
 .doneActions a {
   display: inline-flex;
   align-items: center;
-  text-decoration: none;
+  min-height: 44px;
+  padding: 0 0.25rem;
+  color: var(--charcoal);
 }
 
 @media (min-width: 900px) {
@@ -233,11 +312,11 @@
 
   .panel {
     max-height: none;
-    padding: 5rem 1.5rem 1.5rem;
-    border-top: 0;
-    border-left: 1px solid rgb(51 48 44 / 0.15);
-    border-radius: 0;
-    box-shadow: -6px 0 16px rgb(43 42 40 / 0.05);
+    margin: 1.25rem 1.25rem 1.25rem 0.5rem;
+    padding: 4.5rem 1.5rem 1.5rem;
+    clip-path: none;
+    rotate: -0.4deg;
+    transform-origin: center;
   }
 
   /* the stage runs under the dock so the canvas (and its shadow) reaches the bottom edge */
@@ -254,7 +333,7 @@
     background: transparent;
   }
 
-  .pill,
+  .dockRow,
   .progress {
     pointer-events: auto;
   }

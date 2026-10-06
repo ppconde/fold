@@ -10,6 +10,7 @@ const pages = [
 
 for (const { path, heading } of pages) {
   test(`${path} loads and has no serious accessibility violations`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' }); // axe must not sample a mid-fade
     await page.goto(path);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(heading);
 
