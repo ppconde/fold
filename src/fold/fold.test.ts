@@ -1,6 +1,7 @@
+import { Euler, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
-import { checkConsistency, foldedPositions } from './fold';
+import { anglesAt, checkConsistency, foldedPositions } from './fold';
 import { loadModel } from './load-model';
 import type { Model, Step, Vec3 } from './types';
 
@@ -167,5 +168,141 @@ describe('step joins', () => {
 
   it('treats a NaN t as 0', () => {
     expect(foldedPositions(half(), 1, Number.NaN)).toEqual(foldedPositions(half(), 1, 0));
+  });
+});
+
+describe('anglesAt', () => {
+  it('is all zeros at step 0', () => {
+    expect(anglesAt(half(), 0, 0.5)).toEqual([0, 0, 0, 0, 0, 0, 0]);
+  });
+
+  it('eases each crease from the previous step to this one', () => {
+    expect(anglesAt(half(), 1, 0)[6]).toBeCloseTo(0);
+    expect(anglesAt(half(), 1, 0.5)[6]).toBeCloseTo(90);
+    expect(anglesAt(half(), 1, 1)[6]).toBeCloseTo(180);
+  });
+
+  it('throws RangeError for a missing step', () => {
+    expect(() => anglesAt(half(), 5, 0)).toThrow(RangeError);
+  });
+});
+
+describe('turning over a folded model', () => {
+  // step 1 folds the left half over; step 2 turns the whole thing over
+  const turned = () =>
+    withSteps(half(), (s) => [s[0], s[1], { ...s[1], rotation: [0, 180, 0], instruction: 'Turn it over.' }]);
+
+  const xRange = (faces: Vec3[][]) => {
+    const xs = faces.flat().map((p) => p[0]);
+    return [Math.min(...xs), Math.max(...xs)];
+  };
+
+  it('stays in place instead of sliding across the flat paper centre', () => {
+    const [min, max] = xRange(foldedPositions(turned(), 2, 1));
+    expect(min).toBeCloseTo(0.5, 1);
+    expect(max).toBeCloseTo(1, 1);
+  });
+
+  it('still joins exactly at both ends of the turn', () => {
+    const model = withSteps(turned(), (s) => [...s, { ...s[2], instruction: 'Look at the back.' }]);
+    const pairs: [number, number, number, number][] = [
+      [1, 1, 2, 0],
+      [2, 1, 3, 0]
+    ];
+    for (const [a, ta, b, tb] of pairs) {
+      const end = foldedPositions(model, a, ta);
+      foldedPositions(model, b, tb).forEach((face, f) => {
+        face.forEach((corner, c) => {
+          expectClose(corner, end[f][c], 9);
+        });
+      });
+    }
+  });
+
+  it('ends with the back of the paper facing the viewer', () => {
+    // the fixed face's front normal (+z when flat) points to −z after turning over
+    const [a, b, c] = foldedPositions(turned(), 2, 1)[1];
+    const n = [
+      (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]),
+      (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]),
+      (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    ];
+    expect(n[2]).toBeLessThan(0);
+  });
+});
+
+describe('seam gap from the 178° clamp', () => {
+  // Regression guard: copies of the same vertex on different faces may drift apart
+  // mid-step because angles are clamped. Today's maximum is ~0.0175; fail if it grows.
+  it('stays under 2% of the paper while folding through two layers', () => {
+    const model = quarters();
+    let worst = 0;
+    for (const t of [0.25, 0.5, 0.75, 1]) {
+      const faces = foldedPositions(model, 2, t);
+      const copies = new Map<number, Vec3[]>();
+      model.faces.forEach((face, f) => {
+        face.forEach((v, c) => {
+          copies.set(v, [...(copies.get(v) ?? []), faces[f][c]]);
+        });
+      });
+      for (const pts of copies.values()) {
+        for (const p of pts) worst = Math.max(worst, Math.hypot(p[0] - pts[0][0], p[1] - pts[0][1], p[2] - pts[0][2]));
+      }
+    }
+    expect(worst).toBeLessThan(0.02);
+  });
+});
+
+describe('several turns', () => {
+  const build = (rot: (r: Vec3) => Vec3) =>
+    withSteps(quarters(), (s) => {
+      const r = (v: Vec3) => rot(v);
+      return [
+        s[0],
+        { ...s[1], angles: s[0].angles, rotation: r([0, 180, 0]), fixedFace: 1, instruction: 'Turn over.' },
+        { ...s[1], rotation: r([0, 180, 0]), fixedFace: 2, instruction: 'Fold.' },
+        { ...s[1], rotation: r([90, 0, 30]), fixedFace: 3, instruction: 'Tilt.' },
+        { ...s[1], rotation: r([0, 0, 0]), fixedFace: 0, instruction: 'Turn back.' }
+      ];
+    });
+  const turned = () => build((v) => v);
+  const normal = ([a, b, c]: Vec3[]) =>
+    new Vector3(...b)
+      .sub(new Vector3(...a))
+      .cross(new Vector3(...c).sub(new Vector3(...a)))
+      .normalize();
+
+  it('joins exactly at every step boundary', () => {
+    const m = turned();
+    for (let k = 1; k <= 3; k++) {
+      const end = foldedPositions(m, k, 1);
+      foldedPositions(m, k + 1, 0).forEach((face, f) => {
+        face.forEach((corner, c) => {
+          expectClose(corner, end[f][c], 9);
+        });
+      });
+    }
+  });
+
+  it('ends each step at the file rotation', () => {
+    const ref = build(() => [0, 0, 0]);
+    const q = new Quaternion().setFromEuler(new Euler(Math.PI / 2, 0, (30 * Math.PI) / 180));
+    const a = foldedPositions(turned(), 3, 1);
+    const b = foldedPositions(ref, 3, 1);
+    a.forEach((face, f) => {
+      const want = normal(b[f]).applyQuaternion(q);
+      expect(normal(face).distanceTo(want)).toBeLessThan(1e-9);
+    });
+  });
+
+  it('does not depend on request order', () => {
+    const cold = foldedPositions(turned(), 4, 1);
+    const m = turned();
+    for (let k = 1; k <= 3; k++) foldedPositions(m, k, 1);
+    foldedPositions(m, 4, 1).forEach((face, f) => {
+      face.forEach((corner, c) => {
+        expectClose(corner, cold[f][c], 12);
+      });
+    });
   });
 });

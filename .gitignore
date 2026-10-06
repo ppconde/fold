@@ -41,3 +41,6 @@ playwright-report/
 
 # Wrangler
 .wrangler/
+
+# graphify knowledge graph output (generated)
+graphify-out/

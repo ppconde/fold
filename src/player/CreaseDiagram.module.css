@@ -1,0 +1,37 @@
+.diagram {
+  display: block;
+  width: 100%;
+  max-width: 16rem;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  background: #fff;
+  box-shadow: 0 4px 12px rgb(43 42 40 / 0.08);
+}
+
+.diagram line {
+  stroke: var(--charcoal);
+  stroke-linecap: round;
+  fill: none;
+}
+
+.border {
+  stroke-width: calc(2px * var(--text-scale));
+}
+
+.valley {
+  stroke-dasharray: 6 4;
+}
+
+.mountain {
+  stroke-dasharray: 8 3 2 3;
+}
+
+.past {
+  stroke-width: calc(1.5px * var(--text-scale));
+  opacity: 0.45;
+}
+
+.diagram .active {
+  stroke: var(--terracotta);
+  stroke-width: calc(3px * var(--text-scale));
+}

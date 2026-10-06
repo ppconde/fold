@@ -1,5 +1,5 @@
-import { Link, Outlet } from '@tanstack/react-router';
-import { useRef, useState } from 'react';
+import { HeadContent, Link, Outlet, useRouterState } from '@tanstack/react-router';
+import { useEffect, useRef, useState } from 'react';
 import styles from './AppShell.module.css';
 import { readTextScale, setTextScale, TEXT_SCALES, type TextScale } from './text-scale';
 
@@ -20,9 +20,20 @@ export function AppShell() {
   const menu = useRef<HTMLDialogElement>(null);
   const [scale, setScale] = useState<TextScale>(readTextScale);
   const close = () => menu.current?.close();
+  const pathname = useRouterState({ select: (s) => s.resolvedLocation?.pathname });
+  const shownPath = useRef(pathname);
+  useEffect(() => {
+    // Screen-reader and keyboard users land on the new page's heading, not where the old page left them.
+    if (!pathname || shownPath.current === pathname) return;
+    shownPath.current = pathname;
+    const heading = document.querySelector<HTMLElement>('main h1');
+    heading?.setAttribute('tabindex', '-1');
+    heading?.focus();
+  }, [pathname]);
 
   return (
     <>
+      <HeadContent />
       <header>
         <button type="button" className={styles.menuButton} aria-label="Menu" onClick={() => menu.current?.showModal()}>
           ☰

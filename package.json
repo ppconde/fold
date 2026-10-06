@@ -13,6 +13,8 @@
     "check": "biome check --write"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
     "@tanstack/react-router": "^1.170.41",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
