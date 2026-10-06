@@ -43,14 +43,14 @@ function Shell() {
       <header>
         <button
           type="button"
-          className={styles.menuButton}
+          className={`ink-link ${styles.menuButton}`}
           aria-label={t.shell.menu}
           onClick={() => menu.current?.showModal()}
         >
-          ☰
+          {t.shell.menu.toLowerCase()}
         </button>
       </header>
-      <dialog ref={menu} className={styles.menu} aria-label={t.shell.menu} closedby="any">
+      <dialog ref={menu} className={`paper ${styles.menu}`} aria-label={t.shell.menu} closedby="any">
         <nav>
           <ul>
             {LINKS.map((link) => (
@@ -91,7 +91,7 @@ function Shell() {
             </button>
           ))}
         </fieldset>
-        <button type="button" className={styles.close} onClick={close}>
+        <button type="button" className={`ink-link ${styles.close}`} onClick={close}>
           {t.shell.close}
         </button>
       </dialog>

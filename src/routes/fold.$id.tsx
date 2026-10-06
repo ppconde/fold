@@ -6,6 +6,7 @@ import { currentLang, dictionary, localized } from '../i18n/lang';
 import { fetchModel } from '../models/catalog';
 import { loadStage } from '../player/load-stage';
 import { Player } from '../player/Player';
+import pages from '../styles/pages.module.css';
 
 export const Route = createFileRoute('/fold/$id')({
   validateSearch: (search: Record<string, unknown>): { step?: number } => {
@@ -48,10 +49,12 @@ function FoldPage() {
 function ModelNotFound() {
   const t = useT().errors;
   return (
-    <main className="page">
+    <main className={`page ${pages.page}`}>
       <h1>{t.modelNotFound}</h1>
       <p>
-        <Link to="/library">{t.browseLibrary}</Link>
+        <Link className="ink-link" to="/library">
+          {t.browseLibrary}
+        </Link>
       </p>
     </main>
   );
@@ -60,11 +63,13 @@ function ModelNotFound() {
 function ModelError({ error }: ErrorComponentProps) {
   const t = useT().errors;
   return (
-    <main className="page">
+    <main className={`page ${pages.page}`}>
       <h1>{t.modelUnreadable}</h1>
-      <p>{error instanceof FoldError ? error.message : t.checkConnection}</p>
+      <p className={pages.prose}>{error instanceof FoldError ? error.message : t.checkConnection}</p>
       <p>
-        <Link to="/library">{t.browseLibrary}</Link>
+        <Link className="ink-link" to="/library">
+          {t.browseLibrary}
+        </Link>
       </p>
     </main>
   );

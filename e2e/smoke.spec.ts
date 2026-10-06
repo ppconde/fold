@@ -74,7 +74,7 @@ test('focus ring is visible inside the dark menu', async ({ page }) => {
 
   await page.keyboard.press('Tab');
   const outline = await page.evaluate(() => getComputedStyle(document.activeElement as Element).outlineColor);
-  expect(outline).toBe('rgb(243, 237, 226)');
+  expect(outline).toBe('rgb(79, 97, 119)');
 });
 
 test('tapping the backdrop closes the menu', async ({ page }) => {
