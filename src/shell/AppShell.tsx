@@ -1,22 +1,28 @@
 import { HeadContent, Link, Outlet, useRouterState } from '@tanstack/react-router';
 import { useEffect, useRef, useState } from 'react';
+import { LanguageProvider, useLang, useT } from '../i18n/LanguageProvider';
 import styles from './AppShell.module.css';
 import { readTextScale, setTextScale, TEXT_SCALES, type TextScale } from './text-scale';
 
 const LINKS = [
-  { to: '/', label: 'Home' },
-  { to: '/library', label: 'Library' },
-  { to: '/editor', label: 'Editor' },
-  { to: '/about', label: 'About' }
+  { to: '/', key: 'home' },
+  { to: '/library', key: 'library' },
+  { to: '/about', key: 'about' }
 ] as const;
 
-const SCALE_BUTTONS = [
-  { glyph: 'A', label: 'Normal text' },
-  { glyph: 'A+', label: 'Large text' },
-  { glyph: 'A++', label: 'Larger text' }
-];
+const GLYPHS = ['A', 'A+', 'A++'];
 
 export function AppShell() {
+  return (
+    <LanguageProvider>
+      <Shell />
+    </LanguageProvider>
+  );
+}
+
+function Shell() {
+  const t = useT();
+  const [lang, setLang] = useLang();
   const menu = useRef<HTMLDialogElement>(null);
   const [scale, setScale] = useState<TextScale>(readTextScale);
   const close = () => menu.current?.close();
@@ -35,24 +41,29 @@ export function AppShell() {
     <>
       <HeadContent />
       <header>
-        <button type="button" className={styles.menuButton} aria-label="Menu" onClick={() => menu.current?.showModal()}>
+        <button
+          type="button"
+          className={styles.menuButton}
+          aria-label={t.shell.menu}
+          onClick={() => menu.current?.showModal()}
+        >
           ☰
         </button>
       </header>
-      <dialog ref={menu} className={styles.menu} aria-label="Menu" closedby="any">
+      <dialog ref={menu} className={styles.menu} aria-label={t.shell.menu} closedby="any">
         <nav>
           <ul>
             {LINKS.map((link) => (
               <li key={link.to}>
                 <Link to={link.to} onClick={close}>
-                  {link.label}
+                  {t.shell.nav[link.key]}
                 </Link>
               </li>
             ))}
           </ul>
         </nav>
         <fieldset className={styles.textSize}>
-          <legend>Text size</legend>
+          <legend>{t.shell.textSize}</legend>
           {TEXT_SCALES.map((s, i) => (
             <button
               key={s}
@@ -63,13 +74,25 @@ export function AppShell() {
                 setScale(s);
               }}
             >
-              {SCALE_BUTTONS[i].glyph}
-              <span className="sr-only"> {SCALE_BUTTONS[i].label}</span>
+              {GLYPHS[i]}
+              <span className="sr-only"> {t.shell.textSizes[i]}</span>
+            </button>
+          ))}
+        </fieldset>
+        <fieldset className={styles.textSize}>
+          <legend>{t.shell.language}</legend>
+          {(['en', 'pt'] as const).map((l) => (
+            <button key={l} type="button" aria-pressed={lang === l} onClick={() => setLang(l)}>
+              {l.toUpperCase()}
+              <span className="sr-only" lang={l}>
+                {' '}
+                {t.shell.languageNames[l]}
+              </span>
             </button>
           ))}
         </fieldset>
         <button type="button" className={styles.close} onClick={close}>
-          Close
+          {t.shell.close}
         </button>
       </dialog>
       <Outlet />

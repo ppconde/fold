@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
-import { Route as EditorRouteImport } from './routes/editor'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as FoldIdRouteImport } from './routes/fold.$id'
 
@@ -23,11 +22,6 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EditorRoute = EditorRouteImport.update({
-  id: '/editor',
-  path: '/editor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LibraryRoute = LibraryRouteImport.update({
@@ -44,14 +38,12 @@ const FoldIdRoute = FoldIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/editor': typeof EditorRoute
   '/library': typeof LibraryRoute
   '/fold/$id': typeof FoldIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/editor': typeof EditorRoute
   '/library': typeof LibraryRoute
   '/fold/$id': typeof FoldIdRoute
 }
@@ -59,22 +51,20 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/editor': typeof EditorRoute
   '/library': typeof LibraryRoute
   '/fold/$id': typeof FoldIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/editor' | '/library' | '/fold/$id'
+  fullPaths: '/' | '/about' | '/library' | '/fold/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/editor' | '/library' | '/fold/$id'
-  id: '__root__' | '/' | '/about' | '/editor' | '/library' | '/fold/$id'
+  to: '/' | '/about' | '/library' | '/fold/$id'
+  id: '__root__' | '/' | '/about' | '/library' | '/fold/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  EditorRoute: typeof EditorRoute
   LibraryRoute: typeof LibraryRoute
   FoldIdRoute: typeof FoldIdRoute
 }
@@ -93,13 +83,6 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/editor': {
-      id: '/editor'
-      path: '/editor'
-      fullPath: '/editor'
-      preLoaderRoute: typeof EditorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/library': {
@@ -122,7 +105,6 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  EditorRoute: EditorRoute,
   LibraryRoute: LibraryRoute,
   FoldIdRoute: FoldIdRoute,
 }

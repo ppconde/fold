@@ -12,7 +12,6 @@ test('each page has its own title', async ({ page }) => {
     ['/', 'Fold'],
     ['/library', 'Library · Fold'],
     ['/about', 'About · Fold'],
-    ['/editor', 'Editor · Fold'],
     ['/fold/fold-in-half', 'Fold in half · Fold']
   ];
   for (const [path, title] of titles) {

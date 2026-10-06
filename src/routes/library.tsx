@@ -1,25 +1,28 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
+import { useT } from '../i18n/LanguageProvider';
+import { currentLang, dictionary } from '../i18n/lang';
 import { fetchIndex } from '../models/catalog';
 
 // ponytail: plain list until the M4 library (search, filter chips, paper cards) replaces it.
 export const Route = createFileRoute('/library')({
-  head: () => ({ meta: [{ title: 'Library · Fold' }] }),
+  head: () => ({ meta: [{ title: dictionary(currentLang()).titles.library }] }),
   loader: () => fetchIndex(),
   component: Library
 });
 
 function Library() {
   const models = Route.useLoaderData();
+  const t = useT().library;
   return (
     <main className="page">
-      <h1>Library</h1>
-      <ul aria-label="Models">
+      <h1>{t.title}</h1>
+      <ul aria-label={t.models}>
         {models.map((m) => (
           <li key={m.id}>
             <Link to="/fold/$id" params={{ id: m.id }} search={{}}>
               {m.name}
             </Link>{' '}
-            · {m.difficulty}
+            · {t.difficulty[m.difficulty]}
           </li>
         ))}
       </ul>

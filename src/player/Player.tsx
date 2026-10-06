@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { Model } from '../fold/types';
+import { useT } from '../i18n/LanguageProvider';
 import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, readPanelOpen, writePanelOpen } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
@@ -14,9 +15,8 @@ type Props = { entry: ModelEntry; model: Model; initialStep: number; onSettle: (
 
 const LazyStage = lazy(loadStage);
 
-const FIRST_INSTRUCTION = 'Start with your sheet of paper, colored side up.';
-
 export function Player({ entry, model, initialStep, onSettle }: Props) {
+  const t = useT().player;
   const [state, dispatch] = usePlayer(model, initialStep);
   const status = playerStatus(state);
   const [panelOpen, setPanelOpen] = useState(readPanelOpen);
@@ -27,7 +27,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [webgl] = useState(hasWebGL);
   const [stageFailed, setStageFailed] = useState(false);
   const showPanel = panelOpen || !webgl || stageFailed;
-  const instruction = state.step === 0 ? FIRST_INSTRUCTION : model.steps[state.step].instruction;
+  const instruction = state.step === 0 ? t.firstInstruction : model.steps[state.step].instruction;
 
   const togglePanel = (open: boolean) => {
     setPanelOpen(open);
@@ -96,15 +96,13 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
       <div className={styles.stage}>
         {webgl ? (
-          <StageBoundary onError={() => setStageFailed(true)}>
+          <StageBoundary onError={() => setStageFailed(true)} message={t.stageFailed} retryLabel={t.tryAgain}>
             <Suspense fallback={<div className={styles.stagePlaceholder} aria-hidden="true" />}>
               <LazyStage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
             </Suspense>
           </StageBoundary>
         ) : (
-          <p className={styles.noWebgl}>
-            The 3D view isn't available on this device. Follow the crease pattern and instructions instead.
-          </p>
+          <p className={styles.noWebgl}>{t.noWebgl}</p>
         )}
         {webgl && !stageFailed && (
           <button
@@ -114,16 +112,14 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             aria-controls="instructions"
             onClick={() => togglePanel(!panelOpen)}
           >
-            {panelOpen ? 'Hide steps' : 'Show steps'}
+            {panelOpen ? t.hideSteps : t.showSteps}
           </button>
         )}
       </div>
 
       {/* biome-ignore lint/a11y/noNoninteractiveTabindex: the sheet scrolls on phones and must be keyboard reachable */}
-      <aside id="instructions" className={styles.panel} aria-label="Instructions" hidden={!showPanel} tabIndex={0}>
-        <p className={styles.stepLabel}>
-          Step {state.step} of {state.last}
-        </p>
+      <aside id="instructions" className={styles.panel} aria-label={t.instructions} hidden={!showPanel} tabIndex={0}>
+        <p className={styles.stepLabel}>{t.stepOf(state.step, state.last)}</p>
         <p className={styles.instruction} aria-live="polite">
           {instruction}
         </p>
@@ -139,16 +135,16 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             max={100}
             step={1}
             value={Math.round(state.t * 100)}
-            aria-label="Fold progress"
-            aria-valuetext={`${Math.round(state.t * 100)}% folded`}
+            aria-label={t.foldProgress}
+            aria-valuetext={t.percentFolded(Math.round(state.t * 100))}
             onChange={(e) => dispatch({ type: 'scrub', t: Number(e.target.value) / 100 })}
           />
         )}
         <div className={styles.pill}>
           <button
             type="button"
-            aria-label="Start over"
-            title="Start over"
+            aria-label={t.startOver}
+            title={t.startOver}
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'goTo', step: 0 })}
           >
@@ -159,8 +155,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           </button>
           <button
             type="button"
-            aria-label="Previous step"
-            title="Previous step"
+            aria-label={t.previous}
+            title={t.previous}
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'prev' })}
           >
@@ -168,8 +164,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           </button>
           <button
             type="button"
-            aria-label="Replay step"
-            title="Replay step"
+            aria-label={t.replay}
+            title={t.replay}
             aria-disabled={state.step === 0 || state.playing}
             onClick={() => dispatch({ type: 'replay' })}
           >
@@ -179,8 +175,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             type="button"
             ref={nextRef}
             className={styles.primary}
-            aria-label="Next step"
-            title="Next step"
+            aria-label={t.next}
+            title={t.next}
             aria-disabled={(state.step === state.last && state.t === 1) || state.playing}
             onClick={() => dispatch({ type: 'next' })}
           >
@@ -188,8 +184,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           </button>
           <button
             type="button"
-            aria-label={`Speed ${state.speed}×`}
-            title={`Speed ${state.speed}×`}
+            aria-label={t.speed(state.speed)}
+            title={t.speed(state.speed)}
             onClick={() => dispatch({ type: 'cycleSpeed' })}
           >
             {state.speed}×
@@ -197,8 +193,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           {webgl && (
             <button
               type="button"
-              aria-label="Reset view"
-              title="Reset view"
+              aria-label={t.resetView}
+              title={t.resetView}
               onClick={() => setResetCount((n) => n + 1)}
             >
               {/* Framing corners, not a circular arrow: this recentres the camera, it does not restart the fold. */}
@@ -208,20 +204,16 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
               </svg>
             </button>
           )}
-          {!showPanel && (
-            <span className={styles.count}>
-              {state.step} / {state.last}
-            </span>
-          )}
+          {!showPanel && <span className={styles.count}>{t.count(state.step, state.last)}</span>}
         </div>
       </div>
 
       {status === 'done' && (
         <section className={styles.done} aria-labelledby="done-title">
           <h2 id="done-title" ref={doneRef} tabIndex={-1}>
-            Well folded!
+            {t.wellFolded}
           </h2>
-          <p>{entry.name} is complete.</p>
+          <p>{t.isComplete(entry.name)}</p>
           <div className={styles.doneActions}>
             <button
               type="button"
@@ -231,9 +223,9 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
                 nextRef.current?.focus();
               }}
             >
-              Fold again
+              {t.foldAgain}
             </button>
-            <Link to="/library">Back to library</Link>
+            <Link to="/library">{t.backToLibrary}</Link>
           </div>
         </section>
       )}

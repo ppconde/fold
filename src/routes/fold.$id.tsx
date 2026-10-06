@@ -1,6 +1,8 @@
 import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tanstack/react-router';
 import { useCallback } from 'react';
 import { FoldError } from '../fold/load-model';
+import { useT } from '../i18n/LanguageProvider';
+import { currentLang, dictionary } from '../i18n/lang';
 import { fetchModel } from '../models/catalog';
 import { loadStage } from '../player/load-stage';
 import { Player } from '../player/Player';
@@ -16,7 +18,15 @@ export const Route = createFileRoute('/fold/$id')({
     if (!found) throw notFound();
     return found;
   },
-  head: ({ loaderData }) => ({ meta: [{ title: loaderData ? `${loaderData.entry.name} · Fold` : 'Fold' }] }),
+  head: ({ loaderData }) => ({
+    meta: [
+      {
+        title: loaderData
+          ? dictionary(currentLang()).titles.model(loaderData.entry.name)
+          : dictionary(currentLang()).titles.home
+      }
+    ]
+  }),
   component: FoldPage,
   notFoundComponent: ModelNotFound,
   errorComponent: ModelError
@@ -36,23 +46,25 @@ function FoldPage() {
 }
 
 function ModelNotFound() {
+  const t = useT().errors;
   return (
     <main className="page">
-      <h1>Model not found</h1>
+      <h1>{t.modelNotFound}</h1>
       <p>
-        <Link to="/library">Browse the library</Link>
+        <Link to="/library">{t.browseLibrary}</Link>
       </p>
     </main>
   );
 }
 
 function ModelError({ error }: ErrorComponentProps) {
+  const t = useT().errors;
   return (
     <main className="page">
-      <h1>This model couldn't be read</h1>
-      <p>{error instanceof FoldError ? error.message : 'Check your connection and try again.'}</p>
+      <h1>{t.modelUnreadable}</h1>
+      <p>{error instanceof FoldError ? error.message : t.checkConnection}</p>
       <p>
-        <Link to="/library">Browse the library</Link>
+        <Link to="/library">{t.browseLibrary}</Link>
       </p>
     </main>
   );

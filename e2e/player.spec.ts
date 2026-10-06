@@ -80,7 +80,7 @@ test('the instructions can be hidden and shown, and the choice survives a reload
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeVisible();
   await page.getByRole('button', { name: 'Hide steps' }).click();
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
-  await expect(page.getByText('0 / 1')).toBeVisible();
+  await expect(page.getByText('0/1')).toBeVisible();
   await page.reload();
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
   await page.getByRole('button', { name: 'Show steps' }).click();

@@ -1,10 +1,12 @@
 import { useId, useMemo } from 'react';
 import type { Model } from '../fold/types';
+import { useT } from '../i18n/LanguageProvider';
 import styles from './CreaseDiagram.module.css';
 import { diagramLines } from './diagram';
 import { paperExtent } from './paper-geometry';
 
 export function CreaseDiagram({ model, step }: { model: Model; step: number }) {
+  const t = useT();
   const titleId = useId();
   const lines = useMemo(() => diagramLines(model, step), [model, step]);
   const { minX, maxY, width, height, size } = paperExtent(model);
@@ -14,9 +16,7 @@ export function CreaseDiagram({ model, step }: { model: Model; step: number }) {
   const viewBox = `${minX - pad} ${-maxY - pad} ${width + pad * 2} ${height + pad * 2}`;
   return (
     <svg className={styles.diagram} viewBox={viewBox} role="img" aria-labelledby={titleId}>
-      <title id={titleId}>
-        {`Crease pattern${active ? `, ${active} crease${active === 1 ? '' : 's'} highlighted for this step` : ''}`}
-      </title>
+      <title id={titleId}>{t.player.diagramTitle(active)}</title>
       {lines.map((l) => (
         <line
           key={l.edge}

@@ -2,6 +2,7 @@ import { CameraControls, ContactShadows } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { type ComponentRef, useEffect, useMemo, useRef } from 'react';
 import type { Model } from '../fold/types';
+import { useT } from '../i18n/LanguageProvider';
 import { prefersReducedMotion } from './browser';
 import { Paper } from './Paper';
 import { endCentre, paperExtent } from './paper-geometry';
@@ -13,13 +14,14 @@ const POLAR = 0.9;
 type Props = { model: Model; step: number; t: number; resetCount: number; frameStep: number };
 
 export function Stage(props: Props) {
+  const t = useT();
   return (
     <Canvas
       frameloop="demand"
       dpr={[1, 2]}
       camera={{ fov: 35, near: 0.01, far: 100, position: [0, 2, 2] }}
       role="img"
-      aria-label="3D view of the paper. Drag to turn it, pinch or scroll to zoom."
+      aria-label={t.player.stageLabel}
     >
       <Scene {...props} />
     </Canvas>
