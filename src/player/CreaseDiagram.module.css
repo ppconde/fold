@@ -32,6 +32,6 @@
 }
 
 .diagram .active {
-  stroke: var(--terracotta);
+  stroke: var(--clay);
   stroke-width: calc(3px * var(--text-scale));
 }
