@@ -212,7 +212,7 @@ If WebGL is unavailable, pages that would show `Stage` show the diagram and inst
 - **Speed** cycles 0.5× / 1× / 1.5×. The default is 0.5× when `prefers-reduced-motion` is set.
 - **Reset view** reframes the camera.
 - `?step=` stays in sync, so reloading or sharing resumes at that step.
-- After the final step, a completion card shows "Well folded!" and "<name> is complete." with "Fold again" and "Back to library". Focus moves to the card heading so screen readers announce it; "Fold again" returns focus to "Next step".
+- After the final step, a completion card shows "Well folded!" and "<name> is complete." with "Fold again" and "Back to library". When the last step finishes playing, focus moves to the card heading so screen readers announce it (not when the page is opened on a finished step, nor when the slider is scrubbed to 100%); "Fold again" returns focus to "Next step".
 
 ### Layout
 
