@@ -14,6 +14,7 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **Mountain/valley sign mismatch.** The loader accepts a mountain crease with a positive angle and a valley with a negative one, because a precrease can later collapse the other way. The editor should warn about these, not reject them.
 - **`remapAngles` tolerance.** The `onSegment` dot-product tolerance isn't normalised by edge length. There are no tests at 0..400 scale, for √2 diagonal splits, or for a new edge spanning two collinear creases. Settle the epsilon and coordinate scale in the Rabbit Ear spike.
 - **Remaining loader gaps.** `frame_parent` / `frame_inherit` are ignored (steps are sequential). Non-convex faces could flip the M/V side test. Both matter only for third-party uploads.
+- **Disconnected stacks pass through themselves.** The fold engine keeps a stack rigid only when its layers share a crease the step leaves alone. Folding the free corner of a folded-in-half sheet moves two separate tips, and they still cross mid-fold (signed gap +0.017 → −0.009). The layer-order solver must handle this case (see the `it.todo` in `src/fold/fold.test.ts`).
 - **"Hide steps" pill overlap.** On phones the "Hide steps" pill can sit over the paper. Consider moving it into the sheet header.
 
 ## M4 — Library and content

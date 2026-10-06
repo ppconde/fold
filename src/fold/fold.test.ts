@@ -238,10 +238,12 @@ describe('creases meeting at a corner', () => {
   // 1: left half over the right (midline, edges 10 + 11). 2: fold the stacked top triangle down along
   // the diagonal from the centre to (1, 1): edge 7 on the lower layer, edge 9 on the flipped upper one.
   // 3: turn over. 4: unfold step 2. The held face changes every step.
-  const corner = () => {
-    const step1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 180, 180];
-    const step2 = [0, 0, 0, 0, 0, 0, 0, 180, 0, -180, 180, 180];
-    return loadModel({
+  const flat = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const step1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 180, 180];
+  const step2 = [0, 0, 0, 0, 0, 0, 0, 180, 0, -180, 180, 180];
+  type Frame = { angles: number[]; fixedFace: number; rotation?: Vec3 };
+  const build = (frames: Frame[]) =>
+    loadModel({
       file_spec: 1.2,
       vertices_coords: [
         [0, 0],
@@ -275,27 +277,22 @@ describe('creases meeting at a corner', () => {
         [4, 5, 6],
         [5, 0, 6]
       ],
-      file_frames: [
-        { edges_foldAngle: step1, 'foldapp:instruction': 'Fold the left half over.', 'foldapp:fixedFace': 1 },
-        { edges_foldAngle: step2, 'foldapp:instruction': 'Fold the top corner down.', 'foldapp:fixedFace': 2 },
-        {
-          edges_foldAngle: step2,
-          'foldapp:instruction': 'Turn it over.',
-          'foldapp:fixedFace': 3,
-          'foldapp:rotation': [0, 180, 0]
-        },
-        { edges_foldAngle: step1, 'foldapp:instruction': 'Unfold the corner.', 'foldapp:fixedFace': 0 }
-      ]
+      file_frames: frames.map(({ angles, fixedFace, rotation }) => ({
+        edges_foldAngle: angles,
+        'foldapp:instruction': 'Fold.',
+        'foldapp:fixedFace': fixedFace,
+        ...(rotation ? { 'foldapp:rotation': rotation } : {})
+      }))
     });
-  };
+  const corner = () =>
+    build([
+      { angles: step1, fixedFace: 1 },
+      { angles: step2, fixedFace: 2 },
+      { angles: step2, fixedFace: 3, rotation: [0, 180, 0] },
+      { angles: step1, fixedFace: 0 }
+    ]);
 
-  it('is a consistent model at every step', () => {
-    const m = corner();
-    for (let k = 1; k < m.steps.length; k++) expect(checkConsistency(m, k)).toEqual({ ok: true });
-  });
-
-  it('joins every corner of every face exactly at each step boundary', () => {
-    const m = corner();
+  const expectJoins = (m: Model) => {
     for (let k = 1; k < m.steps.length - 1; k++) {
       const end = foldedPositions(m, k, 1);
       foldedPositions(m, k + 1, 0).forEach((face, f) => {
@@ -304,6 +301,48 @@ describe('creases meeting at a corner', () => {
         });
       });
     }
+  };
+
+  it('is a consistent model at every step', () => {
+    const m = corner();
+    for (let k = 1; k < m.steps.length; k++) expect(checkConsistency(m, k)).toEqual({ ok: true });
+  });
+
+  it('joins every corner of every face exactly at each step boundary', () => {
+    expectJoins(corner());
+  });
+
+  // The cases below change the spanning tree across a non-collinear vertex, where the clamped angles leave
+  // the differing cycles open: without a correction the faces jump by ~0.035 at the boundary.
+  it('joins exactly when everything unfolds after the corner fold', () => {
+    expectJoins(
+      build([
+        { angles: step1, fixedFace: 1 },
+        { angles: step2, fixedFace: 2 },
+        { angles: flat, fixedFace: 0 }
+      ])
+    );
+  });
+
+  it('joins exactly when a turned-over corner fold unfolds completely', () => {
+    expectJoins(
+      build([
+        { angles: step1, fixedFace: 1 },
+        { angles: step2, fixedFace: 2 },
+        { angles: step2, fixedFace: 3, rotation: [0, 180, 0] },
+        { angles: flat, fixedFace: 4 }
+      ])
+    );
+  });
+
+  it('joins exactly when only the corner unfolds after folding all four creases at once', () => {
+    expectJoins(
+      build([
+        { angles: step2, fixedFace: 1 },
+        { angles: step1, fixedFace: 2 },
+        { angles: flat, fixedFace: 5 }
+      ])
+    );
   });
 });
 
@@ -319,6 +358,9 @@ describe('stacked layers', () => {
       expect(n.normalize().dot(new Vector3(...far).sub(new Vector3(...a)))).toBeGreaterThan(0.01);
     }
   });
+
+  // Known limit: the two tips share no crease the step leaves alone, so no spanning tree joins them; the M3 layer-order solver must.
+  it.todo('a stack whose pieces share no unmoved crease (fold in half, then fold the free corner) turns as one piece');
 });
 
 describe('seam gap from the 178° clamp', () => {

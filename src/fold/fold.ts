@@ -34,9 +34,10 @@ const anchors = new WeakMap<Model, Matrix4[]>();
 
 /**
  * Spanning tree from face 0 for `step`, preferring creases this step leaves alone (0-1 Prim, FIFO).
- * Layers stacked by an earlier fold then hang off each other through that fold, so a stack turns
- * as one rigid piece instead of each layer pivoting on its own copy of the crease and passing
- * through its neighbour mid-fold.
+ * Layers stacked by an earlier fold then hang off each other through that fold, so a stack joined by
+ * a crease this step leaves alone turns as one rigid piece, instead of each layer pivoting on its own
+ * copy of the crease and passing through its neighbour mid-fold. Stacks whose moving pieces share no
+ * unmoved crease (fold in half, then fold the free corner) still pass through; that needs layer order.
  */
 function tree(model: Model, step: number): Tree {
   let list = trees.get(model);
@@ -45,12 +46,15 @@ function tree(model: Model, step: number): Tree {
     trees.set(model, list);
   }
   if (list[step]) return list[step];
+  const moves = (k: number, e: number) =>
+    k > 0 && clampAngle(model.steps[k - 1].angles[e]) !== clampAngle(model.steps[k].angles[e]);
   // a step that moves no crease (a turn, a new held face) keeps the previous tree, so it joins exactly
-  if (step > 0 && model.steps[step].angles.every((a, e) => a === model.steps[step - 1].angles[e])) {
-    list[step] = tree(model, step - 1);
+  let from = step;
+  while (from > 0 && !list[from] && model.steps[from].angles.every((_, e) => !moves(from, e))) from--;
+  if (list[from]) {
+    for (let k = from + 1; k <= step; k++) list[k] = list[from];
     return list[step];
   }
-  const moves = (e: number) => step > 0 && model.steps[step - 1].angles[e] !== model.steps[step].angles[e];
   const parent: number[] = [];
   const parentEdge: number[] = [];
   const treeEdges = new Set<number>();
@@ -60,7 +64,7 @@ function tree(model: Model, step: number): Tree {
   const add = (f: number) => {
     seen.add(f);
     order.push(f);
-    for (const e of model.faceEdges[f]) for (const g of model.edgeFaces[e]) buckets[+moves(e)].push([f, e, g]);
+    for (const e of model.faceEdges[f]) for (const g of model.edgeFaces[e]) buckets[+moves(from, e)].push([f, e, g]);
   };
   add(0);
   for (let next = buckets[0].shift() ?? buckets[1].shift(); next; next = buckets[0].shift() ?? buckets[1].shift()) {
@@ -71,7 +75,8 @@ function tree(model: Model, step: number): Tree {
     treeEdges.add(e);
     add(g);
   }
-  list[step] = { order, parent, parentEdge, treeEdges };
+  const built = { order, parent, parentEdge, treeEdges };
+  for (let k = from; k <= step; k++) list[k] = built;
   return list[step];
 }
 
@@ -103,6 +108,46 @@ function anchorFor(model: Model, step: number): Matrix4 {
   return list[step];
 }
 
+const corrections = new WeakMap<Model, (Matrix4[] | null)[]>();
+
+/**
+ * Per face, `C_f = R_f⁻¹ · Q_f`: the start-of-step pose under the previous step's tree (Q) relative to
+ * this step's tree (R), both taken relative to this step's fixed face at the previous step's clamped angles.
+ * Changing the tree across a non-collinear vertex leaves the clamped cycles open, so the two trees place
+ * faces up to ~0.035 apart. Fading C from full at s = 0 to identity at s = 1 makes each step start
+ * exactly where the last one ended and still end at pure T_k. Null when the trees match (no cost).
+ */
+function treeChange(model: Model, step: number): Matrix4[] | null {
+  let list = corrections.get(model);
+  if (!list) {
+    list = [];
+    corrections.set(model, list);
+  }
+  if (list[step] !== undefined) return list[step];
+  const now = tree(model, step).parentEdge;
+  const before = tree(model, step - 1).parentEdge;
+  let c: Matrix4[] | null = null;
+  if (now.some((e, g) => e !== before[g])) {
+    const angles = model.steps[step - 1].angles.map(clampAngle);
+    const fixed = model.steps[step].fixedFace;
+    const R = rootTransforms(model, angles, step);
+    const Q = rootTransforms(model, angles, step - 1);
+    const r = R[fixed].clone().invert();
+    const q = Q[fixed].clone().invert();
+    c = R.map((m, f) => r.clone().multiply(m).invert().multiply(q.clone().multiply(Q[f])));
+  }
+  list[step] = c;
+  return c;
+}
+
+/** `c` faded toward identity: full at s = 0, none at s = 1 (translation lerped, rotation slerped). */
+function fade(c: Matrix4, s: number): Matrix4 {
+  const p = new Vector3();
+  const q = new Quaternion();
+  c.decompose(p, q, new Vector3());
+  return new Matrix4().compose(p.multiplyScalar(1 - s), new Quaternion().slerp(q, 1 - s), new Vector3(1, 1, 1));
+}
+
 /** Eased, unclamped angle of every edge at progress `t` through `step` (all zeros at step 0). */
 export function anglesAt(model: Model, step: number, t: number): number[] {
   assertStep(model, step);
@@ -121,7 +166,13 @@ const toQuaternion = (r: Vec3) => new Quaternion().setFromEuler(new Euler(r[0] *
 function startPose(model: Model, step: number): Matrix4[] {
   const T = rootTransforms(model, model.steps[step - 1].angles.map(clampAngle), step);
   const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
-  return T.map((m) => base.clone().multiply(m));
+  const C = treeChange(model, step);
+  return T.map((m, f) =>
+    base
+      .clone()
+      .multiply(m)
+      .multiply(C ? C[f] : new Matrix4())
+  );
 }
 
 /** World-space bounding-box centre of `poses` after `world`. */
@@ -179,9 +230,11 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
     .multiply(anchorFor(model, step))
     .multiply(T[cur.fixedFace].clone().invert());
 
+  const C = treeChange(model, step);
   const point = new Vector3();
   return model.faces.map((face, f) => {
     const m = world.clone().multiply(T[f]);
+    if (C) m.multiply(fade(C[f], s));
     return face.map((v) => point.set(model.vertices[v][0], model.vertices[v][1], 0).applyMatrix4(m).toArray() as Vec3);
   });
 }
