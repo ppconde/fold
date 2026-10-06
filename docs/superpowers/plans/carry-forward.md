@@ -10,6 +10,8 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 ## M3 — Editor
 
+- **Non-rigid steps tear mid-fold.** When one step moves several creases that meet at a vertex (e.g. a degree-4 corner) and those creases are interpolated linearly at the same time, faces can separate mid-step by up to ~0.6 of the paper, even though `checkConsistency` is fine at the step's end. The editor should warn when a step folds more than one crease meeting at a vertex, or check consistency at intermediate t.
+
 - **Models are frozen.** `loadModel` deep-freezes its result, and the WeakMap caches assume immutability. Every edit must produce a new `Model`.
 - **Mountain/valley sign mismatch.** The loader accepts a mountain crease with a positive angle and a valley with a negative one, because a precrease can later collapse the other way. The editor should warn about these, not reject them.
 - **`remapAngles` tolerance.** The `onSegment` dot-product tolerance isn't normalised by edge length. There are no tests at 0..400 scale, for √2 diagonal splits, or for a new edge spanning two collinear creases. Settle the epsilon and coordinate scale in the Rabbit Ear spike.
