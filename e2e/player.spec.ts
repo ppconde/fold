@@ -253,3 +253,18 @@ test('the controls work before the 3D view has loaded', async ({ page }) => {
   release();
   await expect(page.locator('canvas')).toBeVisible();
 });
+
+test('if the 3D view fails to load, the 2D path keeps working and Try again recovers', async ({ page }) => {
+  let fail = true;
+  await page.route(/\/assets\/Stage-[^/]+\.js$/, (route) => (fail ? route.abort() : route.continue()));
+  await page.goto('/fold/fold-in-quarters');
+  await expect(page.getByText("The 3D view didn't load.")).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold in quarters');
+  await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Next step' }).click();
+  await settled(page);
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  fail = false;
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.locator('canvas')).toBeVisible();
+});

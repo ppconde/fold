@@ -6,11 +6,13 @@ import { hasWebGL, readPanelOpen, writePanelOpen } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
 import styles from './Player.module.css';
 import { playerStatus } from './player-state';
+import { StageBoundary } from './StageBoundary';
 import { usePlayer } from './use-player';
 
 type Props = { entry: ModelEntry; model: Model; initialStep: number; onSettle: (step: number) => void };
 
-const Stage = lazy(() => import('./Stage').then((m) => ({ default: m.Stage })));
+export const loadStage = () => import('./Stage').then((m) => ({ default: m.Stage }));
+const LazyStage = lazy(loadStage);
 
 const FIRST_INSTRUCTION = 'Start with your sheet of paper, colored side up.';
 
@@ -23,7 +25,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [resetCount, setResetCount] = useState(0);
   const [frameStep, setFrameStep] = useState(state.step);
   const [webgl] = useState(hasWebGL);
-  const showPanel = panelOpen || !webgl;
+  const [stageFailed, setStageFailed] = useState(false);
+  const showPanel = panelOpen || !webgl || stageFailed;
   const instruction = state.step === 0 ? FIRST_INSTRUCTION : model.steps[state.step].instruction;
 
   const togglePanel = (open: boolean) => {
@@ -89,9 +92,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
       <div className={styles.stage}>
         {webgl ? (
-          <Suspense fallback={<div className={styles.stagePlaceholder} aria-hidden="true" />}>
-            <Stage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
-          </Suspense>
+          <StageBoundary onError={() => setStageFailed(true)}>
+            <Suspense fallback={<div className={styles.stagePlaceholder} aria-hidden="true" />}>
+              <LazyStage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
+            </Suspense>
+          </StageBoundary>
         ) : (
           <p className={styles.noWebgl}>
             The 3D view isn't available on this device. Follow the crease pattern and instructions instead.

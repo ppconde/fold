@@ -40,6 +40,18 @@
   text-align: center;
 }
 
+.retry {
+  display: block;
+  margin: 0 auto;
+  min-height: 44px;
+  padding: 0 1rem;
+  border: 1px solid var(--beige);
+  border-radius: 999px;
+  background: var(--off-white);
+  font: inherit;
+  cursor: pointer;
+}
+
 .panelToggle,
 .pill button,
 .doneActions button,
