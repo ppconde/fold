@@ -483,3 +483,54 @@ Run it. Expected: FAIL. Without a separate chunk the route never matches, so the
 - [ ] **Step 4: Run the full checks.** biome, vitest and e2e, as in Task 3. All green.
 
 - [ ] **Step 5: Commit** as `perf(player): load the 3D stage separately so controls appear first`, with the trailer.
+
+---
+
+### Task 5: Stacked layers turn as one piece (engine fix)
+
+**Why:** after a fold, stacked layers each hinged on their own copy of the shared crease. During the next fold they became exactly coplanar at 90° and then passed through each other. That caused z-fighting at t = 0.5 and the wrong layer on top at the end. Root-cause evidence and the exact proposed diff are in `.superpowers/sdd/2026-10-06-player-polish/striping-debug.md`, a git-ignored workspace file.
+
+**Files:**
+- Modify:
+  - `src/fold/fold.ts`
+  - `src/fold/fold.test.ts`
+  - `src/player/paper-geometry.ts`
+  - `src/player/paper-geometry.test.ts`
+
+**Interfaces:** the public API is unchanged (`foldedPositions`, `anglesAt`, `checkConsistency`, `MAX_RENDER_ANGLE`). Internally, `tree(model, step)` and `rootTransforms(model, angles, step)` become per step.
+
+- [ ] **Step 1: Write the failing engine test** (the `stacked layers` describe from striping-debug.md) and run it. Expected: FAIL on the current code. Record the output.
+
+- [ ] **Step 2: Write the corner-join test.** It checks that steps still join exactly when creases meet at a corner (non-collinear).
+  - In `src/fold/fold.test.ts`, build a model inline as FOLD JSON passed to `loadModel`: a unit square with both diagonals and the vertical midline. The midline makes three creases meet at the centre.
+  - Use at least 3 steps, each folding a different crease set to ±180 so that stacked layers exist. For example:
+    - step 1: fold along one diagonal;
+    - step 2: fold the resulting triangle in half along the midline segment that lies inside it;
+    - step 3: turn it over or unfold one crease.
+  - Change `fixedFace` at least once.
+  - Assert that every corner of every face at `foldedPositions(m, k, 1)` equals `foldedPositions(m, k + 1, 0)` within 1e-9, for every k.
+  - Make sure `loadModel` accepts the model. Faces must be counter-clockwise; derive the faces carefully and check `checkConsistency` is ok at each step.
+  - This test may pass on the current code (canonical tree). It must keep passing after the change.
+
+- [ ] **Step 3: Implement the per-step spanning tree** exactly as the diff in striping-debug.md shows: a 0-1 Prim from face 0 that prefers creases the step doesn't move, and that reuses the previous step's tree when a step moves no crease. Apply the two test-tolerance changes from that file (folds-through-two-layers to < 0.06, seam gap < 0.04), and keep the explanatory comments.
+
+- [ ] **Step 4: Run.** `pnpm vitest run src/fold`. Expected:
+  - the stacked-layers test passes;
+  - the corner-join test passes.
+
+  **If the corner-join test fails (a jump at a step boundary), STOP.** Do not loosen it. Report BLOCKED with the measured jump size and the step. The user asked to be consulted in that case.
+
+- [ ] **Step 5: Keep the step's crease highlight fully visible.**
+  - In `lineGroups` (`src/player/paper-geometry.ts`), draw each **active** crease from every face that owns the edge, not only `edgeFaces[e][0]`. When the two copies coincide this looks the same. When they drift apart, both stay visible.
+  - Update the tests: the `active` length for the half model's step 1 becomes 12 (two faces × one segment × 6 numbers), and the quarters step 2 active length becomes 24.
+  - Borders and past creases keep drawing one copy.
+
+- [ ] **Step 6: Verify end to end.**
+  - Run `pnpm biome ci`, `pnpm vitest run` and `lsof -ti:4173 | xargs kill 2>/dev/null; pnpm test:e2e`.
+  - Build, preview, and screenshot (1280×800) `/fold/fold-in-quarters?step=2` at these slider values:
+    - fill `50` → `/tmp/polish-fix-050.png`. Must have no striping.
+    - fill `100` → `/tmp/polish-fix-100.png`. The white back must be on top, and the terracotta crease visible along the fold.
+  - Do the same mid-fold check on a phone (`--mobile`, fill 50) → `/tmp/polish-fix-phone-050.png`.
+  - Look at all three and describe them.
+
+- [ ] **Step 7: Commit** as `fix(fold): stacked layers turn as one piece so they never pass through each other` with the trailer.
