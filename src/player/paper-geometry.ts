@@ -52,8 +52,8 @@ export function fillTriangles(faces: Vec3[][], out: Float32Array): void {
   }
 }
 
-function segment(model: Model, faces: Vec3[][], e: number): number[] {
-  const f = model.edgeFaces[e][0];
+/** Edge `e` as drawn on face `f` (default: the first face that owns it). */
+function segment(model: Model, faces: Vec3[][], e: number, f = model.edgeFaces[e][0]): number[] {
   const j = model.faceEdges[f].indexOf(e);
   const a = faces[f][j];
   const b = faces[f][(j + 1) % faces[f].length];
@@ -65,17 +65,18 @@ export function lineGroups(
   faces: Vec3[][],
   step: number,
   t: number
-): { borders: number[]; folded: number[]; flat: number[] } {
+): { borders: number[]; folded: number[]; flat: number[]; active: number[] } {
   const { active, past } = stepCreases(model, step);
   const angles = anglesAt(model, step, t);
   const borders: number[] = [];
   const folded: number[] = [];
   const flat: number[] = [];
+  const highlighted: number[] = [];
   model.assignments.forEach((a, e) => {
     if (a === 'B') borders.push(...segment(model, faces, e));
   });
-  for (const e of [...active, ...past].sort((x, y) => x - y)) {
-    (Math.abs(angles[e]) > FOLDED_DEGREES ? folded : flat).push(...segment(model, faces, e));
-  }
-  return { borders, folded, flat };
+  // every face's copy of the step's crease: copies can drift apart under the 178° clamp, and one may hide
+  for (const e of active) for (const f of model.edgeFaces[e]) highlighted.push(...segment(model, faces, e, f));
+  for (const e of past) (Math.abs(angles[e]) > FOLDED_DEGREES ? folded : flat).push(...segment(model, faces, e));
+  return { borders, folded, flat, active: highlighted };
 }

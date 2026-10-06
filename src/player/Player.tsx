@@ -1,15 +1,18 @@
 import { Link } from '@tanstack/react-router';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { Model } from '../fold/types';
 import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, readPanelOpen, writePanelOpen } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
+import { loadStage } from './load-stage';
 import styles from './Player.module.css';
 import { playerStatus } from './player-state';
-import { Stage } from './Stage';
+import { StageBoundary } from './StageBoundary';
 import { usePlayer } from './use-player';
 
 type Props = { entry: ModelEntry; model: Model; initialStep: number; onSettle: (step: number) => void };
+
+const LazyStage = lazy(loadStage);
 
 const FIRST_INSTRUCTION = 'Start with your sheet of paper, colored side up.';
 
@@ -22,7 +25,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [resetCount, setResetCount] = useState(0);
   const [frameStep, setFrameStep] = useState(state.step);
   const [webgl] = useState(hasWebGL);
-  const showPanel = panelOpen || !webgl;
+  const [stageFailed, setStageFailed] = useState(false);
+  const showPanel = panelOpen || !webgl || stageFailed;
   const instruction = state.step === 0 ? FIRST_INSTRUCTION : model.steps[state.step].instruction;
 
   const togglePanel = (open: boolean) => {
@@ -41,8 +45,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
     setFrameStep(state.step);
   }, [state.playing, state.step]);
 
+  // focus the card only when playback finishes; a scrub to 100% must leave the slider focused
+  const prevStatus = useRef(status);
   useEffect(() => {
-    if (status === 'done') doneRef.current?.focus();
+    if (status === 'done' && prevStatus.current === 'playing') doneRef.current?.focus();
+    prevStatus.current = status;
   }, [status]);
 
   // follow an external ?step change; while playing, state.step differs from the URL by design
@@ -53,6 +60,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' '))
+        return;
       if (document.querySelector('dialog[open]') || e.altKey || e.ctrlKey || e.metaKey) return;
       const onControl = e.target instanceof Element && e.target.closest('button, a, input, textarea, select');
       const inPanel = e.target instanceof Element && e.target.closest('#instructions');
@@ -77,6 +86,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
       className={styles.player}
       data-step={state.step}
       data-state={status}
+      data-progress={Math.round(state.t * 100)}
       data-panel={showPanel ? 'open' : 'closed'}
     >
       <div className={styles.title}>
@@ -86,13 +96,17 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
       <div className={styles.stage}>
         {webgl ? (
-          <Stage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
+          <StageBoundary onError={() => setStageFailed(true)}>
+            <Suspense fallback={<div className={styles.stagePlaceholder} aria-hidden="true" />}>
+              <LazyStage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
+            </Suspense>
+          </StageBoundary>
         ) : (
           <p className={styles.noWebgl}>
             The 3D view isn't available on this device. Follow the crease pattern and instructions instead.
           </p>
         )}
-        {webgl && (
+        {webgl && !stageFailed && (
           <button
             type="button"
             className={styles.panelToggle}
@@ -117,6 +131,19 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
       </aside>
 
       <div className={styles.dock} data-testid="dock">
+        {state.step > 0 && (
+          <input
+            type="range"
+            className={styles.progress}
+            min={0}
+            max={100}
+            step={1}
+            value={Math.round(state.t * 100)}
+            aria-label="Fold progress"
+            aria-valuetext={`${Math.round(state.t * 100)}% folded`}
+            onChange={(e) => dispatch({ type: 'scrub', t: Number(e.target.value) / 100 })}
+          />
+        )}
         <div className={styles.pill}>
           <button
             type="button"
@@ -154,7 +181,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             className={styles.primary}
             aria-label="Next step"
             title="Next step"
-            aria-disabled={state.step === state.last || state.playing}
+            aria-disabled={(state.step === state.last && state.t === 1) || state.playing}
             onClick={() => dispatch({ type: 'next' })}
           >
             {'\u25B6\uFE0E'}

@@ -10,6 +10,7 @@ import { fillTriangles, lineGroups, paperExtent, triangleCount } from './paper-g
 type LineRef = ComponentRef<typeof Line>;
 
 const INK = '#2B2A28';
+const HIGHLIGHT = '#B8613F';
 const BACK = '#FBF9F4';
 const PLACEHOLDER: Vec3[] = [
   [0, 0, 0],
@@ -50,6 +51,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const borders = useRef<LineRef>(null);
   const folded = useRef<LineRef>(null);
   const flat = useRef<LineRef>(null);
+  const active = useRef<LineRef>(null);
   const scale = readTextScale();
   const { center } = paperExtent(model);
 
@@ -64,6 +66,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     setSegments(borders.current, groups.borders);
     setSegments(folded.current, groups.folded);
     setSegments(flat.current, groups.flat);
+    setSegments(active.current, groups.active);
     invalidate();
   }, [model, step, t, geometry, invalidate]);
 
@@ -111,6 +114,15 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           transparent
           opacity={0.35}
           visible={false}
+        />
+        <Line
+          ref={active}
+          points={PLACEHOLDER}
+          segments
+          color={HIGHLIGHT}
+          renderOrder={1}
+          lineWidth={2.5 * scale}
+          frustumCulled={false}
         />
       </group>
     </group>

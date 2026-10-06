@@ -2,6 +2,7 @@ import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tans
 import { useCallback } from 'react';
 import { FoldError } from '../fold/load-model';
 import { fetchModel } from '../models/catalog';
+import { loadStage } from '../player/load-stage';
 import { Player } from '../player/Player';
 
 export const Route = createFileRoute('/fold/$id')({
@@ -10,6 +11,7 @@ export const Route = createFileRoute('/fold/$id')({
     return search.step !== undefined && Number.isInteger(n) && n >= 0 ? { step: n } : {};
   },
   loader: async ({ params }): Promise<NonNullable<Awaited<ReturnType<typeof fetchModel>>>> => {
+    void loadStage().catch(() => {}); // start the 3D chunk alongside the model data
     const found = await fetchModel(params.id);
     if (!found) throw notFound();
     return found;

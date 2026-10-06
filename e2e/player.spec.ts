@@ -195,3 +195,98 @@ test('the dock fits on screen with the steps hidden, even on a 360px phone', asy
   expect(dock.x).toBeGreaterThanOrEqual(0);
   expect(dock.x + dock.width).toBeLessThanOrEqual(width);
 });
+
+test('scrubbing folds part-way, and Next finishes the same step', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=1');
+  const progress = page.getByRole('slider', { name: 'Fold progress' });
+  await progress.fill('50');
+  await expect(page.locator('main')).toHaveAttribute('data-progress', '50');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  await expect(progress).toHaveAttribute('aria-valuetext', '50% folded');
+  await page.getByRole('button', { name: 'Next step' }).click();
+  await settled(page);
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  await expect(page.locator('main')).toHaveAttribute('data-progress', '100');
+});
+
+test('a part-folded last step is not finished yet', async ({ page }) => {
+  await page.goto('/fold/fold-in-half?step=1');
+  await expect(page.getByText('Well folded!')).toBeVisible();
+  await page.getByRole('slider', { name: 'Fold progress' }).fill('30');
+  await expect(page.getByText('Well folded!')).toBeHidden();
+  await page.getByRole('button', { name: 'Next step' }).click();
+  await settled(page);
+  await expect(page.getByText('Well folded!')).toBeVisible();
+});
+
+test('arrow keys on the slider move the fold, not the step', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=1');
+  const progress = page.getByRole('slider', { name: 'Fold progress' });
+  await progress.focus();
+  await page.keyboard.press('Home');
+  await page.keyboard.press('ArrowLeft');
+  await settled(page);
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  await expect(page.locator('main')).toHaveAttribute('data-progress', '0');
+});
+
+test('scrubbing the last step to 100% keeps the slider focused', async ({ page }) => {
+  await page.goto('/fold/fold-in-half?step=1');
+  const progress = page.getByRole('slider', { name: 'Fold progress' });
+  await progress.focus();
+  await page.keyboard.press('Home');
+  await page.keyboard.press('End');
+  await expect(page.getByText('Well folded!')).toBeVisible();
+  await expect(progress).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('main')).not.toHaveAttribute('data-state', 'playing');
+});
+
+test('Escape closes the instructions even while the slider has focus', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.getByRole('slider', { name: 'Fold progress' }).focus();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
+});
+
+test('the flat sheet has no progress slider', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=0');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
+  await expect(page.getByRole('slider', { name: 'Fold progress' })).toHaveCount(0);
+});
+
+test('the controls work before the 3D view has loaded', async ({ page }) => {
+  let release: () => void = () => {};
+  const held = new Promise<void>((r) => {
+    release = r;
+  });
+  await page.route(/\/assets\/Stage-[^/]+\.js$/, async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto('/fold/fold-in-quarters');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
+  await expect(page.locator('canvas')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Next step' }).click();
+  await settled(page);
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  release();
+  await expect(page.locator('canvas')).toBeVisible();
+});
+
+test('if the 3D view fails to load, the 2D path keeps working and Try again recovers', async ({ page }) => {
+  let fail = true;
+  await page.route(/\/assets\/Stage-[^/]+\.js$/, (route) => (fail ? route.abort() : route.continue()));
+  await page.goto('/fold/fold-in-quarters');
+  await expect(page.getByText("The 3D view didn't load.")).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold in quarters');
+  await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^(Hide|Show) steps$/ })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Next step' }).click();
+  await settled(page);
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  fail = false;
+  await page.getByRole('button', { name: 'Try again' }).click();
+  await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+});

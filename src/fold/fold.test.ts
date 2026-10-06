@@ -64,9 +64,10 @@ describe('foldedPositions', () => {
   it('folds through two layers in the second quarters step', () => {
     const faces = foldedPositions(quarters(), 2, 1);
     // top-right corner (vertex 4, face 2) lands near the bottom-right corner
-    expectClose(faces[2][2], [1, 0, 0], 1);
-    // top-left corner (vertex 6, face 3) was folded right in step 1, now also lands near (1, 0)
-    expectClose(faces[3][3], [1, 0, 0], 1);
+    expect(Math.hypot(faces[2][2][0] - 1, faces[2][2][1], faces[2][2][2])).toBeLessThan(0.06);
+    // top-left corner (vertex 6, face 3) was folded right in step 1, now also lands near (1, 0),
+    // one wedge (~0.035) inside the outer layer because the stack turns as one piece
+    expect(Math.hypot(faces[3][3][0] - 1, faces[3][3][1], faces[3][3][2])).toBeLessThan(0.06);
   });
 
   it('anchors the new fixed face where the previous step left it', () => {
@@ -231,10 +232,142 @@ describe('turning over a folded model', () => {
   });
 });
 
+describe('creases meeting at a corner', () => {
+  // Unit square with both diagonals and the vertical midline; faces fan CCW around the centre (vertex 6):
+  // 0 bottom-left, 1 bottom-right, 2 right, 3 top-right, 4 top-left, 5 left.
+  // 1: left half over the right (midline, edges 10 + 11). 2: fold the stacked top triangle down along
+  // the diagonal from the centre to (1, 1): edge 7 on the lower layer, edge 9 on the flipped upper one.
+  // 3: turn over. 4: unfold step 2. The held face changes every step.
+  const flat = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  const step1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 180, 180];
+  const step2 = [0, 0, 0, 0, 0, 0, 0, 180, 0, -180, 180, 180];
+  type Frame = { angles: number[]; fixedFace: number; rotation?: Vec3 };
+  const build = (frames: Frame[]) =>
+    loadModel({
+      file_spec: 1.2,
+      vertices_coords: [
+        [0, 0],
+        [0.5, 0],
+        [1, 0],
+        [1, 1],
+        [0.5, 1],
+        [0, 1],
+        [0.5, 0.5]
+      ],
+      edges_vertices: [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 4],
+        [4, 5],
+        [5, 0],
+        [0, 6],
+        [6, 3],
+        [2, 6],
+        [6, 5],
+        [1, 6],
+        [6, 4]
+      ],
+      edges_assignment: ['B', 'B', 'B', 'B', 'B', 'B', 'F', 'V', 'F', 'M', 'V', 'V'],
+      faces_vertices: [
+        [0, 1, 6],
+        [1, 2, 6],
+        [2, 3, 6],
+        [3, 4, 6],
+        [4, 5, 6],
+        [5, 0, 6]
+      ],
+      file_frames: frames.map(({ angles, fixedFace, rotation }) => ({
+        edges_foldAngle: angles,
+        'foldapp:instruction': 'Fold.',
+        'foldapp:fixedFace': fixedFace,
+        ...(rotation ? { 'foldapp:rotation': rotation } : {})
+      }))
+    });
+  const corner = () =>
+    build([
+      { angles: step1, fixedFace: 1 },
+      { angles: step2, fixedFace: 2 },
+      { angles: step2, fixedFace: 3, rotation: [0, 180, 0] },
+      { angles: step1, fixedFace: 0 }
+    ]);
+
+  const expectJoins = (m: Model) => {
+    for (let k = 1; k < m.steps.length - 1; k++) {
+      const end = foldedPositions(m, k, 1);
+      foldedPositions(m, k + 1, 0).forEach((face, f) => {
+        face.forEach((corner, c) => {
+          expectClose(corner, end[f][c], 9);
+        });
+      });
+    }
+  };
+
+  it('is a consistent model at every step', () => {
+    const m = corner();
+    for (let k = 1; k < m.steps.length; k++) expect(checkConsistency(m, k)).toEqual({ ok: true });
+  });
+
+  it('joins every corner of every face exactly at each step boundary', () => {
+    expectJoins(corner());
+  });
+
+  // The cases below change the spanning tree across a non-collinear vertex, where the clamped angles leave
+  // the differing cycles open: without a correction the faces jump by ~0.035 at the boundary.
+  it('joins exactly when everything unfolds after the corner fold', () => {
+    expectJoins(
+      build([
+        { angles: step1, fixedFace: 1 },
+        { angles: step2, fixedFace: 2 },
+        { angles: flat, fixedFace: 0 }
+      ])
+    );
+  });
+
+  it('joins exactly when a turned-over corner fold unfolds completely', () => {
+    expectJoins(
+      build([
+        { angles: step1, fixedFace: 1 },
+        { angles: step2, fixedFace: 2 },
+        { angles: step2, fixedFace: 3, rotation: [0, 180, 0] },
+        { angles: flat, fixedFace: 4 }
+      ])
+    );
+  });
+
+  it('joins exactly when only the corner unfolds after folding all four creases at once', () => {
+    expectJoins(
+      build([
+        { angles: step2, fixedFace: 1 },
+        { angles: step1, fixedFace: 2 },
+        { angles: flat, fixedFace: 5 }
+      ])
+    );
+  });
+});
+
+describe('stacked layers', () => {
+  // A zero-thickness stack folded about one crease must keep its layer order: hinging each layer
+  // on its own copy of the crease made them coplanar at 90° and swap sides (z-fighting mid-fold).
+  it('keeps the step 1 flap on the same side of the layer under it all through step 2', () => {
+    const model = quarters();
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+      const [, a, b, c] = foldedPositions(model, 2, t)[2];
+      const n = new Vector3(...b).sub(new Vector3(...a)).cross(new Vector3(...c).sub(new Vector3(...a)));
+      const far = foldedPositions(model, 2, t)[3][0];
+      expect(n.normalize().dot(new Vector3(...far).sub(new Vector3(...a)))).toBeGreaterThan(0.01);
+    }
+  });
+
+  // Known limit: the two tips share no crease the step leaves alone, so no spanning tree joins them; the M3 layer-order solver must.
+  it.todo('a stack whose pieces share no unmoved crease (fold in half, then fold the free corner) turns as one piece');
+});
+
 describe('seam gap from the 178° clamp', () => {
   // Regression guard: copies of the same vertex on different faces may drift apart
-  // mid-step because angles are clamped. Today's maximum is ~0.0175; fail if it grows.
-  it('stays under 2% of the paper while folding through two layers', () => {
+  // mid-step because angles are clamped. A rigidly turning stack opens the inner crease by two
+  // wedges: today's maximum is ~0.035; fail if it grows. This only covers fold-in-quarters; see the 3-column guard below.
+  it('stays under 4% of the paper while folding through two layers', () => {
     const model = quarters();
     let worst = 0;
     for (const t of [0.25, 0.5, 0.75, 1]) {
@@ -249,7 +382,7 @@ describe('seam gap from the 178° clamp', () => {
         for (const p of pts) worst = Math.max(worst, Math.hypot(p[0] - pts[0][0], p[1] - pts[0][1], p[2] - pts[0][2]));
       }
     }
-    expect(worst).toBeLessThan(0.02);
+    expect(worst).toBeLessThan(0.04);
   });
 });
 
@@ -304,5 +437,68 @@ describe('several turns', () => {
         expectClose(corner, cold[f][c], 12);
       });
     });
+  });
+});
+
+describe('at-rest seam gap on a 3-column model', () => {
+  // Known clamp-wedge artifact: the seam grows with distance from the stack (~0.047 on 3 panels, ~0.052 on 4).
+  // Awaiting the M3 layer-order solver; this only guards against it getting worse.
+  const grid3 = () => {
+    const nx = 3;
+    const verts: number[][] = [];
+    for (let j = 0; j < 3; j++) for (let i = 0; i <= nx; i++) verts.push([i / nx, j / 2]);
+    const v = (i: number, j: number) => j * (nx + 1) + i;
+    const edges: number[][] = [];
+    const asg: string[] = [];
+    const key: Record<string, number> = {};
+    const add = (a: number, b: number, n: string, border: boolean) => {
+      key[n] = edges.length;
+      edges.push([a, b]);
+      asg.push(border ? 'B' : 'V');
+    };
+    for (let j = 0; j < 3; j++) for (let i = 0; i < nx; i++) add(v(i, j), v(i + 1, j), `h${i}${j}`, j !== 1);
+    for (let i = 0; i <= nx; i++)
+      for (let j = 0; j < 2; j++) add(v(i, j), v(i, j + 1), `v${i}${j}`, i === 0 || i === nx);
+    const faces: number[][] = [];
+    for (let j = 0; j < 2; j++)
+      for (let i = 0; i < nx; i++) faces.push([v(i, j), v(i + 1, j), v(i + 1, j + 1), v(i, j + 1)]);
+    const angles = (o: Record<string, number>) => {
+      const a = edges.map(() => 0);
+      for (const k in o) a[key[k]] = o[k];
+      return a;
+    };
+    const s1 = { v10: 180, v11: 180 };
+    const s2 = { ...s1, h01: -180, h11: 180, h21: 180 };
+    return loadModel({
+      file_spec: 1.2,
+      vertices_coords: verts,
+      edges_vertices: edges,
+      edges_assignment: asg,
+      faces_vertices: faces,
+      file_frames: [angles(s1), angles(s2)].map((a) => ({
+        edges_foldAngle: a,
+        'foldapp:instruction': 'x',
+        'foldapp:fixedFace': 1
+      }))
+    });
+  };
+
+  it('does not grow beyond the measured 0.033 (t=0.5) and 0.0465 (t=1)', () => {
+    const model = grid3();
+    const worstAt = (t: number) => {
+      const F = foldedPositions(model, 2, t);
+      const copies = new Map<number, Vec3[]>();
+      model.faces.forEach((face, f) => {
+        face.forEach((v, c) => {
+          copies.set(v, [...(copies.get(v) ?? []), F[f][c]]);
+        });
+      });
+      let worst = 0;
+      for (const pts of copies.values())
+        for (const p of pts) worst = Math.max(worst, Math.hypot(p[0] - pts[0][0], p[1] - pts[0][1], p[2] - pts[0][2]));
+      return worst;
+    };
+    expect(worstAt(0.5)).toBeLessThan(0.033 * 1.1);
+    expect(worstAt(1)).toBeLessThan(0.0465 * 1.1);
   });
 });
