@@ -1,16 +1,27 @@
-[
-  {
-    "id": "fold-in-half",
-    "name": "Fold in half",
-    "category": "geometric",
-    "difficulty": "easy",
-    "tags": ["basic", "practice"]
-  },
-  {
-    "id": "fold-in-quarters",
-    "name": "Fold in quarters",
-    "category": "geometric",
-    "difficulty": "easy",
-    "tags": ["basic", "practice"]
-  }
-]
+{
+  "defaultModel": "fold-in-quarters",
+  "models": [
+    {
+      "id": "fold-in-half",
+      "name": {
+        "en": "Fold in half",
+        "pt": "Dobrar ao meio"
+      },
+      "category": "geometric",
+      "difficulty": "easy",
+      "tags": ["basic", "practice"],
+      "japaneseName": "Futatsu-ori"
+    },
+    {
+      "id": "fold-in-quarters",
+      "name": {
+        "en": "Fold in quarters",
+        "pt": "Dobrar em quatro"
+      },
+      "category": "geometric",
+      "difficulty": "easy",
+      "tags": ["basic", "practice"],
+      "japaneseName": "Yotsu-ori"
+    }
+  ]
+}

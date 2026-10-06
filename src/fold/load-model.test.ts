@@ -6,13 +6,20 @@ type Json = Record<string, unknown> & { file_frames: Record<string, unknown>[] }
 const half = () => fixture('fold-in-half') as Json;
 
 describe('loadModel', () => {
+  it('loads a bilingual instruction as is and a plain string as English', () => {
+    const load = (instruction: unknown) =>
+      loadModel({ ...half(), file_frames: [{ ...half().file_frames[0], 'foldapp:instruction': instruction }] });
+    expect(load({ en: 'Fold', pt: 'Dobra' }).steps[1].instruction).toEqual({ en: 'Fold', pt: 'Dobra' });
+    expect(load('Fold').steps[1].instruction).toEqual({ en: 'Fold' });
+  });
+
   it('loads fold-in-half with an implicit flat step 0', () => {
     const model = loadModel(fixture('fold-in-half'));
     expect(model.title).toBe('Fold in half');
     expect(model.paperColor).toBe('#B8613F');
     expect(model.steps).toHaveLength(2);
     expect(model.steps[0].angles).toEqual([0, 0, 0, 0, 0, 0, 0]);
-    expect(model.steps[1].instruction).toBe('Fold the left half over onto the right half.');
+    expect(model.steps[1].instruction.en).toBe('Fold the left half over onto the right half.');
     expect(model.steps[1].fixedFace).toBe(1);
     expect(model.edgeFaces[6]).toEqual([0, 1]);
     expect(model.faceEdges[0]).toEqual([0, 6, 4, 5]);
@@ -124,6 +131,16 @@ describe('loadModel', () => {
     [
       'missing instruction',
       (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], 'foldapp:instruction': ' ' }] }),
+      /Step 1 has no instruction/
+    ],
+    [
+      'instruction object without en',
+      (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], 'foldapp:instruction': { pt: 'Dobra' } }] }),
+      /Step 1 has no instruction/
+    ],
+    [
+      'instruction with a non-string pt',
+      (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], 'foldapp:instruction': { en: 'Fold', pt: 3 } }] }),
       /Step 1 has no instruction/
     ],
     [

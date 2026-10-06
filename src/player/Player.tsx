@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { Model } from '../fold/types';
-import { useT } from '../i18n/LanguageProvider';
+import { useLang, useT } from '../i18n/LanguageProvider';
+import { localized } from '../i18n/lang';
 import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, readPanelOpen, writePanelOpen } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
@@ -17,6 +18,7 @@ const LazyStage = lazy(loadStage);
 
 export function Player({ entry, model, initialStep, onSettle }: Props) {
   const t = useT().player;
+  const [lang] = useLang();
   const [state, dispatch] = usePlayer(model, initialStep);
   const status = playerStatus(state);
   const [panelOpen, setPanelOpen] = useState(readPanelOpen);
@@ -27,7 +29,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [webgl] = useState(hasWebGL);
   const [stageFailed, setStageFailed] = useState(false);
   const showPanel = panelOpen || !webgl || stageFailed;
-  const instruction = state.step === 0 ? t.firstInstruction : model.steps[state.step].instruction;
+  const instruction = state.step === 0 ? t.firstInstruction : localized(model.steps[state.step].instruction, lang);
 
   const togglePanel = (open: boolean) => {
     setPanelOpen(open);
@@ -90,7 +92,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
       data-panel={showPanel ? 'open' : 'closed'}
     >
       <div className={styles.title}>
-        <h1>{entry.name}</h1>
+        <h1>{localized(entry.name, lang)}</h1>
         {entry.japaneseName && <p className={styles.japanese}>{entry.japaneseName}</p>}
       </div>
 
@@ -213,7 +215,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           <h2 id="done-title" ref={doneRef} tabIndex={-1}>
             {t.wellFolded}
           </h2>
-          <p>{t.isComplete(entry.name)}</p>
+          <p>{t.isComplete(localized(entry.name, lang))}</p>
           <div className={styles.doneActions}>
             <button
               type="button"

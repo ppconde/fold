@@ -2,7 +2,7 @@ import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tans
 import { useCallback } from 'react';
 import { FoldError } from '../fold/load-model';
 import { useT } from '../i18n/LanguageProvider';
-import { currentLang, dictionary } from '../i18n/lang';
+import { currentLang, dictionary, localized } from '../i18n/lang';
 import { fetchModel } from '../models/catalog';
 import { loadStage } from '../player/load-stage';
 import { Player } from '../player/Player';
@@ -22,7 +22,7 @@ export const Route = createFileRoute('/fold/$id')({
     meta: [
       {
         title: loaderData
-          ? dictionary(currentLang()).titles.model(loaderData.entry.name)
+          ? dictionary(currentLang()).titles.model(localized(loaderData.entry.name, currentLang()))
           : dictionary(currentLang()).titles.home
       }
     ]
