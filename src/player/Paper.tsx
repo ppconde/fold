@@ -120,6 +120,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           points={PLACEHOLDER}
           segments
           color={HIGHLIGHT}
+          renderOrder={1}
           lineWidth={2.5 * scale}
           frustumCulled={false}
         />

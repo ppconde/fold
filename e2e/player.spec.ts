@@ -223,10 +223,30 @@ test('arrow keys on the slider move the fold, not the step', async ({ page }) =>
   await page.goto('/fold/fold-in-quarters?step=1');
   const progress = page.getByRole('slider', { name: 'Fold progress' });
   await progress.focus();
+  await page.keyboard.press('Home');
   await page.keyboard.press('ArrowLeft');
-  await page.keyboard.press('ArrowLeft');
+  await settled(page);
   await expect(page.locator('main')).toHaveAttribute('data-step', '1');
-  await expect(page.locator('main')).toHaveAttribute('data-progress', '98');
+  await expect(page.locator('main')).toHaveAttribute('data-progress', '0');
+});
+
+test('scrubbing the last step to 100% keeps the slider focused', async ({ page }) => {
+  await page.goto('/fold/fold-in-half?step=1');
+  const progress = page.getByRole('slider', { name: 'Fold progress' });
+  await progress.focus();
+  await page.keyboard.press('Home');
+  await page.keyboard.press('End');
+  await expect(page.getByText('Well folded!')).toBeVisible();
+  await expect(progress).toBeFocused();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('main')).not.toHaveAttribute('data-state', 'playing');
+});
+
+test('Escape closes the instructions even while the slider has focus', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.getByRole('slider', { name: 'Fold progress' }).focus();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
 });
 
 test('the flat sheet has no progress slider', async ({ page }) => {
@@ -261,10 +281,12 @@ test('if the 3D view fails to load, the 2D path keeps working and Try again reco
   await expect(page.getByText("The 3D view didn't load.")).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold in quarters');
   await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^(Hide|Show) steps$/ })).toHaveCount(0);
   await page.getByRole('button', { name: 'Next step' }).click();
   await settled(page);
   await expect(page.locator('main')).toHaveAttribute('data-step', '1');
   fail = false;
   await page.getByRole('button', { name: 'Try again' }).click();
   await expect(page.locator('canvas')).toBeVisible();
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
 });

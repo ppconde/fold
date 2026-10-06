@@ -4,6 +4,7 @@ import type { Model } from '../fold/types';
 import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, readPanelOpen, writePanelOpen } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
+import { loadStage } from './load-stage';
 import styles from './Player.module.css';
 import { playerStatus } from './player-state';
 import { StageBoundary } from './StageBoundary';
@@ -11,7 +12,6 @@ import { usePlayer } from './use-player';
 
 type Props = { entry: ModelEntry; model: Model; initialStep: number; onSettle: (step: number) => void };
 
-export const loadStage = () => import('./Stage').then((m) => ({ default: m.Stage }));
 const LazyStage = lazy(loadStage);
 
 const FIRST_INSTRUCTION = 'Start with your sheet of paper, colored side up.';
@@ -45,8 +45,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
     setFrameStep(state.step);
   }, [state.playing, state.step]);
 
+  // focus the card only when playback finishes; a scrub to 100% must leave the slider focused
+  const prevStatus = useRef(status);
   useEffect(() => {
-    if (status === 'done') doneRef.current?.focus();
+    if (status === 'done' && prevStatus.current === 'playing') doneRef.current?.focus();
+    prevStatus.current = status;
   }, [status]);
 
   // follow an external ?step change; while playing, state.step differs from the URL by design
@@ -57,7 +60,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
+      if (e.target instanceof HTMLInputElement && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' '))
+        return;
       if (document.querySelector('dialog[open]') || e.altKey || e.ctrlKey || e.metaKey) return;
       const onControl = e.target instanceof Element && e.target.closest('button, a, input, textarea, select');
       const inPanel = e.target instanceof Element && e.target.closest('#instructions');
@@ -102,7 +106,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             The 3D view isn't available on this device. Follow the crease pattern and instructions instead.
           </p>
         )}
-        {webgl && (
+        {webgl && !stageFailed && (
           <button
             type="button"
             className={styles.panelToggle}

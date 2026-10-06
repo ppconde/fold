@@ -2,7 +2,8 @@ import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tans
 import { useCallback } from 'react';
 import { FoldError } from '../fold/load-model';
 import { fetchModel } from '../models/catalog';
-import { loadStage, Player } from '../player/Player';
+import { loadStage } from '../player/load-stage';
+import { Player } from '../player/Player';
 
 export const Route = createFileRoute('/fold/$id')({
   validateSearch: (search: Record<string, unknown>): { step?: number } => {

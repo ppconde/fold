@@ -131,4 +131,14 @@ describe('player state', () => {
     expect(playerReducer(playing, secs(Number.NaN))).toBe(playing);
     expect(playerReducer(playing, secs(-1))).toBe(playing);
   });
+
+  it('ignores next during the lead-in', () => {
+    const s = run(initPlayer(3, 0, false), { type: 'next' }, secs(0.1));
+    expect(playerReducer(s, { type: 'next' })).toBe(s);
+  });
+
+  it('a scrub during the lead-in stops play', () => {
+    const s = run(initPlayer(3, 0, false), { type: 'next' }, secs(0.1), { type: 'scrub', t: 0.3 });
+    expect(s).toMatchObject({ playing: false, hold: 0, t: 0.3 });
+  });
 });

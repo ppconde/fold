@@ -366,7 +366,7 @@ describe('stacked layers', () => {
 describe('seam gap from the 178° clamp', () => {
   // Regression guard: copies of the same vertex on different faces may drift apart
   // mid-step because angles are clamped. A rigidly turning stack opens the inner crease by two
-  // wedges: today's maximum is ~0.035; fail if it grows.
+  // wedges: today's maximum is ~0.035; fail if it grows. This only covers fold-in-quarters; see the 3-column guard below.
   it('stays under 4% of the paper while folding through two layers', () => {
     const model = quarters();
     let worst = 0;
@@ -437,5 +437,68 @@ describe('several turns', () => {
         expectClose(corner, cold[f][c], 12);
       });
     });
+  });
+});
+
+describe('at-rest seam gap on a 3-column model', () => {
+  // Known clamp-wedge artifact: the seam grows with distance from the stack (~0.047 on 3 panels, ~0.052 on 4).
+  // Awaiting the M3 layer-order solver; this only guards against it getting worse.
+  const grid3 = () => {
+    const nx = 3;
+    const verts: number[][] = [];
+    for (let j = 0; j < 3; j++) for (let i = 0; i <= nx; i++) verts.push([i / nx, j / 2]);
+    const v = (i: number, j: number) => j * (nx + 1) + i;
+    const edges: number[][] = [];
+    const asg: string[] = [];
+    const key: Record<string, number> = {};
+    const add = (a: number, b: number, n: string, border: boolean) => {
+      key[n] = edges.length;
+      edges.push([a, b]);
+      asg.push(border ? 'B' : 'V');
+    };
+    for (let j = 0; j < 3; j++) for (let i = 0; i < nx; i++) add(v(i, j), v(i + 1, j), `h${i}${j}`, j !== 1);
+    for (let i = 0; i <= nx; i++)
+      for (let j = 0; j < 2; j++) add(v(i, j), v(i, j + 1), `v${i}${j}`, i === 0 || i === nx);
+    const faces: number[][] = [];
+    for (let j = 0; j < 2; j++)
+      for (let i = 0; i < nx; i++) faces.push([v(i, j), v(i + 1, j), v(i + 1, j + 1), v(i, j + 1)]);
+    const angles = (o: Record<string, number>) => {
+      const a = edges.map(() => 0);
+      for (const k in o) a[key[k]] = o[k];
+      return a;
+    };
+    const s1 = { v10: 180, v11: 180 };
+    const s2 = { ...s1, h01: -180, h11: 180, h21: 180 };
+    return loadModel({
+      file_spec: 1.2,
+      vertices_coords: verts,
+      edges_vertices: edges,
+      edges_assignment: asg,
+      faces_vertices: faces,
+      file_frames: [angles(s1), angles(s2)].map((a) => ({
+        edges_foldAngle: a,
+        'foldapp:instruction': 'x',
+        'foldapp:fixedFace': 1
+      }))
+    });
+  };
+
+  it('does not grow beyond the measured 0.033 (t=0.5) and 0.0465 (t=1)', () => {
+    const model = grid3();
+    const worstAt = (t: number) => {
+      const F = foldedPositions(model, 2, t);
+      const copies = new Map<number, Vec3[]>();
+      model.faces.forEach((face, f) => {
+        face.forEach((v, c) => {
+          copies.set(v, [...(copies.get(v) ?? []), F[f][c]]);
+        });
+      });
+      let worst = 0;
+      for (const pts of copies.values())
+        for (const p of pts) worst = Math.max(worst, Math.hypot(p[0] - pts[0][0], p[1] - pts[0][1], p[2] - pts[0][2]));
+      return worst;
+    };
+    expect(worstAt(0.5)).toBeLessThan(0.033 * 1.1);
+    expect(worstAt(1)).toBeLessThan(0.0465 * 1.1);
   });
 });
