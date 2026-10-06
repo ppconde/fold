@@ -94,8 +94,19 @@
 .dock {
   grid-area: dock;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
   justify-content: center;
   padding: 0.75rem 0.5rem calc(0.75rem + env(safe-area-inset-bottom));
+}
+
+.progress {
+  width: min(22rem, 100%);
+  min-height: 44px;
+  margin: 0;
+  accent-color: var(--terracotta);
+  cursor: pointer;
 }
 
 .pill {
@@ -231,7 +242,8 @@
     background: transparent;
   }
 
-  .pill {
+  .pill,
+  .progress {
     pointer-events: auto;
   }
 

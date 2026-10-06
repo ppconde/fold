@@ -195,3 +195,42 @@ test('the dock fits on screen with the steps hidden, even on a 360px phone', asy
   expect(dock.x).toBeGreaterThanOrEqual(0);
   expect(dock.x + dock.width).toBeLessThanOrEqual(width);
 });
+
+test('scrubbing folds part-way, and Next finishes the same step', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=1');
+  const progress = page.getByRole('slider', { name: 'Fold progress' });
+  await progress.fill('50');
+  await expect(page.locator('main')).toHaveAttribute('data-progress', '50');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  await expect(progress).toHaveAttribute('aria-valuetext', '50% folded');
+  await page.getByRole('button', { name: 'Next step' }).click();
+  await settled(page);
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  await expect(page.locator('main')).toHaveAttribute('data-progress', '100');
+});
+
+test('a part-folded last step is not finished yet', async ({ page }) => {
+  await page.goto('/fold/fold-in-half?step=1');
+  await expect(page.getByText('Well folded!')).toBeVisible();
+  await page.getByRole('slider', { name: 'Fold progress' }).fill('30');
+  await expect(page.getByText('Well folded!')).toBeHidden();
+  await page.getByRole('button', { name: 'Next step' }).click();
+  await settled(page);
+  await expect(page.getByText('Well folded!')).toBeVisible();
+});
+
+test('arrow keys on the slider move the fold, not the step', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=1');
+  const progress = page.getByRole('slider', { name: 'Fold progress' });
+  await progress.focus();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
+  await expect(page.locator('main')).toHaveAttribute('data-progress', '98');
+});
+
+test('the flat sheet has no progress slider', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters?step=0');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
+  await expect(page.getByRole('slider', { name: 'Fold progress' })).toHaveCount(0);
+});

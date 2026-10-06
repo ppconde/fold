@@ -53,6 +53,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
       if (document.querySelector('dialog[open]') || e.altKey || e.ctrlKey || e.metaKey) return;
       const onControl = e.target instanceof Element && e.target.closest('button, a, input, textarea, select');
       const inPanel = e.target instanceof Element && e.target.closest('#instructions');
@@ -77,6 +78,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
       className={styles.player}
       data-step={state.step}
       data-state={status}
+      data-progress={Math.round(state.t * 100)}
       data-panel={showPanel ? 'open' : 'closed'}
     >
       <div className={styles.title}>
@@ -117,6 +119,19 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
       </aside>
 
       <div className={styles.dock} data-testid="dock">
+        {state.step > 0 && (
+          <input
+            type="range"
+            className={styles.progress}
+            min={0}
+            max={100}
+            step={1}
+            value={Math.round(state.t * 100)}
+            aria-label="Fold progress"
+            aria-valuetext={`${Math.round(state.t * 100)}% folded`}
+            onChange={(e) => dispatch({ type: 'scrub', t: Number(e.target.value) / 100 })}
+          />
+        )}
         <div className={styles.pill}>
           <button
             type="button"
@@ -154,7 +169,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             className={styles.primary}
             aria-label="Next step"
             title="Next step"
-            aria-disabled={state.step === state.last || state.playing}
+            aria-disabled={(state.step === state.last && state.t === 1) || state.playing}
             onClick={() => dispatch({ type: 'next' })}
           >
             {'\u25B6\uFE0E'}
