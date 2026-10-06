@@ -64,9 +64,10 @@ describe('foldedPositions', () => {
   it('folds through two layers in the second quarters step', () => {
     const faces = foldedPositions(quarters(), 2, 1);
     // top-right corner (vertex 4, face 2) lands near the bottom-right corner
-    expectClose(faces[2][2], [1, 0, 0], 1);
-    // top-left corner (vertex 6, face 3) was folded right in step 1, now also lands near (1, 0)
-    expectClose(faces[3][3], [1, 0, 0], 1);
+    expect(Math.hypot(faces[2][2][0] - 1, faces[2][2][1], faces[2][2][2])).toBeLessThan(0.06);
+    // top-left corner (vertex 6, face 3) was folded right in step 1, now also lands near (1, 0),
+    // one wedge (~0.035) inside the outer layer because the stack turns as one piece
+    expect(Math.hypot(faces[3][3][0] - 1, faces[3][3][1], faces[3][3][2])).toBeLessThan(0.06);
   });
 
   it('anchors the new fixed face where the previous step left it', () => {
@@ -231,10 +232,100 @@ describe('turning over a folded model', () => {
   });
 });
 
+describe('creases meeting at a corner', () => {
+  // Unit square with both diagonals and the vertical midline; faces fan CCW around the centre (vertex 6):
+  // 0 bottom-left, 1 bottom-right, 2 right, 3 top-right, 4 top-left, 5 left.
+  // 1: left half over the right (midline, edges 10 + 11). 2: fold the stacked top triangle down along
+  // the diagonal from the centre to (1, 1): edge 7 on the lower layer, edge 9 on the flipped upper one.
+  // 3: turn over. 4: unfold step 2. The held face changes every step.
+  const corner = () => {
+    const step1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 180, 180];
+    const step2 = [0, 0, 0, 0, 0, 0, 0, 180, 0, -180, 180, 180];
+    return loadModel({
+      file_spec: 1.2,
+      vertices_coords: [
+        [0, 0],
+        [0.5, 0],
+        [1, 0],
+        [1, 1],
+        [0.5, 1],
+        [0, 1],
+        [0.5, 0.5]
+      ],
+      edges_vertices: [
+        [0, 1],
+        [1, 2],
+        [2, 3],
+        [3, 4],
+        [4, 5],
+        [5, 0],
+        [0, 6],
+        [6, 3],
+        [2, 6],
+        [6, 5],
+        [1, 6],
+        [6, 4]
+      ],
+      edges_assignment: ['B', 'B', 'B', 'B', 'B', 'B', 'F', 'V', 'F', 'M', 'V', 'V'],
+      faces_vertices: [
+        [0, 1, 6],
+        [1, 2, 6],
+        [2, 3, 6],
+        [3, 4, 6],
+        [4, 5, 6],
+        [5, 0, 6]
+      ],
+      file_frames: [
+        { edges_foldAngle: step1, 'foldapp:instruction': 'Fold the left half over.', 'foldapp:fixedFace': 1 },
+        { edges_foldAngle: step2, 'foldapp:instruction': 'Fold the top corner down.', 'foldapp:fixedFace': 2 },
+        {
+          edges_foldAngle: step2,
+          'foldapp:instruction': 'Turn it over.',
+          'foldapp:fixedFace': 3,
+          'foldapp:rotation': [0, 180, 0]
+        },
+        { edges_foldAngle: step1, 'foldapp:instruction': 'Unfold the corner.', 'foldapp:fixedFace': 0 }
+      ]
+    });
+  };
+
+  it('is a consistent model at every step', () => {
+    const m = corner();
+    for (let k = 1; k < m.steps.length; k++) expect(checkConsistency(m, k)).toEqual({ ok: true });
+  });
+
+  it('joins every corner of every face exactly at each step boundary', () => {
+    const m = corner();
+    for (let k = 1; k < m.steps.length - 1; k++) {
+      const end = foldedPositions(m, k, 1);
+      foldedPositions(m, k + 1, 0).forEach((face, f) => {
+        face.forEach((corner, c) => {
+          expectClose(corner, end[f][c], 9);
+        });
+      });
+    }
+  });
+});
+
+describe('stacked layers', () => {
+  // A zero-thickness stack folded about one crease must keep its layer order: hinging each layer
+  // on its own copy of the crease made them coplanar at 90° and swap sides (z-fighting mid-fold).
+  it('keeps the step 1 flap on the same side of the layer under it all through step 2', () => {
+    const model = quarters();
+    for (const t of [0, 0.25, 0.5, 0.75, 1]) {
+      const [, a, b, c] = foldedPositions(model, 2, t)[2];
+      const n = new Vector3(...b).sub(new Vector3(...a)).cross(new Vector3(...c).sub(new Vector3(...a)));
+      const far = foldedPositions(model, 2, t)[3][0];
+      expect(n.normalize().dot(new Vector3(...far).sub(new Vector3(...a)))).toBeGreaterThan(0.01);
+    }
+  });
+});
+
 describe('seam gap from the 178° clamp', () => {
   // Regression guard: copies of the same vertex on different faces may drift apart
-  // mid-step because angles are clamped. Today's maximum is ~0.0175; fail if it grows.
-  it('stays under 2% of the paper while folding through two layers', () => {
+  // mid-step because angles are clamped. A rigidly turning stack opens the inner crease by two
+  // wedges: today's maximum is ~0.035; fail if it grows.
+  it('stays under 4% of the paper while folding through two layers', () => {
     const model = quarters();
     let worst = 0;
     for (const t of [0.25, 0.5, 0.75, 1]) {
@@ -249,7 +340,7 @@ describe('seam gap from the 178° clamp', () => {
         for (const p of pts) worst = Math.max(worst, Math.hypot(p[0] - pts[0][0], p[1] - pts[0][1], p[2] - pts[0][2]));
       }
     }
-    expect(worst).toBeLessThan(0.02);
+    expect(worst).toBeLessThan(0.04);
   });
 });
 

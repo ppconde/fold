@@ -28,40 +28,56 @@ function hinge(model: Model, e: number, g: number, angle: number): Matrix4 {
 
 type Tree = { order: number[]; parent: number[]; parentEdge: number[]; treeEdges: Set<number> };
 
-const trees = new WeakMap<Model, Tree>();
+const trees = new WeakMap<Model, Tree[]>();
 // Models from loadModel are frozen, so cached anchors stay valid; an edit must create a new Model.
 const anchors = new WeakMap<Model, Matrix4[]>();
 
-/** One canonical spanning tree per model: BFS from face 0. */
-function tree(model: Model): Tree {
-  let t = trees.get(model);
-  if (t) return t;
+/**
+ * Spanning tree from face 0 for `step`, preferring creases this step leaves alone (0-1 Prim, FIFO).
+ * Layers stacked by an earlier fold then hang off each other through that fold, so a stack turns
+ * as one rigid piece instead of each layer pivoting on its own copy of the crease and passing
+ * through its neighbour mid-fold.
+ */
+function tree(model: Model, step: number): Tree {
+  let list = trees.get(model);
+  if (!list) {
+    list = [];
+    trees.set(model, list);
+  }
+  if (list[step]) return list[step];
+  // a step that moves no crease (a turn, a new held face) keeps the previous tree, so it joins exactly
+  if (step > 0 && model.steps[step].angles.every((a, e) => a === model.steps[step - 1].angles[e])) {
+    list[step] = tree(model, step - 1);
+    return list[step];
+  }
+  const moves = (e: number) => step > 0 && model.steps[step - 1].angles[e] !== model.steps[step].angles[e];
   const parent: number[] = [];
   const parentEdge: number[] = [];
   const treeEdges = new Set<number>();
-  const seen = new Set([0]);
-  const order = [0];
-  for (let i = 0; i < order.length; i++) {
-    const f = order[i];
-    for (const e of model.faceEdges[f]) {
-      for (const g of model.edgeFaces[e]) {
-        if (seen.has(g)) continue;
-        seen.add(g);
-        parent[g] = f;
-        parentEdge[g] = e;
-        treeEdges.add(e);
-        order.push(g);
-      }
-    }
+  const seen = new Set<number>();
+  const order: number[] = [];
+  const buckets: [number, number, number][][] = [[], []];
+  const add = (f: number) => {
+    seen.add(f);
+    order.push(f);
+    for (const e of model.faceEdges[f]) for (const g of model.edgeFaces[e]) buckets[+moves(e)].push([f, e, g]);
+  };
+  add(0);
+  for (let next = buckets[0].shift() ?? buckets[1].shift(); next; next = buckets[0].shift() ?? buckets[1].shift()) {
+    const [f, e, g] = next;
+    if (seen.has(g)) continue;
+    parent[g] = f;
+    parentEdge[g] = e;
+    treeEdges.add(e);
+    add(g);
   }
-  t = { order, parent, parentEdge, treeEdges };
-  trees.set(model, t);
-  return t;
+  list[step] = { order, parent, parentEdge, treeEdges };
+  return list[step];
 }
 
 /** Transform of every face relative to face 0, for the given fold angles. */
-function rootTransforms(model: Model, angles: number[]): Matrix4[] {
-  const { order, parent, parentEdge } = tree(model);
+function rootTransforms(model: Model, angles: number[], step: number): Matrix4[] {
+  const { order, parent, parentEdge } = tree(model, step);
   const T: Matrix4[] = [];
   for (const g of order) {
     T[g] =
@@ -78,7 +94,7 @@ function anchorFor(model: Model, step: number): Matrix4 {
     anchors.set(model, list);
   }
   for (let k = list.length - 1; k < step; k++) {
-    const T = rootTransforms(model, model.steps[k].angles.map(clampAngle));
+    const T = rootTransforms(model, model.steps[k].angles.map(clampAngle), k);
     list[k + 1] = list[k]
       .clone()
       .multiply(T[model.steps[k].fixedFace].clone().invert())
@@ -103,7 +119,7 @@ const toQuaternion = (r: Vec3) => new Quaternion().setFromEuler(new Euler(r[0] *
 
 /** Unrotated pose of every face at the start of `step` (clamped angles, anchored). */
 function startPose(model: Model, step: number): Matrix4[] {
-  const T = rootTransforms(model, model.steps[step - 1].angles.map(clampAngle));
+  const T = rootTransforms(model, model.steps[step - 1].angles.map(clampAngle), step);
   const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
   return T.map((m) => base.clone().multiply(m));
 }
@@ -157,7 +173,7 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
 
   const cur = model.steps[step];
   const angles = anglesAt(model, step, t).map(clampAngle);
-  const T = rootTransforms(model, angles);
+  const T = rootTransforms(model, angles, step);
   const s = progress(t);
   const world = stepRotation(model, step, s)
     .multiply(anchorFor(model, step))
@@ -174,8 +190,8 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
 export function checkConsistency(model: Model, step: number): { ok: true } | { ok: false; edges: number[] } {
   assertStep(model, step);
   const { angles } = model.steps[step];
-  const { treeEdges } = tree(model);
-  const T = rootTransforms(model, angles);
+  const { treeEdges } = tree(model, step);
+  const T = rootTransforms(model, angles, step);
   const bad: number[] = [];
   const p = new Vector3();
   const q = new Vector3();
