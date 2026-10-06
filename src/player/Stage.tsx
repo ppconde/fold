@@ -20,6 +20,7 @@ export function Stage(props: Props) {
       frameloop="demand"
       dpr={[1, 2]}
       camera={{ fov: 35, near: 0.01, far: 100, position: [0, 2, 2] }}
+      gl={{ alpha: true }}
       role="img"
       aria-label={t.player.stageLabel}
     >
@@ -49,11 +50,11 @@ function Scene({ model, step, t, resetCount, frameStep }: Props) {
 
   return (
     <>
-      <hemisphereLight args={['#fffaf0', '#e9e1d1', 0.9]} />
-      <directionalLight position={[-2, 4, 3]} intensity={2.2} />
-      <directionalLight position={[3, 2, -2]} intensity={0.6} />
+      <hemisphereLight args={['#fffaf0', '#e6dccb', 1.1]} />
+      <directionalLight position={[-2, 4, 3]} intensity={1.6} color="#fff4e6" />
+      <directionalLight position={[3, 2, -2]} intensity={0.45} />
       <Paper model={model} step={step} t={t} />
-      <ContactShadows position={[0, -0.002, 0]} scale={size * 3} blur={2.5} opacity={0.35} far={size} />
+      <ContactShadows position={[0, -0.002, 0]} scale={size * 3} blur={3.2} opacity={0.25} color="#5b4a3a" far={size} />
       <CameraControls ref={controls} makeDefault minDistance={size * 0.4} maxDistance={size * 6} />
     </>
   );

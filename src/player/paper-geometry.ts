@@ -52,6 +52,20 @@ export function fillTriangles(faces: Vec3[][], out: Float32Array): void {
   }
 }
 
+/** Flat-paper UVs (0..1) in the same triangle order as fillTriangles, 6 floats per triangle. */
+export function fillUVs(model: Model, out: Float32Array): void {
+  const { minX, minY, size } = paperExtent(model);
+  let i = 0;
+  for (const face of model.faces) {
+    for (let k = 1; k < face.length - 1; k++) {
+      for (const v of [face[0], face[k], face[k + 1]]) {
+        out[i++] = (model.vertices[v][0] - minX) / size;
+        out[i++] = (model.vertices[v][1] - minY) / size;
+      }
+    }
+  }
+}
+
 /** Edge `e` as drawn on face `f` (default: the first face that owns it). */
 function segment(model: Model, faces: Vec3[][], e: number, f = model.edgeFaces[e][0]): number[] {
   const j = model.faceEdges[f].indexOf(e);
