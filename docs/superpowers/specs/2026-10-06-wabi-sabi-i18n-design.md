@@ -47,10 +47,10 @@ Success:
 | `--ivory` | `#F3EDE2` | paper sheets, cards, the menu sheet |
 | `--sand` | `#B08A6A` | quiet details only; never text on sand |
 | `--clay` | `#A5633F` | primary accent: Next, the active crease, the slider thumb, underlines |
-| `--moss` | `#6F7A55` | secondary accent: difficulty marks |
+| `--moss` | `#6F7A55` | secondary accent for non-text marks: difficulty marks (3.37:1) |
 | `--indigo` | `#4F6177` | links, the focus ring |
 | `--charcoal` | `#33302C` | text, ink lines |
-| `--muted` | `#6F6658` | captions, labels |
+| `--muted` | `#5E5649` | captions, labels (5.33:1 on plaster; the mockup's #6F6658 failed AA at 4.16:1) |
 
 The old tokens (`--ivory #F7F3EA`, `--terracotta`, and the rest) are replaced. Every text and background pair actually used must pass WCAG AA. An automated test enforces this (§10).
 
