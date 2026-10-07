@@ -94,6 +94,40 @@
   text-transform: uppercase;
 }
 
+/* a small hanko stamped on the sheet when the model is finished */
+.seal {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid var(--clay);
+  border-radius: 6px;
+  color: var(--clay);
+  font-family: var(--font-brush);
+  font-size: 1.6rem;
+  line-height: 1;
+  rotate: -6deg;
+  opacity: 0.85;
+  mix-blend-mode: multiply;
+  animation: stamp 420ms var(--ease) both;
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    scale: 1.25;
+  }
+
+  60% {
+    opacity: 0.9;
+    scale: 0.94;
+  }
+}
+
 .instruction {
   margin: 0.5rem 0 1rem;
   font-family: var(--font-serif);
@@ -258,6 +292,15 @@
 
   .stepLabel {
     grid-area: label;
+  }
+
+  /* the text fills the left column here, so the seal stamps the diagram's bottom corner instead */
+  .seal {
+    top: calc(1.1rem + min(32vw, 8.5rem) - 2rem);
+    right: 0.8rem;
+    width: 2rem;
+    height: 2rem;
+    font-size: 1.25rem;
   }
 
   .instruction {

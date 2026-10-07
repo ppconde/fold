@@ -135,6 +135,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         tabIndex={0}
       >
         <p className={styles.stepLabel}>{t.stepOf(state.step, state.last)}</p>
+        {status === 'done' && (
+          <span className={styles.seal} aria-hidden="true">
+            完
+          </span>
+        )}
         <p className={styles.instruction} aria-live="polite">
           {instruction}
         </p>
@@ -223,6 +228,9 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           </p>
         )}
       </div>
+      <p className="sr-only" role="status">
+        {status === 'done' ? t.isComplete(localized(entry.name, lang)) : ''}
+      </p>
     </main>
   );
 }
