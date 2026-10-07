@@ -86,8 +86,8 @@ describe('crossings', () => {
 });
 
 describe('flapFlips', () => {
-  // The first dog face: its nose fold re-routed the engine's spanning tree, and the clamped 178° wedges
-  // then put the right ear's front layer on top of its back layer (white side showing, z-fighting).
+  // The first dog face: under the old 178° clamp its nose fold re-routed the spanning tree and the
+  // wedges put the right ear's front layer on top of its back layer (white side showing, z-fighting).
   const firstDog = () => {
     const s = diamondSequence();
     const text = { en: 'x', pt: 'x' };
@@ -101,10 +101,16 @@ describe('flapFlips', () => {
   };
 
   it('finds a folded flap that changes side in a later step', () => {
-    expect(flapFlips(firstDog())).toContainEqual(
-      expect.stringMatching(/^Step 5: face \d+ flips to the other side of face \d+/)
+    // fold-in-half, then a step that keeps the angles but puts the flap under the held half
+    const json = fixture('fold-in-half') as { file_frames: Record<string, unknown>[] };
+    json.file_frames.push({ ...json.file_frames[0], faceOrders: [[0, 1, -1]] });
+    expect(flapFlips(loadModel(json))).toContainEqual(
+      expect.stringMatching(/^Step 2: face \d+ flips to the other side of face \d+/)
     );
-    expect(checkModel(firstDog())).toContainEqual(expect.stringMatching(/flips to the other side/));
+  });
+
+  it('passes the first dog face now that layers are ordered', () => {
+    expect(checkModel(firstDog())).toEqual([]);
   });
 
   it('finds none in the fixtures', () => {

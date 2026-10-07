@@ -1,7 +1,7 @@
 import { Euler, Matrix3, Matrix4, Vector2 } from 'three';
 import type { Vec2, Vec3 } from '../src/fold/types';
 import { type Crease, signedArea } from './arrange';
-import { inside, type ModelSource, type SourceStep } from './build';
+import { inside, type ModelSource, type SourceStep, type StackPiece } from './build';
 
 type Text = { en: string; pt: string };
 /** A flat piece of paper: its outline in paper coordinates, where it lies in the view, and which way it faces. */
@@ -88,11 +88,17 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
   ];
   const creases: Record<string, Crease> = {};
   const steps: SourceStep[] = [];
+  // pieces run bottom to top as the viewer sees them; every step records that stack
+  const stack = (): StackPiece[] => pieces.map(({ outline, toView, frontUp }) => ({ outline, toView, frontUp }));
 
   return {
     /** A step that only turns the model (absolute Euler XYZ, degrees). Pieces keep their view positions. */
     turn(rotation: Vec3, text: Text) {
-      steps.push({ rotation, ...text });
+      steps.push({ rotation, ...text, stack: stack() });
+    },
+    /** A step that sets existing creases to new angles, e.g. to open a model out at the end. The stack stays as it was. */
+    set(fold: Record<string, number>, text: Text, rotation?: Vec3) {
+      steps.push({ fold, ...text, ...(rotation ? { rotation } : {}), stack: stack() });
     },
     /** The creases the fold called `name` made, one per layer it cut (name1, name2, …), with their angles. */
     angles(name: string): Record<string, number> {
@@ -103,6 +109,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     fold(name: string, p: Vec2, q: Vec2, opts: FoldOptions) {
       const fold: Record<string, number> = {};
       const next: Piece[] = [];
+      const flaps: Piece[] = [];
       const moved = new Set<Piece>();
       const flip = mirror(p, q);
       for (const piece of pieces) {
@@ -135,10 +142,12 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
           tags: opts.tag ? [...piece.tags, opts.tag] : piece.tags
         };
         moved.add(flap);
-        next.push(flap);
+        flaps.push(flap);
       }
       if (!Object.keys(fold).length) throw new Error(`Fold ${name} doesn't fold anything.`);
-      pieces = next;
+      // a simple fold turns the moving layers over as one: they reverse, and land on top (valley) or underneath
+      flaps.reverse();
+      pieces = opts.valley ? [...next, ...flaps] : [...flaps, ...next];
       let hold: Vec2 | undefined;
       if (opts.hold) {
         const still = pieces.find(
@@ -152,7 +161,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         if (!still) throw new Error(`Fold ${name} holds a point that is not on a piece that stays still.`);
         hold = centroid(still.outline);
       }
-      steps.push({ fold, en: opts.en, pt: opts.pt, ...(hold ? { hold } : {}) });
+      steps.push({ fold, en: opts.en, pt: opts.pt, ...(hold ? { hold } : {}), stack: stack() });
     },
     source(entry: Omit<ModelSource, 'creases' | 'steps'>): ModelSource {
       return { ...entry, creases, steps };

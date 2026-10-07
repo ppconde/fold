@@ -5,9 +5,8 @@ const BACK = '#F3EDE2';
 const INK = '#33302C';
 
 /**
- * The paper at the end of `step` seen from above, as a small washi-grain SVG.
- * ponytail: faces are painted far-to-near by mean height, which can misorder stacked flaps; use the
- * layer order from the layer-order milestone once it exists.
+ * The paper at the end of `step` seen from above, as a small washi-grain SVG. Faces are painted far to near
+ * by mean height, which follows the stack because every layer is lifted by its place in it.
  */
 export function thumbnail(model: Model, step = model.steps.length - 1): string {
   const faces = foldedPositions(model, step, 1);
