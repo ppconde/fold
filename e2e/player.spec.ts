@@ -60,9 +60,11 @@ test('finishing leaves the folded model in view, with no completion card over it
   await expect(page.getByRole('button', { name: 'Fold again' })).toHaveCount(0);
 });
 
-test('finishing stamps a small seal on the sheet and tells screen readers', async ({ page }) => {
+test('finishing stamps a small seal and tells screen readers, even with the steps hidden', async ({ page }) => {
   await page.goto('/fold/fold-in-half');
-  const seal = page.getByRole('complementary').getByText('完');
+  await page.getByRole('button', { name: 'hide steps' }).click();
+  await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
+  const seal = page.getByText('完');
   await expect(seal).toHaveCount(0);
   await next(page);
   await expect(seal).toBeVisible();

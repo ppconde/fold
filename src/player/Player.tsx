@@ -124,6 +124,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             {panelOpen ? t.hideSteps : t.showSteps}
           </button>
         )}
+        {status === 'done' && (
+          <span className={styles.seal} aria-hidden="true">
+            完
+          </span>
+        )}
       </div>
 
       <aside
@@ -135,11 +140,6 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         tabIndex={0}
       >
         <p className={styles.stepLabel}>{t.stepOf(state.step, state.last)}</p>
-        {status === 'done' && (
-          <span className={styles.seal} aria-hidden="true">
-            完
-          </span>
-        )}
         <p className={styles.instruction} aria-live="polite">
           {instruction}
         </p>

@@ -94,10 +94,10 @@
   text-transform: uppercase;
 }
 
-/* a small hanko stamped on the sheet when the model is finished */
+/* a small hanko stamped under the steps toggle when the model is finished, so it shows with the steps hidden too */
 .seal {
   position: absolute;
-  top: 1.25rem;
+  top: 3.75rem;
   right: 1.25rem;
   z-index: 1;
   display: grid;
@@ -292,15 +292,6 @@
 
   .stepLabel {
     grid-area: label;
-  }
-
-  /* the text fills the left column here, so the seal stamps the diagram's bottom corner instead */
-  .seal {
-    top: calc(1.1rem + min(32vw, 8.5rem) - 2rem);
-    right: 0.8rem;
-    width: 2rem;
-    height: 2rem;
-    font-size: 1.25rem;
   }
 
   .instruction {
