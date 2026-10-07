@@ -1,0 +1,81 @@
+.home {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-columns: minmax(18rem, 38%) 1fr;
+  padding: 6rem 0 3rem 6vw;
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 700ms var(--ease);
+}
+
+@starting-style {
+  .home {
+    opacity: 0;
+  }
+}
+
+.text {
+  align-self: center;
+  max-width: 26rem;
+  transition: opacity 600ms var(--ease);
+}
+
+.text h1 {
+  font-family: var(--font-serif);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
+  line-height: 1.08;
+}
+
+.lede {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin: 1rem 0 1.5rem;
+}
+
+.soon {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 2.5rem;
+}
+
+.entering .text {
+  opacity: 0;
+}
+
+.crane {
+  position: relative;
+  min-height: 0;
+}
+
+.crane canvas {
+  position: relative;
+}
+
+.mark {
+  position: absolute;
+  right: 12%;
+  top: 18%;
+  font-family: var(--font-brush);
+  font-size: clamp(8rem, 18vw, 14rem);
+  color: var(--charcoal);
+  opacity: 0.06;
+  line-height: 1;
+  pointer-events: none;
+}
+
+@media (max-width: 719px) {
+  .home {
+    grid-template-columns: 1fr;
+    grid-template-rows: 46vh auto;
+    padding: 5rem 0 0;
+  }
+
+  .crane {
+    order: -1;
+  }
+
+  .text {
+    padding: 0 1.25rem 2rem;
+  }
+}
