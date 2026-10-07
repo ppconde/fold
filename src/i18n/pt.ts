@@ -34,7 +34,13 @@ export const pt: Dictionary = {
   library: {
     title: 'Biblioteca',
     models: 'Modelos',
-    difficulty: { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' }
+    difficulty: { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' },
+    search: 'Pesquisar dobras',
+    category: 'Categoria',
+    categories: { all: 'Todas', animals: 'Animais', flowers: 'Flores', objects: 'Objetos', geometric: 'Geometria' },
+    level: 'Dificuldade',
+    noMatch: 'Nenhuma dobra corresponde.',
+    clear: 'Limpar filtros'
   },
   about: {
     title: 'Sobre',
