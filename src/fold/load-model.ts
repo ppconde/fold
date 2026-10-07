@@ -1,4 +1,4 @@
-import type { Assignment, Edge, Model, Step, Vec2, Vec3 } from './types';
+import type { Assignment, Edge, FaceOrder, Model, Step, Vec2, Vec3 } from './types';
 
 export class FoldError extends Error {
   override name = 'FoldError';
@@ -93,7 +93,13 @@ export function loadModel(json: unknown): Model {
   ).i;
 
   const steps: Step[] = [
-    { angles: edges.map(() => 0), instruction: { en: '' }, fixedFace: nearestToCenter, rotation: [0, 0, 0] }
+    {
+      angles: edges.map(() => 0),
+      instruction: { en: '' },
+      fixedFace: nearestToCenter,
+      rotation: [0, 0, 0],
+      faceOrders: []
+    }
   ];
   frames.forEach((frame, i) => {
     const n = i + 1;
@@ -130,7 +136,10 @@ export function loadModel(json: unknown): Model {
       throw new FoldError(`Step ${n} rotation must be three numbers.`);
     }
 
-    steps.push({ angles: [...angles], instruction, fixedFace, rotation: [...rotation] as Vec3 });
+    const faceOrders =
+      frame.faceOrders === undefined ? prev.faceOrders : readFaceOrders(frame.faceOrders, n, faces.length);
+
+    steps.push({ angles: [...angles], instruction, fixedFace, rotation: [...rotation] as Vec3, faceOrders });
   });
 
   return deepFreeze({
@@ -145,6 +154,20 @@ export function loadModel(json: unknown): Model {
     faceCentroids,
     center,
     steps
+  });
+}
+
+function readFaceOrders(raw: unknown, n: number, faceCount: number): FaceOrder[] {
+  const bad = () => new FoldError(`Step ${n} faceOrders needs [f, g, s] triples with s of -1, 0 or 1.`);
+  if (!Array.isArray(raw)) throw bad();
+  return raw.flatMap((order): FaceOrder[] => {
+    if (!Array.isArray(order) || order.length !== 3 || ![-1, 0, 1].includes(order[2])) throw bad();
+    const [f, g, s] = order;
+    for (const face of [f, g]) {
+      if (!isIndex(face, faceCount)) throw new FoldError(`Step ${n} orders face ${face}, which does not exist.`);
+    }
+    if (f === g) throw new FoldError(`Step ${n} orders face ${f} against itself.`);
+    return s === 0 ? [] : [[f, g, s]];
   });
 }
 

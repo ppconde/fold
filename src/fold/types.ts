@@ -3,6 +3,9 @@ export type Vec3 = [number, number, number];
 export type Edge = [number, number];
 export type Assignment = 'M' | 'V' | 'B' | 'F' | 'U';
 
+/** FOLD faceOrders triple: face f lies above (1) or below (-1) face g, along g's normal. */
+export type FaceOrder = [number, number, 1 | -1];
+
 export type Step = {
   /** Fold angle of every edge at the end of the step, in degrees (+valley, −mountain). */
   angles: number[];
@@ -11,6 +14,8 @@ export type Step = {
   fixedFace: number;
   /** Whole-model rotation at the end of the step, Euler XYZ in degrees. */
   rotation: Vec3;
+  /** How overlapping faces stack at the end of the step (FOLD faceOrders, unknown orders dropped). */
+  faceOrders: FaceOrder[];
 };
 
 export type Model = {
