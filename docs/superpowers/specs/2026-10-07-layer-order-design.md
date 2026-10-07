@@ -38,8 +38,8 @@ Probe (during planning, throwaway): with exact angles, `LAYER_GAP` 0.002 and the
 ## 3. Data: `faceOrders` per frame
 
 FOLD defines `faceOrders` as triples `[f, g, s]` for faces that overlap in the folded state:
-- `s = +1`: face *f* lies above face *g*, on the side *f*'s normal points to;
-- `s = −1`: *f* lies below *g*;
+- `s = +1`: face *f* lies above face *g*, on the side ***g*'s** normal points to (FOLD spec, checked against edemaine/fold `doc/spec.md`);
+- `s = −1`: *f* lies below *g*, on the side opposite *g*'s normal;
 - `s = 0`: unknown.
 
 A face's normal comes from its vertex order in `faces_vertices`. Counter-clockwise in the flat sheet means the normal is +z, the front.
@@ -58,7 +58,7 @@ A face's normal comes from its vertex order in `faces_vertices`. Counter-clockwi
   - The spanning-tree code stays. A flat-foldable state closes its cycles exactly, so `treeChange` corrections fall to identity in practice. They stay for steps that are not fully folded (the plane's open wings).
 - **Layer heights.** `layerHeights(model, step): number[]` gives each face's position in the stack at the end of `step`. It's cached per model, like the trees.
   1. It takes each face's folded pose at the end of the step, before the whole-model rotation, with no lift. Every flat stack then lies parallel to z = 0.
-  2. For each triple in `faceOrders`, f's normal z-sign times s says whether f is above or below g along +z.
+  2. For each triple in `faceOrders`, g's normal z-sign times s says whether f is above or below g along +z.
   3. Faces are ranked by a topological sort over those relations. Faces with no relation get the lowest rank that keeps every relation true. A cycle throws a RangeError naming the step.
   - Step 0 is all zeros.
 - **Lift.** `foldedPositions(model, step, t)` lifts every face of step `step` by `LAYER_GAP × h` along +z, in the frame before the whole-model rotation. h blends from the previous step's height to this step's, over `smoothstep(min(1, t / 0.15))`.
@@ -75,7 +75,7 @@ A face's normal comes from its vertex order in `faces_vertices`. Counter-clockwi
 - **`build.ts` writes `faceOrders`.**
   1. For each step, it maps each face of the crease pattern to the piece that contains its centroid; pieces only split along creases, so each face lies in exactly one piece.
   2. For every pair of faces whose pieces overlap in the folded state, it emits `[f, g, s]`. The overlap test clips one convex outline against the other and needs an area above 1e-9.
-  3. s comes from the pieces' order and from whether f faces the viewer.
+  3. s comes from the pieces' order and from whether g faces the viewer (s is measured along g's normal).
   - It writes `faceOrders` only on frames where it differs from the previous frame. The output stays deterministic, so the stale-output guard keeps working.
 - **`set()` comes back.** The paper plane's last step opens its wings with it.
 - **`checkModel` gets no new checks.** It runs on lifted positions, so the existing crossing and flap-flip checks now enforce the layer order.
