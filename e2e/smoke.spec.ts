@@ -47,13 +47,11 @@ for (const path of ['/nope', '/fold']) {
   });
 }
 
-test('text size persists across reloads', async ({ page }) => {
+test('the menu offers the language but no text size', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Menu' }).click();
-  await page.getByRole('button', { name: /Larger text/ }).click();
-  await page.reload();
-  const scale = await page.evaluate(() => document.documentElement.style.getPropertyValue('--text-scale'));
-  expect(scale).toBe('1.3');
+  await expect(page.getByRole('group', { name: 'Language' })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Text size' })).toHaveCount(0);
 });
 
 test('menu button does not overlap the heading', async ({ page }) => {

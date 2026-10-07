@@ -3,8 +3,6 @@ export const en = {
     menu: 'Menu',
     close: 'Close',
     nav: { home: 'Home', library: 'Library', about: 'About' },
-    textSize: 'Text size',
-    textSizes: ['Normal text', 'Large text', 'Larger text'],
     language: 'Language',
     languageNames: { en: 'English', pt: 'Português' }
   },

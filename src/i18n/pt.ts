@@ -5,8 +5,6 @@ export const pt: Dictionary = {
     menu: 'Menu',
     close: 'Fechar',
     nav: { home: 'Início', library: 'Biblioteca', about: 'Sobre' },
-    textSize: 'Tamanho do texto',
-    textSizes: ['Texto normal', 'Texto grande', 'Texto maior'],
     language: 'Idioma',
     languageNames: { en: 'English', pt: 'Português' }
   },

@@ -22,7 +22,7 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 - **Step count cell may overflow at 10 or more steps.** The 7th dock column is now `minmax(44px, max-content)`; asserted on the 11-step kabuto in part 2.
 - **`setPositions` line buffer churn.** `writeSegments` (src/player/segments.ts) reuses the line buffer while the segment count is unchanged.
-- **`readTextScale()` every render.** `Paper` reads the scale through `useTextScale()` (`useSyncExternalStore`), so line widths follow a live text-size change.
+- **`readTextScale()` every render.** Moot: the text-size option was removed at the maintainer's request (browser zoom covers it).
 
 ## Layer-order milestone (inserted before M4 part 2)
 

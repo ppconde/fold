@@ -312,15 +312,10 @@ test('every dock button has a non-empty title', async ({ page }) => {
 
 test('on a phone each step fits the instructions sheet without scrolling', async ({ page, isMobile }) => {
   test.skip(!isMobile, 'phone layout only');
-  for (const scale of ['1', '1.15']) {
-    await page.addInitScript((s) => localStorage.setItem('fold:textScale', s), scale);
-    for (let step = 0; step <= 5; step++) {
-      await page.goto(`/fold/dog-face?step=${step}`);
-      const sheet = page.getByRole('complementary', { name: 'Instructions' });
-      await expect(sheet).toBeVisible();
-      expect(await sheet.evaluate((el) => el.scrollHeight <= el.clientHeight + 1), `step ${step} at ${scale}×`).toBe(
-        true
-      );
-    }
+  for (let step = 0; step <= 6; step++) {
+    await page.goto(`/fold/dog-face?step=${step}`);
+    const sheet = page.getByRole('complementary', { name: 'Instructions' });
+    await expect(sheet).toBeVisible();
+    expect(await sheet.evaluate((el) => el.scrollHeight <= el.clientHeight + 1), `step ${step}`).toBe(true);
   }
 });

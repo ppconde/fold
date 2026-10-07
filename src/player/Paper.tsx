@@ -4,7 +4,6 @@ import { type ComponentRef, useEffect, useLayoutEffect, useMemo, useRef } from '
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
-import { useTextScale } from '../shell/text-scale';
 import { fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
 import { writeSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
@@ -47,7 +46,6 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const folded = useRef<LineRef>(null);
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
-  const scale = useTextScale();
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
@@ -102,14 +100,14 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
             polygonOffsetUnits={1}
           />
         </mesh>
-        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7 * scale} />
-        <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.0 * scale} visible={false} />
+        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7} />
+        <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.0} visible={false} />
         <Line
           ref={flat}
           points={PLACEHOLDER}
           segments
           color={INK}
-          lineWidth={0.7 * scale}
+          lineWidth={0.7}
           transparent
           opacity={0.35}
           visible={false}
@@ -120,7 +118,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           segments
           color={HIGHLIGHT}
           renderOrder={1}
-          lineWidth={1.8 * scale}
+          lineWidth={1.8}
           frustumCulled={false}
         />
       </group>
