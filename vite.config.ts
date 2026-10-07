@@ -6,6 +6,6 @@ export default defineConfig({
   // The router plugin must come before the React plugin.
   plugins: [tanstackRouter({ target: 'react', autoCodeSplitting: true }), react()],
   test: {
-    include: ['src/**/*.test.{ts,tsx}']
+    include: ['src/**/*.test.{ts,tsx}', 'models/**/*.test.ts']
   }
 });

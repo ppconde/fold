@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest",
     "test:e2e": "playwright test",
-    "check": "biome check --write"
+    "check": "biome check --write",
+    "models": "node models/run.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.9",
