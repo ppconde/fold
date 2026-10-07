@@ -1,7 +1,7 @@
 # Fold — Layer-order milestone: flat folds with recorded layer order
 
 Date: 2026-10-07
-Status: draft, awaiting review
+Status: approved
 Builds on:
 - `2026-10-04-fold-restart-design.md` (the "restart spec"). This milestone changes the fold engine from §6: folds now reach their exact angles, and faces get a layer lift.
 - `2026-10-06-wabi-sabi-i18n-design.md` §8. This milestone is the "layer-order solver milestone" that §8's gate inserts before Milestone 4 ships.
