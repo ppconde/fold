@@ -6,7 +6,7 @@ const INK = '#33302C';
 const SIZE = 240;
 
 /**
- * The paper at the end of `step` seen from above, as a small washi-grain SVG. Faces are painted far to near
+ * The paper at the end of `step` seen from above, as a small SVG. Faces are painted far to near
  * by mean height, which follows the stack because every layer is lifted by its place in it.
  */
 export function thumbnail(model: Model, step = model.steps.length - 1): string {
@@ -17,7 +17,7 @@ export function thumbnail(model: Model, step = model.steps.length - 1): string {
   const span = Math.max(x1 - x0, y1 - y0);
   const pad = span * 0.08;
   const n = (v: number) => +v.toFixed(2);
-  // the paper centred in a square, in pixel units: Safari drops a filter whose region is only ~1 unit across
+  // the paper centred in a square, in pixel units
   const k = SIZE / (span + 2 * pad);
   const [ox, oy] = [(x0 + x1 - span) / 2 - pad, (y0 + y1 - span) / 2 - pad];
   const polygons = faces
@@ -34,10 +34,8 @@ export function thumbnail(model: Model, step = model.steps.length - 1): string {
     .join('');
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">`,
-    `<filter id="washi"><feTurbulence type="fractalNoise" baseFrequency="${+(6 / k).toFixed(4)}" numOctaves="2" seed="4"/>`,
-    '<feColorMatrix values="0 0 0 0 0.2 0 0 0 0 0.19 0 0 0 0 0.17 0 0 0 0.09 0"/>',
-    '<feComposite in2="SourceGraphic" operator="in"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode/></feMerge></filter>',
-    `<g filter="url(#washi)" stroke="${INK}" stroke-width="${n((span / 220) * k)}" stroke-linejoin="round">${polygons}</g>`,
+    // no SVG filter (the washi grain was one): Safari draws a filtered SVG image at 1×, blurry on Retina screens
+    `<g stroke="${INK}" stroke-width="${n((span / 220) * k)}" stroke-linejoin="round">${polygons}</g>`,
     '</svg>\n'
   ].join('');
 }
