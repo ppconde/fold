@@ -333,13 +333,23 @@ function travel(model: Model, step: number): { moving: boolean[]; clearance: num
   const to = stackAt(model, step).heights;
   const range = (pick: boolean) => {
     const hs = moving.flatMap((m, f) => (m === pick ? [from[f], to[f]] : []));
-    const ends = moving.flatMap((m, f) => (m === pick ? [to[f]] : []));
-    return { min: Math.min(...hs), max: Math.max(...hs), end: ends.reduce((a, h) => a + h, 0) / ends.length };
+    return { min: Math.min(...hs), max: Math.max(...hs) };
   };
   const go = range(true);
   const stay = range(false);
-  // the flap travels toward the side of the stack it lands on: over it (+) or under it (−)
-  const over = go.end >= stay.end;
+  // the flap passes over the stack (+) when it swings toward +z on its way, under it (−) when it swings toward −z
+  const mid = rootTransforms(model, anglesAt(model, step, 0.5), step);
+  const midBase = anchorFor(model, step).clone().multiply(mid[model.steps[step].fixedFace].clone().invert());
+  const point = new Vector3();
+  const rise = model.faces.reduce((sum, face, f) => {
+    if (!moving[f]) return sum;
+    const midPose = midBase.clone().multiply(mid[f]);
+    return face.reduce((acc, v) => {
+      const [x, y] = model.vertices[v];
+      return acc + point.set(x, y, 0).applyMatrix4(midPose).z - point.set(x, y, 0).applyMatrix4(start[f]).z;
+    }, sum);
+  }, 0);
+  const over = rise >= 0;
   // a step that keeps the stacking (a turn, or opening a model out) has no flap to carry over the stack
   const restack = to.some((h, f) => h !== from[f]);
   const clearance =

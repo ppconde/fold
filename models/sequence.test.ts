@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { layerHeights } from '../src/fold/fold';
+import { foldedPositions, layerHeights } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { buildFold } from './build';
 import { checkModel } from './check';
@@ -99,5 +99,23 @@ describe('foldSequence', () => {
     const frames = buildFold(s.source({ ...entry, tags: [] })).file_frames;
     expect(frames[0].faceOrders).toHaveLength(1);
     expect(frames[1]).not.toHaveProperty('faceOrders');
+  });
+
+  it('carries a valley flap over the paper it lands on, even when a thicker stack lies elsewhere', () => {
+    // a thick strip on the left, then a corner folded on the thin right side (once through one layer, once through two)
+    for (const halved of [false, true]) {
+      const s = foldSequence();
+      if (halved) s.fold('half', [0, 0.5], [1, 0.5], { valley: true, hold: [0.8, 0.25], ...text });
+      for (const x of [0.3, 0.45, 0.55])
+        s.fold(`strip${x}`, [x, 0], [x, 1], { valley: true, hold: [0.8, 0.25], ...text });
+      s.fold('corner', halved ? [1, 0.25] : [1, 0.2], halved ? [0.75, 0] : [0.8, 0], { valley: true, ...text });
+      const model = loadModel(buildFold(s.source({ ...entry, tags: [] })));
+      const last = model.steps.length - 1;
+      for (const t of [0.1, 0.3, 0.5, 0.7, 0.85, 0.9]) {
+        // no turn: the table is z = 0, and a valley fold only ever rises off it
+        const lowest = Math.min(...foldedPositions(model, last, t).flatMap((face) => face.map((p) => p[2])));
+        expect(lowest).toBeGreaterThanOrEqual(-1e-9);
+      }
+    }
   });
 });
