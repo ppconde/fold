@@ -2,11 +2,13 @@ import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from 'three';
 
 const IVORY = [0xf3, 0xed, 0xe2];
 
-export function softenTowardIvory(hex: string, amount = 0.15): string {
+const SOFTEN = 0.15;
+
+export function softenTowardIvory(hex: string): string {
   const c = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
   return `#${c
     .map((v, i) =>
-      Math.round(v + (IVORY[i] - v) * amount)
+      Math.round(v + (IVORY[i] - v) * SOFTEN)
         .toString(16)
         .padStart(2, '0')
     )

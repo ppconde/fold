@@ -1,10 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useT } from '../i18n/LanguageProvider';
-import { currentLang, dictionary } from '../i18n/lang';
+import { titles } from '../i18n/lang';
 import pages from '../styles/pages.module.css';
 
 export const Route = createFileRoute('/about')({
-  head: () => ({ meta: [{ title: dictionary(currentLang()).titles.about }] }),
+  head: () => ({ meta: [{ title: titles().about }] }),
   component: About
 });
 

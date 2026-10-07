@@ -2,7 +2,7 @@ import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tans
 import { useCallback } from 'react';
 import { FoldError } from '../fold/load-model';
 import { useT } from '../i18n/LanguageProvider';
-import { currentLang, dictionary, localized } from '../i18n/lang';
+import { currentLang, localized, titles } from '../i18n/lang';
 import { fetchModel } from '../models/catalog';
 import { loadStage } from '../player/load-stage';
 import { Player } from '../player/Player';
@@ -20,13 +20,7 @@ export const Route = createFileRoute('/fold/$id')({
     return found;
   },
   head: ({ loaderData }) => ({
-    meta: [
-      {
-        title: loaderData
-          ? dictionary(currentLang()).titles.model(localized(loaderData.entry.name, currentLang()))
-          : dictionary(currentLang()).titles.home
-      }
-    ]
+    meta: [{ title: loaderData ? titles().model(localized(loaderData.entry.name, currentLang())) : titles().home }]
   }),
   component: FoldPage,
   notFoundComponent: ModelNotFound,

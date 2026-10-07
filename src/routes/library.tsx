@@ -1,12 +1,12 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useLang, useT } from '../i18n/LanguageProvider';
-import { currentLang, dictionary, localized } from '../i18n/lang';
+import { localized, titles } from '../i18n/lang';
 import { fetchIndex } from '../models/catalog';
 import pages from '../styles/pages.module.css';
 
 // ponytail: plain list until the M4 library (search, filter chips, paper cards) replaces it.
 export const Route = createFileRoute('/library')({
-  head: () => ({ meta: [{ title: dictionary(currentLang()).titles.library }] }),
+  head: () => ({ meta: [{ title: titles().library }] }),
   loader: async () => (await fetchIndex()).models,
   component: Library
 });

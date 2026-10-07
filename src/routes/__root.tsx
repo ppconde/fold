@@ -1,11 +1,11 @@
 import { createRootRoute, Link } from '@tanstack/react-router';
 import { useT } from '../i18n/LanguageProvider';
-import { currentLang, dictionary } from '../i18n/lang';
+import { titles } from '../i18n/lang';
 import { AppShell } from '../shell/AppShell';
 import pages from '../styles/pages.module.css';
 
 export const Route = createRootRoute({
-  head: () => ({ meta: [{ title: dictionary(currentLang()).titles.home }] }),
+  head: () => ({ meta: [{ title: titles().home }] }),
   component: AppShell,
   notFoundComponent: NotFound
 });

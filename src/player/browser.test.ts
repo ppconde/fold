@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readPanelOpen, writePanelOpen } from './browser';
+import { markHintSeen, readPanelOpen, shouldShowHint, writePanelOpen } from './browser';
 
 afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('panel preference', () => {
+describe('stored preferences', () => {
   it('defaults to open and round-trips', () => {
     const store = new Map<string, string>();
     vi.stubGlobal('localStorage', {
@@ -15,6 +15,9 @@ describe('panel preference', () => {
     expect(readPanelOpen()).toBe(true);
     writePanelOpen(false);
     expect(readPanelOpen()).toBe(false);
+    expect(shouldShowHint()).toBe(true);
+    markHintSeen();
+    expect(shouldShowHint()).toBe(false);
   });
 
   it('survives blocked storage', () => {
@@ -24,5 +27,7 @@ describe('panel preference', () => {
     vi.stubGlobal('localStorage', { getItem: blocked, setItem: blocked });
     expect(readPanelOpen()).toBe(true);
     expect(() => writePanelOpen(false)).not.toThrow();
+    expect(shouldShowHint()).toBe(true);
+    expect(() => markHintSeen()).not.toThrow();
   });
 });

@@ -2,14 +2,15 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { CraneBoundary } from '../home/CraneBoundary';
 import styles from '../home/Home.module.css';
-import { loadCrane } from '../home/load-crane';
 import { useT } from '../i18n/LanguageProvider';
-import { currentLang, dictionary } from '../i18n/lang';
+import { titles } from '../i18n/lang';
 import { fetchIndex } from '../models/catalog';
 import { prefersReducedMotion } from '../player/browser';
 
+const loadCrane = () => import('../home/CraneScene').then((m) => ({ default: m.CraneScene }));
+
 export const Route = createFileRoute('/')({
-  head: () => ({ meta: [{ title: dictionary(currentLang()).titles.home }] }),
+  head: () => ({ meta: [{ title: titles().home }] }),
   loader: () => {
     void loadCrane().catch(() => {});
     return fetchIndex().then(
@@ -76,7 +77,7 @@ function Home() {
         <span className={styles.mark} aria-hidden="true">
           折
         </span>
-        <CraneBoundary onError={() => {}}>
+        <CraneBoundary>
           <Suspense fallback={null}>
             <LazyCrane pointer={pointer} entering={entering} still={still} label={t.home.craneLabel} />
           </Suspense>
