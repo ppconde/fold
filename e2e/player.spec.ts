@@ -68,6 +68,7 @@ test('finishing stamps a small seal and tells screen readers, even with the step
   await expect(seal).toHaveCount(0);
   await next(page);
   await expect(seal).toBeVisible();
+  await expect(page.getByText('Done', { exact: true })).toBeVisible();
   await expect(page.getByRole('status')).toHaveText('Fold in half is complete.');
   await page.getByRole('slider', { name: 'Fold progress' }).fill('30');
   await expect(seal).toHaveCount(0);

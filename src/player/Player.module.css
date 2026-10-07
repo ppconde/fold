@@ -94,13 +94,32 @@
   text-transform: uppercase;
 }
 
-/* a small hanko stamped over the finished model, up and right of centre; it stays put while the camera turns */
-.seal {
+/* a small hanko and "done" over the finished model, up and right of centre; it stays put while the camera turns */
+.done {
   position: absolute;
   top: 30%;
   left: 68%;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
   pointer-events: none;
+  color: var(--clay);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  animation: done-in 300ms 250ms var(--ease) both;
+}
+
+@keyframes done-in {
+  from {
+    color: transparent;
+  }
+}
+
+.seal {
   display: grid;
   place-items: center;
   width: 2.5rem;

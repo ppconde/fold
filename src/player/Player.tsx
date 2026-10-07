@@ -125,9 +125,10 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           </button>
         )}
         {status === 'done' && (
-          <span className={styles.seal} aria-hidden="true">
-            完
-          </span>
+          <p className={styles.done} aria-hidden="true">
+            <span className={styles.seal}>完</span>
+            <span>{t.done}</span>
+          </p>
         )}
       </div>
 
