@@ -95,3 +95,28 @@ test('the menu Library link clears a typed search', async ({ page }) => {
   await expect(box).toHaveValue('');
   await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveCount(4);
 });
+
+test('difficulty sits on its own row under the categories', async ({ page }) => {
+  await page.goto('/library');
+  const all = await page.getByRole('button', { name: 'All' }).boundingBox();
+  const easy = await page.getByRole('button', { name: 'Easy' }).boundingBox();
+  expect(easy && all && easy.y >= all.y + all.height).toBe(true);
+});
+
+test('one button clears the search and both filters', async ({ page }) => {
+  await page.goto('/library');
+  const clear = page.getByRole('button', { name: 'Clear filters' });
+  await expect(clear).toHaveCount(0);
+  await page.getByRole('searchbox', { name: 'Search folds' }).fill('dog');
+  await page.getByRole('button', { name: 'Animals' }).click();
+  await page.getByRole('button', { name: 'Easy' }).click();
+  await expect(page).toHaveURL(/q=dog/);
+  await expect(page).toHaveURL(/cat=animals/);
+  await expect(page).toHaveURL(/diff=easy/);
+  await clear.click();
+  await expect(page).toHaveURL(/\/library$/);
+  await expect(page.getByRole('searchbox', { name: 'Search folds' })).toHaveValue('');
+  await expect(page.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Easy' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(clear).toHaveCount(0);
+});

@@ -87,6 +87,11 @@ function Library() {
             ))}
           </fieldset>
         </div>
+        {(search.q || search.cat || search.diff) && (
+          <button type="button" className={`ink-link ${styles.clear}`} onClick={clear}>
+            {t.clear}
+          </button>
+        )}
       </div>
       {shown.length ? (
         <ul className={styles.grid} aria-label={t.models}>
@@ -117,12 +122,7 @@ function Library() {
           ))}
         </ul>
       ) : (
-        <p className={styles.empty}>
-          {t.noMatch}{' '}
-          <button type="button" className="ink-link" onClick={clear}>
-            {t.clear}
-          </button>
-        </p>
+        <p className={styles.empty}>{t.noMatch}</p>
       )}
     </main>
   );

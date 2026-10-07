@@ -4,6 +4,10 @@
   left: 1.25rem;
   z-index: 10;
   font-family: var(--font-sans);
+  /* a plaster backing with soft edges, so page text scrolling under the button can't show through */
+  background: var(--linen), var(--grain), var(--plaster);
+  border-radius: 2px;
+  box-shadow: 0 0 0.6rem 0.4rem var(--plaster);
 }
 
 .menu {
