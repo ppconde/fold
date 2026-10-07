@@ -71,10 +71,8 @@ export const pt: Dictionary = {
     foldProgress: 'Progresso da dobra',
     percentFolded: (n) => `${n}% dobrado`,
     hint: '← anterior · seguinte → · passa o rato para ver os nomes',
-    wellFolded: 'Bem dobrado!',
+    done: 'Feito',
     isComplete: (name) => `${name} está concluído.`,
-    foldAgain: 'Dobrar outra vez',
-    backToLibrary: 'Voltar à biblioteca',
     diagramTitle: (active) =>
       `Padrão de vincos${active ? `, ${active} vinco${active === 1 ? '' : 's'} em destaque neste passo` : ''}`
   }

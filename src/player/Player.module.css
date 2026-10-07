@@ -94,6 +94,60 @@
   text-transform: uppercase;
 }
 
+/* a small hanko and "done" over the finished model, up and right of centre; it stays put while the camera turns */
+.done {
+  position: absolute;
+  top: 30%;
+  left: 68%;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  pointer-events: none;
+  color: var(--clay);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  animation: done-in 300ms 250ms var(--ease) both;
+}
+
+@keyframes done-in {
+  from {
+    color: transparent;
+  }
+}
+
+.seal {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 2px solid var(--clay);
+  border-radius: 6px;
+  color: var(--clay);
+  font-family: var(--font-brush);
+  font-size: 1.6rem;
+  line-height: 1;
+  rotate: -6deg;
+  opacity: 0.85;
+  mix-blend-mode: multiply;
+  animation: stamp 420ms var(--ease) both;
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    scale: 1.25;
+  }
+
+  60% {
+    opacity: 0.9;
+    scale: 0.94;
+  }
+}
+
 .instruction {
   margin: 0.5rem 0 1rem;
   font-family: var(--font-serif);
@@ -235,67 +289,6 @@
   }
 }
 
-.done {
-  position: fixed;
-  left: 50%;
-  bottom: calc(5rem + env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  width: min(22rem, calc(100vw - 2rem));
-  padding: 1.5rem;
-  text-align: center;
-  animation: done-in 500ms var(--ease) both;
-}
-
-.done::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 22px;
-  height: 22px;
-  background: var(--plaster);
-  clip-path: polygon(100% 0, 0 0, 100% 100%);
-}
-
-.done::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 31px;
-  height: 1px;
-  background: rgb(51 48 44 / 0.25);
-  transform-origin: right top;
-  rotate: 45deg;
-  z-index: 1;
-}
-
-@keyframes done-in {
-  from {
-    opacity: 0;
-  }
-}
-
-.done h2 {
-  margin: 0 0 0.5rem;
-  font-family: var(--font-serif);
-  font-size: 1.8rem;
-  font-weight: 500;
-}
-
-.doneActions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.doneActions button,
-.doneActions a {
-  white-space: nowrap;
-}
-
 .doneActions a {
   display: inline-flex;
   align-items: center;
@@ -371,16 +364,6 @@
   .dockRow,
   .progress {
     pointer-events: auto;
-  }
-
-  .done {
-    left: auto;
-    right: 1.5rem;
-    bottom: 1.5rem;
-    top: auto;
-    transform: none;
-    width: 19rem;
-    padding: 1.25rem 1rem;
   }
 }
 

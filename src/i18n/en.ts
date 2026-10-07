@@ -68,10 +68,8 @@ export const en = {
     foldProgress: 'Fold progress',
     percentFolded: (n: number) => `${n}% folded`,
     hint: '← back · next → · hover for names',
-    wellFolded: 'Well folded!',
+    done: 'Done',
     isComplete: (name: string) => `${name} is complete.`,
-    foldAgain: 'Fold again',
-    backToLibrary: 'Back to library',
     diagramTitle: (active: number) =>
       `Crease pattern${active ? `, ${active} crease${active === 1 ? '' : 's'} highlighted for this step` : ''}`
   }

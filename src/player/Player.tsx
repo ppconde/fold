@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { Model } from '../fold/types';
 import { useLang, useT } from '../i18n/LanguageProvider';
@@ -23,8 +22,6 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [state, dispatch] = usePlayer(model, initialStep);
   const status = playerStatus(state);
   const [panelOpen, setPanelOpen] = useState(readPanelOpen);
-  const doneRef = useRef<HTMLHeadingElement>(null);
-  const nextRef = useRef<HTMLButtonElement>(null);
   const [resetCount, setResetCount] = useState(0);
   const [frameStep, setFrameStep] = useState(state.step);
   const [webgl] = useState(hasWebGL);
@@ -49,10 +46,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
     setFrameStep(state.step);
   }, [state.playing, state.step]);
 
-  // focus the card only when playback finishes; a scrub to 100% must leave the slider focused
   const prevStatus = useRef(status);
   useEffect(() => {
-    if (status === 'done' && prevStatus.current === 'playing') doneRef.current?.focus();
     if (prevStatus.current === 'playing' && status !== 'playing' && state.step >= 1) {
       markHintSeen();
       setHint((h) => (h === 'show' ? 'fading' : h));
@@ -129,6 +124,12 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             {panelOpen ? t.hideSteps : t.showSteps}
           </button>
         )}
+        {status === 'done' && (
+          <p className={styles.done} aria-hidden="true">
+            <span className={styles.seal}>完</span>
+            <span>{t.done}</span>
+          </p>
+        )}
       </div>
 
       <aside
@@ -190,7 +191,6 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           </button>
           <button
             type="button"
-            ref={nextRef}
             className={styles.next}
             aria-label={t.next}
             title={t.next}
@@ -229,28 +229,9 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           </p>
         )}
       </div>
-
-      {status === 'done' && (
-        <section className={`${styles.done} paper`} aria-labelledby="done-title">
-          <h2 id="done-title" ref={doneRef} tabIndex={-1}>
-            {t.wellFolded}
-          </h2>
-          <p>{t.isComplete(localized(entry.name, lang))}</p>
-          <div className={styles.doneActions}>
-            <button
-              type="button"
-              className="ink-link"
-              onClick={() => {
-                dispatch({ type: 'goTo', step: 0 });
-                nextRef.current?.focus();
-              }}
-            >
-              {t.foldAgain}
-            </button>
-            <Link to="/library">{t.backToLibrary}</Link>
-          </div>
-        </section>
-      )}
+      <p className="sr-only" role="status">
+        {status === 'done' ? t.isComplete(localized(entry.name, lang)) : ''}
+      </p>
     </main>
   );
 }

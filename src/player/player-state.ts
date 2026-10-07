@@ -1,4 +1,4 @@
-export const SPEEDS = [0.5, 1, 1.5] as const;
+export const SPEEDS = [0.5, 1, 1.5, 2] as const;
 export type Speed = (typeof SPEEDS)[number];
 /** Seconds one step takes at 1×. */
 export const STEP_SECONDS = 2.4;

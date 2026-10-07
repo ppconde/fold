@@ -73,7 +73,8 @@ describe('player state', () => {
     );
     expect(s.speed).toBe(1.5);
     expect(s.t).toBeCloseTo(0.5);
-    expect(run(s, { type: 'cycleSpeed' }).speed).toBe(0.5);
+    expect(run(s, { type: 'cycleSpeed' }).speed).toBe(2);
+    expect(run(s, { type: 'cycleSpeed' }, { type: 'cycleSpeed' }).speed).toBe(0.5);
   });
 
   it('jumps to a clamped step with goTo', () => {

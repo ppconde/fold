@@ -52,27 +52,27 @@ test('keyboard: arrows step, space replays, and the open menu takes keys away fr
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
 });
 
-test('finishing shows the completion card, and Fold again starts over', async ({ page }) => {
+test('finishing leaves the folded model in view, with no completion card over it', async ({ page }) => {
   await page.goto('/fold/fold-in-half');
   await next(page);
   await expect(page.locator('main')).toHaveAttribute('data-state', 'done');
-  await expect(page.getByText('Well folded!')).toBeVisible();
-  await page.getByRole('button', { name: 'Fold again' }).click();
-  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
-  await expect(page.getByRole('link', { name: 'Back to library' })).toBeHidden();
+  await expect(page.getByText('Well folded!')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Fold again' })).toHaveCount(0);
 });
 
-test('the completion card does not cover the middle of the stage', async ({ page }) => {
+test('finishing stamps a small seal and tells screen readers, even with the steps hidden', async ({ page }) => {
   await page.goto('/fold/fold-in-half');
+  await page.getByRole('button', { name: 'hide steps' }).click();
+  await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
+  const seal = page.getByText('完');
+  await expect(seal).toHaveCount(0);
   await next(page);
-  await expect(page.getByText('Well folded!')).toBeVisible();
-  const canvas = await page.locator('canvas').boundingBox();
-  test.skip(!canvas, 'no canvas');
-  const card = await page.locator('section[aria-labelledby="done-title"]').boundingBox();
-  if (!canvas || !card) throw new Error('missing box');
-  const [x, y] = [canvas.x + canvas.width / 2, canvas.y + canvas.height / 2];
-  const inside = x >= card.x && x <= card.x + card.width && y >= card.y && y <= card.y + card.height;
-  expect(inside).toBe(false);
+  await expect(seal).toBeVisible();
+  await expect(page.getByText('Done', { exact: true })).toBeVisible();
+  await expect(page.getByRole('status')).toHaveText('Fold in half is complete.');
+  await page.getByRole('slider', { name: 'Fold progress' }).fill('30');
+  await expect(seal).toHaveCount(0);
+  await expect(page.getByRole('status')).toHaveText('');
 });
 
 test('the instructions can be hidden and shown, and the choice survives a reload', async ({ page }) => {
@@ -126,14 +126,6 @@ test('without WebGL the diagram and instructions still work', async ({ page }) =
   await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
   await next(page);
   await expect(page.locator('main')).toHaveAttribute('data-state', 'done');
-});
-
-test('finishing moves focus to the completion heading, and Fold again focuses Next step', async ({ page }) => {
-  await page.goto('/fold/fold-in-half');
-  await next(page);
-  await expect(page.getByRole('heading', { name: 'Well folded!' })).toBeFocused();
-  await page.getByRole('button', { name: 'Fold again' }).click();
-  await expect(page.getByRole('button', { name: 'Next step' })).toBeFocused();
 });
 
 test('Escape hides the instructions and the choice survives a reload', async ({ page }) => {
@@ -212,12 +204,13 @@ test('scrubbing folds part-way, and Next finishes the same step', async ({ page 
 
 test('a part-folded last step is not finished yet', async ({ page }) => {
   await page.goto('/fold/fold-in-half?step=1');
-  await expect(page.getByText('Well folded!')).toBeVisible();
+  const main = page.locator('main');
+  await expect(main).toHaveAttribute('data-state', 'done');
   await page.getByRole('slider', { name: 'Fold progress' }).fill('30');
-  await expect(page.getByText('Well folded!')).toBeHidden();
+  await expect(main).not.toHaveAttribute('data-state', 'done');
   await page.getByRole('button', { name: 'Next step' }).click();
   await settled(page);
-  await expect(page.getByText('Well folded!')).toBeVisible();
+  await expect(main).toHaveAttribute('data-state', 'done');
 });
 
 test('arrow keys on the slider move the fold, not the step', async ({ page }) => {
@@ -237,7 +230,7 @@ test('scrubbing the last step to 100% keeps the slider focused', async ({ page }
   await progress.focus();
   await page.keyboard.press('Home');
   await page.keyboard.press('End');
-  await expect(page.getByText('Well folded!')).toBeVisible();
+  await expect(page.locator('main')).toHaveAttribute('data-state', 'done');
   await expect(progress).toBeFocused();
   await page.keyboard.press('ArrowLeft');
   await expect(page.locator('main')).not.toHaveAttribute('data-state', 'playing');
