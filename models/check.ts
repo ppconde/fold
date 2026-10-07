@@ -74,6 +74,40 @@ export function crossings(model: Model, step: number, t: number): [number, numbe
   return found;
 }
 
+/** Which side of face f's plane face g's centre lies on at the end of `step` (+1 front, −1 back). */
+function sideOf(faces: Vec3[][], f: number, g: number): number {
+  const [a, b, c] = faces[f];
+  const n = cross(sub(b, a), sub(c, a));
+  const G = faces[g];
+  const centre = G.reduce(
+    (s, p): Vec3 => [s[0] + p[0] / G.length, s[1] + p[1] / G.length, s[2] + p[2] / G.length],
+    [0, 0, 0]
+  );
+  return Math.sign(dot(n, sub(centre, a)));
+}
+
+/**
+ * Flaps already folded (90° or more) that end a later step on the other side of their neighbour across the
+ * crease, although that crease didn't move. A later step can re-route the engine's spanning tree, and the
+ * clamped 178° wedges then add up differently: a thin stack flips and z-fights. crossings() skips these
+ * faces because they share a crease.
+ */
+export function flapFlips(model: Model): string[] {
+  const ends = model.steps.map((_, k) => (k ? foldedPositions(model, k, 1) : []));
+  const found: string[] = [];
+  model.edgeFaces.forEach(([f, g], e) => {
+    if (g === undefined) return;
+    for (let k = 1; k + 1 < model.steps.length; k++) {
+      const angle = model.steps[k].angles[e];
+      if (Math.abs(angle) < 90 || model.steps[k + 1].angles[e] !== angle) continue;
+      if (sideOf(ends[k], f, g) !== sideOf(ends[k + 1], f, g)) {
+        found.push(`Step ${k + 1}: face ${g} flips to the other side of face ${f} across edge ${e}.`);
+      }
+    }
+  });
+  return found;
+}
+
 /** Everything wrong with a model, one sentence each; empty when it may ship. */
 export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
   const problems: string[] = [];
@@ -102,5 +136,6 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
       }
     }
   }
+  problems.push(...flapFlips(model));
   return problems;
 }

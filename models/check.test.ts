@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { fixture } from '../src/fold/fixtures';
 import { loadModel } from '../src/fold/load-model';
-import { checkModel, crossings, spread } from './check';
+import { buildFold } from './build';
+import { checkModel, crossings, flapFlips, spread } from './check';
+import { diamond as d, diamondSequence, has, lacks } from './sequence';
 
 const quarters = () => loadModel(fixture('fold-in-quarters'));
 
@@ -78,5 +80,33 @@ describe('crossings', () => {
     // each 0.4-wide flap overhangs the 0.2-wide middle, so they cut through each other from edge to edge
     expect(crossings(strip, 1, 1)).toContainEqual([0, 2]);
     expect(crossings(strip, 1, 0.25)).toEqual([]);
+  });
+});
+
+describe('flapFlips', () => {
+  // The first dog face: its nose fold re-routed the engine's spanning tree, and the clamped 178° wedges
+  // then put the right ear's front layer on top of its back layer (white side showing, z-fighting).
+  const firstDog = () => {
+    const s = diamondSequence();
+    const text = { en: 'x', pt: 'x' };
+    s.fold('diagonal', d(0, 0), d(2, 0), { valley: true, tag: 'front', hold: d(1, -0.5), ...text });
+    s.fold('leftEar', d(0.25, -0.25), d(0.65, 0), { valley: true, hold: d(1, -0.4), ...text });
+    s.fold('rightEar', d(1.35, 0), d(1.75, -0.25), { valley: true, ...text });
+    s.fold('nose', d(1.25, -0.75), d(0.75, -0.75), { valley: true, only: has('front'), ...text });
+    s.fold('chin', d(1.25, -0.75), d(0.75, -0.75), { valley: false, only: lacks('front'), ...text });
+    const entry = { id: 'dog', name: { en: 'Dog' }, category: 'animals', difficulty: 'easy', tags: [] } as const;
+    return loadModel(buildFold(s.source({ ...entry, tags: [], paperColor: '#B08A6A' })));
+  };
+
+  it('finds a folded flap that changes side in a later step', () => {
+    expect(flapFlips(firstDog())).toContainEqual(
+      expect.stringMatching(/^Step 5: face \d+ flips to the other side of face \d+/)
+    );
+    expect(checkModel(firstDog())).toContainEqual(expect.stringMatching(/flips to the other side/));
+  });
+
+  it('finds none in the fixtures', () => {
+    expect(flapFlips(quarters())).toEqual([]);
+    expect(flapFlips(loadModel(fixture('fold-in-half')))).toEqual([]);
   });
 });
