@@ -1,7 +1,7 @@
 import { Euler, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
-import { anglesAt, checkConsistency, foldedPositions } from './fold';
+import { anglesAt, checkConsistency, foldedPositions, LAYER_GAP, layerHeights } from './fold';
 import { loadModel } from './load-model';
 import type { Model, Step, Vec3 } from './types';
 
@@ -36,15 +36,13 @@ describe('foldedPositions', () => {
   });
 
   it('stands the moving half upright at t = 0.5, toward +z for a valley fold', () => {
-    expectClose(foldedPositions(half(), 1, 0.5)[0][0], [0.5, 0, 0.5]);
+    // half way to its new layer along its own normal (−x at 90°), and carried one layer clear of the stack
+    expectClose(foldedPositions(half(), 1, 0.5)[0][0], [0.5 - LAYER_GAP / 2, 0, 0.5 + LAYER_GAP], 9);
   });
 
-  it('lays the half on top at t = 1, stopping just short of flat (178°)', () => {
-    const [x, y, z] = foldedPositions(half(), 1, 1)[0][0];
-    expect(x).toBeCloseTo(0.5 + 0.5 * Math.cos((2 * Math.PI) / 180), 4);
-    expect(y).toBeCloseTo(0);
-    expect(z).toBeGreaterThan(0);
-    expect(z).toBeCloseTo(0.5 * Math.sin((2 * Math.PI) / 180), 4);
+  it('lays the half exactly flat on top at t = 1, one layer gap above the held half', () => {
+    expectClose(foldedPositions(half(), 1, 1)[0][0], [1, 0, LAYER_GAP], 9);
+    expectClose(foldedPositions(half(), 1, 1)[1][0], [0.5, 0, 0], 9);
   });
 
   it('never moves the fixed face', () => {
@@ -85,7 +83,7 @@ describe('foldedPositions', () => {
 
   it('turns the model over with a rotation step, and keeps it turned in later steps', () => {
     const model = withSteps(half(), (s) => {
-      const turned = { ...s[1], angles: s[1].angles.map(() => 0), rotation: [0, 180, 0] as Vec3 };
+      const turned = { ...s[1], angles: s[1].angles.map(() => 0), rotation: [0, 180, 0] as Vec3, faceOrders: [] };
       return [s[0], turned, { ...turned, instruction: { en: 'Look at it.' } }];
     });
     expectClose(foldedPositions(model, 1, 1)[0][0], [1, 0, 0]);
@@ -350,27 +348,24 @@ describe('creases meeting at a corner', () => {
 });
 
 describe('stacked layers', () => {
-  // A zero-thickness stack folded about one crease must keep its layer order: hinging each layer
-  // on its own copy of the crease made them coplanar at 90° and swap sides (z-fighting mid-fold).
+  // A stack folded about one crease must keep its layer order all through the fold, not only at rest.
   it('keeps the step 1 flap on the same side of the layer under it all through step 2', () => {
     const model = quarters();
     for (const t of [0, 0.25, 0.5, 0.75, 1]) {
       const [, a, b, c] = foldedPositions(model, 2, t)[2];
       const n = new Vector3(...b).sub(new Vector3(...a)).cross(new Vector3(...c).sub(new Vector3(...a)));
       const far = foldedPositions(model, 2, t)[3][0];
-      expect(n.normalize().dot(new Vector3(...far).sub(new Vector3(...a)))).toBeGreaterThan(0.01);
+      expect(n.normalize().dot(new Vector3(...far).sub(new Vector3(...a)))).toBeGreaterThan(LAYER_GAP / 2);
     }
   });
-
-  // Known limit: the two tips share no crease the step leaves alone, so no spanning tree joins them; the M3 layer-order solver must.
-  it.todo('a stack whose pieces share no unmoved crease (fold in half, then fold the free corner) turns as one piece');
+  // Two tips that share no unmoved crease (fold in half, then fold the free corner) are covered in
+  // models/sequence.test.ts, where checkModel proves they no longer pass through each other.
 });
 
-describe('seam gap from the 178° clamp', () => {
-  // Regression guard: copies of the same vertex on different faces may drift apart
-  // mid-step because angles are clamped. A rigidly turning stack opens the inner crease by two
-  // wedges: today's maximum is ~0.035; fail if it grows. This only covers fold-in-quarters; see the 3-column guard below.
-  it('stays under 4% of the paper while folding through two layers', () => {
+describe('seam between the layers of a stack', () => {
+  // Folds reach their exact angles, so copies of a vertex only part by the layer lift, never by a gap:
+  // at most both copies' lifts (up to 3 layers each), along two different normals mid-fold.
+  it('stays within the stack thickness while folding through two layers', () => {
     const model = quarters();
     let worst = 0;
     for (const t of [0.25, 0.5, 0.75, 1]) {
@@ -385,7 +380,7 @@ describe('seam gap from the 178° clamp', () => {
         for (const p of pts) worst = Math.max(worst, Math.hypot(p[0] - pts[0][0], p[1] - pts[0][1], p[2] - pts[0][2]));
       }
     }
-    expect(worst).toBeLessThan(0.04);
+    expect(worst).toBeLessThanOrEqual(6 * LAYER_GAP + 1e-9);
   });
 });
 
@@ -443,9 +438,8 @@ describe('several turns', () => {
   });
 });
 
-describe('at-rest seam gap on a 3-column model', () => {
-  // Known clamp-wedge artifact: the seam grows with distance from the stack (~0.047 on 3 panels, ~0.052 on 4).
-  // Awaiting the M3 layer-order solver; this only guards against it getting worse.
+describe('seam on a 3-column model without faceOrders', () => {
+  // The 178° clamp used to open this seam by up to 0.0465; exact angles close it.
   const grid3 = () => {
     const nx = 3;
     const verts: number[][] = [];
@@ -486,7 +480,7 @@ describe('at-rest seam gap on a 3-column model', () => {
     });
   };
 
-  it('does not grow beyond the measured 0.033 (t=0.5) and 0.0465 (t=1)', () => {
+  it('closes completely mid-step and at rest', () => {
     const model = grid3();
     const worstAt = (t: number) => {
       const F = foldedPositions(model, 2, t);
@@ -501,7 +495,75 @@ describe('at-rest seam gap on a 3-column model', () => {
         for (const p of pts) worst = Math.max(worst, Math.hypot(p[0] - pts[0][0], p[1] - pts[0][1], p[2] - pts[0][2]));
       return worst;
     };
-    expect(worstAt(0.5)).toBeLessThan(0.033 * 1.1);
-    expect(worstAt(1)).toBeLessThan(0.0465 * 1.1);
+    expect(worstAt(0.5)).toBeLessThan(1e-9);
+    expect(worstAt(1)).toBeLessThan(1e-9);
+  });
+});
+
+describe('layer heights', () => {
+  /** fold-in-quarters with step 2's faceOrders replaced, its angles unchanged. */
+  const reordered = (faceOrders: number[][]) => {
+    const json = fixture('fold-in-quarters') as { file_frames: Record<string, unknown>[] };
+    json.file_frames[1].faceOrders = faceOrders;
+    return loadModel(json);
+  };
+
+  it('follows faceOrders through each step', () => {
+    expect(layerHeights(quarters(), 0)).toEqual([0, 0, 0, 0]);
+    expect(layerHeights(quarters(), 1)).toEqual([1, 0, 0, 1]);
+    expect(layerHeights(quarters(), 2)).toEqual([1, 0, 3, 2]);
+  });
+
+  it('reads s along the normal of g, so a face lying front-down flips it', () => {
+    // at step 2 face 0 lies front-down: [3, 0, -1] puts face 3 above it
+    expect(layerHeights(quarters(), 2)[3]).toBeGreaterThan(layerHeights(quarters(), 2)[0]);
+  });
+
+  it('is all zeros without faceOrders', () => {
+    const json = fixture('fold-in-quarters') as { file_frames: Record<string, unknown>[] };
+    for (const frame of json.file_frames) delete frame.faceOrders;
+    expect(layerHeights(loadModel(json), 2)).toEqual([0, 0, 0, 0]);
+  });
+
+  it('keeps the stack through a step that inherits its faceOrders, even with faces standing on edge', () => {
+    // a third step opens the second fold to 90°: the faces stand up, but nothing restacks
+    const model = withSteps(quarters(), (steps) => [
+      ...steps,
+      { ...steps[2], angles: steps[2].angles.map((a, e) => (e === 10 || e === 11 ? a / 2 : a)) }
+    ]);
+    expect(layerHeights(model, 3)).toEqual(layerHeights(model, 2));
+  });
+
+  it('throws a RangeError for faceOrders that contradict each other', () => {
+    expect(() =>
+      layerHeights(
+        reordered([
+          [0, 1, 1],
+          [1, 0, -1]
+        ]),
+        2
+      )
+    ).toThrow(RangeError);
+  });
+
+  it('stacks the layers one gap apart at rest', () => {
+    const faces = foldedPositions(quarters(), 2, 1);
+    layerHeights(quarters(), 2).forEach((h, f) => {
+      for (const [, , z] of faces[f]) expect(z).toBeCloseTo(h * LAYER_GAP, 9);
+    });
+  });
+
+  it('carries a travelling flap one layer clear of the paper it passes, and sets it down exactly', () => {
+    // the hinge corner of fold-in-half's moving half
+    const hinge = (t: number) => foldedPositions(half(), 1, t)[0][1];
+    expectClose(hinge(0), [0.5, 0, 0], 9);
+    expectClose(hinge(0.5), [0.5 - LAYER_GAP / 2, 0, LAYER_GAP], 9);
+    expectClose(hinge(1), [0.5, 0, LAYER_GAP], 9);
+  });
+
+  it('turns the stack with the paper: after a turn-over the top layer is at the bottom', () => {
+    const model = withSteps(half(), (steps) => [...steps, { ...steps[1], rotation: [0, 180, 0] }]);
+    const faces = foldedPositions(model, 2, 1);
+    expect(faces[0][0][2]).toBeLessThan(faces[1][0][2]);
   });
 });

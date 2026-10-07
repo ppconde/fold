@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fixture } from '../fold/fixtures';
-import { foldedPositions } from '../fold/fold';
+import { foldedPositions, LAYER_GAP } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import { endCentre, fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
 
@@ -55,8 +55,9 @@ describe('lineGroups', () => {
     const g = lineGroups(model, foldedPositions(model, 1, 0.5), 1, 0.5);
     for (let i = 0; i < g.active.length; i += 3) {
       const [x, y, z] = g.active.slice(i, i + 3);
-      expect(x).toBeCloseTo(0.5, 9);
-      expect(z).toBeCloseTo(0, 9);
+      // on the hinge, give or take the moving half's one-layer lift
+      expect(Math.abs(x - 0.5)).toBeLessThanOrEqual(LAYER_GAP + 1e-9);
+      expect(Math.abs(z)).toBeLessThanOrEqual(LAYER_GAP + 1e-9);
       expect([0, 1]).toContain(Math.round(y * 1e9) / 1e9);
     }
   });

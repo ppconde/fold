@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fixture } from '../src/fold/fixtures';
+import { LAYER_GAP } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { buildFold } from './build';
 import { checkModel, crossings, flapFlips, spread } from './check';
@@ -25,10 +26,10 @@ describe('checkModel', () => {
 });
 
 describe('spread', () => {
-  it('is zero on the flat sheet and small but non-zero at rest after a two-layer fold', () => {
+  it('is zero on the flat sheet and only the layer lift at rest after a two-layer fold', () => {
     expect(spread(quarters(), 1, 0)).toBe(0);
-    expect(spread(quarters(), 2, 1)).toBeGreaterThan(0.01);
-    expect(spread(quarters(), 2, 1)).toBeLessThan(0.06);
+    expect(spread(quarters(), 2, 1)).toBeGreaterThan(0);
+    expect(spread(quarters(), 2, 1)).toBeLessThanOrEqual(6 * LAYER_GAP + 1e-9);
   });
 });
 
@@ -38,7 +39,8 @@ describe('crossings', () => {
   });
 
   it('finds two flaps folded through each other', () => {
-    // a 3-panel strip whose outer panels both fold valley onto the narrower middle one
+    // a 3-panel strip whose outer panels both fold valley onto the narrower middle one, stopping at 178°
+    // without faceOrders: each flap rests on its own wedge, so they cut through each other
     const strip = loadModel({
       file_spec: 1.2,
       vertices_coords: [
@@ -71,7 +73,7 @@ describe('crossings', () => {
       ],
       file_frames: [
         {
-          edges_foldAngle: [0, 0, 0, 0, 0, 0, 0, 0, 180, 180],
+          edges_foldAngle: [0, 0, 0, 0, 0, 0, 0, 0, 178, 178],
           'foldapp:instruction': 'Both flaps in.',
           'foldapp:fixedFace': 1
         }
