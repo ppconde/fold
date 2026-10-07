@@ -83,3 +83,15 @@ test('a model without a thumbnail shows the paper placeholder', async ({ page })
   await page.goto('/library');
   await expect(page.getByRole('link', { name: /Fold in half/ }).locator('img')).toHaveCount(0);
 });
+
+test('the menu Library link clears a typed search', async ({ page }) => {
+  await page.goto('/library');
+  const box = page.getByRole('searchbox', { name: 'Search folds' });
+  await box.pressSequentially('dog');
+  await expect(page).toHaveURL(/q=dog/);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.getByRole('link', { name: 'Library' }).click();
+  await expect(page).toHaveURL(/\/library$/);
+  await expect(box).toHaveValue('');
+  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveCount(4);
+});

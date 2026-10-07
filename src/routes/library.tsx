@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLang, useT } from '../i18n/LanguageProvider';
 import { localized, titles } from '../i18n/lang';
 import { fetchIndex } from '../models/catalog';
@@ -24,9 +24,20 @@ function Library() {
   const [lang] = useLang();
   // the box keeps what was typed (spaces included); the URL keeps the trimmed query
   const [query, setQuery] = useState(search.q ?? '');
-  const update = (next: LibrarySearch) =>
-    void navigate({ search: parseLibrarySearch({ ...search, ...next }), replace: true });
+  // the q this page last put in the URL; any other change (the menu's Library link, back) resets the box
+  const ours = useRef(search.q);
+  useEffect(() => {
+    if (search.q === ours.current) return;
+    ours.current = search.q;
+    setQuery(search.q ?? '');
+  }, [search.q]);
+  const update = (next: LibrarySearch) => {
+    const parsed = parseLibrarySearch({ ...search, ...next });
+    ours.current = parsed.q;
+    void navigate({ search: parsed, replace: true });
+  };
   const clear = () => {
+    ours.current = undefined;
     setQuery('');
     void navigate({ search: {}, replace: true });
   };

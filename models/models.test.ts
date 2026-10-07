@@ -4,6 +4,7 @@ import { loadModel } from '../src/fold/load-model';
 import { buildFold, entryOf } from './build';
 import { checkModel } from './check';
 import { DEFAULT_MODEL, FIXTURES, sources } from './src/index';
+import { thumbnail } from './thumbnail';
 
 const committed = (path: string) =>
   JSON.parse(readFileSync(new URL(`../public/models/${path}`, import.meta.url), 'utf8'));
@@ -15,6 +16,8 @@ describe.each(sources.map((s) => [s.id, s] as const))('%s', (_, src) => {
 
   it('is committed as built (run pnpm models)', () => {
     expect(committed(`${src.id}.fold`)).toEqual(JSON.parse(JSON.stringify(buildFold(src))));
+    const svg = readFileSync(new URL(`../public/models/${src.id}.svg`, import.meta.url), 'utf8');
+    expect(svg).toBe(thumbnail(loadModel(buildFold(src))));
   });
 
   it('has a Portuguese name and instructions', () => {
