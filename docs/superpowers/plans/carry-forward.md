@@ -52,3 +52,6 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **Homepage crane polish.** Shadow sits low; crane fills ~35% of the canvas; pointer tilt isn't reset on mouseleave.
 - **Step-1 raised flap is clipped** at the top of the player canvas (camera framing).
 - **No drift test** between `src/styles/palette.ts` and the CSS tokens in `global.css`.
+- **Tablet portrait (maintainer request).** Both layouts switch on width alone, so a portrait tablet gets the landscape layout. Not yet reproduced: check at 834×1194 (iPad Air) and 1024×1366 (iPad Pro 12.9″).
+  - *Homepage:* the crane isn't centred in its canvas. The two-column grid (`Home.module.css`, side-by-side from 720px) gives the crane a tall, narrow column. Landscape is fine. Fix: in portrait, use the phone's stacked layout (crane above, text below), e.g. `@media (max-width: 719px), (orientation: portrait)`, or centre the crane in the camera framing.
+  - *Player:* the instructions should sit at the bottom as on the phone. The side panel turns on at `min-width: 900px` (`Player.module.css`), which a 1024px-wide portrait iPad Pro passes. Fix: side panel only for `(min-width: 900px) and (orientation: landscape)`; otherwise the bottom sheet, including the side-by-side text and diagram layout. Add an e2e check at a portrait tablet viewport.
