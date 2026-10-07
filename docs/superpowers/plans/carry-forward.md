@@ -10,6 +10,7 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 ## Editor (later)
 
+- **A layer-order solver for imported files.** Files without `faceOrders` render with flat, coplanar layers. A solver fills `faceOrders` for them when import arrives.
 - **Non-rigid steps tear mid-fold.** When one step moves several creases that meet at a vertex (e.g. a degree-4 corner) and those creases are interpolated linearly at the same time, faces can separate mid-step by up to ~0.6 of the paper, even though `checkConsistency` is fine at the step's end. The editor should warn when a step folds more than one crease meeting at a vertex, or check consistency at intermediate t.
 
 - **Models are frozen.** `loadModel` deep-freezes its result, and the WeakMap caches assume immutability. Every edit must produce a new `Model`.
@@ -24,13 +25,12 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **`setPositions` line buffer churn.** `writeSegments` (src/player/segments.ts) reuses the line buffer while the segment count is unchanged.
 - **`readTextScale()` every render.** Moot: the text-size option was removed at the maintainer's request (browser zoom covers it).
 
-## Layer-order milestone (inserted before M4 part 2)
+## Resolved in the layer-order milestone
 
-- **M4 part 2 needs `foldSequence().set()` back.** It was removed as unused in part 1. The paper plane's last step (plan Task 11) calls it to open the wings: `set(fold, text, rotation?)` pushes `{ fold, ...text, rotation }`.
-- **Flaps cut through flaps at rest.** No layer order: a flap folded onto another flap clamps to the same 178° wedge. `pnpm models` with the full `models/src/index.ts` from Task 11 of the M4 plan reports it for the cup (from step 4), fox face (step 3), samurai helmet (step 3) and paper plane (step 4). Done when those four pass `checkModel` unchanged.
-- **Thumbnail painter's order.** `models/thumbnail.ts` paints faces by mean height; switch it to the solver's layer order.
-- **Disconnected stacks pass through themselves.** The fold engine keeps a stack rigid only when its layers share a crease the step leaves alone. Folding the free corner of a folded-in-half sheet moves two separate tips, and they still cross mid-fold (signed gap +0.017 → −0.009). The layer-order solver must handle this case (see the `it.todo` in `src/fold/fold.test.ts`).
-- **Seam gap at rest.** The 178° clamp leaves copies of a vertex apart even when the step is finished (0.047 on 3 panels, 0.052 on 4, at t=1). The layer-order solver must remove it.
+- **Flaps cut through flaps at rest.** The builder records each step's stack as FOLD `faceOrders`; the engine lifts every face by its place in it. The cup, fox face, kabuto and paper plane pass `checkModel` unchanged.
+- **Thumbnail painter's order.** Mean height now follows the stack, because every layer is lifted by its place in it.
+- **Disconnected stacks pass through themselves.** The layer lift and the travel clearance carry a moving flap clear of the paper that stays put.
+- **Seam gap at rest.** Folds reach their exact angles (the 178° clamp is gone), so copies of a vertex part only by the layer lift.
 
 ## M5 — Landing and polish
 
