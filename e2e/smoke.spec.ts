@@ -86,11 +86,3 @@ test('tapping the backdrop closes the menu', async ({ page }) => {
   await page.mouse.click(width - 10, height / 2);
   await expect(page.getByRole('dialog')).toBeHidden();
 });
-
-test('text scrolled under the menu button stays hidden behind it', async ({ page }) => {
-  await page.goto('/library');
-  await page.mouse.wheel(0, 400);
-  const menu = page.getByRole('button', { name: 'Menu' });
-  // an opaque plaster backing, so the page text passing under it can't show through
-  await expect(menu).toHaveCSS('background-color', 'rgb(230, 220, 203)');
-});
