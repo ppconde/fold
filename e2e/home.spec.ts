@@ -45,3 +45,23 @@ test('if the crane fails to load, the homepage still works', async ({ page }) =>
   await page.getByRole('link', { name: /start folding/ }).click();
   await expect(page).toHaveURL(/\/fold\/fold-in-quarters/);
 });
+
+test('if models.json cannot be fetched, the homepage still works', async ({ page }) => {
+  await page.route(/\/models\/models\.json$/, (route) => route.abort());
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold, slowly.');
+  await expect(page.getByRole('link', { name: /start folding/ })).toBeVisible();
+});
+
+test.describe('a small phone', () => {
+  test.use({ viewport: { width: 360, height: 640 } });
+  test('the last line is reachable by scrolling and the crane still renders', async ({ page }) => {
+    await page.goto('/');
+    const link = page.getByRole('link', { name: /start folding/ });
+    await link.scrollIntoViewIfNeeded();
+    await expect(link).toBeInViewport();
+    const m = page.locator('main');
+    expect(await m.evaluate((el) => el.scrollHeight >= el.clientHeight)).toBe(true);
+    await expect(page.locator('canvas')).toBeVisible();
+  });
+});

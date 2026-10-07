@@ -31,6 +31,10 @@ function Crane({ pointer, entering, still }: Props) {
   const { scene } = useGLTF(URL);
   const group = useRef<Group>(null);
   const washi = useMemo(createWashiTexture, []);
+  const material = useMemo(
+    () => new MeshStandardMaterial({ color: '#efe7da', roughness: 0.92, metalness: 0, map: washi }),
+    [washi]
+  );
   const crane = useMemo(() => {
     const copy = scene.clone(true);
     copy.traverse((o) => {
@@ -38,11 +42,17 @@ function Crane({ pointer, entering, still }: Props) {
       const name = Array.isArray(o.material) ? o.material[0]?.name : o.material?.name;
       if (name === 'Sombra')
         o.visible = false; // the asset's baked shadow plane; ContactShadows replaces it
-      else o.material = new MeshStandardMaterial({ color: '#efe7da', roughness: 0.92, metalness: 0, map: washi });
+      else o.material = material;
     });
     return copy;
-  }, [scene, washi]);
-  useEffect(() => () => washi.dispose(), [washi]);
+  }, [scene, material]);
+  useEffect(
+    () => () => {
+      material.dispose();
+      washi.dispose();
+    },
+    [material, washi]
+  );
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
     if (still) invalidate();

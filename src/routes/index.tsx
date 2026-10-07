@@ -10,9 +10,12 @@ import { prefersReducedMotion } from '../player/browser';
 
 export const Route = createFileRoute('/')({
   head: () => ({ meta: [{ title: dictionary(currentLang()).titles.home }] }),
-  loader: async () => {
+  loader: () => {
     void loadCrane().catch(() => {});
-    return (await fetchIndex()).defaultModel;
+    return fetchIndex().then(
+      (i) => i.defaultModel,
+      () => 'fold-in-quarters'
+    );
   },
   component: Home
 });
@@ -60,7 +63,7 @@ function Home() {
           search={{}}
           className="ink-link"
           onClick={(e) => {
-            if (still) return;
+            if (still || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
             e.preventDefault();
             enter();
           }}

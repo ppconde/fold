@@ -28,6 +28,9 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 ## M5 — Landing and polish
 
+- **Homepage motion gaps.** It uses frameloop 'always' (the spec asked for 'demand', paused on visibilitychange), and the ≤1° camera drift was never built.
+- **English-only strings.** FoldError detail messages are English for PT users (catalog.ts says "The model library is not a FOLD file." for models.json); index.html meta description is English only.
+
 - **Very small screens.** At 320px wide with the sheet hidden, the dock pill (~332px) overflows and clips ◀; wrap it or hide the step count below ~340px. On desktops under ~700px tall the completion card can cover the bottom of the crease diagram.
 
 - **Scrub position not in the URL.** A reload shows the step fully folded.

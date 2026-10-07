@@ -1,6 +1,7 @@
 .home {
   position: fixed;
   inset: 0;
+  overflow-y: auto;
   display: grid;
   grid-template-columns: minmax(18rem, 38%) 1fr;
   padding: 6rem 0 3rem 6vw;
@@ -67,7 +68,7 @@
 @media (max-width: 719px) {
   .home {
     grid-template-columns: 1fr;
-    grid-template-rows: 46vh auto;
+    grid-template-rows: minmax(30vh, 46vh) auto;
     padding: 5rem 0 0;
   }
 

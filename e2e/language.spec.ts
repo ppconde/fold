@@ -11,6 +11,7 @@ test('switching to Portuguese updates the page, the title and <html lang>, and p
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt-PT');
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Sobre');
+  await expect(page).toHaveTitle('Sobre · Fold');
 });
 
 test.describe('a Brazilian Portuguese browser', () => {
@@ -32,7 +33,7 @@ test.describe('a French browser', () => {
 test('Portuguese pages have no serious accessibility violations', async ({ page }) => {
   await page.goto('/about');
   await page.evaluate(() => localStorage.setItem('fold:lang', 'pt'));
-  for (const path of ['/', '/library', '/about', '/fold/fold-in-quarters?step=1']) {
+  for (const path of ['/', '/library', '/about', '/fold/fold-in-quarters?step=1', '/nope']) {
     await page.emulateMedia({ reducedMotion: 'reduce' }); // axe must not sample a mid-fade
     await page.goto(path);
     const { violations } = await new AxeBuilder({ page }).analyze();

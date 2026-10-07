@@ -65,6 +65,10 @@
   clip-path: polygon(0 1.2%, 30% 0, 62% 0.8%, 100% 0, 100% 100%, 0 100%);
 }
 
+.panel:focus-visible {
+  outline-offset: -4px;
+}
+
 .panel::before {
   content: "";
   position: absolute;
