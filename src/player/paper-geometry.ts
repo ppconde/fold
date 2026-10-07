@@ -35,17 +35,18 @@ export function endCentre(model: Model, step: number): [number, number] {
 }
 
 /**
- * How far the paper reaches from the camera's centre (endCentre) while `step` or the step after it plays, either
- * way: a flap standing up mid-fold, a turn-over, or the flatter pose at the far end. Sampled at quarter steps.
+ * How far the paper reaches from the camera's centre (endCentre of `step`): the settled pose, or, while step
+ * `playing` plays or is scrubbed, every pose it passes (a flap standing up, a turn-over). Sampled at quarter steps.
  */
-export function frameReach(model: Model, step: number): number {
+export function frameReach(model: Model, step: number, playing?: number): number {
   const [cx, cz] = endCentre(model, step);
   const [x0, y0] = [cx + model.center[0], model.center[1] - cz];
+  const poses =
+    playing === undefined
+      ? [foldedPositions(model, step, step === 0 ? 0 : 1)]
+      : [0, 0.25, 0.5, 0.75, 1].map((t) => foldedPositions(model, playing, t));
   let reach = 0;
-  for (const s of [step, step + 1].filter((s) => s < model.steps.length))
-    for (const t of [0, 0.25, 0.5, 0.75, 1])
-      for (const [x, y, z] of foldedPositions(model, s, t).flat())
-        reach = Math.max(reach, Math.hypot(x - x0, y - y0, z));
+  for (const [x, y, z] of poses.flat(2)) reach = Math.max(reach, Math.hypot(x - x0, y - y0, z));
   return reach;
 }
 

@@ -1,7 +1,10 @@
 import { expect, type Page, test } from '@playwright/test';
 
-/** Paper-coloured pixels in a 2px strip along each edge of the 3D view (the page background is plaster). */
-async function edgeHits(page: Page) {
+/**
+ * Paper-coloured pixels in a 2px strip along each edge of the 3D view (the page background is plaster), and the
+ * share of the view's width the paper spans.
+ */
+async function measure(page: Page) {
   const png = (await page.locator('canvas').screenshot()).toString('base64');
   return page.evaluate(async (src) => {
     const img = new Image();
@@ -19,7 +22,10 @@ async function edgeHits(page: Page) {
     let hits = 0;
     for (let x = 0; x < c.width; x++) for (const y of [0, 1, c.height - 2, c.height - 1]) hits += +paper(x, y);
     for (let y = 0; y < c.height; y++) for (const x of [0, 1, c.width - 2, c.width - 1]) hits += +paper(x, y);
-    return hits;
+    const columns = Array.from({ length: c.width }, (_, x) => x).filter((x) =>
+      Array.from({ length: c.height }, (_, y) => y).some((y) => paper(x, y))
+    );
+    return { hits, span: columns.length ? (columns[columns.length - 1] - columns[0]) / c.width : 0 };
   }, png);
 }
 
@@ -38,8 +44,21 @@ test.describe('on a short phone (an iPhone SE under Safari toolbars)', () => {
       await expect(page.locator('canvas')).toBeVisible();
       if (progress) await page.getByRole('slider', { name: 'Fold progress' }).fill(progress);
       await page.waitForTimeout(600); // the camera eases into place
-      expect(await edgeHits(page), `step ${step} at ${progress ?? '100'}%`).toBe(0);
+      expect((await measure(page)).hits, `step ${step} at ${progress ?? '100'}%`).toBe(0);
     }
+  });
+});
+
+test.describe('on a tall phone', () => {
+  test.use({ viewport: { width: 412, height: 839 } });
+
+  // the camera closes in on the settled model, not on room for the step it came from
+  test('a folded model at rest spans three quarters of the width', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', 'sets its own viewport');
+    await page.goto('/fold/tulip?step=3');
+    await expect(page.locator('canvas')).toBeVisible();
+    await page.waitForTimeout(600); // the camera eases into place
+    expect((await measure(page)).span).toBeGreaterThan(0.75);
   });
 });
 
