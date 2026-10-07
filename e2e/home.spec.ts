@@ -41,7 +41,7 @@ test.describe('reduced motion', () => {
 test('if the crane fails to load, the homepage still works', async ({ page }) => {
   await page.route(/\/assets\/CraneScene-[^/]+\.js$/, (route) => route.abort());
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold, slowly.');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold');
   await page.getByRole('link', { name: /start folding/ }).click();
   await expect(page).toHaveURL(/\/fold\/fold-in-quarters/);
 });
@@ -49,8 +49,15 @@ test('if the crane fails to load, the homepage still works', async ({ page }) =>
 test('if models.json cannot be fetched, the homepage still works', async ({ page }) => {
   await page.route(/\/models\/models\.json$/, (route) => route.abort());
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold, slowly.');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold');
   await expect(page.getByRole('link', { name: /start folding/ })).toBeVisible();
+});
+
+test('the name stays Fold in Portuguese', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('fold:lang', 'pt'));
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold');
+  await expect(page.getByRole('link', { name: /começar a dobrar/ })).toBeVisible();
 });
 
 test.describe('a small phone', () => {

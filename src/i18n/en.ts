@@ -23,7 +23,6 @@ export const en = {
     browseLibrary: 'Browse the library'
   },
   home: {
-    headline: 'Fold, slowly.',
     lede: 'Choose an origami and follow it fold by fold, turning the paper in 3D as you go.',
     start: 'start folding',
     craneSoon: 'learning the crane — coming soon',

@@ -56,7 +56,8 @@ function Home() {
       }}
     >
       <div className={styles.text}>
-        <h1>{t.home.headline}</h1>
+        {/* the name is never translated */}
+        <h1>Fold</h1>
         <p className={styles.lede}>{t.home.lede}</p>
         <Link
           to="/fold/$id"

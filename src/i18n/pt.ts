@@ -25,7 +25,6 @@ export const pt: Dictionary = {
     browseLibrary: 'Ver a biblioteca'
   },
   home: {
-    headline: 'Dobrar, devagar.',
     lede: 'Escolhe um origami e segue-o dobra a dobra, rodando o papel em 3D enquanto avanças.',
     start: 'começar a dobrar',
     craneSoon: 'aprender o grou — em breve',
