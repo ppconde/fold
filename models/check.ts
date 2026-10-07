@@ -11,6 +11,11 @@ const cross = (a: Vec3, b: Vec3): Vec3 => [
   a[0] * b[1] - a[1] * b[0]
 ];
 const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const centre = (face: Vec3[]) =>
+  face.reduce(
+    (s, p): Vec3 => [s[0] + p[0] / face.length, s[1] + p[1] / face.length, s[2] + p[2] / face.length],
+    [0, 0, 0]
+  );
 
 /** Largest distance between two copies of the same vertex on different faces: a tear mid-step, a seam at rest. */
 export function spread(model: Model, step: number, t: number): number {
@@ -56,10 +61,7 @@ export function crossings(model: Model, step: number, t: number): [number, numbe
       if (f === g || model.faces[f].some((v) => model.faces[g].includes(v))) return;
       // the sides, plus spokes from the centre: two faces can cut through each other along a line that
       // runs from side to side, where no side pierces the other face but a spoke does
-      const c = P.reduce(
-        (s, p): Vec3 => [s[0] + p[0] / P.length, s[1] + p[1] / P.length, s[2] + p[2] / P.length],
-        [0, 0, 0]
-      );
+      const c = centre(P);
       const segments = P.flatMap((p, i): [Vec3, Vec3][] => [
         [p, P[(i + 1) % P.length]],
         [c, p]
@@ -78,12 +80,7 @@ export function crossings(model: Model, step: number, t: number): [number, numbe
 function sideOf(faces: Vec3[][], f: number, g: number): number {
   const [a, b, c] = faces[f];
   const n = cross(sub(b, a), sub(c, a));
-  const G = faces[g];
-  const centre = G.reduce(
-    (s, p): Vec3 => [s[0] + p[0] / G.length, s[1] + p[1] / G.length, s[2] + p[2] / G.length],
-    [0, 0, 0]
-  );
-  return Math.sign(dot(n, sub(centre, a)));
+  return Math.sign(dot(n, sub(centre(faces[g]), a)));
 }
 
 /**

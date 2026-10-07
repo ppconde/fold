@@ -23,6 +23,8 @@ const BORDER: [Vec2, Vec2][] = [
 ];
 const cross = (a: Vec2, b: Vec2) => a[0] * b[1] - a[1] * b[0];
 const sub = (a: Vec2, b: Vec2): Vec2 => [a[0] - b[0], a[1] - b[1]];
+/** Signed area, positive when the polygon runs counter-clockwise. */
+export const signedArea = (poly: Vec2[]) => poly.reduce((s, p, i) => s + cross(p, poly[(i + 1) % poly.length]), 0) / 2;
 
 /**
  * Planar graph of the unit square cut by `creases`: every segment is split where another one meets it,
@@ -121,8 +123,7 @@ export function arrange(creases: Record<string, Crease>) {
         const ns = around[v];
         [u, v] = [v, ns[(ns.indexOf(u) - 1 + ns.length) % ns.length]];
       }
-      const area = face.reduce((s, p, i) => s + cross(vertices[p], vertices[face[(i + 1) % face.length]]), 0);
-      if (area > EPS) faces.push(face);
+      if (signedArea(face.map((p) => vertices[p])) > EPS) faces.push(face);
     }
   }
   return { vertices, edges, assignments, edgeCrease, faces };

@@ -19,7 +19,8 @@ export type ModelSource = Omit<ModelEntry, 'thumbnail'> & {
   steps: SourceStep[];
 };
 
-function inside(p: Vec2, poly: Vec2[]): boolean {
+/** Is p inside the polygon? (even-odd ray cast) */
+export function inside(p: Vec2, poly: Vec2[]): boolean {
   let hit = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
     const [xi, yi] = poly[i];

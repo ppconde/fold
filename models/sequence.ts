@@ -1,42 +1,23 @@
-import { Euler, Matrix4 } from 'three';
+import { Euler, Matrix3, Matrix4, Vector2 } from 'three';
 import type { Vec2, Vec3 } from '../src/fold/types';
-import type { Crease } from './arrange';
-import type { ModelSource, SourceStep } from './build';
+import { type Crease, signedArea } from './arrange';
+import { inside, type ModelSource, type SourceStep } from './build';
 
 type Text = { en: string; pt: string };
-/** x' = a·x + b·y + c, y' = d·x + e·y + f */
-type Affine = [number, number, number, number, number, number];
 /** A flat piece of paper: its outline in paper coordinates, where it lies in the view, and which way it faces. */
-type Piece = { outline: Vec2[]; toView: Affine; frontUp: boolean; tags: string[] };
+type Piece = { outline: Vec2[]; toView: Matrix3; frontUp: boolean; tags: string[] };
 
-const apply = (m: Affine, [x, y]: Vec2): Vec2 => [m[0] * x + m[1] * y + m[2], m[3] * x + m[4] * y + m[5]];
-const compose = (m: Affine, n: Affine): Affine => [
-  m[0] * n[0] + m[1] * n[3],
-  m[0] * n[1] + m[1] * n[4],
-  m[0] * n[2] + m[1] * n[5] + m[2],
-  m[3] * n[0] + m[4] * n[3],
-  m[3] * n[1] + m[4] * n[4],
-  m[3] * n[2] + m[4] * n[5] + m[5]
-];
-function invert(m: Affine): Affine {
-  const det = m[0] * m[4] - m[1] * m[3];
-  const [a, b, d, e] = [m[4] / det, -m[1] / det, -m[3] / det, m[0] / det];
-  return [a, b, -(a * m[2] + b * m[5]), d, e, -(d * m[2] + e * m[5])];
-}
+const apply = (m: Matrix3, [x, y]: Vec2): Vec2 => [...new Vector2(x, y).applyMatrix3(m).toArray()] as Vec2;
 /** Mirror about the line through p and q. */
-function mirror(p: Vec2, q: Vec2): Affine {
-  const dx = q[0] - p[0];
-  const dy = q[1] - p[1];
+function mirror(p: Vec2, q: Vec2): Matrix3 {
+  const [dx, dy] = [q[0] - p[0], q[1] - p[1]];
   const l = dx * dx + dy * dy;
   const c = (dx * dx - dy * dy) / l;
   const s = (2 * dx * dy) / l;
-  return [c, s, p[0] - c * p[0] - s * p[1], s, -c, p[1] - s * p[0] + c * p[1]];
+  return new Matrix3().set(c, s, p[0] - c * p[0] - s * p[1], s, -c, p[1] - s * p[0] + c * p[1], 0, 0, 1);
 }
 const side = (p: Vec2, q: Vec2, v: Vec2) => (q[0] - p[0]) * (v[1] - p[1]) - (q[1] - p[1]) * (v[0] - p[0]);
-const area = (poly: Vec2[]) =>
-  Math.abs(
-    poly.reduce((s, a, i) => s + a[0] * poly[(i + 1) % poly.length][1] - poly[(i + 1) % poly.length][0] * a[1], 0)
-  ) / 2;
+const area = (poly: Vec2[]) => Math.abs(signedArea(poly));
 
 /** Split a convex outline (view coordinates) by the line p→q into its left part, right part and the cut ends. */
 function cut(poly: Vec2[], p: Vec2, q: Vec2) {
@@ -60,15 +41,6 @@ function cut(poly: Vec2[], p: Vec2, q: Vec2) {
     }
   });
   return { left, right, ends };
-}
-function inside(p: Vec2, poly: Vec2[]): boolean {
-  let hit = false;
-  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-    const [xi, yi] = poly[i];
-    const [xj, yj] = poly[j];
-    if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) hit = !hit;
-  }
-  return hit;
 }
 const centroid = (poly: Vec2[]): Vec2 => [
   poly.reduce((s, v) => s + v[0], 0) / poly.length,
@@ -97,8 +69,10 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
   const D = Math.PI / 180;
   const r = new Matrix4().makeRotationFromEuler(new Euler(start[0] * D, start[1] * D, start[2] * D)).elements;
   // view = R (p − c) + c on the table plane; R's z-row says whether the front still faces the viewer
-  const turn: Affine = [r[0], r[4], 0, r[1], r[5], 0];
-  const toView = compose([1, 0, 0.5, 0, 1, 0.5], compose(turn, [1, 0, -0.5, 0, 1, -0.5]));
+  const toView = new Matrix3()
+    .makeTranslation(0.5, 0.5)
+    .multiply(new Matrix3().set(r[0], r[4], 0, r[1], r[5], 0, 0, 0, 1))
+    .multiply(new Matrix3().makeTranslation(-0.5, -0.5));
   let pieces: Piece[] = [
     {
       outline: [
@@ -119,10 +93,6 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     /** A step that only turns the model (absolute Euler XYZ, degrees). Pieces keep their view positions. */
     turn(rotation: Vec3, text: Text) {
       steps.push({ rotation, ...text });
-    },
-    /** A step that sets existing creases to new angles, e.g. to open a model out at the end. */
-    set(fold: Record<string, number>, text: Text, rotation?: Vec3) {
-      steps.push({ fold, ...text, ...(rotation ? { rotation } : {}) });
     },
     /** The creases the fold called `name` made, one per layer it cut (name1, name2, …), with their angles. */
     angles(name: string): Record<string, number> {
@@ -145,7 +115,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
           next.push(piece);
           continue;
         }
-        const back = invert(piece.toView);
+        const back = piece.toView.clone().invert();
         if (area(right) > 1e-9) {
           const cutEnds = ends.filter(
             (e, i) => ends.findIndex((o) => Math.hypot(o[0] - e[0], o[1] - e[1]) < 1e-9) === i
@@ -160,7 +130,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         }
         const flap: Piece = {
           outline: left.map((v) => apply(back, v)),
-          toView: compose(flip, piece.toView),
+          toView: flip.clone().multiply(piece.toView),
           frontUp: !piece.frontUp,
           tags: opts.tag ? [...piece.tags, opts.tag] : piece.tags
         };

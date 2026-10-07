@@ -26,6 +26,7 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 ## Layer-order milestone (inserted before M4 part 2)
 
+- **M4 part 2 needs `foldSequence().set()` back.** It was removed as unused in part 1. The paper plane's last step (plan Task 11) calls it to open the wings: `set(fold, text, rotation?)` pushes `{ fold, ...text, rotation }`.
 - **Flaps cut through flaps at rest.** No layer order: a flap folded onto another flap clamps to the same 178° wedge. `pnpm models` with the full `models/src/index.ts` from Task 11 of the M4 plan reports it for the cup (from step 4), fox face (step 3), samurai helmet (step 3) and paper plane (step 4). Done when those four pass `checkModel` unchanged.
 - **Thumbnail painter's order.** `models/thumbnail.ts` paints faces by mean height; switch it to the solver's layer order.
 - **Disconnected stacks pass through themselves.** The fold engine keeps a stack rigid only when its layers share a crease the step leaves alone. Folding the free corner of a folded-in-half sheet moves two separate tips, and they still cross mid-fold (signed gap +0.017 → −0.009). The layer-order solver must handle this case (see the `it.todo` in `src/fold/fold.test.ts`).
