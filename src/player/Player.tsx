@@ -107,7 +107,14 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         {webgl ? (
           <StageBoundary onError={() => setStageFailed(true)} message={t.stageFailed} retryLabel={t.tryAgain}>
             <Suspense fallback={<div className={styles.stagePlaceholder} aria-hidden="true" />}>
-              <LazyStage model={model} step={state.step} t={state.t} resetCount={resetCount} frameStep={frameStep} />
+              <LazyStage
+                model={model}
+                step={state.step}
+                t={state.t}
+                playing={state.playing}
+                resetCount={resetCount}
+                frameStep={frameStep}
+              />
             </Suspense>
           </StageBoundary>
         ) : (
