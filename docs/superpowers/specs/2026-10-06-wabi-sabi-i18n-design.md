@@ -242,10 +242,12 @@ The layout and every behaviour from the restart spec §8 and the polish round ar
 |---|---|---|
 | 0–2 | Setup, engine, player | done (PRs #423–#425) |
 | — | Player polish | PR #426 |
-| **3** | **This spec:** wabi-sabi visual pass, crane homepage, EN/PT | next |
-| 4 | Library: search, filters, cards with rendered thumbnails; launch models authored as code in EN/PT | |
+| **3** | **This spec:** wabi-sabi visual pass, crane homepage, EN/PT | done (PR #428) |
+| 4a | Library, model pipeline, dog face and tulip | this PR |
+| L | Layer order (inserted by the §8 gate: cup, fox, kabuto and plane cut through themselves) | next |
+| 4b | The other four launch models; the cup becomes the default lesson | |
 | 5 | About page and final polish | |
-| later | Crane lesson (keyframe steps for squash and petal folds); layer-order solver; editor; uploads; accounts | deferred |
+| later | Crane lesson (keyframe steps for squash and petal folds); editor; uploads; accounts | deferred |
 
 ## 10. Testing
 - **Unit tests:**
