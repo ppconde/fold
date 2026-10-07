@@ -84,3 +84,17 @@ test('tapping the backdrop closes the menu', async ({ page }) => {
   await page.mouse.click(width - 10, height / 2);
   await expect(page.getByRole('dialog')).toBeHidden();
 });
+
+test('the menu sits in a bar across the top that wears the page texture', async ({ page }) => {
+  await page.goto('/library');
+  await expect(page.locator('img').first()).toBeVisible();
+  const top = await page.evaluate(() => {
+    const hit = document.elementFromPoint(window.innerWidth / 2, 20);
+    const bg = (el: Element, pseudo?: string) => getComputedStyle(el, pseudo).backgroundImage;
+    return {
+      inHeader: !!hit?.closest('header'),
+      same: bg(document.querySelector('header') ?? document.body) === bg(document.body, '::before')
+    };
+  });
+  expect(top).toEqual({ inHeader: true, same: true });
+});

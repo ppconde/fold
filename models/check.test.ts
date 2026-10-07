@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fixture } from '../src/fold/fixtures';
+import { LAYER_GAP } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { buildFold } from './build';
 import { checkModel, crossings, flapFlips, spread } from './check';
@@ -25,10 +26,10 @@ describe('checkModel', () => {
 });
 
 describe('spread', () => {
-  it('is zero on the flat sheet and small but non-zero at rest after a two-layer fold', () => {
+  it('is zero on the flat sheet and only the layer lift at rest after a two-layer fold', () => {
     expect(spread(quarters(), 1, 0)).toBe(0);
-    expect(spread(quarters(), 2, 1)).toBeGreaterThan(0.01);
-    expect(spread(quarters(), 2, 1)).toBeLessThan(0.06);
+    expect(spread(quarters(), 2, 1)).toBeGreaterThan(0);
+    expect(spread(quarters(), 2, 1)).toBeLessThanOrEqual(6 * LAYER_GAP + 1e-9);
   });
 });
 
@@ -38,7 +39,8 @@ describe('crossings', () => {
   });
 
   it('finds two flaps folded through each other', () => {
-    // a 3-panel strip whose outer panels both fold valley onto the narrower middle one
+    // a 3-panel strip whose outer panels both fold valley onto the narrower middle one, stopping at 178°
+    // without faceOrders: each flap rests on its own wedge, so they cut through each other
     const strip = loadModel({
       file_spec: 1.2,
       vertices_coords: [
@@ -71,7 +73,7 @@ describe('crossings', () => {
       ],
       file_frames: [
         {
-          edges_foldAngle: [0, 0, 0, 0, 0, 0, 0, 0, 180, 180],
+          edges_foldAngle: [0, 0, 0, 0, 0, 0, 0, 0, 178, 178],
           'foldapp:instruction': 'Both flaps in.',
           'foldapp:fixedFace': 1
         }
@@ -84,8 +86,8 @@ describe('crossings', () => {
 });
 
 describe('flapFlips', () => {
-  // The first dog face: its nose fold re-routed the engine's spanning tree, and the clamped 178° wedges
-  // then put the right ear's front layer on top of its back layer (white side showing, z-fighting).
+  // The first dog face: under the old 178° clamp its nose fold re-routed the spanning tree and the
+  // wedges put the right ear's front layer on top of its back layer (white side showing, z-fighting).
   const firstDog = () => {
     const s = diamondSequence();
     const text = { en: 'x', pt: 'x' };
@@ -99,10 +101,16 @@ describe('flapFlips', () => {
   };
 
   it('finds a folded flap that changes side in a later step', () => {
-    expect(flapFlips(firstDog())).toContainEqual(
-      expect.stringMatching(/^Step 5: face \d+ flips to the other side of face \d+/)
+    // fold-in-half, then a step that keeps the angles but puts the flap under the held half
+    const json = fixture('fold-in-half') as { file_frames: Record<string, unknown>[] };
+    json.file_frames.push({ ...json.file_frames[0], faceOrders: [[0, 1, -1]] });
+    expect(flapFlips(loadModel(json))).toContainEqual(
+      expect.stringMatching(/^Step 2: face \d+ flips to the other side of face \d+/)
     );
-    expect(checkModel(firstDog())).toContainEqual(expect.stringMatching(/flips to the other side/));
+  });
+
+  it('passes the first dog face now that layers are ordered', () => {
+    expect(checkModel(firstDog())).toEqual([]);
   });
 
   it('finds none in the fixtures', () => {

@@ -62,6 +62,19 @@ describe('loadModel', () => {
     expect(loadModel(json).vertices[1]).toEqual([1, 0]);
   });
 
+  it('reads faceOrders per step, keeps them for steps without any, and drops unknown (0) orders', () => {
+    const json = fixture('fold-in-quarters') as Json;
+    json.file_frames[0].faceOrders = [
+      [0, 1, 1],
+      [1, 2, 0]
+    ];
+    delete json.file_frames[1].faceOrders;
+    const model = loadModel(json);
+    expect(model.steps[0].faceOrders).toEqual([]);
+    expect(model.steps[1].faceOrders).toEqual([[0, 1, 1]]);
+    expect(model.steps[2].faceOrders).toEqual([[0, 1, 1]]);
+  });
+
   const broken: [string, (j: Json) => unknown, RegExp][] = [
     ['not an object', () => 42, /not a FOLD object/],
     ['missing faces', (j) => ({ ...j, faces_vertices: undefined }), /faces_vertices/],
@@ -152,6 +165,26 @@ describe('loadModel', () => {
       'bad rotation',
       (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], 'foldapp:rotation': [0, 180] }] }),
       /Step 1 rotation/
+    ],
+    [
+      'faceOrders that is not a list of triples',
+      (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], faceOrders: [[0, 1]] }] }),
+      /Step 1 faceOrders needs \[f, g, s\] triples with s of -1, 0 or 1/
+    ],
+    [
+      'faceOrders with a bad sign',
+      (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], faceOrders: [[0, 1, 2]] }] }),
+      /Step 1 faceOrders needs \[f, g, s\] triples with s of -1, 0 or 1/
+    ],
+    [
+      'faceOrders naming a missing face',
+      (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], faceOrders: [[0, 9, 1]] }] }),
+      /Step 1 orders face 9, which does not exist/
+    ],
+    [
+      'faceOrders ordering a face against itself',
+      (j) => ({ ...j, file_frames: [{ ...j.file_frames[0], faceOrders: [[1, 1, 1]] }] }),
+      /Step 1 orders face 1 against itself/
     ],
     [
       'paper in pieces',

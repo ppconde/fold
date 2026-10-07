@@ -26,10 +26,24 @@
 
 body {
   margin: 0;
-  background: var(--linen), var(--grain), var(--plaster);
+  background: var(--plaster);
   color: var(--charcoal);
   font-family: var(--font-sans);
   line-height: 1.55;
+}
+
+/* The page texture stays put, anchored to the viewport like the header bar, so the two line up exactly.
+   (background-attachment: fixed would too, but iOS ignores it.) */
+body::before,
+.page-bar {
+  background: var(--linen), var(--grain), var(--plaster);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
 }
 
 h1,
