@@ -5,12 +5,12 @@ const pages = [
   { path: '/', heading: 'Fold' },
   { path: '/library', heading: 'Library' },
   { path: '/fold/fold-in-half', heading: 'Fold in half' },
-  { path: '/editor', heading: 'Editor' },
   { path: '/about', heading: 'About' }
 ];
 
 for (const { path, heading } of pages) {
   test(`${path} loads and has no serious accessibility violations`, async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' }); // axe must not sample a mid-fade
     await page.goto(path);
     await expect(page.getByRole('heading', { level: 1 })).toContainText(heading);
 
@@ -75,7 +75,7 @@ test('focus ring is visible inside the dark menu', async ({ page }) => {
 
   await page.keyboard.press('Tab');
   const outline = await page.evaluate(() => getComputedStyle(document.activeElement as Element).outlineColor);
-  expect(outline).toBe('rgb(247, 243, 234)');
+  expect(outline).toBe('rgb(79, 97, 119)');
 });
 
 test('tapping the backdrop closes the menu', async ({ page }) => {

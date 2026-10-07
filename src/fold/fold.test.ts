@@ -86,7 +86,7 @@ describe('foldedPositions', () => {
   it('turns the model over with a rotation step, and keeps it turned in later steps', () => {
     const model = withSteps(half(), (s) => {
       const turned = { ...s[1], angles: s[1].angles.map(() => 0), rotation: [0, 180, 0] as Vec3 };
-      return [s[0], turned, { ...turned, instruction: 'Look at it.' }];
+      return [s[0], turned, { ...turned, instruction: { en: 'Look at it.' } }];
     });
     expectClose(foldedPositions(model, 1, 1)[0][0], [1, 0, 0]);
     expectClose(foldedPositions(model, 2, 0)[0][0], [1, 0, 0]);
@@ -131,7 +131,10 @@ describe('checkConsistency', () => {
 describe('step joins', () => {
   it('joins every face exactly when the held face changes after a clamped fold', () => {
     const base = quarters();
-    const model = withSteps(base, (s) => [...s, { ...s[2], fixedFace: 0, instruction: 'Hold the other side.' }]);
+    const model = withSteps(base, (s) => [
+      ...s,
+      { ...s[2], fixedFace: 0, instruction: { en: 'Hold the other side.' } }
+    ]);
     const end = foldedPositions(model, 2, 1);
     const start = foldedPositions(model, 3, 0);
     end.forEach((face, f) => {
@@ -191,7 +194,7 @@ describe('anglesAt', () => {
 describe('turning over a folded model', () => {
   // step 1 folds the left half over; step 2 turns the whole thing over
   const turned = () =>
-    withSteps(half(), (s) => [s[0], s[1], { ...s[1], rotation: [0, 180, 0], instruction: 'Turn it over.' }]);
+    withSteps(half(), (s) => [s[0], s[1], { ...s[1], rotation: [0, 180, 0], instruction: { en: 'Turn it over.' } }]);
 
   const xRange = (faces: Vec3[][]) => {
     const xs = faces.flat().map((p) => p[0]);
@@ -205,7 +208,7 @@ describe('turning over a folded model', () => {
   });
 
   it('still joins exactly at both ends of the turn', () => {
-    const model = withSteps(turned(), (s) => [...s, { ...s[2], instruction: 'Look at the back.' }]);
+    const model = withSteps(turned(), (s) => [...s, { ...s[2], instruction: { en: 'Look at the back.' } }]);
     const pairs: [number, number, number, number][] = [
       [1, 1, 2, 0],
       [2, 1, 3, 0]
@@ -392,10 +395,10 @@ describe('several turns', () => {
       const r = (v: Vec3) => rot(v);
       return [
         s[0],
-        { ...s[1], angles: s[0].angles, rotation: r([0, 180, 0]), fixedFace: 1, instruction: 'Turn over.' },
-        { ...s[1], rotation: r([0, 180, 0]), fixedFace: 2, instruction: 'Fold.' },
-        { ...s[1], rotation: r([90, 0, 30]), fixedFace: 3, instruction: 'Tilt.' },
-        { ...s[1], rotation: r([0, 0, 0]), fixedFace: 0, instruction: 'Turn back.' }
+        { ...s[1], angles: s[0].angles, rotation: r([0, 180, 0]), fixedFace: 1, instruction: { en: 'Turn over.' } },
+        { ...s[1], rotation: r([0, 180, 0]), fixedFace: 2, instruction: { en: 'Fold.' } },
+        { ...s[1], rotation: r([90, 0, 30]), fixedFace: 3, instruction: { en: 'Tilt.' } },
+        { ...s[1], rotation: r([0, 0, 0]), fixedFace: 0, instruction: { en: 'Turn back.' } }
       ];
     });
   const turned = () => build((v) => v);

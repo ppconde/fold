@@ -1,29 +1,37 @@
 .menuButton {
   position: fixed;
   top: 1rem;
-  left: 1rem;
+  left: 1.25rem;
   z-index: 10;
-  border: 1px solid var(--beige);
-  border-radius: 50%;
-  background: #fff;
-  color: var(--charcoal);
-  font-size: 1.25rem;
-  cursor: pointer;
+  font-family: var(--font-sans);
 }
 
 .menu {
   margin: 0;
-  width: min(20rem, 85vw);
+  width: min(21rem, 86vw);
   height: 100dvh;
   max-height: none;
   border: 0;
-  padding: 4rem 2rem 2rem;
-  background: var(--charcoal);
-  color: var(--ivory);
+  padding: 3.5rem 2rem 2rem;
+  color: var(--charcoal);
+  opacity: 0;
+  transition:
+    opacity 400ms var(--ease),
+    display 400ms allow-discrete;
+}
+
+.menu[open] {
+  opacity: 1;
+}
+
+@starting-style {
+  .menu[open] {
+    opacity: 0;
+  }
 }
 
 .menu::backdrop {
-  background: rgb(43 42 40 / 0.4);
+  background: rgb(51 48 44 / 0.25);
 }
 
 .menu ul {
@@ -35,38 +43,52 @@
 .menu a {
   display: block;
   padding: 0.5rem 0;
-  color: var(--ivory);
+  color: var(--charcoal);
   font-family: var(--font-serif);
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   text-decoration: none;
+}
+
+.menu a:hover,
+.menu a:focus-visible {
+  text-decoration: underline;
+  text-decoration-color: var(--clay);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.25em;
 }
 
 .textSize {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.25rem;
   margin: 2rem 0;
   border: 0;
   padding: 0;
 }
 
 .textSize legend {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-.textSize button,
-.close {
-  border: 1px solid var(--ivory);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ivory);
-  cursor: pointer;
+.textSize button {
+  padding: 0 0.5rem;
+  color: var(--muted);
+  text-decoration: none;
 }
 
 .textSize button[aria-pressed="true"] {
-  background: var(--ivory);
   color: var(--charcoal);
+  text-decoration: underline;
+  text-decoration-color: var(--clay);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.25em;
 }
 
-.menu :focus-visible {
-  outline-color: var(--ivory);
+.close {
+  font-family: var(--font-sans);
 }

@@ -8,7 +8,7 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **Per-frame allocation.** Kept `Vec3[][]`; revisit only if a real phone stutters (headless timing is not representative).
 - **☰ button backdrop.** Verified by axe on the player.
 
-## M3 — Editor
+## Editor (later)
 
 - **Non-rigid steps tear mid-fold.** When one step moves several creases that meet at a vertex (e.g. a degree-4 corner) and those creases are interpolated linearly at the same time, faces can separate mid-step by up to ~0.6 of the paper, even though `checkConsistency` is fine at the step's end. The editor should warn when a step folds more than one crease meeting at a vertex, or check consistency at intermediate t.
 
@@ -18,14 +18,18 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **Remaining loader gaps.** `frame_parent` / `frame_inherit` are ignored (steps are sequential). Non-convex faces could flip the M/V side test. Both matter only for third-party uploads.
 - **Disconnected stacks pass through themselves.** The fold engine keeps a stack rigid only when its layers share a crease the step leaves alone. Folding the free corner of a folded-in-half sheet moves two separate tips, and they still cross mid-fold (signed gap +0.017 → −0.009). The layer-order solver must handle this case (see the `it.todo` in `src/fold/fold.test.ts`).
 - **Seam gap at rest.** The 178° clamp leaves copies of a vertex apart even when the step is finished (0.047 on 3 panels, 0.052 on 4, at t=1). The layer-order solver must remove it.
-- **"Hide steps" pill overlap.** On phones the "Hide steps" pill can sit over the paper. Consider moving it into the sheet header.
+- **Homepage crane.** Switch it to a crease-pattern build when the crane lesson exists.
 
 ## M4 — Library and content
 
+- **Step count cell may overflow at 10 or more steps.**
 - **`setPositions` line buffer churn.** Each frame re-sends every line segment buffer. Preallocate per crease count before larger models.
 - **`readTextScale()` every render.** Line widths are read on render, so they don't follow a live text-size change.
 
 ## M5 — Landing and polish
+
+- **Homepage motion gaps.** It uses frameloop 'always' (the spec asked for 'demand', paused on visibilitychange), and the ≤1° camera drift was never built.
+- **English-only strings.** FoldError detail messages are English for PT users (catalog.ts says "The model library is not a FOLD file." for models.json); index.html meta description is English only.
 
 - **Very small screens.** At 320px wide with the sheet hidden, the dock pill (~332px) overflows and clips ◀; wrap it or hide the step count below ~340px. On desktops under ~700px tall the completion card can cover the bottom of the crease diagram.
 
@@ -34,3 +38,11 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **Lazy-load `Stage`.** The route chunk is ~993 kB.
 - **No keyboard camera control.** Only drag, pinch and scroll turn or zoom the view; R resets it.
 - **Aside tab stop.** The instructions aside's `tabIndex` (needed for the scrolling phone sheet) adds a tab stop on desktop.
+- **User photography for the About page.**
+- **Dock hint says "hover for names".** Wrong on touch devices.
+- **Phone completion card overlaps the instruction sheet.**
+- **Shippori Mincho weight 500 is used** but only 400/600 load.
+- **Library list sets `lang="ja"` on the romaji Japanese name.** Should be `ja-Latn` or none.
+- **Homepage crane polish.** Shadow sits low; crane fills ~35% of the canvas; pointer tilt isn't reset on mouseleave.
+- **Step-1 raised flap is clipped** at the top of the player canvas (camera framing).
+- **No drift test** between `src/styles/palette.ts` and the CSS tokens in `global.css`.

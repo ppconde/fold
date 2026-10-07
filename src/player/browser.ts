@@ -1,4 +1,5 @@
 const PANEL_KEY = 'fold:panelOpen';
+const HINT_KEY = 'fold:dockHint';
 
 export function hasWebGL(): boolean {
   try {
@@ -13,18 +14,25 @@ export function prefersReducedMotion(): boolean {
   return typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-export function readPanelOpen(): boolean {
+/** localStorage that tolerates blocked storage (private mode): reads fall back, writes apply for this visit only. */
+export function readStored(key: string): string | null {
   try {
-    return localStorage.getItem(PANEL_KEY) !== 'false';
+    return localStorage.getItem(key);
   } catch {
-    return true;
+    return null;
   }
 }
 
-export function writePanelOpen(open: boolean): void {
+export function writeStored(key: string, value: string): void {
   try {
-    localStorage.setItem(PANEL_KEY, String(open));
+    localStorage.setItem(key, value);
   } catch {
-    // Storage blocked: the choice still applies for this visit.
+    // storage blocked: the choice still applies for this visit
   }
 }
+
+export const readPanelOpen = () => readStored(PANEL_KEY) !== 'false';
+export const writePanelOpen = (open: boolean) => writeStored(PANEL_KEY, String(open));
+
+export const shouldShowHint = () => readStored(HINT_KEY) !== 'seen';
+export const markHintSeen = () => writeStored(HINT_KEY, 'seen');

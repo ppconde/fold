@@ -6,7 +6,7 @@ export type Assignment = 'M' | 'V' | 'B' | 'F' | 'U';
 export type Step = {
   /** Fold angle of every edge at the end of the step, in degrees (+valley, −mountain). */
   angles: number[];
-  instruction: string;
+  instruction: { en: string; pt?: string };
   /** Face that stays still during the step. */
   fixedFace: number;
   /** Whole-model rotation at the end of the step, Euler XYZ in degrees. */

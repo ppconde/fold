@@ -1,7 +1,7 @@
 import { Component, type ReactNode } from 'react';
 import styles from './Player.module.css';
 
-type Props = { children: ReactNode; onError: () => void };
+type Props = { children: ReactNode; onError: () => void; message: string; retryLabel: string };
 
 // catches a failed Stage chunk download (offline, or a redeploy removed the hashed file).
 // "Try again" reloads: browsers cache a failed dynamic import of the same URL, so re-importing can't recover
@@ -16,12 +16,12 @@ export class StageBoundary extends Component<Props, { failed: boolean }> {
   render() {
     if (!this.state.failed) return this.props.children;
     return (
-      <>
-        <p className={styles.noWebgl}>The 3D view didn't load. Follow the crease pattern and instructions instead.</p>
-        <button type="button" className={styles.retry} onClick={() => location.reload()}>
-          Try again
+      <div className={styles.fallback}>
+        <p className={styles.noWebgl}>{this.props.message}</p>
+        <button type="button" className="ink-link" onClick={() => location.reload()}>
+          {this.props.retryLabel}
         </button>
-      </>
+      </div>
     );
   }
 }

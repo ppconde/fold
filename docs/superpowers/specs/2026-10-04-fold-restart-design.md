@@ -1,7 +1,7 @@
 # Fold — restart design
 
 Date: 2026-10-04
-Status: draft, awaiting review
+Status: approved. The visual direction (§7, §8 look, §11) and the milestones (§14) are superseded by `2026-10-06-wabi-sabi-i18n-design.md`.
 
 ## 1. Purpose
 

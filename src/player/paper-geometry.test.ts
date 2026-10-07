@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { fixture } from '../fold/fixtures';
 import { foldedPositions } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
-import { endCentre, fillTriangles, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import { endCentre, fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
 
 const half = () => loadModel(fixture('fold-in-half'));
 const quarters = () => loadModel(fixture('fold-in-quarters'));
@@ -81,5 +81,14 @@ describe('endCentre', () => {
     const [x, z] = endCentre(half(), 1);
     expect(x).toBeCloseTo(0.25, 6);
     expect(z).toBeCloseTo(0, 6);
+  });
+});
+
+describe('fillUVs', () => {
+  it('maps flat paper coordinates into 0..1', () => {
+    const model = quarters();
+    const out = new Float32Array(triangleCount(model) * 6);
+    fillUVs(model, out);
+    expect([...out.slice(0, 6)]).toEqual([0, 0, 0.5, 0, 0.5, 0.5]);
   });
 });

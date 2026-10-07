@@ -1,31 +1,22 @@
 import { Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { type ComponentRef, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { BackSide, BufferAttribute, BufferGeometry, DataTexture, FrontSide, NearestFilter, RedFormat } from 'three';
+import { BackSide, BufferAttribute, BufferGeometry, FrontSide } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
 import { readTextScale } from '../shell/text-scale';
-import { fillTriangles, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import { fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import { createWashiTexture, softenTowardIvory } from './washi';
 
 type LineRef = ComponentRef<typeof Line>;
 
-const INK = '#2B2A28';
-const HIGHLIGHT = '#B8613F';
-const BACK = '#FBF9F4';
+const INK = '#33302C';
+const HIGHLIGHT = '#A5633F';
+const BACK = '#F3EDE2';
 const PLACEHOLDER: Vec3[] = [
   [0, 0, 0],
   [0, 0, 0]
 ];
-
-/** Three flat tones for cel shading. */
-function toonGradient(): DataTexture {
-  const texture = new DataTexture(new Uint8Array([110, 185, 255]), 3, 1, RedFormat);
-  texture.minFilter = NearestFilter;
-  texture.magFilter = NearestFilter;
-  texture.generateMipmaps = false;
-  texture.needsUpdate = true;
-  return texture;
-}
 
 function setSegments(line: LineRef | null, points: number[]) {
   if (!line) return;
@@ -43,9 +34,12 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const geometry = useMemo(() => {
     const g = new BufferGeometry();
     g.setAttribute('position', new BufferAttribute(new Float32Array(triangleCount(model) * 9), 3));
+    const uv = new Float32Array(triangleCount(model) * 6);
+    fillUVs(model, uv);
+    g.setAttribute('uv', new BufferAttribute(uv, 2));
     return g;
   }, [model]);
-  const gradient = useMemo(toonGradient, []);
+  const washi = useMemo(createWashiTexture, []);
   const initial = useMemo(() => lineGroups(model, foldedPositions(model, 0, 0), 0, 0), [model]);
   const borderPoints = useMemo(() => toPoints(initial.borders), [initial]);
   const borders = useRef<LineRef>(null);
@@ -70,7 +64,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     invalidate();
   }, [model, step, t, geometry, invalidate]);
 
-  useEffect(() => () => gradient.dispose(), [gradient]);
+  useEffect(() => () => washi.dispose(), [washi]);
 
   useEffect(
     () => () => {
@@ -84,9 +78,11 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     <group rotation={[-Math.PI / 2, 0, 0]}>
       <group position={[-center[0], -center[1], 0]}>
         <mesh geometry={geometry}>
-          <meshToonMaterial
-            color={model.paperColor}
-            gradientMap={gradient}
+          <meshStandardMaterial
+            color={softenTowardIvory(model.paperColor)}
+            roughness={0.92}
+            metalness={0}
+            map={washi}
             side={FrontSide}
             polygonOffset
             polygonOffsetFactor={1}
@@ -94,23 +90,25 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           />
         </mesh>
         <mesh geometry={geometry}>
-          <meshToonMaterial
+          <meshStandardMaterial
             color={BACK}
-            gradientMap={gradient}
+            roughness={0.92}
+            metalness={0}
+            map={washi}
             side={BackSide}
             polygonOffset
             polygonOffsetFactor={1}
             polygonOffsetUnits={1}
           />
         </mesh>
-        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={2.5 * scale} />
-        <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.5 * scale} visible={false} />
+        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7 * scale} />
+        <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.0 * scale} visible={false} />
         <Line
           ref={flat}
           points={PLACEHOLDER}
           segments
           color={INK}
-          lineWidth={1 * scale}
+          lineWidth={0.7 * scale}
           transparent
           opacity={0.35}
           visible={false}
@@ -121,7 +119,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           segments
           color={HIGHLIGHT}
           renderOrder={1}
-          lineWidth={2.5 * scale}
+          lineWidth={1.8 * scale}
           frustumCulled={false}
         />
       </group>

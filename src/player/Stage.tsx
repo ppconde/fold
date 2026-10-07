@@ -2,6 +2,7 @@ import { CameraControls, ContactShadows } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { type ComponentRef, useEffect, useMemo, useRef } from 'react';
 import type { Model } from '../fold/types';
+import { useT } from '../i18n/LanguageProvider';
 import { prefersReducedMotion } from './browser';
 import { Paper } from './Paper';
 import { endCentre, paperExtent } from './paper-geometry';
@@ -13,13 +14,15 @@ const POLAR = 0.9;
 type Props = { model: Model; step: number; t: number; resetCount: number; frameStep: number };
 
 export function Stage(props: Props) {
+  const t = useT();
   return (
     <Canvas
       frameloop="demand"
       dpr={[1, 2]}
       camera={{ fov: 35, near: 0.01, far: 100, position: [0, 2, 2] }}
+      gl={{ alpha: true }}
       role="img"
-      aria-label="3D view of the paper. Drag to turn it, pinch or scroll to zoom."
+      aria-label={t.player.stageLabel}
     >
       <Scene {...props} />
     </Canvas>
@@ -47,11 +50,11 @@ function Scene({ model, step, t, resetCount, frameStep }: Props) {
 
   return (
     <>
-      <hemisphereLight args={['#fffaf0', '#e9e1d1', 0.9]} />
-      <directionalLight position={[-2, 4, 3]} intensity={2.2} />
-      <directionalLight position={[3, 2, -2]} intensity={0.6} />
+      <hemisphereLight args={['#fffaf0', '#e6dccb', 1.1]} />
+      <directionalLight position={[-2, 4, 3]} intensity={1.6} color="#fff4e6" />
+      <directionalLight position={[3, 2, -2]} intensity={0.45} />
       <Paper model={model} step={step} t={t} />
-      <ContactShadows position={[0, -0.002, 0]} scale={size * 3} blur={2.5} opacity={0.35} far={size} />
+      <ContactShadows position={[0, -0.002, 0]} scale={size * 3} blur={3.2} opacity={0.25} color="#5b4a3a" far={size} />
       <CameraControls ref={controls} makeDefault minDistance={size * 0.4} maxDistance={size * 6} />
     </>
   );

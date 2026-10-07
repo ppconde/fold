@@ -2,6 +2,8 @@
 
 Learn origami step by step: an interactive 3D model folds along with you, next to the crease pattern for each step.
 
+The app is available in English and European Portuguese (switch from the menu).
+
 Live at https://fold.ppconde.com
 
 ## Develop

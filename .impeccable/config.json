@@ -164,6 +164,96 @@
         ],
         "createdAt": "2026-10-04T19:23:14.067Z",
         "reason": "Claude: throwaway brainstorm wireframe drawn at miniature scale"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-direction.html"
+        ],
+        "createdAt": "2026-10-06T13:42:34.541Z",
+        "reason": "Claude: throwaway brainstorm mockup drawn at miniature scale; real sizes come from the spec"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-direction.html"
+        ],
+        "createdAt": "2026-10-06T13:42:34.571Z",
+        "reason": "Claude: throwaway brainstorm mockup drawn at miniature scale; real sizes come from the spec"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-mix.html"
+        ],
+        "createdAt": "2026-10-06T13:43:54.987Z",
+        "reason": "Claude: throwaway brainstorm mockup drawn at miniature scale"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-mix.html"
+        ],
+        "createdAt": "2026-10-06T13:43:55.013Z",
+        "reason": "Claude: throwaway brainstorm mockup drawn at miniature scale"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-controls.html"
+        ],
+        "createdAt": "2026-10-06T13:45:17.888Z",
+        "reason": "Claude: throwaway brainstorm mockup"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-controls.html"
+        ],
+        "createdAt": "2026-10-06T13:45:17.913Z",
+        "reason": "Claude: throwaway brainstorm mockup"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-controls.html"
+        ],
+        "createdAt": "2026-10-06T13:45:17.938Z",
+        "reason": "Claude: throwaway brainstorm mockup"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-controls-v2.html"
+        ],
+        "createdAt": "2026-10-06T13:46:15.838Z",
+        "reason": "Claude: throwaway brainstorm mockup"
+      },
+      {
+        "rule": "undersized-ui-text",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-controls-v2.html"
+        ],
+        "createdAt": "2026-10-06T13:46:15.863Z",
+        "reason": "Claude: throwaway brainstorm mockup"
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          ".superpowers/brainstorm/74384-1791294086/content/wabi-controls-v2.html"
+        ],
+        "createdAt": "2026-10-06T13:46:15.888Z",
+        "reason": "Claude: throwaway brainstorm mockup"
       }
     ]
   }

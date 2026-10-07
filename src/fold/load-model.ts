@@ -93,7 +93,7 @@ export function loadModel(json: unknown): Model {
   ).i;
 
   const steps: Step[] = [
-    { angles: edges.map(() => 0), instruction: '', fixedFace: nearestToCenter, rotation: [0, 0, 0] }
+    { angles: edges.map(() => 0), instruction: { en: '' }, fixedFace: nearestToCenter, rotation: [0, 0, 0] }
   ];
   frames.forEach((frame, i) => {
     const n = i + 1;
@@ -111,8 +111,14 @@ export function loadModel(json: unknown): Model {
       if (a !== 0 && kind) throw new FoldError(`Step ${n} folds edge ${e}, which is a ${kind}, not a crease.`);
     });
 
-    const instruction = frame['foldapp:instruction'];
-    if (typeof instruction !== 'string' || !instruction.trim()) throw new FoldError(`Step ${n} has no instruction.`);
+    const raw = frame['foldapp:instruction'];
+    const instruction =
+      typeof raw === 'string'
+        ? { en: raw.trim() }
+        : isRecord(raw) && typeof raw.en === 'string' && (raw.pt === undefined || typeof raw.pt === 'string')
+          ? { en: raw.en.trim(), ...(typeof raw.pt === 'string' && raw.pt.trim() ? { pt: raw.pt.trim() } : {}) }
+          : { en: '' };
+    if (!instruction.en) throw new FoldError(`Step ${n} has no instruction.`);
 
     const fixedFace = frame['foldapp:fixedFace'] ?? prev.fixedFace;
     if (!isIndex(fixedFace, faces.length)) {
@@ -124,7 +130,7 @@ export function loadModel(json: unknown): Model {
       throw new FoldError(`Step ${n} rotation must be three numbers.`);
     }
 
-    steps.push({ angles: [...angles], instruction: instruction.trim(), fixedFace, rotation: [...rotation] as Vec3 });
+    steps.push({ angles: [...angles], instruction, fixedFace, rotation: [...rotation] as Vec3 });
   });
 
   return deepFreeze({

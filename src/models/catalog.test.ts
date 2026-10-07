@@ -25,7 +25,13 @@ describe('fetchIndex', () => {
   it('returns the entries in models.json', async () => {
     serve({ '/models/models.json': { body: file('models.json') } });
     const index = await fetchIndex();
-    expect(index.map((e) => e.id)).toEqual(['fold-in-half', 'fold-in-quarters']);
+    expect(index.models.map((e) => e.id)).toEqual(['fold-in-half', 'fold-in-quarters']);
+    expect(index.defaultModel).toBe('fold-in-quarters');
+  });
+
+  it('throws a FoldError when the index has no models array', async () => {
+    serve({ '/models/models.json': { body: '[]' } });
+    await expect(fetchIndex()).rejects.toThrow(FoldError);
   });
 
   it('throws a FoldError when the index is not JSON', async () => {
@@ -41,7 +47,7 @@ describe('fetchModel', () => {
       '/models/fold-in-half.fold': { body: file('fold-in-half.fold') }
     });
     const result = await fetchModel('fold-in-half');
-    expect(result?.entry.name).toBe('Fold in half');
+    expect(result?.entry.name.en).toBe('Fold in half');
     expect(result?.model.steps).toHaveLength(2);
   });
 

@@ -1,14 +1,21 @@
 :root {
-  --ivory: #f7f3ea;
-  --off-white: #fbf9f4;
-  --beige: #e9e1d1;
-  --charcoal: #2b2a28;
-  --terracotta: #b8613f;
-  --indigo: #2e3a59;
-  --muted: #5f5850;
+  --plaster: #e6dccb;
+  --ivory: #f3ede2;
+  --sand: #b08a6a;
+  --clay: #a5633f;
+  --moss: #6f7a55;
+  --indigo: #4f6177;
+  --charcoal: #33302c;
+  --muted: #5e5649;
   --text-scale: 1;
-  --font-serif: Georgia, "Times New Roman", serif;
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: "Shippori Mincho", Georgia, serif;
+  --font-sans: "Instrument Sans", system-ui, sans-serif;
+  --font-brush: "Zen Kurenaido", var(--font-serif);
+  --ease: cubic-bezier(0.2, 0.6, 0.2, 1);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .3 0 0 0 0 .25 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --linen:
+    repeating-linear-gradient(0deg, rgb(90 78 64 / 0.03) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgb(90 78 64 / 0.025) 0 1px, transparent 1px 4px);
   color-scheme: light;
 }
 
@@ -24,10 +31,10 @@ html {
 
 body {
   margin: 0;
-  background: var(--ivory);
+  background: var(--linen), var(--grain), var(--plaster);
   color: var(--charcoal);
   font-family: var(--font-sans);
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
 h1,
@@ -35,22 +42,29 @@ h2,
 h3 {
   font-family: var(--font-serif);
   font-weight: 400;
+  letter-spacing: 0.01em;
   line-height: 1.15;
 }
 
 a {
   color: var(--indigo);
+  text-underline-offset: 0.2em;
+  text-decoration-thickness: 1px;
 }
 
 :focus-visible {
-  outline: 3px solid var(--indigo);
-  outline-offset: 2px;
+  outline: 2px solid var(--indigo);
+  outline-offset: 3px;
 }
 
 button {
   font: inherit;
   min-height: 44px;
   min-width: 44px;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
 }
 
 .page {
@@ -73,4 +87,33 @@ button {
 
 h1:focus {
   outline: none;
+}
+
+.paper {
+  background: var(--grain), var(--ivory);
+  box-shadow:
+    0 1px 0 rgb(51 48 44 / 0.04),
+    0 14px 28px -18px rgb(51 48 44 / 0.45);
+  clip-path: polygon(0 0.6%, 99.4% 0, 100% 99.2%, 0.5% 100%);
+}
+
+.ink-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.25rem;
+  color: var(--charcoal);
+  text-decoration: underline;
+  text-decoration-color: var(--clay);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.25em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
 }

@@ -14,7 +14,7 @@
       "frame_inherit": true,
       "frame_parent": 0,
       "edges_foldAngle": [0, 0, 0, 0, 0, 0, 180],
-      "foldapp:instruction": "Fold the left half over onto the right half.",
+      "foldapp:instruction": { "en": "Fold the left half over onto the right half.", "pt": "Dobra a metade esquerda sobre a metade direita." },
       "foldapp:fixedFace": 1
     }
   ]
