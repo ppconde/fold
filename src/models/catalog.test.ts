@@ -25,7 +25,7 @@ describe('fetchIndex', () => {
   it('returns the entries in models.json', async () => {
     serve({ '/models/models.json': { body: file('models.json') } });
     const index = await fetchIndex();
-    expect(index.models.map((e) => e.id)).toEqual(['fold-in-half', 'fold-in-quarters']);
+    expect(index.models.map((e) => e.id)).toEqual(['dog-face', 'tulip', 'fold-in-half', 'fold-in-quarters']);
     expect(index.defaultModel).toBe('fold-in-quarters');
   });
 

@@ -2,15 +2,51 @@
   "defaultModel": "fold-in-quarters",
   "models": [
     {
+      "id": "dog-face",
+      "name": {
+        "en": "Dog face",
+        "pt": "Cara de cão"
+      },
+      "japaneseName": "Inu",
+      "category": "animals",
+      "difficulty": "easy",
+      "tags": [
+        "dog",
+        "puppy",
+        "animal",
+        "face"
+      ],
+      "thumbnail": "/models/dog-face.svg"
+    },
+    {
+      "id": "tulip",
+      "name": {
+        "en": "Tulip",
+        "pt": "Túlipa"
+      },
+      "japaneseName": "Chūrippu",
+      "category": "flowers",
+      "difficulty": "easy",
+      "tags": [
+        "tulip",
+        "flower",
+        "spring"
+      ],
+      "thumbnail": "/models/tulip.svg"
+    },
+    {
       "id": "fold-in-half",
       "name": {
         "en": "Fold in half",
         "pt": "Dobrar ao meio"
       },
+      "japaneseName": "Futatsu-ori",
       "category": "geometric",
       "difficulty": "easy",
-      "tags": ["basic", "practice"],
-      "japaneseName": "Futatsu-ori"
+      "tags": [
+        "basic",
+        "practice"
+      ]
     },
     {
       "id": "fold-in-quarters",
@@ -18,10 +54,13 @@
         "en": "Fold in quarters",
         "pt": "Dobrar em quatro"
       },
+      "japaneseName": "Yotsu-ori",
       "category": "geometric",
       "difficulty": "easy",
-      "tags": ["basic", "practice"],
-      "japaneseName": "Yotsu-ori"
+      "tags": [
+        "basic",
+        "practice"
+      ]
     }
   ]
 }
