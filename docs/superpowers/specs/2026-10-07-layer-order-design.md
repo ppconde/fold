@@ -31,9 +31,13 @@ Success:
 | Storage | Standard FOLD `faceOrders`, per frame. No custom field. |
 | Rendering | Exact fold angles, plus a small geometric lift per layer. Not a 178° wedge, and not draw-order or depth tricks, which break when the paper is turned to the side. |
 | Layer gap | `LAYER_GAP = 0.002` of the paper's side per layer. A 15-layer kabuto stack is 0.03 thick. |
-| Lift timing | A face moves from its old layer height to its new one in the first 15% of a step (smoothstep). A flap rises over the stack early instead of clipping it near the hinge. |
+| Lift | Each face is lifted along its own normal by height × facing (+1 front up, −1 front down), blended with the fold's rotation. A stack that turns over keeps its inner order, and stacks carried by a turn or an opening fold stay apart. |
+| Clearance | While a flap travels, all moving faces shift together, straight up or down toward the side of the stack they land on, by enough layers to pass every face that stays put. The shift rises in the first 15% of the step and settles in the last 15%. Steps that keep the stacking have no clearance. |
 
-Probe (during planning, throwaway): with exact angles, `LAYER_GAP` 0.002 and the 15% lift, all six launch models passed every `checkModel` check: folds flat, steps join within 1e-9, no tear, no faces crossing, no flap flips. Without the early lift, the cup (steps 4 and 5) and the kabuto (step 10) still clipped mid-fold.
+Validated during planning on a scratch copy, with the code the implementation plan carries: all six launch models pass every `checkModel` check (folds flat, steps join within 1e-9, no tear, no faces crossing, no flap flips). The player renders the cup at steps 4 and 6, the fox, the kabuto and the plane with no paper showing through.
+Two simpler lifts were tried and rejected:
+- **A straight-up lift blended early.** Layers inside a stack that turns over trade places while still flat. The crossing check misses this because the faces share a crease, but a unit test catches it.
+- **A per-normal lift blended early.** The bottom layer of a two-layer flap sinks through the stack before the flap has turned.
 
 ## 3. Data: `faceOrders` per frame
 
@@ -61,9 +65,12 @@ A face's normal comes from its vertex order in `faces_vertices`. Counter-clockwi
   2. For each triple in `faceOrders`, g's normal z-sign times s says whether f is above or below g along +z.
   3. Faces are ranked by a topological sort over those relations. Faces with no relation get the lowest rank that keeps every relation true. A cycle throws a RangeError naming the step.
   - Step 0 is all zeros.
-- **Lift.** `foldedPositions(model, step, t)` lifts every face of step `step` by `LAYER_GAP × h` along +z, in the frame before the whole-model rotation. h blends from the previous step's height to this step's, over `smoothstep(min(1, t / 0.15))`.
-  - The rotation is applied after the lift, so a turn-over carries the stack with it.
-  - At t = 0, h equals the previous step's end height, so steps still join exactly.
+- **Inherited orders keep the stack.** A step whose `faceOrders` are inherited (a turn, or the plane opening out) reuses the previous step's heights instead of re-reading tilted faces.
+- **Lift.** `foldedPositions(model, step, t)` places each face at `LAYER_GAP × (height × facing)` along its own normal. The value blends from the previous step's to this step's with the fold's eased progress. It is applied before the whole-model rotation, so a turn-over carries it. At t = 0 and t = 1 it equals the step-end values exactly, so steps join.
+- **Clearance.** Faces whose pose changes in the step are "moving".
+  - When the step changes the stacking, the moving faces shift together along +z, or −z when they land under the stack, by `LAYER_GAP × c`. c is the number of layers between the moving faces and the far side of the faces that stay put, plus one.
+  - The shift is `c × smoothstep(t / 0.15) × smoothstep((1 − t) / 0.15)`, so it is zero at both ends of the step.
+  - A uniform shift never reorders the moving faces.
 - **Signature unchanged.** `foldedPositions`, `anglesAt` and `checkConsistency` keep their signatures. `checkConsistency` has always used unclamped angles. The player, `Paper.tsx`, `paper-geometry.ts` and the diagram need no change.
 - `Paper.tsx` keeps `polygonOffset`. Lifted layers no longer need it, but it does no harm.
 
@@ -80,7 +87,7 @@ A face's normal comes from its vertex order in `faces_vertices`. Counter-clockwi
 - **`set()` comes back.** The paper plane's last step opens its wings with it.
 - **`checkModel` gets no new checks.** It runs on lifted positions, so the existing crossing and flap-flip checks now enforce the layer order.
   - The seam check measures copies of a vertex. At rest that is now at most `LAYER_GAP` × (stack height), which is 0.03 for the kabuto, inside the 0.06 budget.
-- **Thumbnails paint by layer.** `thumbnail.ts` paints faces bottom to top by layer height instead of by mean z. This fixes the mismatched dog ears in the drawing, and the `ponytail:` note goes.
+- **Thumbnails need no change of method.** `thumbnail.ts` still paints faces by mean height. That now follows the stack, because every layer is lifted by its place in it, which fixes the dog's mismatched ears in the drawing. The `ponytail:` note goes.
 
 ## 6. Testing
 
@@ -91,7 +98,7 @@ A face's normal comes from its vertex order in `faces_vertices`. Counter-clockwi
 - **Engine, unit** (`src/fold/fold.test.ts`):
   - Rewrite the 178° tests for exact angles: fold-in-half ends flat at z = 0 under its lift, and the seam gap at rest is 0 when the lift is ignored.
   - `layerHeights` follows `faceOrders`, flips correctly for faces whose front faces down, and throws on a cycle.
-  - The lift joins exactly at every step boundary.
+  - The lift joins exactly at every step boundary. A travelling flap is carried one layer clear mid-step and set down exactly at t = 1.
   - The lift turns with a turn-over step.
   - The `it.todo` for disconnected stacks becomes a real test: the two tips no longer cross.
 - **Builder, unit:**
