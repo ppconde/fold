@@ -151,7 +151,8 @@
 /* Seven cells: 3 x 44 + 56 + 3 x 44 = 320px, fits a 360px phone. */
 .dockRow {
   display: grid;
-  grid-template-columns: repeat(3, 44px) 56px repeat(3, 44px);
+  /* the step count grows past 44px at 10 steps or more */
+  grid-template-columns: repeat(3, 44px) 56px repeat(2, 44px) minmax(44px, max-content);
   justify-items: center;
   align-items: center;
 }

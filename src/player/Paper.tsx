@@ -4,8 +4,9 @@ import { type ComponentRef, useEffect, useLayoutEffect, useMemo, useRef } from '
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
-import { readTextScale } from '../shell/text-scale';
+import { useTextScale } from '../shell/text-scale';
 import { fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import { writeSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
 type LineRef = ComponentRef<typeof Line>;
@@ -21,7 +22,7 @@ const PLACEHOLDER: Vec3[] = [
 function setSegments(line: LineRef | null, points: number[]) {
   if (!line) return;
   line.visible = points.length > 0;
-  if (points.length) line.geometry.setPositions(points);
+  if (points.length) writeSegments(line.geometry, points);
 }
 
 const toPoints = (flat: number[]): Vec3[] =>
@@ -46,7 +47,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const folded = useRef<LineRef>(null);
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
-  const scale = readTextScale();
+  const scale = useTextScale();
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { readTextScale, setTextScale } from './text-scale';
+import { readTextScale, setTextScale, subscribeTextScale } from './text-scale';
 
 const store = new Map<string, string>();
 const fakeStorage = {
@@ -25,6 +25,18 @@ describe('text scale', () => {
     setTextScale(1.3);
     expect(fakeRoot.style.setProperty).toHaveBeenCalledWith('--text-scale', '1.3');
     expect(readTextScale()).toBe(1.3);
+  });
+
+  it('tells subscribers about a change until they unsubscribe', () => {
+    vi.stubGlobal('localStorage', fakeStorage);
+    vi.stubGlobal('document', { documentElement: fakeRoot });
+    const listener = vi.fn();
+    const unsubscribe = subscribeTextScale(listener);
+    setTextScale(1.15);
+    expect(listener).toHaveBeenCalledTimes(1);
+    unsubscribe();
+    setTextScale(1);
+    expect(listener).toHaveBeenCalledTimes(1);
   });
 
   it('ignores a stored value that is not an allowed scale', () => {
