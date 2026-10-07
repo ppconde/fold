@@ -15,4 +15,9 @@ describe('thumbnail', () => {
   it('shows the white back of a flap folded over', () => {
     expect(thumbnail(loadModel(fixture('fold-in-half')))).toContain('fill="#F3EDE2"');
   });
+
+  // Safari drops the whole washi filter (and the paper with it) when the filter region is only ~1 unit across
+  it('draws in pixel units, so Safari renders the filter', () => {
+    expect(thumbnail(loadModel(fixture('fold-in-half')))).toContain('viewBox="0 0 240 240"');
+  });
 });

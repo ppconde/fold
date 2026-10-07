@@ -36,7 +36,8 @@ function Shell() {
   return (
     <>
       <HeadContent />
-      <header>
+      {/* the player keeps its own top row beside the menu; every other page scrolls under a bar */}
+      <header className={pathname?.startsWith('/fold/') ? undefined : `page-bar ${styles.bar}`}>
         <button
           type="button"
           className={`ink-link ${styles.menuButton}`}

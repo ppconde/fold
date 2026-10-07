@@ -3,6 +3,7 @@ import type { Model } from '../src/fold/types';
 
 const BACK = '#F3EDE2';
 const INK = '#33302C';
+const SIZE = 240;
 
 /**
  * The paper at the end of `step` seen from above, as a small washi-grain SVG. Faces are painted far to near
@@ -15,9 +16,10 @@ export function thumbnail(model: Model, step = model.steps.length - 1): string {
   const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
   const span = Math.max(x1 - x0, y1 - y0);
   const pad = span * 0.08;
-  const n = (v: number) => +v.toFixed(4);
-  // square view box, the paper centred in it
-  const box = [(x0 + x1 - span) / 2 - pad, (y0 + y1 - span) / 2 - pad, span + 2 * pad, span + 2 * pad].map(n).join(' ');
+  const n = (v: number) => +v.toFixed(2);
+  // the paper centred in a square, in pixel units: Safari drops a filter whose region is only ~1 unit across
+  const k = SIZE / (span + 2 * pad);
+  const [ox, oy] = [(x0 + x1 - span) / 2 - pad, (y0 + y1 - span) / 2 - pad];
   const polygons = faces
     .map((face) => ({ face, z: face.reduce((s, p) => s + p[2], 0) / face.length }))
     .sort((a, b) => a.z - b.z)
@@ -27,15 +29,15 @@ export function thumbnail(model: Model, step = model.steps.length - 1): string {
         (s, p, i) => s + p[0] * face[(i + 1) % face.length][1] - face[(i + 1) % face.length][0] * p[1],
         0
       );
-      return `<polygon points="${face.map((p) => `${n(p[0])},${n(-p[1])}`).join(' ')}" fill="${turn > 0 ? model.paperColor : BACK}"/>`;
+      return `<polygon points="${face.map((p) => `${n((p[0] - ox) * k)},${n((-p[1] - oy) * k)}`).join(' ')}" fill="${turn > 0 ? model.paperColor : BACK}"/>`;
     })
     .join('');
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${box}" width="240" height="240">`,
-    '<filter id="washi"><feTurbulence type="fractalNoise" baseFrequency="6" numOctaves="2" seed="4"/>',
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">`,
+    `<filter id="washi"><feTurbulence type="fractalNoise" baseFrequency="${+(6 / k).toFixed(4)}" numOctaves="2" seed="4"/>`,
     '<feColorMatrix values="0 0 0 0 0.2 0 0 0 0 0.19 0 0 0 0 0.17 0 0 0 0.09 0"/>',
     '<feComposite in2="SourceGraphic" operator="in"/><feMerge><feMergeNode in="SourceGraphic"/><feMergeNode/></feMerge></filter>',
-    `<g filter="url(#washi)" stroke="${INK}" stroke-width="${n(span / 220)}" stroke-linejoin="round">${polygons}</g>`,
+    `<g filter="url(#washi)" stroke="${INK}" stroke-width="${n((span / 220) * k)}" stroke-linejoin="round">${polygons}</g>`,
     '</svg>\n'
   ].join('');
 }
