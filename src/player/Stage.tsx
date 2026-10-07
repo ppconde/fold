@@ -5,11 +5,13 @@ import type { Model } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import { prefersReducedMotion } from './browser';
 import { Paper } from './Paper';
-import { endCentre, paperExtent } from './paper-geometry';
+import { endCentre, frameReach, paperExtent } from './paper-geometry';
 
-/** Camera distance in paper sizes, and its angle from straight down, in radians. */
-const FRAME = 1.8;
+/** Vertical field of view in degrees, and the camera's angle from straight down, in radians. */
+const FOV = 35;
 const POLAR = 0.9;
+/** Room left around the paper's furthest reach. */
+const MARGIN = 1.08;
 
 type Props = { model: Model; step: number; t: number; resetCount: number; frameStep: number };
 
@@ -19,7 +21,7 @@ export function Stage(props: Props) {
     <Canvas
       frameloop="demand"
       dpr={[1, 2]}
-      camera={{ fov: 35, near: 0.01, far: 100, position: [0, 2, 2] }}
+      camera={{ fov: FOV, near: 0.01, far: 100, position: [0, 2, 2] }}
       gl={{ alpha: true }}
       role="img"
       aria-label={t.player.stageLabel}
@@ -36,6 +38,7 @@ function Scene({ model, step, t, resetCount, frameStep }: Props) {
   const { size } = paperExtent(model);
   // frameStep is the last settled step, so the camera never moves while a step plays
   const [cx, cz] = useMemo(() => endCentre(model, frameStep), [model, frameStep]);
+  const reach = useMemo(() => frameReach(model, frameStep), [model, frameStep]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: resetCount is a trigger, not a value
   useEffect(() => {
@@ -43,10 +46,11 @@ function Scene({ model, step, t, resetCount, frameStep }: Props) {
     if (!c) return;
     const animate = !firstFrame.current && !prefersReducedMotion();
     firstFrame.current = false;
-    // pull back on narrow screens so the paper fits the width, not just the height
-    const d = (size * FRAME) / Math.min(1, aspect / 1.1);
+    // far enough that a ball holding the paper through this step and the next fits the narrower side
+    const half = (FOV / 2) * (Math.PI / 180);
+    const d = (reach * MARGIN) / Math.sin(Math.min(half, Math.atan(Math.tan(half) * aspect)));
     void c.setLookAt(cx, d * Math.cos(POLAR), cz + d * Math.sin(POLAR), cx, 0, cz, animate);
-  }, [cx, cz, size, aspect, resetCount]);
+  }, [cx, cz, reach, aspect, resetCount]);
 
   return (
     <>

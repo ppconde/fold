@@ -34,6 +34,21 @@ export function endCentre(model: Model, step: number): [number, number] {
   return [(Math.min(...xs) + Math.max(...xs)) / 2 - cx, -((Math.min(...ys) + Math.max(...ys)) / 2 - cy)];
 }
 
+/**
+ * How far the paper reaches from the camera's centre (endCentre) while `step` or the step after it plays, either
+ * way: a flap standing up mid-fold, a turn-over, or the flatter pose at the far end. Sampled at quarter steps.
+ */
+export function frameReach(model: Model, step: number): number {
+  const [cx, cz] = endCentre(model, step);
+  const [x0, y0] = [cx + model.center[0], model.center[1] - cz];
+  let reach = 0;
+  for (const s of [step, step + 1].filter((s) => s < model.steps.length))
+    for (const t of [0, 0.25, 0.5, 0.75, 1])
+      for (const [x, y, z] of foldedPositions(model, s, t).flat())
+        reach = Math.max(reach, Math.hypot(x - x0, y - y0, z));
+  return reach;
+}
+
 export function triangleCount(model: Model): number {
   return model.faces.reduce((n, f) => n + f.length - 2, 0);
 }
