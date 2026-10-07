@@ -3,8 +3,6 @@ export const en = {
     menu: 'Menu',
     close: 'Close',
     nav: { home: 'Home', library: 'Library', about: 'About' },
-    textSize: 'Text size',
-    textSizes: ['Normal text', 'Large text', 'Larger text'],
     language: 'Language',
     languageNames: { en: 'English', pt: 'Português' }
   },
@@ -23,7 +21,6 @@ export const en = {
     browseLibrary: 'Browse the library'
   },
   home: {
-    headline: 'Fold, slowly.',
     lede: 'Choose an origami and follow it fold by fold, turning the paper in 3D as you go.',
     start: 'start folding',
     craneSoon: 'learning the crane — coming soon',
@@ -32,7 +29,13 @@ export const en = {
   library: {
     title: 'Library',
     models: 'Models',
-    difficulty: { easy: 'Easy', medium: 'Medium', hard: 'Hard' }
+    difficulty: { easy: 'Easy', medium: 'Medium', hard: 'Hard' },
+    search: 'Search folds',
+    category: 'Category',
+    categories: { all: 'All', animals: 'Animals', flowers: 'Flowers', objects: 'Objects', geometric: 'Geometric' },
+    level: 'Difficulty',
+    noMatch: 'No folds match.',
+    clear: 'Clear filters'
   },
   about: {
     title: 'About',

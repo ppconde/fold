@@ -5,8 +5,6 @@ export const pt: Dictionary = {
     menu: 'Menu',
     close: 'Fechar',
     nav: { home: 'Início', library: 'Biblioteca', about: 'Sobre' },
-    textSize: 'Tamanho do texto',
-    textSizes: ['Texto normal', 'Texto grande', 'Texto maior'],
     language: 'Idioma',
     languageNames: { en: 'English', pt: 'Português' }
   },
@@ -25,7 +23,6 @@ export const pt: Dictionary = {
     browseLibrary: 'Ver a biblioteca'
   },
   home: {
-    headline: 'Dobrar, devagar.',
     lede: 'Escolhe um origami e segue-o dobra a dobra, rodando o papel em 3D enquanto avanças.',
     start: 'começar a dobrar',
     craneSoon: 'aprender o grou — em breve',
@@ -34,7 +31,13 @@ export const pt: Dictionary = {
   library: {
     title: 'Biblioteca',
     models: 'Modelos',
-    difficulty: { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' }
+    difficulty: { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' },
+    search: 'Pesquisar dobras',
+    category: 'Categoria',
+    categories: { all: 'Todas', animals: 'Animais', flowers: 'Flores', objects: 'Objetos', geometric: 'Geometria' },
+    level: 'Dificuldade',
+    noMatch: 'Nenhuma dobra corresponde.',
+    clear: 'Limpar filtros'
   },
   about: {
     title: 'Sobre',

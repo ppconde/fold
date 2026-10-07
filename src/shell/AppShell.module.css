@@ -57,7 +57,7 @@
   text-underline-offset: 0.25em;
 }
 
-.textSize {
+.choice {
   display: flex;
   gap: 0.25rem;
   margin: 2rem 0;
@@ -65,7 +65,7 @@
   padding: 0;
 }
 
-.textSize legend {
+.choice legend {
   margin-bottom: 0.25rem;
   padding: 0;
   font-family: var(--font-sans);
@@ -75,13 +75,13 @@
   color: var(--muted);
 }
 
-.textSize button {
+.choice button {
   padding: 0 0.5rem;
   color: var(--muted);
   text-decoration: none;
 }
 
-.textSize button[aria-pressed="true"] {
+.choice button[aria-pressed="true"] {
   color: var(--charcoal);
   text-decoration: underline;
   text-decoration-color: var(--clay);

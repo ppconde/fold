@@ -309,3 +309,13 @@ test('every dock button has a non-empty title', async ({ page }) => {
   await expect(buttons).toHaveCount(6);
   for (const b of await buttons.all()) expect(((await b.getAttribute('title')) ?? '').length).toBeGreaterThan(0);
 });
+
+test('on a phone each step fits the instructions sheet without scrolling', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'phone layout only');
+  for (let step = 0; step <= 6; step++) {
+    await page.goto(`/fold/dog-face?step=${step}`);
+    const sheet = page.getByRole('complementary', { name: 'Instructions' });
+    await expect(sheet).toBeVisible();
+    expect(await sheet.evaluate((el) => el.scrollHeight <= el.clientHeight + 1), `step ${step}`).toBe(true);
+  }
+});

@@ -1,0 +1,180 @@
+.tools {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.search input {
+  width: min(100%, 24rem);
+  min-height: 44px;
+  padding: 0 0.25rem;
+  border: 0;
+  border-bottom: 1px solid rgb(51 48 44 / 0.45);
+  border-radius: 0;
+  background: transparent;
+  color: var(--charcoal);
+  font-family: var(--font-sans);
+  font-size: max(16px, 1.05rem);
+}
+
+.search input::placeholder {
+  color: var(--muted);
+}
+
+/* category on one row, difficulty under it; on phones a row scrolls sideways instead of wrapping */
+.chips {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.chips fieldset {
+  display: flex;
+  gap: 0.25rem;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.clear {
+  justify-self: start;
+  font-size: 0.95rem;
+}
+
+.chips button {
+  min-height: 44px;
+  padding: 0 0.5rem;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.chips button[aria-pressed="true"] {
+  color: var(--charcoal);
+  text-decoration: underline;
+  text-decoration-color: var(--clay);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.3em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
+  gap: 1.75rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grid .card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  height: 100%;
+  padding: 0.75rem 0.75rem 0.9rem;
+  color: var(--charcoal);
+  text-decoration: none;
+  /* the top-right corner is folded over */
+  clip-path: polygon(0 0.6%, calc(100% - 18px) 0, 100% 18px, 100% 99.2%, 0.5% 100%);
+  transition: translate 500ms var(--ease);
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 18px;
+  height: 18px;
+  background: var(--sand);
+  opacity: 0.55;
+  clip-path: polygon(0 0, 0 100%, 100% 100%);
+}
+
+.grid li:nth-child(3n + 1) .card {
+  rotate: -0.6deg;
+}
+
+.grid li:nth-child(3n + 2) .card {
+  rotate: 0.4deg;
+}
+
+.card:hover,
+.card:focus-visible {
+  translate: 0 -3px;
+}
+
+.thumb,
+.placeholder {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  margin-bottom: 0.4rem;
+}
+
+/* no thumbnail yet: a plain sheet turned to a diamond */
+.placeholder {
+  background: var(--plaster);
+  clip-path: polygon(50% 10%, 90% 50%, 50% 90%, 10% 50%);
+}
+
+.name {
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  line-height: 1.25;
+}
+
+.card:hover .name,
+.card:focus-visible .name {
+  text-decoration: underline;
+  text-decoration-color: var(--clay);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.25em;
+}
+
+.ja {
+  color: var(--muted);
+  font-family: var(--font-brush);
+}
+
+.level {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.3rem;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--moss);
+}
+
+.empty {
+  font-family: var(--font-sans);
+  color: var(--muted);
+}
+
+@media (max-width: 599px) {
+  .ja {
+    display: none;
+  }
+}

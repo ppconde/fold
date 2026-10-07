@@ -44,3 +44,6 @@ playwright-report/
 
 # graphify knowledge graph output (generated)
 graphify-out/
+
+# pnpm models review drawings
+models/out/
