@@ -16,8 +16,8 @@ describe('thumbnail', () => {
     expect(thumbnail(loadModel(fixture('fold-in-half')))).toContain('fill="#F3EDE2"');
   });
 
-  // Safari drops the whole washi filter (and the paper with it) when the filter region is only ~1 unit across
-  it('draws in pixel units, so Safari renders the filter', () => {
-    expect(thumbnail(loadModel(fixture('fold-in-half')))).toContain('viewBox="0 0 240 240"');
+  // Safari draws an SVG image that uses a filter at 1×, so it blurs on Retina screens
+  it('uses no SVG filter, so Safari draws it sharp', () => {
+    expect(thumbnail(loadModel(fixture('fold-in-half')))).not.toContain('filter');
   });
 });
