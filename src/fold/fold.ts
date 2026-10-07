@@ -42,11 +42,8 @@ const anchors = new WeakMap<Model, Matrix4[]>();
  * unmoved crease (fold in half, then fold the free corner) still pass through; that needs layer order.
  */
 function tree(model: Model, step: number): Tree {
-  let list = trees.get(model);
-  if (!list) {
-    list = [];
-    trees.set(model, list);
-  }
+  const list = trees.get(model) ?? [];
+  trees.set(model, list);
   if (list[step]) return list[step];
   const moves = (k: number, e: number) => k > 0 && model.steps[k - 1].angles[e] !== model.steps[k].angles[e];
   // a step that moves no crease (a turn, a new held face) keeps the previous tree, so it joins exactly
@@ -94,11 +91,8 @@ function rootTransforms(model: Model, angles: number[], step: number): Matrix4[]
 
 /** Pose of each step's fixed face at the end of the previous step, so steps join without a jump. Index k is step k. */
 function anchorFor(model: Model, step: number): Matrix4 {
-  let list = anchors.get(model);
-  if (!list) {
-    list = [new Matrix4(), new Matrix4()];
-    anchors.set(model, list);
-  }
+  const list = anchors.get(model) ?? [new Matrix4(), new Matrix4()];
+  anchors.set(model, list);
   for (let k = list.length - 1; k < step; k++) {
     const T = rootTransforms(model, model.steps[k].angles, k);
     list[k + 1] = list[k]
@@ -119,11 +113,8 @@ const corrections = new WeakMap<Model, (Matrix4[] | null)[]>();
  * exactly where the last one ended and still end at pure T_k. Null when the trees match (no cost).
  */
 function treeChange(model: Model, step: number): Matrix4[] | null {
-  let list = corrections.get(model);
-  if (!list) {
-    list = [];
-    corrections.set(model, list);
-  }
+  const list = corrections.get(model) ?? [];
+  corrections.set(model, list);
   if (list[step] !== undefined) return list[step];
   const now = tree(model, step).parentEdge;
   const before = tree(model, step - 1).parentEdge;
@@ -209,11 +200,8 @@ function stepRotation(model: Model, step: number, s: number): Matrix4 {
 
 /** World rotation at the end of `step` (identity at step 0). Cached per model. */
 function rotationAfter(model: Model, step: number): Matrix4 {
-  let list = rotations.get(model);
-  if (!list) {
-    list = [new Matrix4()];
-    rotations.set(model, list);
-  }
+  const list = rotations.get(model) ?? [new Matrix4()];
+  rotations.set(model, list);
   for (let k = list.length; k <= step; k++) list[k] = stepRotation(model, k, 1);
   return list[step];
 }
@@ -228,11 +216,8 @@ const layers = new WeakMap<Model, Layers[]>();
  * a face sits one above the highest face it must cover. Contradictory orders throw a RangeError.
  */
 function stackAt(model: Model, step: number): Layers {
-  let list = layers.get(model);
-  if (!list) {
-    list = [];
-    layers.set(model, list);
-  }
+  const list = layers.get(model) ?? [];
+  layers.set(model, list);
   if (list[step]) return list[step];
   // a step that inherits its faceOrders (a turn, or opening out) keeps the stack it was given
   if (step > 1 && model.steps[step].faceOrders === model.steps[step - 1].faceOrders) {
@@ -316,11 +301,8 @@ const travels = new WeakMap<Model, { moving: boolean[]; clearance: number }[]>()
  * stays put on their way to the side of the stack they land on. They shift together, so it never reorders them.
  */
 function travel(model: Model, step: number): { moving: boolean[]; clearance: number } {
-  let list = travels.get(model);
-  if (!list) {
-    list = [];
-    travels.set(model, list);
-  }
+  const list = travels.get(model) ?? [];
+  travels.set(model, list);
   if (list[step]) return list[step];
   const start = startPose(model, step);
   const T = rootTransforms(model, model.steps[step].angles, step);
