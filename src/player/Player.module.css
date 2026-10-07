@@ -289,14 +289,6 @@
   }
 }
 
-.doneActions a {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 0.25rem;
-  color: var(--charcoal);
-}
-
 /* phones and tablets: text beside a smaller diagram, so a step fits the sheet without scrolling */
 @media (max-width: 899px) and (orientation: portrait), (max-width: 899px) and (min-height: 501px) {
   .panel {

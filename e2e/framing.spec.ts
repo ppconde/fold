@@ -49,7 +49,7 @@ test.describe('on a phone held sideways', () => {
   test('the 3D view keeps at least half the height', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'sets its own viewport');
     await page.goto('/fold/dog-face?step=6');
-    const box = await page.locator('canvas').boundingBox();
-    expect(box?.height ?? 0).toBeGreaterThan(375 * 0.5);
+    // polled: the canvas starts at its default 150px until the 3D view sizes it
+    await expect.poll(async () => (await page.locator('canvas').boundingBox())?.height ?? 0).toBeGreaterThan(375 * 0.5);
   });
 });
