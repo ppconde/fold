@@ -417,6 +417,17 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       pieces = before;
       step.stack = pieces;
     },
+    /** The creases a fold along p→q would make (`opts` picks the layers), left flat with no step: a squash's lines. */
+    mark(name: string, p: Vec2, q: Vec2, opts: FoldOptions) {
+      const before = pieces;
+      const prior = { ...state };
+      api.fold(name, p, q, opts);
+      for (const k of Object.keys(steps.pop()?.fold ?? {})) {
+        if (k in prior) state[k] = prior[k];
+        else delete state[k];
+      }
+      pieces = before;
+    },
     /**
      * A step that moves several creases at once (a collapse, squash, petal fold): set them, and the layers
      * are worked out again from the flat-folded crease pattern, the piece under `hold` staying put.

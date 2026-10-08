@@ -221,7 +221,9 @@ function overlap(a: Vec2[], b: Vec2[]): { area: number; centre: Vec2 } {
   let out = a;
   clip.forEach((p, i) => {
     const q = clip[(i + 1) % clip.length];
-    const keep = (v: Vec2) => (q[0] - p[0]) * (v[1] - p[1]) - (q[1] - p[1]) * (v[0] - p[0]) >= 0;
+    // a hair outside the edge counts as inside: faces lying exactly on each other have collinear edges, and
+    // rounding to either side of one would cut an edge parallel to it (0 / 0)
+    const keep = (v: Vec2) => (q[0] - p[0]) * (v[1] - p[1]) - (q[1] - p[1]) * (v[0] - p[0]) >= -1e-12;
     const next: Vec2[] = [];
     out.forEach((v, j) => {
       const w = out[(j + 1) % out.length];
@@ -302,7 +304,7 @@ export function motionOrders(fold: Fold, tucks: (Tuck<number> | undefined)[] = [
         const pg = onG.clone().applyMatrix4(soon[g]);
         const normal = new Vector3(0, 0, 1).transformDirection(soon[g]);
         const d = pf.sub(pg).dot(normal);
-        if (Math.abs(d) < 1e-9) {
+        if (!(Math.abs(d) >= 1e-9)) {
           throw new Error(
             `Step ${k}: faces ${f} and ${g} (at ${model.faceCentroids[f].map((x) => x.toFixed(3))} and ${model.faceCentroids[g].map((x) => x.toFixed(3))}) land together; their order is unknown.`
           );

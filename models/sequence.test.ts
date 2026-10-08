@@ -143,6 +143,36 @@ describe('foldSequence', () => {
     expect(model.steps[5].path.length).toBeGreaterThan(0);
     expect(checkModel(model)).toEqual([]);
   });
+
+  it('marks creases without a step, flat, for a collapse to set', () => {
+    const s = foldSequence();
+    s.mark('m', [0.5, 0], [0.5, 1], { valley: true, ...text });
+    expect(s.source({ ...entry, tags: [] }).steps).toEqual([]);
+    expect(Object.keys(s.source({ ...entry, tags: [] }).creases)).toEqual(['m1']);
+    s.collapse({ m1: 180 }, { hold: [0.75, 0.5], ...text });
+    expect(checkModel(loadModel(buildFold(s.source({ ...entry, tags: [] }))))).toEqual([]);
+  });
+
+  it('orders faces that land exactly on each other through a many-layer fold', () => {
+    // the Snail's opening: corners to the middle, in half twice, then the squash's lines
+    const d = diamond;
+    const flat = (x: number, y: number): [number, number] => [(2 - x + y) / 2, (x + y) / 2];
+    const s = diamondSequence();
+    s.crease('across', d(2, 0), d(0, 0), { valley: true, hold: d(1, 0.5), ...text });
+    s.crease('upright', d(1, -1), d(1, 1), { valley: true, hold: d(1.5, 0), ...text });
+    s.together(text, () => {
+      s.fold('sideL', d(0.5, -0.5), d(0.5, 0.5), { valley: true, hold: d(1, 0), ...text });
+      s.fold('sideR', d(1.5, 0.5), d(1.5, -0.5), { valley: true, ...text });
+    });
+    s.split('across1', flat(0.5, 0));
+    s.split('across1.2', flat(1.5, 0));
+    s.fold('half', d(0, 0), d(2, 0), { valley: true, hold: d(1, -0.5), ...text });
+    s.split('upright1', flat(1, 0));
+    s.fold('quarter', d(1, 0), d(1, -1), { valley: true, hold: d(0.75, -0.5), ...text });
+    s.mark('mid', d(0.5, -0.5), d(1, 0), { valley: true, ...text });
+    const model = loadModel(buildFold(s.source({ ...entry, tags: [], solve: true })));
+    expect(checkModel(model)).toEqual([]);
+  });
 });
 
 describe('slit', () => {
