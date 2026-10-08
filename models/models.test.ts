@@ -10,15 +10,12 @@ import { thumbnail } from './thumbnail';
 const committed = (path: string) =>
   JSON.parse(readFileSync(new URL(`../public/models/${path}`, import.meta.url), 'utf8'));
 
-/** `x` with every number matched to 4 decimals: the solver's last digits differ between CPUs (CI is x64). */
-const near = (x: unknown): unknown =>
-  typeof x === 'number'
-    ? expect.closeTo(x, 4)
-    : Array.isArray(x)
-      ? x.map(near)
-      : x && typeof x === 'object'
-        ? Object.fromEntries(Object.entries(x).map(([k, v]) => [k, near(v)]))
-        : x;
+/** A committed file with every number matched within 0.05: the solver's last digits differ between CPUs (CI is
+ * x64), and can tip an unfold angle rounded to 0.01. */
+const near = (path: string) =>
+  JSON.parse(readFileSync(new URL(`../public/models/${path}`, import.meta.url), 'utf8'), (_, v) =>
+    typeof v === 'number' ? expect.closeTo(v, 1) : v
+  );
 
 describe.each(sources.map((s) => [s.id, s] as const))('%s', (_, src) => {
   const built = buildFold(src);
@@ -34,7 +31,7 @@ describe.each(sources.map((s) => [s.id, s] as const))('%s', (_, src) => {
   });
 
   it('is committed as built (run pnpm models)', () => {
-    expect(JSON.parse(JSON.stringify(built))).toEqual(near(committed(`${src.id}.fold`)));
+    expect(JSON.parse(JSON.stringify(built))).toEqual(near(`${src.id}.fold`));
     const svg = readFileSync(new URL(`../public/models/${src.id}.svg`, import.meta.url), 'utf8');
     expect(svg).toBe(thumbnail(loadModel(built)));
   });

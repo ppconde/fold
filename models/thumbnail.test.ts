@@ -1,8 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture } from '../src/fold/fixtures';
 import { loadModel } from '../src/fold/load-model';
-import { buildFold } from './build';
-import crane from './src/crane';
 import { flatStep, thumbnail } from './thumbnail';
 
 describe('thumbnail', () => {
@@ -24,7 +23,7 @@ describe('thumbnail', () => {
   });
 
   it('draws a model that ends standing up at its last flat step', () => {
-    const model = loadModel(buildFold(crane));
+    const model = loadModel(JSON.parse(readFileSync(new URL('../public/models/crane.fold', import.meta.url), 'utf8')));
     expect(flatStep(model)).toBe(model.steps.length - 3); // before standing up and spreading the wings
     expect(flatStep(loadModel(fixture('fold-in-half')))).toBe(1);
   });

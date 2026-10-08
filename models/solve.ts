@@ -209,15 +209,6 @@ function bridged(model: Model, k: number, vars: number[], knots: number[][], dep
   return out;
 }
 
-/** Largest vertex gap along step k's path, at its knots and halfway between them. */
-export function pathTear(fold: Fold, k = 1): number {
-  const model = loadModel(fold);
-  const n = 2 * (model.steps[k].path.length + 1);
-  let worst = 0;
-  for (let i = 1; i < n; i++) worst = Math.max(worst, worstGap(model, pathAngles(model, k, i / n), k));
-  return worst;
-}
-
 /** Area of the overlap of two convex polygons (Sutherland–Hodgman) and its centroid. */
 function overlap(a: Vec2[], b: Vec2[]): { area: number; centre: Vec2 } {
   const clip = signedArea(b) < 0 ? [...b].reverse() : b;
