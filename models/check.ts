@@ -1,3 +1,4 @@
+import { cornerKeys } from '../src/fold/cuts';
 import { checkConsistency, foldedPositions } from '../src/fold/fold';
 import type { Model, Vec3 } from '../src/fold/types';
 
@@ -17,17 +18,18 @@ const centre = (face: Vec3[]) =>
     [0, 0, 0]
   );
 
-/** Largest distance between two copies of the same vertex on different faces: a tear mid-step, a seam at rest. */
+/** Largest distance between two copies of a vertex that must lie together: a tear mid-step, a seam at rest. */
 export function spread(model: Model, step: number, t: number): number {
   const faces = foldedPositions(model, step, t);
+  const keys = cornerKeys(model, step);
   const first = new Map<number, Vec3>();
   let worst = 0;
   model.faces.forEach((face, f) => {
-    face.forEach((v, c) => {
+    face.forEach((_, c) => {
       const p = faces[f][c];
-      const q = first.get(v);
+      const q = first.get(keys[f][c]);
       if (q) worst = Math.max(worst, Math.hypot(...sub(p, q)));
-      else first.set(v, p);
+      else first.set(keys[f][c], p);
     });
   });
   return worst;

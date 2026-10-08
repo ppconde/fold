@@ -5,7 +5,7 @@ export type DiagramLine = {
   edge: number;
   from: Vec2;
   to: Vec2;
-  kind: 'border' | 'mountain' | 'valley';
+  kind: 'border' | 'mountain' | 'valley' | 'cut';
   state: 'outline' | 'active' | 'past';
 };
 
@@ -21,6 +21,13 @@ export function diagramLines(model: Model, step: number): DiagramLine[] {
     const to = model.vertices[b];
     if (assignment === 'B') {
       lines.push({ edge, from, to, kind: 'border', state: 'outline' });
+      return;
+    }
+    if (assignment === 'C') {
+      // a slit shows from the step that cuts it, then stays as part of the paper's outline
+      if (model.cutAt[edge] <= step) {
+        lines.push({ edge, from, to, kind: 'cut', state: model.cutAt[edge] === step ? 'active' : 'outline' });
+      }
       return;
     }
     if (!shown.has(edge)) return;

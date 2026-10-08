@@ -16,7 +16,8 @@
   fill: none;
 }
 
-.border {
+.border,
+.cut {
   stroke-width: 2px;
 }
 

@@ -108,7 +108,7 @@ export function lineGroups(
   faces: Vec3[][],
   step: number,
   t: number
-): { borders: number[]; folded: number[]; flat: number[]; active: number[] } {
+): { borders: number[]; folded: number[]; flat: number[]; active: number[]; cut: number[] } {
   const { active, past } = stepCreases(model, step);
   const angles = anglesAt(model, step, t);
   const borders: number[] = [];
@@ -117,9 +117,26 @@ export function lineGroups(
   const highlighted: number[] = [];
   model.assignments.forEach((a, e) => {
     if (a === 'B') borders.push(...segment(model, faces, e));
+    // once cut, a slit is an edge of the paper on each side, and the sides may have parted
+    if (a === 'C' && model.cutAt[e] < step)
+      for (const f of model.edgeFaces[e]) borders.push(...segment(model, faces, e, f));
   });
   // every face's copy of the step's crease: copies can drift apart under the 178° clamp, and one may hide
   for (const e of active) for (const f of model.edgeFaces[e]) highlighted.push(...segment(model, faces, e, f));
   for (const e of past) (Math.abs(angles[e]) > FOLDED_DEGREES ? folded : flat).push(...segment(model, faces, e));
-  return { borders, folded, flat, active: highlighted };
+  // the slit this step cuts, from where the scissors go in to as far as they've got, on every layer
+  const reach = Math.max(0, Math.min(1, t));
+  const cut: number[] = [];
+  for (const { edge, from, to } of model.steps[step].cuts) {
+    const [lo, hi] = from < to ? [from, to] : [to, from];
+    if (reach <= lo) continue;
+    const share = (Math.min(reach, hi) - lo) / (hi - lo);
+    for (const f of model.edgeFaces[edge]) {
+      const corner = (v: number) => faces[f][model.faces[f].indexOf(v)];
+      const [a, b] = model.edges[edge].map(corner);
+      const [p, q] = from < to ? [a, b] : [b, a];
+      cut.push(...p, ...p.map((x, i) => x + (q[i] - x) * share));
+    }
+  }
+  return { borders, folded, flat, active: highlighted, cut };
 }

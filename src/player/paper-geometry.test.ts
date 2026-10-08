@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fixture } from '../fold/fixtures';
+import { fixture, slitFixture } from '../fold/fixtures';
 import { foldedPositions, LAYER_GAP } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import {
@@ -114,5 +114,27 @@ describe('fillUVs', () => {
     const out = new Float32Array(triangleCount(model) * 6);
     fillUVs(model, out);
     expect([...out.slice(0, 6)]).toEqual([0, 0, 0.5, 0, 0.5, 0.5]);
+  });
+});
+
+describe('slits', () => {
+  const slit = () => loadModel(slitFixture());
+  const round = (xs: number[]) => xs.map((x) => +x.toFixed(6));
+
+  it('traces the cut from where the scissors go in', () => {
+    const model = slit();
+    const at = (t: number) => round(lineGroups(model, foldedPositions(model, 1, t), 1, t).cut);
+    expect(at(0)).toEqual([]);
+    // a quarter of the way: half of edge 7 (0 → 0.5 of the cut), drawn on both faces it joins
+    expect(at(0.25)).toEqual([0, 0.5, 0, 0.125, 0.5, 0, 0, 0.5, 0, 0.125, 0.5, 0]);
+    // half way: all of edge 7, none of edge 8 yet
+    expect(at(0.5)).toEqual([0, 0.5, 0, 0.25, 0.5, 0, 0, 0.5, 0, 0.25, 0.5, 0]);
+  });
+
+  it('draws a slit as an edge of the paper once cut, one on each side', () => {
+    const model = slit();
+    const borders = (step: number) => lineGroups(model, foldedPositions(model, step, 0), step, 0).borders.length / 6;
+    expect(borders(1)).toBe(7);
+    expect(borders(2)).toBe(7 + 4);
   });
 });

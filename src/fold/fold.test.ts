@@ -1,6 +1,6 @@
 import { Euler, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { fixture } from './fixtures';
+import { fixture, slitFixture } from './fixtures';
 import { anglesAt, checkConsistency, foldedPositions, LAYER_GAP, layerHeights } from './fold';
 import { loadModel } from './load-model';
 import type { Model, Step, Vec3 } from './types';
@@ -571,5 +571,35 @@ describe('layer heights', () => {
     const model = withSteps(half(), (steps) => [...steps, { ...steps[1], rotation: [0, 180, 0] }]);
     const faces = foldedPositions(model, 2, 1);
     expect(faces[0][0][2]).toBeLessThan(faces[1][0][2]);
+  });
+});
+
+describe('slits', () => {
+  const slit = () => loadModel(slitFixture());
+
+  it('cutting moves nothing', () => {
+    const [cut, flat] = [foldedPositions(slit(), 1, 1).flat(2), foldedPositions(slit(), 0, 0).flat(2)];
+    cut.forEach((x, i) => {
+      expect(x).toBeCloseTo(flat[i], 9);
+    });
+  });
+
+  it('folds one side of a slit while the other stays', () => {
+    const model = slit();
+    expect(checkConsistency(model, 2)).toEqual({ ok: true });
+    const faces = foldedPositions(model, 2, 1);
+    // the top-left corner (face 1: vertices 4, 5, 8, 3) turns over x = 0.25
+    expectClose(faces[1][0], [0.5, 0.5, faces[1][0][2]]);
+    expectClose(faces[1][3], [0.5, 1, faces[1][3][2]]);
+    // the bottom half (face 0) stays where it was, its copy of vertex 4 at the left edge
+    expectClose(faces[0][5], [0, 0.5, 0]);
+  });
+
+  it('without the cut the same fold tears the paper', () => {
+    const json = slitFixture();
+    json.edges_assignment[7] = 'F';
+    json.edges_assignment[8] = 'F';
+    delete json.file_frames[0]['foldapp:cut'];
+    expect(checkConsistency(loadModel(json), 2).ok).toBe(false);
   });
 });

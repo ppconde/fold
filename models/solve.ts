@@ -1,4 +1,5 @@
 import { type Matrix4, Vector3 } from 'three';
+import { cornerKeys } from '../src/fold/cuts';
 import { pathAngles, rootTransforms, treeEdges } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import type { FaceOrder, Model, Vec2 } from '../src/fold/types';
@@ -25,19 +26,20 @@ function corners(model: Model, T: Matrix4[]): number[] {
 }
 
 /** Gaps between copies of each vertex: zero when the paper is joined everywhere. */
-function gaps(model: Model, T: Matrix4[]): number[] {
+function gaps(model: Model, T: Matrix4[], step: number): number[] {
   const at = corners(model, T);
+  const keys = cornerKeys(model, step);
   const first = new Map<number, number>();
   const out: number[] = [];
   let i = 0;
-  for (const face of model.faces) {
-    for (const v of face) {
-      const j = first.get(v);
-      if (j === undefined) first.set(v, i);
-      else for (let c = 0; c < 3; c++) out.push(at[i + c] - at[j + c]);
+  model.faces.forEach((face, f) => {
+    face.forEach((_, c) => {
+      const j = first.get(keys[f][c]);
+      if (j === undefined) first.set(keys[f][c], i);
+      else for (let d = 0; d < 3; d++) out.push(at[i + d] - at[j + d]);
       i += 3;
-    }
-  }
+    });
+  });
   return out;
 }
 
@@ -74,7 +76,7 @@ function project(model: Model, step: number, vars: number[], straight: number[],
   const residual = (a: number[]) => {
     const T = rootTransforms(model, a, step);
     return [
-      ...gaps(model, T),
+      ...gaps(model, T, step),
       ...vars.map((e) => {
         const angle = tree.has(e) || model.edgeFaces[e].length < 2 ? a[e] : measure(model, T, e, straight[e]);
         return STRAIGHT * (angle - straight[e]) * DEG;
@@ -143,7 +145,7 @@ function measure(model: Model, T: Matrix4[], e: number, hint: number): number {
 
 /** Largest vertex gap at angles `a` in `step`. */
 const worstGap = (model: Model, a: number[], step: number) => {
-  const g = gaps(model, rootTransforms(model, a, step));
+  const g = gaps(model, rootTransforms(model, a, step), step);
   let worst = 0;
   for (let i = 0; i < g.length; i += 3) worst = Math.max(worst, Math.hypot(g[i], g[i + 1], g[i + 2]));
   return worst;
@@ -176,7 +178,11 @@ export function solvePaths(fold: Fold, knots = KNOTS): void {
       // angles only matter along the spanning tree; read the rest off the folded paper, so any tree agrees
       const T = rootTransforms(model, solved, k);
       const knot = solved.map((a, e) =>
-        model.edgeFaces[e].length === 2 ? measure(model, T, e, a) : model.assignments[e] === 'B' ? 0 : a
+        model.assignments[e] === 'B' || model.assignments[e] === 'C'
+          ? 0
+          : model.edgeFaces[e].length === 2
+            ? measure(model, T, e, a)
+            : a
       );
       // creases that don't move stay exactly where they were, so the step highlights only what moves
       path.push(knot.map((a, e) => (end[e] === prev[e] ? prev[e] : a)));

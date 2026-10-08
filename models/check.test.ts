@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fixture } from '../src/fold/fixtures';
+import { fixture, slitFixture } from '../src/fold/fixtures';
 import { LAYER_GAP } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { buildFold } from './build';
@@ -116,5 +116,13 @@ describe('flapFlips', () => {
   it('finds none in the fixtures', () => {
     expect(flapFlips(quarters())).toEqual([]);
     expect(flapFlips(loadModel(fixture('fold-in-half')))).toEqual([]);
+  });
+});
+
+describe('slits', () => {
+  it('a slit parting is no tear', () => {
+    const model = loadModel(slitFixture());
+    expect(spread(model, 2, 0.5)).toBeLessThan(6 * LAYER_GAP + 1e-9);
+    expect(checkModel(model)).toEqual([]);
   });
 });

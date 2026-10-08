@@ -134,18 +134,34 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     let n = 2;
     while (creases[`${key}.${n}`]) n++;
     const other = `${key}.${n}`;
+    // how far along the crease x lies, for splitting the cut spans below
+    const [dx, dy] = [c.to[0] - c.from[0], c.to[1] - c.from[1]];
+    const s = ((x[0] - c.from[0]) * dx + (x[1] - c.from[1]) * dy) / (dx * dx + dy * dy);
     creases[key] = { ...c, to: x };
     creases[other] = { ...c, from: x };
     if (key in state) state[other] = state[key];
     for (const st of steps) {
       for (const m of [st.fold, ...(st.path ?? [])]) if (m && key in m) m[other] = m[key];
+      if (st.cut?.[key]) {
+        // `key` keeps the crease's from end, `other` its to end
+        const [a, b] = st.cut[key];
+        const mid = a + (b - a) * s;
+        st.cut[key] = [a, mid];
+        st.cut[other] = [mid, b];
+      }
     }
   };
   /**
    * The crease names covering the segment from→to, made where missing (`name1`, `name2`, …): parts that
    * lie on an existing crease reuse it, and with `splitEnds` existing creases it meets end-on split there.
    */
-  const claim = (name: string, from: Vec2, to: Vec2, assignment: 'M' | 'V', splitEnds: boolean): string[] => {
+  const claim = (
+    name: string,
+    from: Vec2,
+    to: Vec2,
+    assignment: Crease['assignment'],
+    splitEnds: boolean
+  ): string[] => {
     for (const x of splitEnds ? [from, to] : []) {
       for (const [k, c] of Object.entries(creases)) if (onSegment(x, c.from, c.to, true)) split(k, x);
     }
@@ -185,7 +201,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         const w = faces[f][(i + 1) % faces[f].length];
         const e = edges.findIndex(([a, b]) => (a === v && b === w) || (a === w && b === v));
         const key = edgeCrease[e];
-        if (key === null) return;
+        if (key === null || creases[key].assignment === 'C') return;
         const g = faces.findIndex((h, j) => j !== f && h.includes(v) && h.includes(w));
         if (g === -1 || out[g]) return;
         const angle = Math.abs(state[key] ?? 0);
@@ -290,7 +306,8 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       for (const [key, c] of Object.entries(creases)) {
         const mid: Vec2 = [(c.from[0] + c.to[0]) / 2, (c.from[1] + c.to[1]) / 2];
         const sides = flaps.filter((f) => onOutline(mid, f.outline)).map((f) => moved.get(f));
-        if (sides.length === 2 && sides[0] !== sides[1] && !(key in fold)) fold[key] = -(state[key] ?? 0);
+        if (sides.length === 2 && sides[0] !== sides[1] && !(key in fold) && c.assignment !== 'C')
+          fold[key] = -(state[key] ?? 0);
       }
       // a simple fold turns the moving layers over as one: they reverse, and land on top (valley) or underneath
       flaps.reverse();
@@ -329,6 +346,62 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         ...(opts.tuck ? { tuck } : {}),
         stack: pieces
       });
+    },
+    /**
+     * A step that cuts with scissors from p to q (view coordinates) through every layer there, so the paper
+     * either side folds on its own from then on. Within each layer the cut carries on to that layer's edges as a
+     * flat line, so every face stays a simple shape. It can't run along a crease.
+     */
+    slit(name: string, p: Vec2, q: Vec2, text: Text) {
+      const span: Record<string, [number, number]> = {};
+      const next: Piece[] = [];
+      const length2 = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2;
+      const along = (v: Vec2) => ((v[0] - p[0]) * (q[0] - p[0]) + (v[1] - p[1]) * (q[1] - p[1])) / length2;
+      const at = (t: number): Vec2 => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+      for (const piece of pieces) {
+        const { left, right, ends } = cut(
+          piece.outline.map((v) => apply(piece.toView, v)),
+          p,
+          q
+        );
+        const chord = ends
+          .filter((e, i) => ends.findIndex((o) => near(o, e)) === i)
+          .map(along)
+          .sort((a, b) => a - b);
+        const [t0, t1] = [Math.max(0, chord[0]), Math.min(1, chord[chord.length - 1])];
+        if (chord.length !== 2 || area(left) < 1e-9 || area(right) < 1e-9 || t1 - t0 < 1e-9) {
+          next.push(piece);
+          continue;
+        }
+        const back = piece.toView.clone().invert();
+        const toPaper = (t: number) => apply(back, at(t));
+        const [from, to] = [toPaper(t0), toPaper(t1)];
+        // claim only reuses a crease that matches a piece of the cut exactly, so look for any overlap here
+        const l = Math.hypot(to[0] - from[0], to[1] - from[1]);
+        const t = (v: Vec2) => ((v[0] - from[0]) * (to[0] - from[0]) + (v[1] - from[1]) * (to[1] - from[1])) / (l * l);
+        const onCrease = Object.entries(creases).find(
+          ([, c]) =>
+            Math.abs(side(from, to, c.from)) < 1e-9 * l &&
+            Math.abs(side(from, to, c.to)) < 1e-9 * l &&
+            Math.min(1, Math.max(t(c.from), t(c.to))) - Math.max(0, Math.min(t(c.from), t(c.to))) > 1e-9
+        );
+        if (onCrease) {
+          throw new Error(`Slit ${name} runs along crease ${onCrease[0]}; cutting along a crease isn't supported.`);
+        }
+        for (const key of claim(name, from, to, 'C', false)) {
+          const c = creases[key];
+          span[key] = [along(apply(piece.toView, c.from)), along(apply(piece.toView, c.to))];
+        }
+        if (chord[0] < t0) claim(`${name}-flat`, toPaper(chord[0]), from, 'F', false);
+        if (chord[1] > t1) claim(`${name}-flat`, to, toPaper(chord[1]), 'F', false);
+        next.push(
+          { ...piece, outline: left.map((v) => apply(back, v)) },
+          { ...piece, outline: right.map((v) => apply(back, v)) }
+        );
+      }
+      if (!Object.keys(span).length) throw new Error(`Slit ${name} doesn't cut any paper.`);
+      pieces = next;
+      steps.push({ cut: span, en: text.en, pt: text.pt, stack: pieces });
     },
     /** Fold and unfold in one step: the crease is made, the paper lies flat again. */
     crease(name: string, p: Vec2, q: Vec2, opts: FoldOptions) {

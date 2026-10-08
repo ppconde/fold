@@ -33,6 +33,8 @@ export type SourceStep = {
   stack?: StackPiece[];
   /** Layers that change places as the step lands (a reverse fold that swings over; written by foldSequence). */
   tuck?: Tuck;
+  /** Slit crease name → how far along the cut its `from` and `to` ends lie (written by foldSequence's `slit`). */
+  cut?: Record<string, [number, number]>;
 };
 
 export type ModelSource = Omit<ModelEntry, 'thumbnail'> & {
@@ -133,12 +135,26 @@ export function buildFold(src: ModelSource) {
     const faceOrders = !src.solve && step.stack ? faceOrdersOf(step.stack, vertices, faces) : undefined;
     const changed = faceOrders !== undefined && JSON.stringify(faceOrders) !== orders;
     if (changed) orders = JSON.stringify(faceOrders);
+    // each slit edge, with how far along the cut its two vertices lie (the player traces the cut that way)
+    const cut = edges.flatMap(([a, b], e) => {
+      const name = edgeCrease[e];
+      const span = name ? step.cut?.[name] : undefined;
+      if (!name || !span) return [];
+      const c = src.creases[name];
+      const [dx, dy] = [c.to[0] - c.from[0], c.to[1] - c.from[1]];
+      const at = (v: number) => {
+        const s = ((vertices[v][0] - c.from[0]) * dx + (vertices[v][1] - c.from[1]) * dy) / (dx * dx + dy * dy);
+        return +Math.max(0, Math.min(1, span[0] + (span[1] - span[0]) * s)).toFixed(6);
+      };
+      return [[e, at(a), at(b)]];
+    });
     return {
       edges_foldAngle: edgeCrease.map((name) => (name && angles[name]) || 0),
       'foldapp:instruction': { en: step.en, pt: step.pt },
       ...(held === undefined ? {} : { 'foldapp:fixedFace': held }),
       ...(step.rotation ? { 'foldapp:rotation': step.rotation } : {}),
       ...(path.length ? { 'foldapp:path': path } : {}),
+      ...(cut.length ? { 'foldapp:cut': cut } : {}),
       ...(changed ? { faceOrders } : {})
     };
   });
@@ -182,12 +198,16 @@ export function buildFold(src: ModelSource) {
     });
   }, []);
   const end = frames[frames.length - 1].edges_foldAngle;
-  const last: { edges_foldAngle: number[]; 'foldapp:path'?: number[][] } = {
+  const last: { edges_foldAngle: number[]; 'foldapp:path'?: number[][]; 'foldapp:cut'?: number[][] } = {
     ...frames[frames.length - 1],
     edges_foldAngle: swung,
-    'foldapp:path': undefined
+    'foldapp:path': undefined,
+    'foldapp:cut': undefined
   };
-  solvePaths({ ...fold, file_frames: [last] }, UNFOLD_KNOTS);
+  // the sheet the model unfolds to has every slit cut already
+  const cuts = frames.flatMap((frame) => frame['foldapp:cut'] ?? []);
+  const cutFirst = { edges_foldAngle: end.map(() => 0), 'foldapp:instruction': 'Cut.', 'foldapp:cut': cuts };
+  solvePaths({ ...fold, file_frames: cuts.length ? [cutFirst, last] : [last] }, UNFOLD_KNOTS);
   const knots = [...(last['foldapp:path'] ?? []), ...(swung.some((a, e) => a !== end[e]) ? [swung] : [])];
   const unfold = knots.map((knot) => knot.map((a) => Math.round(a * 100) / 100));
   return unfold.length ? { ...fold, 'foldapp:unfold': unfold } : fold;
