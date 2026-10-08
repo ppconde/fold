@@ -81,3 +81,33 @@ test('the homepage shows the lesson opened last and unfolds into it', async ({ p
   await page.getByRole('link', { name: /start folding/ }).click();
   await expect(page).toHaveURL(/\/fold\/tulip/, { timeout: 6000 });
 });
+
+// the stage only reports how far its camera sits once it mounts, after the hand-off has started
+test('the sheet lands in the lesson without zooming in first', async ({ page }) => {
+  await page.addInitScript(() => {
+    const start = Document.prototype.startViewTransition;
+    Document.prototype.startViewTransition = function (...args) {
+      const transition = start.apply(this, args);
+      transition.ready.then(() => {
+        // where the sheet is headed, read the moment the hand-off starts
+        const lands = document.getAnimations().find((a) => (a as CSSAnimation).animationName === 'paper-lands');
+        if (!lands) return;
+        lands.pause();
+        lands.currentTime = 550;
+        const height = (pseudo: string) => parseFloat(getComputedStyle(document.documentElement, pseudo).height);
+        (window as unknown as { growth: number }).growth =
+          height('::view-transition-old(paper)') / height('::view-transition-group(paper)');
+        lands.play();
+      });
+      return transition;
+    };
+  });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  const { width, height } = page.viewportSize() ?? { width: 1280, height: 720 };
+  await page.mouse.click(width * 0.75, height * 0.55);
+  const growth = await page.waitForFunction(() => (window as unknown as { growth?: number }).growth, null, {
+    timeout: 8000
+  });
+  expect(await growth.jsonValue()).toBeLessThan(1.5);
+});
