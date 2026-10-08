@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { fixture } from '../fold/fixtures';
-import { foldedPositions } from '../fold/fold';
+import { fixture, slitFixture } from '../fold/fixtures';
+import { checkConsistency, foldedPositions } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import { evenPace, unfoldAll } from './unfold';
 
@@ -30,5 +30,17 @@ describe('unfoldAll', () => {
     expect(pace(1)).toBeCloseTo(1);
     const ts = [0.1, 0.3, 0.5, 0.7, 0.9].map(pace);
     expect(ts).toEqual([...ts].sort((a, b) => a - b));
+  });
+
+  it('keeps a slit open the whole way, without cutting it again', () => {
+    // a first step that does nothing, so the slit is cut at step 2: later than the one-step unfold's step 1
+    const json = slitFixture();
+    json.file_frames.unshift({ edges_foldAngle: Array.from({ length: 11 }, () => 0), 'foldapp:instruction': 'Look.' });
+    const model = loadModel(json);
+    const once = unfoldAll(model);
+    const never = Number.POSITIVE_INFINITY;
+    expect(once.cutAt).toEqual([never, never, never, never, never, never, never, 0, 0, never, never]);
+    expect(once.steps[1].cuts).toEqual([]);
+    expect(checkConsistency(once, 1)).toEqual({ ok: true });
   });
 });

@@ -25,7 +25,9 @@ export function unfoldAll(model: Model): Model {
   const orderedAt = model.steps.find((s) => s.faceOrders === last.faceOrders)?.angles;
   const unturned: Model = {
     ...model,
-    steps: [model.steps[0], { ...last, path: model.unfold, rotation: [0, 0, 0], orderedAt }]
+    // the sheet it unfolds to was cut: every slit is open from the start, with no cut to trace
+    cutAt: model.cutAt.map((k) => (k === Number.POSITIVE_INFINITY ? k : 0)),
+    steps: [model.steps[0], { ...last, path: model.unfold, rotation: [0, 0, 0], orderedAt, cuts: [] }]
   };
   const turn = basis(foldedPositions(model, n, 1)[0]).multiply(basis(foldedPositions(unturned, 1, 1)[0]).invert());
   const e = new Euler().setFromRotationMatrix(turn);
