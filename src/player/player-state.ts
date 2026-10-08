@@ -62,7 +62,7 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
   }
   if (state.playing) {
     // a press against the running fold turns it around where it is
-    if (action.type === 'next' && state.direction === -1) return { ...state, direction: 1, hold: 0 };
+    if (action.type === 'next' && state.direction === -1) return { ...state, direction: 1 };
     if (action.type === 'prev' && state.direction === 1) return { ...state, direction: -1, hold: 0 };
   }
   // anything else skips the running fold to where it was heading, then acts from there
@@ -78,7 +78,7 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
     case 'replay':
       return s.step === 0 ? s : { ...s, t: 0, playing: true, direction: 1, hold: LEAD_IN_SECONDS };
     case 'goTo':
-      return { ...s, step: clampStep(action.step, s.last), t: 1, direction: 1, hold: 0 };
+      return { ...s, step: clampStep(action.step, s.last), t: 1 };
   }
 }
 
