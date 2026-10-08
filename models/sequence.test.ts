@@ -178,6 +178,25 @@ describe('slit', () => {
     expect(checkModel(model)).toEqual([]);
   });
 
+  it('splits the cut with the slit when a reverse fold ends inside it', () => {
+    const s = foldSequence();
+    s.slit('cut', [0, 0.5], [0.5, 0.5], text);
+    s.fold('corner', [0.25, 0], [0.25, 1], {
+      valley: () => true,
+      only: (_, at) => at[1] > 0.5,
+      hold: [0.75, 0.25],
+      ...text
+    });
+    const model = loadModel(buildFold(s.source({ ...entry, tags: [] })));
+    expect(
+      model.steps[1].cuts
+        .flatMap((c) => [c.from, c.to])
+        .map((x) => +x.toFixed(9))
+        .sort()
+    ).toEqual([0, 0.5, 0.5, 1]);
+    expect(checkModel(model)).toEqual([]);
+  });
+
   it("won't cut along a crease", () => {
     const s = foldSequence();
     s.crease('mid', [0, 0.5], [1, 0.5], { valley: true, ...text });

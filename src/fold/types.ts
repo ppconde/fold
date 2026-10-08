@@ -6,7 +6,7 @@ export type Assignment = 'M' | 'V' | 'B' | 'F' | 'U' | 'C';
 /** FOLD faceOrders triple: face f lies above (1) or below (-1) face g, along g's normal. */
 export type FaceOrder = [number, number, 1 | -1];
 
-/** A stretch of a slit cut in a step: edge `edge`, its first and second vertex `from` and `to` of the way along the cut. */
+/** A stretch of a slit cut in a step: edge `edge` is cut from its first vertex at `from` to its second at `to`, as shares (0 to 1) of the way along the scissors' cut. */
 export type Cut = { edge: number; from: number; to: number };
 
 export type Step = {

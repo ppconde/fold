@@ -134,11 +134,21 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     let n = 2;
     while (creases[`${key}.${n}`]) n++;
     const other = `${key}.${n}`;
+    // how far along the crease x lies, for splitting the cut spans below
+    const [dx, dy] = [c.to[0] - c.from[0], c.to[1] - c.from[1]];
+    const s = ((x[0] - c.from[0]) * dx + (x[1] - c.from[1]) * dy) / (dx * dx + dy * dy);
     creases[key] = { ...c, to: x };
     creases[other] = { ...c, from: x };
     if (key in state) state[other] = state[key];
     for (const st of steps) {
       for (const m of [st.fold, ...(st.path ?? [])]) if (m && key in m) m[other] = m[key];
+      if (st.cut?.[key]) {
+        // `key` keeps the crease's from end, `other` its to end
+        const [a, b] = st.cut[key];
+        const mid = a + (b - a) * s;
+        st.cut[key] = [a, mid];
+        st.cut[other] = [mid, b];
+      }
     }
   };
   /**
@@ -296,7 +306,8 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       for (const [key, c] of Object.entries(creases)) {
         const mid: Vec2 = [(c.from[0] + c.to[0]) / 2, (c.from[1] + c.to[1]) / 2];
         const sides = flaps.filter((f) => onOutline(mid, f.outline)).map((f) => moved.get(f));
-        if (sides.length === 2 && sides[0] !== sides[1] && !(key in fold)) fold[key] = -(state[key] ?? 0);
+        if (sides.length === 2 && sides[0] !== sides[1] && !(key in fold) && c.assignment !== 'C')
+          fold[key] = -(state[key] ?? 0);
       }
       // a simple fold turns the moving layers over as one: they reverse, and land on top (valley) or underneath
       flaps.reverse();

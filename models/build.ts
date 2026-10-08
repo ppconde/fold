@@ -144,7 +144,7 @@ export function buildFold(src: ModelSource) {
       const [dx, dy] = [c.to[0] - c.from[0], c.to[1] - c.from[1]];
       const at = (v: number) => {
         const s = ((vertices[v][0] - c.from[0]) * dx + (vertices[v][1] - c.from[1]) * dy) / (dx * dx + dy * dy);
-        return Math.max(0, Math.min(1, span[0] + (span[1] - span[0]) * s));
+        return +Math.max(0, Math.min(1, span[0] + (span[1] - span[0]) * s)).toFixed(6);
       };
       return [[e, at(a), at(b)]];
     });
