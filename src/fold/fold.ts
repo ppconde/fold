@@ -47,9 +47,17 @@ function tree(model: Model, step: number): Tree {
   if (list[step]) return list[step];
   const moves = (k: number, e: number) =>
     k > 0 && [...model.steps[k].path, model.steps[k].angles].some((a) => a[e] !== model.steps[k - 1].angles[e]);
-  // a step that moves no crease (a turn, a new held face) keeps the previous tree, so it joins exactly
+  // a step that moves no crease (a turn, a new held face) keeps the previous tree, so it joins exactly; one that
+  // cuts gets its own, without the slit
   let from = step;
-  while (from > 0 && !list[from] && model.steps[from].angles.every((_, e) => !moves(from, e))) from--;
+  while (
+    from > 0 &&
+    !list[from] &&
+    !model.steps[from].cuts.length &&
+    model.steps[from].angles.every((_, e) => !moves(from, e))
+  ) {
+    from--;
+  }
   if (list[from]) {
     for (let k = from + 1; k <= step; k++) list[k] = list[from];
     return list[step];
@@ -63,7 +71,11 @@ function tree(model: Model, step: number): Tree {
   const add = (f: number) => {
     seen.add(f);
     order.push(f);
-    for (const e of model.faceEdges[f]) for (const g of model.edgeFaces[e]) buckets[+moves(from, e)].push([f, e, g]);
+    for (const e of model.faceEdges[f]) {
+      // a cut edge is no hinge: the paper either side of a slit is joined only around it
+      if (model.cutAt[e] <= from) continue;
+      for (const g of model.edgeFaces[e]) buckets[+moves(from, e)].push([f, e, g]);
+    }
   };
   add(0);
   for (let next = buckets[0].shift() ?? buckets[1].shift(); next; next = buckets[0].shift() ?? buckets[1].shift()) {
@@ -428,7 +440,7 @@ export function checkConsistency(model: Model, step: number): { ok: true } | { o
   const p = new Vector3();
   const q = new Vector3();
   model.edgeFaces.forEach((faces, e) => {
-    if (faces.length !== 2 || treeEdges.has(e)) return;
+    if (faces.length !== 2 || treeEdges.has(e) || model.cutAt[e] <= step) return;
     const [f, g] = faces;
     const viaEdge = T[f].clone().multiply(hinge(model, e, g, angles[e]));
     const off = model.faces[g].some((v) => {
