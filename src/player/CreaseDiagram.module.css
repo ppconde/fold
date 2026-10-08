@@ -20,6 +20,10 @@
   stroke-width: 2px;
 }
 
+.cut {
+  stroke-width: 2px;
+}
+
 .valley {
   stroke-dasharray: 6 4;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fixture } from '../fold/fixtures';
+import { fixture, slitFixture } from '../fold/fixtures';
 import { loadModel } from '../fold/load-model';
 import { diagramLines } from './diagram';
 
@@ -30,6 +30,23 @@ describe('diagramLines', () => {
       [9, 'valley', 'past'],
       [10, 'mountain', 'active'],
       [11, 'valley', 'active']
+    ]);
+  });
+
+  it('shows a slit as a cut, highlighted in the step that cuts it', () => {
+    const model = loadModel(slitFixture());
+    const cuts = (step: number) =>
+      diagramLines(model, step)
+        .filter((l) => l.kind === 'cut')
+        .map((l) => [l.edge, l.state]);
+    expect(cuts(0)).toEqual([]);
+    expect(cuts(1)).toEqual([
+      [7, 'active'],
+      [8, 'active']
+    ]);
+    expect(cuts(2)).toEqual([
+      [7, 'outline'],
+      [8, 'outline']
     ]);
   });
 });

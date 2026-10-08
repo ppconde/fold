@@ -46,6 +46,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const folded = useRef<LineRef>(null);
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
+  const cut = useRef<LineRef>(null);
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
@@ -60,6 +61,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     setSegments(folded.current, groups.folded);
     setSegments(flat.current, groups.flat);
     setSegments(active.current, groups.active);
+    setSegments(cut.current, groups.cut);
     invalidate();
   }, [model, step, t, geometry, invalidate]);
 
@@ -120,6 +122,17 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           renderOrder={1}
           lineWidth={1.8}
           frustumCulled={false}
+        />
+        <Line
+          ref={cut}
+          points={PLACEHOLDER}
+          segments
+          color={INK}
+          lineWidth={2.6}
+          renderOrder={2}
+          depthTest={false}
+          frustumCulled={false}
+          visible={false}
         />
       </group>
     </group>
