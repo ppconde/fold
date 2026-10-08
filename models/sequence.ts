@@ -145,7 +145,13 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
    * The crease names covering the segment from→to, made where missing (`name1`, `name2`, …): parts that
    * lie on an existing crease reuse it, and with `splitEnds` existing creases it meets end-on split there.
    */
-  const claim = (name: string, from: Vec2, to: Vec2, assignment: 'M' | 'V', splitEnds: boolean): string[] => {
+  const claim = (
+    name: string,
+    from: Vec2,
+    to: Vec2,
+    assignment: 'M' | 'V' | 'C' | 'F',
+    splitEnds: boolean
+  ): string[] => {
     for (const x of splitEnds ? [from, to] : []) {
       for (const [k, c] of Object.entries(creases)) if (onSegment(x, c.from, c.to, true)) split(k, x);
     }
@@ -185,7 +191,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         const w = faces[f][(i + 1) % faces[f].length];
         const e = edges.findIndex(([a, b]) => (a === v && b === w) || (a === w && b === v));
         const key = edgeCrease[e];
-        if (key === null) return;
+        if (key === null || creases[key].assignment === 'C') return;
         const g = faces.findIndex((h, j) => j !== f && h.includes(v) && h.includes(w));
         if (g === -1 || out[g]) return;
         const angle = Math.abs(state[key] ?? 0);
@@ -329,6 +335,55 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         ...(opts.tuck ? { tuck } : {}),
         stack: pieces
       });
+    },
+    /**
+     * A step that cuts with scissors from p to q (view coordinates) through every layer there, so the paper
+     * either side folds on its own from then on. Within each layer the cut carries on to that layer's edges as a
+     * flat line, so every face stays a simple shape. It can't run along a crease.
+     */
+    slit(name: string, p: Vec2, q: Vec2, text: Text) {
+      const span: Record<string, [number, number]> = {};
+      const next: Piece[] = [];
+      const length2 = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2;
+      const along = (v: Vec2) => ((v[0] - p[0]) * (q[0] - p[0]) + (v[1] - p[1]) * (q[1] - p[1])) / length2;
+      const at = (t: number): Vec2 => [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
+      for (const piece of pieces) {
+        const { left, right, ends } = cut(
+          piece.outline.map((v) => apply(piece.toView, v)),
+          p,
+          q
+        );
+        const chord = ends
+          .filter((e, i) => ends.findIndex((o) => near(o, e)) === i)
+          .map(along)
+          .sort((a, b) => a - b);
+        const [t0, t1] = [Math.max(0, chord[0]), Math.min(1, chord[chord.length - 1])];
+        if (chord.length !== 2 || area(left) < 1e-9 || area(right) < 1e-9 || t1 - t0 < 1e-9) {
+          next.push(piece);
+          continue;
+        }
+        const back = piece.toView.clone().invert();
+        const toPaper = (t: number) => apply(back, at(t));
+        const [from, to] = [toPaper(t0), toPaper(t1)];
+        const middle: Vec2 = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
+        const onCrease = Object.entries(creases).find(([, c]) => onSegment(middle, c.from, c.to));
+        if (onCrease) {
+          throw new Error(`Slit ${name} runs along crease ${onCrease[0]}; cutting along a crease isn't supported.`);
+        }
+        for (const key of claim(name, from, to, 'C', false)) {
+          const c = creases[key];
+          span[key] = [along(apply(piece.toView, c.from)), along(apply(piece.toView, c.to))];
+        }
+        if (chord[0] < t0) claim(`${name}-flat`, toPaper(chord[0]), from, 'F', false);
+        if (chord[1] > t1) claim(`${name}-flat`, to, toPaper(chord[1]), 'F', false);
+        next.push(
+          { ...piece, outline: left.map((v) => apply(back, v)) },
+          { ...piece, outline: right.map((v) => apply(back, v)) }
+        );
+      }
+      if (!Object.keys(span).length) throw new Error(`Slit ${name} doesn't cut any paper.`);
+      pieces = next;
+      steps.push({ cut: span, en: text.en, pt: text.pt, stack: pieces });
     },
     /** Fold and unfold in one step: the crease is made, the paper lies flat again. */
     crease(name: string, p: Vec2, q: Vec2, opts: FoldOptions) {

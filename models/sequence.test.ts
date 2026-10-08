@@ -144,3 +144,49 @@ describe('foldSequence', () => {
     expect(checkModel(model)).toEqual([]);
   });
 });
+
+describe('slit', () => {
+  /** Slit the left half of the middle line, then fold the top-left corner over x = 0.25. */
+  const slitThenFold = () => {
+    const s = foldSequence();
+    s.slit('cut', [0, 0.5], [0.5, 0.5], text);
+    s.fold('corner', [0.25, 0], [0.25, 1], {
+      valley: true,
+      only: (_, at) => at[1] > 0.5,
+      hold: [0.75, 0.25],
+      ...text
+    });
+    return s.source({ ...entry, tags: [] });
+  };
+
+  it('cuts a slit crease and carries it on to the far edge as a flat line', () => {
+    const src = slitThenFold();
+    expect(src.creases.cut1).toEqual({ from: [0, 0.5], to: [0.5, 0.5], assignment: 'C' });
+    expect(src.creases['cut-flat1']).toEqual({ from: [0.5, 0.5], to: [1, 0.5], assignment: 'F' });
+    expect(src.steps[0]).toEqual({ cut: { cut1: [0, 1] }, ...text, stack: expect.any(Array) });
+  });
+
+  it('builds a model whose corner folds over without tearing the paper', () => {
+    const model = loadModel(buildFold(slitThenFold()));
+    // the fold's crease meets the slit at x = 0.25, splitting it in two edges
+    expect(
+      model.steps[1].cuts
+        .flatMap((c) => [c.from, c.to])
+        .map((x) => +x.toFixed(9))
+        .sort()
+    ).toEqual([0, 0.5, 0.5, 1]);
+    expect(checkModel(model)).toEqual([]);
+  });
+
+  it("won't cut along a crease", () => {
+    const s = foldSequence();
+    s.crease('mid', [0, 0.5], [1, 0.5], { valley: true, ...text });
+    expect(() => s.slit('cut', [0, 0.5], [0.5, 0.5], text)).toThrow(/Slit cut runs along crease mid1/);
+  });
+
+  it("won't cut a piece off", () => {
+    const s = foldSequence();
+    s.slit('cut', [0, 0.5], [1, 0.5], text);
+    expect(() => loadModel(buildFold(s.source({ ...entry, tags: [] })))).toThrow(/separate pieces/);
+  });
+});

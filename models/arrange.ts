@@ -1,6 +1,6 @@
 import type { Assignment, Edge, Vec2 } from '../src/fold/types';
 
-export type Crease = { from: Vec2; to: Vec2; assignment: 'M' | 'V' | 'F' };
+export type Crease = { from: Vec2; to: Vec2; assignment: 'M' | 'V' | 'F' | 'C' };
 
 const EPS = 1e-6;
 const BORDER: [Vec2, Vec2][] = [
