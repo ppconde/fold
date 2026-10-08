@@ -52,6 +52,7 @@ export const en = {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
     stepOf: (n: number, total: number) => `Step ${n} · ${total}`,
     count: (n: number, total: number) => `${n}/${total}`,
+    goToStep: 'Go to step',
     instructions: 'Instructions',
     hideSteps: 'hide steps',
     showSteps: 'show steps',

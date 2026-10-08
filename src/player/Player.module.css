@@ -257,11 +257,24 @@
 }
 
 .count {
+  appearance: none;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
   color: var(--muted);
   font-family: var(--font-sans);
   font-size: 0.95rem;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.count:hover,
+.count:focus-visible {
+  color: var(--charcoal);
 }
 
 .hint {

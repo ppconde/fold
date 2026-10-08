@@ -33,11 +33,34 @@ describe('player state', () => {
     expect(s).toMatchObject({ step: 1, t: 1, playing: false });
   });
 
-  it('ignores next, prev, replay and goTo while a step is playing', () => {
-    const playing = run(initPlayer(3, 0, false), { type: 'next' }, secs(0.1));
-    for (const a of [{ type: 'next' }, { type: 'prev' }, { type: 'replay' }, { type: 'goTo', step: 3 }] as const) {
-      expect(playerReducer(playing, a)).toBe(playing);
-    }
+  it('next while playing finishes the step and starts the following one', () => {
+    const playing = run(initPlayer(3, 0, false), { type: 'next' }, secs(LEAD_IN_SECONDS + 0.5));
+    expect(run(playing, { type: 'next' })).toMatchObject({ step: 2, t: 0, playing: true, direction: 1 });
+  });
+
+  it('next while playing the last step skips to its end', () => {
+    const playing = run(initPlayer(3, 2, false), { type: 'next' }, secs(0.1));
+    expect(run(playing, { type: 'next' })).toMatchObject({ step: 3, t: 1, playing: false });
+  });
+
+  it('prev while playing forward turns the fold around; prev again skips back a step', () => {
+    const playing = run(initPlayer(3, 1, false), { type: 'next' }, secs(LEAD_IN_SECONDS + 1));
+    let s = run(playing, { type: 'prev' });
+    expect(s).toMatchObject({ step: 2, t: playing.t, playing: true, direction: -1, hold: 0 });
+    s = run(s, { type: 'prev' });
+    expect(s).toMatchObject({ step: 1, t: 1, playing: true, direction: -1 });
+  });
+
+  it('next while playing backward turns the fold forward again', () => {
+    const s = run(initPlayer(3, 2, false), { type: 'prev' }, secs(0.5), { type: 'next' });
+    expect(s).toMatchObject({ step: 2, playing: true, direction: 1 });
+    expect(s.t).toBeLessThan(1);
+  });
+
+  it('replay and goTo work while playing', () => {
+    const playing = run(initPlayer(3, 0, false), { type: 'next' }, secs(LEAD_IN_SECONDS + 1));
+    expect(run(playing, { type: 'replay' })).toMatchObject({ step: 1, t: 0, playing: true });
+    expect(run(playing, { type: 'goTo', step: 3 })).toMatchObject({ step: 3, t: 1, playing: false });
   });
 
   it('plays the current step backwards and settles on the previous one', () => {
@@ -133,9 +156,9 @@ describe('player state', () => {
     expect(playerReducer(playing, secs(-1))).toBe(playing);
   });
 
-  it('ignores next during the lead-in', () => {
-    const s = run(initPlayer(3, 0, false), { type: 'next' }, secs(0.1));
-    expect(playerReducer(s, { type: 'next' })).toBe(s);
+  it('next during the lead-in skips the step', () => {
+    const s = run(initPlayer(3, 0, false), { type: 'next' }, secs(0.1), { type: 'next' });
+    expect(s).toMatchObject({ step: 2, t: 0, playing: true });
   });
 
   it('a scrub during the lead-in stops play', () => {
