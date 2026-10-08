@@ -69,7 +69,10 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' '))
+      if (
+        (e.target instanceof HTMLInputElement || e.target instanceof HTMLSelectElement) &&
+        (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ')
+      )
         return;
       if (document.querySelector('dialog[open]') || e.altKey || e.ctrlKey || e.metaKey) return;
       const onControl = e.target instanceof Element && e.target.closest('button, a, input, textarea, select');
@@ -173,7 +176,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             type="button"
             aria-label={t.startOver}
             title={t.startOver}
-            aria-disabled={state.step === 0 || state.playing}
+            aria-disabled={state.step === 0}
             onClick={() => dispatch({ type: 'goTo', step: 0 })}
           >
             <StartIcon />
@@ -182,7 +185,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             type="button"
             aria-label={t.previous}
             title={t.previous}
-            aria-disabled={state.step === 0 || state.playing}
+            aria-disabled={state.step === 0}
             onClick={() => dispatch({ type: 'prev' })}
           >
             <BackIcon />
@@ -191,7 +194,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             type="button"
             aria-label={t.replay}
             title={t.replay}
-            aria-disabled={state.step === 0 || state.playing}
+            aria-disabled={state.step === 0}
             onClick={() => dispatch({ type: 'replay' })}
           >
             <AgainIcon />
@@ -201,7 +204,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             className={styles.next}
             aria-label={t.next}
             title={t.next}
-            aria-disabled={(state.step === state.last && state.t === 1) || state.playing}
+            aria-disabled={state.step === state.last && state.t === 1}
             onClick={() => dispatch({ type: 'next' })}
           >
             <NextIcon />
@@ -228,7 +231,19 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           ) : (
             <span aria-hidden="true" />
           )}
-          <span className={styles.count}>{t.count(state.step, state.last)}</span>
+          <select
+            className={styles.count}
+            aria-label={t.goToStep}
+            value={state.step}
+            onChange={(e) => dispatch({ type: 'goTo', step: Number(e.target.value) })}
+          >
+            {model.steps.map((_, i) => (
+              // biome-ignore lint/suspicious/noArrayIndexKey: steps are a fixed list and the index is the step number
+              <option key={i} value={i}>
+                {t.count(i, state.last)}
+              </option>
+            ))}
+          </select>
         </div>
         {hint !== 'gone' && (
           <p className={`${styles.hint} ${hint === 'fading' ? styles.hintOut : ''}`} aria-hidden="true">

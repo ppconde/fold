@@ -80,7 +80,7 @@ test('the instructions can be hidden and shown, and the choice survives a reload
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeVisible();
   await page.getByRole('button', { name: 'Hide steps' }).click();
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
-  await expect(page.getByText('0/1')).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Go to step' })).toHaveValue('0');
   await page.reload();
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
   await page.getByRole('button', { name: 'Show steps' }).click();
@@ -311,4 +311,21 @@ test('on a phone each step fits the instructions sheet without scrolling', async
     await expect(sheet).toBeVisible();
     expect(await sheet.evaluate((el) => el.scrollHeight <= el.clientHeight + 1), `step ${step}`).toBe(true);
   }
+});
+
+test('the step menu jumps straight to a step', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters');
+  await page.getByRole('combobox', { name: 'Go to step' }).selectOption('2');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '2');
+  await expect(page).toHaveURL(/step=2/);
+});
+
+test('next skips a step that is still playing', async ({ page }) => {
+  await page.goto('/fold/fold-in-quarters');
+  const next = page.getByRole('button', { name: 'Next step' });
+  await next.click();
+  await expect(page.locator('main')).toHaveAttribute('data-state', 'playing');
+  await expect(next).toHaveAttribute('aria-disabled', 'false');
+  await next.click();
+  await expect(page.locator('main')).toHaveAttribute('data-step', '2');
 });

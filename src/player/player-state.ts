@@ -60,21 +60,36 @@ export function playerReducer(state: PlayerState, action: PlayerAction): PlayerS
       return { ...state, t, hold: 0 };
     }
   }
-  if (state.playing) return state;
+  if (state.playing) {
+    // a press against the running fold turns it around where it is
+    if (action.type === 'next' && state.direction === -1) return { ...state, direction: 1 };
+    if (action.type === 'prev' && state.direction === 1) return { ...state, direction: -1, hold: 0 };
+  }
+  // anything else skips the running fold to where it was heading, then acts from there
+  const s = state.playing ? settle(state) : state;
   switch (action.type) {
     case 'next':
-      if (state.step > 0 && state.t < 1) return { ...state, playing: true, direction: 1, hold: 0 };
-      return state.step >= state.last
-        ? state
-        : { ...state, step: state.step + 1, t: 0, playing: true, direction: 1, hold: LEAD_IN_SECONDS };
+      if (s.step > 0 && s.t < 1) return { ...s, playing: true, direction: 1, hold: 0 };
+      return s.step >= s.last
+        ? s
+        : { ...s, step: s.step + 1, t: 0, playing: true, direction: 1, hold: LEAD_IN_SECONDS };
     case 'prev':
-      return state.step === 0 ? state : { ...state, playing: true, direction: -1, hold: 0 };
+      return s.step === 0 ? s : { ...s, playing: true, direction: -1, hold: 0 };
     case 'replay':
-      return state.step === 0 ? state : { ...state, t: 0, playing: true, direction: 1, hold: LEAD_IN_SECONDS };
+      return s.step === 0 ? s : { ...s, t: 0, playing: true, direction: 1, hold: LEAD_IN_SECONDS };
     case 'goTo':
-      return { ...state, step: clampStep(action.step, state.last), t: 1, direction: 1, hold: 0 };
+      return { ...s, step: clampStep(action.step, s.last), t: 1 };
   }
 }
+
+const settle = (state: PlayerState): PlayerState => ({
+  ...state,
+  step: state.direction === 1 ? state.step : state.step - 1,
+  t: 1,
+  playing: false,
+  direction: 1,
+  hold: 0
+});
 
 export function playerStatus(state: PlayerState): 'idle' | 'playing' | 'done' {
   if (state.playing) return 'playing';

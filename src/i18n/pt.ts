@@ -55,6 +55,7 @@ export const pt: Dictionary = {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
     stepOf: (n, total) => `Passo ${n} · ${total}`,
     count: (n, total) => `${n}/${total}`,
+    goToStep: 'Ir para o passo',
     instructions: 'Instruções',
     hideSteps: 'esconder passos',
     showSteps: 'mostrar passos',
