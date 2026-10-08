@@ -365,8 +365,15 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         const back = piece.toView.clone().invert();
         const toPaper = (t: number) => apply(back, at(t));
         const [from, to] = [toPaper(t0), toPaper(t1)];
-        const middle: Vec2 = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
-        const onCrease = Object.entries(creases).find(([, c]) => onSegment(middle, c.from, c.to));
+        // claim only reuses a crease that matches a piece of the cut exactly, so look for any overlap here
+        const l = Math.hypot(to[0] - from[0], to[1] - from[1]);
+        const t = (v: Vec2) => ((v[0] - from[0]) * (to[0] - from[0]) + (v[1] - from[1]) * (to[1] - from[1])) / (l * l);
+        const onCrease = Object.entries(creases).find(
+          ([, c]) =>
+            Math.abs(side(from, to, c.from)) < 1e-9 * l &&
+            Math.abs(side(from, to, c.to)) < 1e-9 * l &&
+            Math.min(1, Math.max(t(c.from), t(c.to))) - Math.max(0, Math.min(t(c.from), t(c.to))) > 1e-9
+        );
         if (onCrease) {
           throw new Error(`Slit ${name} runs along crease ${onCrease[0]}; cutting along a crease isn't supported.`);
         }

@@ -184,6 +184,12 @@ describe('slit', () => {
     expect(() => s.slit('cut', [0, 0.5], [0.5, 0.5], text)).toThrow(/Slit cut runs along crease mid1/);
   });
 
+  it("won't cut partly along a crease", () => {
+    const s = foldSequence();
+    s.crease('mid', [0.25, 0.5], [1, 0.5], { valley: true, ...text });
+    expect(() => s.slit('cut', [0, 0.5], [0.5, 0.5], text)).toThrow(/Slit cut runs along crease/);
+  });
+
   it("won't cut a piece off", () => {
     const s = foldSequence();
     s.slit('cut', [0, 0.5], [1, 0.5], text);
