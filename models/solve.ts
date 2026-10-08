@@ -6,7 +6,12 @@ import type { FaceOrder, Model, Vec2 } from '../src/fold/types';
 import { signedArea } from './arrange';
 import type { Tuck } from './build';
 
-type Frame = { edges_foldAngle: number[]; 'foldapp:path'?: number[][]; faceOrders?: FaceOrder[] };
+type Frame = {
+  edges_foldAngle: number[];
+  'foldapp:path'?: number[][];
+  faceOrders?: FaceOrder[];
+  'foldapp:landedOrders'?: FaceOrder[];
+};
 type Fold = { faces_vertices: number[][]; file_frames: Frame[] };
 
 const DEG = Math.PI / 180;
@@ -312,14 +317,20 @@ export function motionOrders(fold: Fold, tucks: (Tuck<number> | undefined)[] = [
         next.set(key, d > 0 ? 1 : -1);
       }
     }
+    const asList = (m: Map<string, 1 | -1>): FaceOrder[] =>
+      [...m].flatMap(([key, s]) => {
+        const [f, g] = key.split(',').map(Number);
+        return f < g ? [[f, g, s] as FaceOrder] : [];
+      });
     const tuck = tucks[k - 1];
-    if (tuck) tuckIn(next, tuck);
+    if (tuck) {
+      // the stack as the paper lands, before the tuck's layers change places (the player blends through it)
+      fold.file_frames[k - 1]['foldapp:landedOrders'] = asList(next);
+      tuckIn(next, tuck);
+    }
     orders = next;
     before = E;
-    const list: FaceOrder[] = [...next].flatMap(([key, s]) => {
-      const [f, g] = key.split(',').map(Number);
-      return f < g ? [[f, g, s] as FaceOrder] : [];
-    });
+    const list = asList(next);
     const json = JSON.stringify(list);
     if (json !== last) fold.file_frames[k - 1].faceOrders = list;
     else delete fold.file_frames[k - 1].faceOrders;

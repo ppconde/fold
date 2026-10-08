@@ -231,6 +231,7 @@ function rotationAfter(model: Model, step: number): Matrix4 {
 
 type Layers = { heights: number[]; up: number[] };
 const layers = new WeakMap<Model, Layers[]>();
+const landedLayers = new WeakMap<Model, Layers[]>();
 
 /**
  * The stack at the end of `step`, before the whole-model turn. `heights[f]` is face f's place in its stack
@@ -238,12 +239,13 @@ const layers = new WeakMap<Model, Layers[]>();
  * From the step's faceOrders: [f, g, s] puts f on the side of g's normal (s = 1) or against it (s = −1);
  * a face sits one above the highest face it must cover. Contradictory orders throw a RangeError.
  */
-function stackAt(model: Model, step: number): Layers {
-  const list = layers.get(model) ?? [];
-  layers.set(model, list);
+function stackAt(model: Model, step: number, landed = false): Layers {
+  const cache = landed ? landedLayers : layers;
+  const list = cache.get(model) ?? [];
+  cache.set(model, list);
   if (list[step]) return list[step];
   // a step that inherits its faceOrders (a turn, or opening out) keeps the stack it was given
-  if (step > 1 && model.steps[step].faceOrders === model.steps[step - 1].faceOrders) {
+  if (!landed && step > 1 && model.steps[step].faceOrders === model.steps[step - 1].faceOrders) {
     list[step] = stackAt(model, step - 1);
     return list[step];
   }
@@ -253,7 +255,7 @@ function stackAt(model: Model, step: number): Layers {
     const T = rootTransforms(model, model.steps[step].orderedAt ?? model.steps[step].angles, step);
     const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
     up = T.map((m) => Math.sign(Math.round(base.clone().multiply(m).elements[10] * 1e6)));
-    for (const [f, g, s] of model.steps[step].faceOrders) {
+    for (const [f, g, s] of (landed && model.steps[step].landedOrders) || model.steps[step].faceOrders) {
       const side = s * up[g];
       if (side > 0) below[f].push(g);
       if (side < 0) below[g].push(f);
@@ -306,9 +308,13 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
     const m = pose.clone().multiply(T[f]);
     return C ? m.multiply(fade(C[f], s)) : m;
   });
+  // a tuck lands on the stack its motion makes, then its layers change places while the paper holds still
+  const landing = cur.landedOrders ? 1 - 1 / (cur.path.length + 1) : 1;
+  const mid = cur.landedOrders ? stackAt(model, step, true) : to;
+  const [a0, a1, u] = s <= landing ? [from, mid, s / landing] : [mid, to, (s - landing) / (1 - landing)];
   const lifts = model.faces.map((_, f) => {
-    const a = from.heights[f] * from.up[f];
-    return LAYER_GAP * (a + (to.heights[f] * to.up[f] - a) * s);
+    const a = a0.heights[f] * a0.up[f];
+    return LAYER_GAP * (a + (a1.heights[f] * a1.up[f] - a) * u);
   });
   // only in a step that ends open (a flap standing out of the stack); flat steps blend their heights alone
   const open = endsOpen(model, step);
