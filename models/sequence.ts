@@ -422,10 +422,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       const before = pieces;
       const prior = { ...state };
       api.fold(name, p, q, opts);
-      for (const k of Object.keys(steps.pop()?.fold ?? {})) {
-        if (k in prior) state[k] = prior[k];
-        else delete state[k];
-      }
+      for (const k of Object.keys(steps.pop()?.fold ?? {})) state[k] = prior[k] ?? 0;
       pieces = before;
     },
     /**
