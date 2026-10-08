@@ -144,8 +144,9 @@ h1:focus {
 }
 
 @keyframes paper-lands {
+  /* the stage sets --paper-to once it mounts, after the move starts; until then the sheet keeps its size */
   to {
-    height: calc(100% * var(--paper-from, 1) / var(--paper-to, 1));
+    height: calc(100% * var(--paper-from, 1) / var(--paper-to, var(--paper-from, 1)));
   }
 }
 
