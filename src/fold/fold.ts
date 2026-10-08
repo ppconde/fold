@@ -45,7 +45,8 @@ function tree(model: Model, step: number): Tree {
   const list = trees.get(model) ?? [];
   trees.set(model, list);
   if (list[step]) return list[step];
-  const moves = (k: number, e: number) => k > 0 && model.steps[k - 1].angles[e] !== model.steps[k].angles[e];
+  const moves = (k: number, e: number) =>
+    k > 0 && [...model.steps[k].path, model.steps[k].angles].some((a) => a[e] !== model.steps[k - 1].angles[e]);
   // a step that moves no crease (a turn, a new held face) keeps the previous tree, so it joins exactly
   let from = step;
   while (from > 0 && !list[from] && model.steps[from].angles.every((_, e) => !moves(from, e))) from--;
@@ -78,8 +79,11 @@ function tree(model: Model, step: number): Tree {
   return list[step];
 }
 
+/** Creases the engine joins faces through in `step`; the others follow from these. */
+export const treeEdges = (model: Model, step: number): ReadonlySet<number> => tree(model, step).treeEdges;
+
 /** Transform of every face relative to face 0, for the given fold angles. */
-function rootTransforms(model: Model, angles: number[], step: number): Matrix4[] {
+export function rootTransforms(model: Model, angles: number[], step: number): Matrix4[] {
   const { order, parent, parentEdge } = tree(model, step);
   const T: Matrix4[] = [];
   for (const g of order) {
@@ -140,14 +144,21 @@ function fade(c: Matrix4, s: number): Matrix4 {
   return new Matrix4().compose(p.multiplyScalar(1 - s), new Quaternion().slerp(q, 1 - s), new Vector3(1, 1, 1));
 }
 
-/** Eased, unclamped angle of every edge at progress `t` through `step` (all zeros at step 0). */
+/** Eased, unclamped angle of every edge at progress `t` through `step` (all zeros at step 0), along the step's path. */
 export function anglesAt(model: Model, step: number, t: number): number[] {
   assertStep(model, step);
   if (step === 0) return model.steps[0].angles.map(() => 0);
-  const prev = model.steps[step - 1].angles;
-  const cur = model.steps[step].angles;
-  const s = progress(t);
-  return prev.map((a, e) => a + (cur[e] - a) * s);
+  return pathAngles(model, step, progress(t));
+}
+
+/** Angles at un-eased progress `s`: straight from the previous step's angles to this one's, through its path. */
+export function pathAngles(model: Model, step: number, s: number): number[] {
+  const knots = [model.steps[step - 1].angles, ...model.steps[step].path, model.steps[step].angles];
+  const x = Math.max(0, Math.min(1, s)) * (knots.length - 1);
+  const i = Math.min(knots.length - 2, Math.floor(x));
+  const [a, b] = [knots[i], knots[i + 1]];
+  // +180° and −180° are one pose: a crease going from one to the other stays put, only its layers change sides
+  return a.map((v, e) => (Math.abs(v) === 180 && b[e] === -v && x < knots.length - 1 ? v : v + (b[e] - v) * (x - i)));
 }
 
 const rotations = new WeakMap<Model, Matrix4[]>();
@@ -227,7 +238,7 @@ function stackAt(model: Model, step: number): Layers {
   let up = model.faces.map(() => 1);
   const below = model.faces.map((): number[] => []);
   if (step > 0) {
-    const T = rootTransforms(model, model.steps[step].angles, step);
+    const T = rootTransforms(model, model.steps[step].orderedAt ?? model.steps[step].angles, step);
     const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
     up = T.map((m) => Math.sign(Math.round(base.clone().multiply(m).elements[10] * 1e6)));
     for (const [f, g, s] of model.steps[step].faceOrders) {
@@ -275,32 +286,94 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   // to pass the paper that stays put, then settle.
   const from = stackAt(model, step - 1);
   const to = stackAt(model, step);
-  const { moving, clearance } = travel(model, step);
-  const rise = clearance * progress(t / LIFT_SPAN) * progress((1 - t) / LIFT_SPAN);
+  const clearance = travel(model, step);
+  const rise = progress(t / LIFT_SPAN) * progress((1 - t) / LIFT_SPAN);
 
   const C = treeChange(model, step);
-  const point = new Vector3();
-  return model.faces.map((face, f) => {
+  const poses = model.faces.map((_, f) => {
     const m = pose.clone().multiply(T[f]);
-    if (C) m.multiply(fade(C[f], s));
+    return C ? m.multiply(fade(C[f], s)) : m;
+  });
+  const lifts = model.faces.map((_, f) => {
     const a = from.heights[f] * from.up[f];
-    const lift = LAYER_GAP * (a + (to.heights[f] * to.up[f] - a) * s);
-    const shift = moving[f] ? LAYER_GAP * rise : 0;
+    return LAYER_GAP * (a + (to.heights[f] * to.up[f] - a) * s);
+  });
+  // only in a step that ends open (a flap standing out of the stack); flat steps blend their heights alone
+  const open = endsOpen(model, step);
+  const roots = open ? flapRoots(model, poses, lifts, cur.fixedFace) : lifts.map(() => 0);
+  const up = new Vector3(0, 0, 1).transformDirection(poses[cur.fixedFace]);
+  const point = new Vector3();
+  const normal = new Vector3();
+  const facing = new Vector3();
+  return model.faces.map((face, f) => {
+    const m = poses[f];
+    const root = roots[f];
+    // a flap standing out of the stack keeps its root at its height in the stack; its own layers part along its
+    // normal, and each layer's root rises with it, so none sinks below the layers beside it (for faces lying in
+    // the stack all three are the same)
+    const lift = Math.sign(lifts[f]) * (Math.abs(lifts[f]) - root);
+    normal.copy(up).multiplyScalar(root);
+    if (open) {
+      facing.set(0, 0, 1).transformDirection(m);
+      normal.addScaledVector(up.clone().addScaledVector(facing, -up.dot(facing)), Math.abs(lift));
+    }
+    const shift = LAYER_GAP * clearance[f] * rise;
     return face.map((v) => {
-      point.set(model.vertices[v][0], model.vertices[v][1], lift).applyMatrix4(m);
+      point.set(model.vertices[v][0], model.vertices[v][1], lift).applyMatrix4(m).add(normal);
       point.z += shift;
       return point.applyMatrix4(turn).toArray() as Vec3;
     });
   });
 }
 
-const travels = new WeakMap<Model, { moving: boolean[]; clearance: number }[]>();
+const opens = new WeakMap<Model, boolean[]>();
+
+/** Does `step` end with some face out of the stack's plane (e.g. wings opened out)? */
+function endsOpen(model: Model, step: number): boolean {
+  const list = opens.get(model) ?? [];
+  opens.set(model, list);
+  list[step] ??= rootTransforms(model, model.steps[step].angles, step).some(
+    (m) => Math.abs(Math.abs(m.elements[10]) - 1) > 1e-9
+  );
+  return list[step];
+}
 
 /**
- * Which faces move in `step`, and how many layers (+ over, − under) they must shift to pass every face that
- * stays put on their way to the side of the stack they land on. They shift together, so it never reorders them.
+ * For each face standing out of the stack's plane (the `held` face's), the lowest lift among the faces sharing
+ * its plane on the same side of the stack: the height the flap's root sits at. 0 for faces lying in the stack.
  */
-function travel(model: Model, step: number): { moving: boolean[]; clearance: number } {
+function flapRoots(model: Model, poses: Matrix4[], lifts: number[], held: number): number[] {
+  const up = new Vector3(0, 0, 1).transformDirection(poses[held]);
+  const base = up.dot(new Vector3().setFromMatrixPosition(poses[held]));
+  const planes = poses.map((m, f) => {
+    const n = new Vector3(0, 0, 1).transformDirection(m);
+    const o = new Vector3().setFromMatrixPosition(m);
+    if (Math.abs(n.dot(up)) > 1 - 1e-6) return undefined;
+    // one sign per plane, so faces back to back share it
+    if (n.toArray().reduce((a, b) => (Math.abs(b) > Math.abs(a) ? b : a)) < 0) n.negate();
+    const [x, y] = model.faceCentroids[f];
+    const side = Math.sign(new Vector3(x, y, 0).applyMatrix4(m).dot(up) - base);
+    return { n, d: n.dot(o), side };
+  });
+  return planes.map((p, f) => {
+    if (!p) return 0;
+    let root = Math.abs(lifts[f]);
+    planes.forEach((q, g) => {
+      if (q && q.side === p.side && Math.abs(p.d - q.d) < 1e-6 && p.n.distanceTo(q.n) < 1e-6)
+        root = Math.min(root, Math.abs(lifts[g]));
+    });
+    return root;
+  });
+}
+
+const travels = new WeakMap<Model, number[][]>();
+
+/**
+ * How many layers (+ over, − under) each face shifts mid-step to pass every face that stays put on its way to
+ * the side of the stack it lands on; 0 for faces that stay. Flaps that swing the same way shift together, so
+ * it never reorders them; flaps swinging opposite ways (one over, one under) each clear the stack their way.
+ */
+function travel(model: Model, step: number): number[] {
   const list = travels.get(model) ?? [];
   travels.set(model, list);
   if (list[step]) return list[step];
@@ -311,36 +384,37 @@ function travel(model: Model, step: number): { moving: boolean[]; clearance: num
     const end = base.clone().multiply(m).elements;
     return start[f].elements.some((x, i) => Math.abs(x - end[i]) > 1e-9);
   });
-  const from = stackAt(model, step - 1).heights;
-  const to = stackAt(model, step).heights;
-  const range = (pick: boolean) => {
-    const hs = moving.flatMap((m, f) => (m === pick ? [from[f], to[f]] : []));
-    return { min: Math.min(...hs), max: Math.max(...hs) };
-  };
-  const go = range(true);
-  const stay = range(false);
-  // the flap passes over the stack (+) when it swings toward +z on its way, under it (−) when it swings toward −z
+  const before = stackAt(model, step - 1);
+  const after = stackAt(model, step);
+  const [from, to] = [before.heights, after.heights];
+  // each moving face passes over the stack when it swings toward +z on its way, under it when toward −z
   const mid = rootTransforms(model, anglesAt(model, step, 0.5), step);
   const midBase = anchorFor(model, step).clone().multiply(mid[model.steps[step].fixedFace].clone().invert());
   const point = new Vector3();
-  const rise = model.faces.reduce((sum, face, f) => {
-    if (!moving[f]) return sum;
+  const over = model.faces.map((face, f) => {
     const midPose = midBase.clone().multiply(mid[f]);
-    return face.reduce((acc, v) => {
+    const rise = face.reduce((acc, v) => {
       const [x, y] = model.vertices[v];
       return acc + point.set(x, y, 0).applyMatrix4(midPose).z - point.set(x, y, 0).applyMatrix4(start[f]).z;
-    }, sum);
-  }, 0);
-  const over = rise >= 0;
-  // a step that keeps the stacking (a turn, or opening a model out) has no flap to carry over the stack
-  const restack = to.some((h, f) => h !== from[f]);
-  const clearance =
-    !restack || !moving.includes(true) || !moving.includes(false)
-      ? 0
-      : over
-        ? Math.max(0, stay.max + 1 - go.min)
-        : -Math.max(0, go.max + 1 - stay.min);
-  list[step] = { moving, clearance };
+    }, 0);
+    return rise >= 0;
+  });
+  const range = (pick: (f: number) => boolean) => {
+    // a face that turns over has its lift blended through 0 on the way
+    const hs = moving.flatMap((_, f) =>
+      pick(f) ? [from[f], to[f], ...(before.up[f] !== after.up[f] ? [0] : [])] : []
+    );
+    return { min: Math.min(...hs), max: Math.max(...hs) };
+  };
+  const stay = range((f) => !moving[f]);
+  const up = range((f) => moving[f] && over[f]);
+  const down = range((f) => moving[f] && !over[f]);
+  // a step that keeps the stacking (a turn, or opening a model out) has no flap to carry over the stack, nor
+  // has the homepage's unfold, every crease moving at once
+  const restack = model.steps[step].path !== model.unfold && to.some((h, f) => h !== from[f]) && moving.includes(false);
+  list[step] = moving.map((m, f) =>
+    !restack || !m ? 0 : over[f] ? Math.max(0, stay.max + 1 - up.min) : -Math.max(0, down.max + 1 - stay.min)
+  );
   return list[step];
 }
 

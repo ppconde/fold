@@ -1,5 +1,6 @@
 const PANEL_KEY = 'fold:panelOpen';
 const HINT_KEY = 'fold:dockHint';
+const LAST_KEY = 'fold:lastModel';
 
 export function hasWebGL(): boolean {
   try {
@@ -36,3 +37,7 @@ export const writePanelOpen = (open: boolean) => writeStored(PANEL_KEY, String(o
 
 export const shouldShowHint = () => readStored(HINT_KEY) !== 'seen';
 export const markHintSeen = () => writeStored(HINT_KEY, 'seen');
+
+/** The lesson opened last: the homepage shows it. */
+export const readLastModel = () => readStored(LAST_KEY);
+export const writeLastModel = (id: string) => writeStored(LAST_KEY, id);

@@ -34,17 +34,8 @@
   margin: 1rem 0 1.5rem;
 }
 
-.soon {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-top: 2.5rem;
-}
-
-.entering .text {
-  opacity: 0;
-}
-
 .crane {
+  view-transition-name: paper;
   position: relative;
   min-height: 0;
 }
@@ -63,6 +54,12 @@
   opacity: 0.06;
   line-height: 1;
   pointer-events: none;
+  transition: opacity 1.2s var(--ease);
+}
+
+.entering .text,
+.entering .mark {
+  opacity: 0;
 }
 
 @media (max-width: 719px) {

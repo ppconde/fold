@@ -126,3 +126,23 @@ h1:focus {
     animation-duration: 0ms !important;
   }
 }
+
+/* the homepage's unfolded sheet moves into the lesson's stage, scaled, not stretched; the stage's own first
+   snapshot (its loading placeholder) stays hidden, and the live stage replaces the sheet when the move ends */
+::view-transition-group(paper) {
+  animation-duration: 550ms;
+  animation-timing-function: var(--ease);
+}
+
+::view-transition-old(paper) {
+  height: 100%;
+  object-fit: contain;
+  animation: none;
+}
+
+::view-transition-new(paper) {
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  animation: none;
+}

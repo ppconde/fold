@@ -1,6 +1,22 @@
 {
-  "defaultModel": "fold-in-quarters",
+  "defaultModel": "crane",
   "models": [
+    {
+      "id": "crane",
+      "name": {
+        "en": "Crane",
+        "pt": "Grou"
+      },
+      "japaneseName": "Orizuru",
+      "category": "animals",
+      "difficulty": "medium",
+      "tags": [
+        "crane",
+        "bird",
+        "classic"
+      ],
+      "thumbnail": "/models/crane.svg"
+    },
     {
       "id": "dog-face",
       "name": {

@@ -17,7 +17,14 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **Mountain/valley sign mismatch.** The loader accepts a mountain crease with a positive angle and a valley with a negative one, because a precrease can later collapse the other way. The editor should warn about these, not reject them.
 - **`remapAngles` tolerance.** The `onSegment` dot-product tolerance isn't normalised by edge length. There are no tests at 0..400 scale, for √2 diagonal splits, or for a new edge spanning two collinear creases. Settle the epsilon and coordinate scale in the Rabbit Ear spike.
 - **Remaining loader gaps.** `frame_parent` / `frame_inherit` are ignored (steps are sequential). Non-convex faces could flip the M/V side test. Both matter only for third-party uploads.
-- **Homepage crane.** Switch it to a crease-pattern build when the crane lesson exists.
+
+## Crane lesson
+
+- **Homepage model.** Resolved: the homepage shows the lesson opened last (the crane by default), built by the fold engine; a click unfolds it and opens the lesson.
+- **The homepage unfold passes layers through each other.** Every crease opens at once along a path solved at build time (`foldapp:unfold`, 59 knots) so the paper stays joined. Around 70% of the crane's unfold, a few layers pass through each other. A path that also respects the layers would need a collision term in models/solve.ts.
+- **Legs are not narrowed.** The traditional crane narrows the legs before the reverse folds. That fold continues past a flat joint into hidden swivel creases (see Origami Simulator's traditionalCrane.svg), which the builder can't express yet. The lesson is the flapping-crane variant: a thicker neck and tail.
+- **Reverse folds swing over, then tuck.** Rigid paper can't tuck a flap inside without opening that corner flat (four creases meet where the fold line crosses the folded edge; switching between "folded straight" and "reverse-folded" passes through flat), so a reverse fold animates as the flap swinging over as one stack (`over` in models/sequence.ts). With `tuck` it then ends as a real inside reverse fold: the creases take their reverse angles (±180° is one pose, `pathAngles` relabels without moving) and `motionOrders` moves the flaps inside (`Tuck`, `tuckIn`). The flaps pass through the outer layers in the last tenth of the step, by a few layer gaps. The crane's neck, tail and head use it. Squash, sink and other folds that need the paper to bend will hit the same wall: the real fix is a build-time solver that bends a thin strip of faces near the fold and bakes the motion into the .fold.
+- **Homepage unfold jumps.** Fixed: `solvePaths` drops knots the solver couldn't join and bisects across jumps (`bridged`), and the unfold no longer carries flaps over a stack mid-step. One jump remains in the crane's unfold (0.052, within budget, about 40 ms on screen): no joined pose lies between those two knots.
 
 ## Resolved in M4 (part 1)
 

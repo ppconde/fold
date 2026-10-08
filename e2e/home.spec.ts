@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('the start folding link opens the default lesson', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /start folding/ }).click();
-  await expect(page).toHaveURL(/\/fold\/fold-in-quarters/);
+  await expect(page).toHaveURL(/\/fold\/crane/);
 });
 
 test('tapping the page background opens the default lesson', async ({ page }) => {
@@ -11,7 +11,7 @@ test('tapping the page background opens the default lesson', async ({ page }) =>
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible(); // wait for hydration before tapping
   const { width, height } = page.viewportSize() ?? { width: 1280, height: 720 };
   await page.mouse.click(width * 0.75, height * 0.55);
-  await expect(page).toHaveURL(/\/fold\/fold-in-quarters/, { timeout: 5000 });
+  await expect(page).toHaveURL(/\/fold\/crane/, { timeout: 5000 });
 });
 
 test('tapping the menu does not start the lesson', async ({ page }) => {
@@ -25,25 +25,25 @@ test('Enter on the link works', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /start folding/ }).focus();
   await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(/\/fold\/fold-in-quarters/);
+  await expect(page).toHaveURL(/\/fold\/crane/);
 });
 
 test.describe('reduced motion', () => {
   test.use({ reducedMotion: 'reduce' });
-  test('the crane is still and the link navigates at once', async ({ page }) => {
+  test('the model is still and the link navigates at once', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('main')).toHaveAttribute('data-motion', 'off');
     await page.getByRole('link', { name: /start folding/ }).click();
-    await expect(page).toHaveURL(/\/fold\/fold-in-quarters/);
+    await expect(page).toHaveURL(/\/fold\/crane/);
   });
 });
 
-test('if the crane fails to load, the homepage still works', async ({ page }) => {
-  await page.route(/\/assets\/CraneScene-[^/]+\.js$/, (route) => route.abort());
+test('if the 3D scene fails to load, the homepage still works', async ({ page }) => {
+  await page.route(/\/assets\/HomeScene-[^/]+\.js$/, (route) => route.abort());
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold');
   await page.getByRole('link', { name: /start folding/ }).click();
-  await expect(page).toHaveURL(/\/fold\/fold-in-quarters/);
+  await expect(page).toHaveURL(/\/fold\/crane/);
 });
 
 test('if models.json cannot be fetched, the homepage still works', async ({ page }) => {
@@ -62,7 +62,7 @@ test('the name stays Fold in Portuguese', async ({ page }) => {
 
 test.describe('a small phone', () => {
   test.use({ viewport: { width: 360, height: 640 } });
-  test('the last line is reachable by scrolling and the crane still renders', async ({ page }) => {
+  test('the last line is reachable by scrolling and the model still renders', async ({ page }) => {
     await page.goto('/');
     const link = page.getByRole('link', { name: /start folding/ });
     await link.scrollIntoViewIfNeeded();
@@ -71,4 +71,13 @@ test.describe('a small phone', () => {
     expect(await m.evaluate((el) => el.scrollHeight >= el.clientHeight)).toBe(true);
     await expect(page.locator('canvas')).toBeVisible();
   });
+});
+
+test('the homepage shows the lesson opened last and unfolds into it', async ({ page }) => {
+  await page.goto('/fold/tulip');
+  await expect(page.getByRole('heading', { name: 'Tulip' })).toBeVisible();
+  await page.goto('/');
+  await expect(page.getByRole('img', { name: /^Tulip in paper/ })).toBeVisible();
+  await page.getByRole('link', { name: /start folding/ }).click();
+  await expect(page).toHaveURL(/\/fold\/tulip/, { timeout: 6000 });
 });

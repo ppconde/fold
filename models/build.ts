@@ -2,25 +2,43 @@ import { type Matrix3, Vector2 } from 'three';
 import type { Vec2, Vec3 } from '../src/fold/types';
 import type { ModelEntry } from '../src/models/catalog';
 import { arrange, type Crease, signedArea } from './arrange';
+import { motionOrders, solvePaths } from './solve';
+
+/** Keyframes on the homepage's all-at-once unfold: every crease travels far, so the solver needs small steps. */
+const UNFOLD_KNOTS = 59;
 
 /** A flat piece of paper at the end of a step: its outline in paper coordinates, where it lies in the view. */
 export type StackPiece = { outline: Vec2[]; toView: Matrix3; frontUp: boolean };
+
+/**
+ * A reverse fold that swings its flaps over one group of `layers` as one stack, but ends tucked in: between
+ * the two groups (inside whatever lies beyond the group passed), the flaps turning one way and the other
+ * swapping sides of each other. Outlines on the flat sheet; each pair holds the layers whose flaps go behind,
+ * then those whose flaps come forward (`layers`: what stays of them).
+ */
+export type Tuck<T = Vec2[]> = { layers: [T[], T[]]; flaps: [T[], T[]] };
 
 export type SourceStep = {
   en: string;
   pt: string;
   /** Crease name → fold angle in degrees from this step on (+valley, −mountain). Unlisted creases keep their angle. */
   fold?: Record<string, number>;
+  /** Angles partway through the step (crease name → degrees, evenly spaced), e.g. a fold that opens again. */
+  path?: Record<string, number>[];
   /** A point (flat-paper coordinates) inside the face that stays still. */
   hold?: Vec2;
   /** Whole-model rotation from this step on, Euler XYZ in degrees. */
   rotation?: Vec3;
   /** The pieces at the end of the step, bottom to top as the viewer sees them (written by foldSequence). */
   stack?: StackPiece[];
+  /** Layers that change places as the step lands (a reverse fold that swings over; written by foldSequence). */
+  tuck?: Tuck;
 };
 
 export type ModelSource = Omit<ModelEntry, 'thumbnail'> & {
   paperColor: string;
+  /** Collapses: solve each tearing step's path, and read the layer order off the motion (models/solve.ts). */
+  solve?: boolean;
   creases: Record<string, Crease>;
   steps: SourceStep[];
 };
@@ -96,6 +114,7 @@ export function buildFold(src: ModelSource) {
   const angles: Record<string, number> = {};
   let orders = '[]';
   const frames = src.steps.map((step, i) => {
+    const before = { ...angles };
     for (const [name, angle] of Object.entries(step.fold ?? {})) {
       if (!src.creases[name]) throw new Error(`${src.id} step ${i + 1} folds ${name}, which is not a crease.`);
       angles[name] = angle;
@@ -110,7 +129,8 @@ export function buildFold(src: ModelSource) {
       );
     if (held === -1) throw new Error(`${src.id} step ${i + 1} holds a point outside the paper.`);
     // faceOrders only where the stacking changes; the loader carries it into later steps
-    const faceOrders = step.stack && faceOrdersOf(step.stack, vertices, faces);
+    const path = (step.path ?? []).map((knot) => edgeCrease.map((name) => (name && (knot[name] ?? before[name])) || 0));
+    const faceOrders = !src.solve && step.stack ? faceOrdersOf(step.stack, vertices, faces) : undefined;
     const changed = faceOrders !== undefined && JSON.stringify(faceOrders) !== orders;
     if (changed) orders = JSON.stringify(faceOrders);
     return {
@@ -118,10 +138,11 @@ export function buildFold(src: ModelSource) {
       'foldapp:instruction': { en: step.en, pt: step.pt },
       ...(held === undefined ? {} : { 'foldapp:fixedFace': held }),
       ...(step.rotation ? { 'foldapp:rotation': step.rotation } : {}),
+      ...(path.length ? { 'foldapp:path': path } : {}),
       ...(changed ? { faceOrders } : {})
     };
   });
-  return {
+  const fold = {
     file_spec: 1.2,
     file_creator: 'fold.ppconde.com',
     file_title: src.name.en,
@@ -134,6 +155,42 @@ export function buildFold(src: ModelSource) {
     faces_vertices: faces,
     file_frames: frames
   };
+  if (src.solve) {
+    solvePaths(fold);
+    // a tuck's outlines as the faces inside them
+    const facesIn = (outlines: Vec2[][]) =>
+      faces.flatMap((f, i) => {
+        const c: Vec2 = [0, 1].map((j) => f.reduce((s, v) => s + vertices[v][j], 0) / f.length) as Vec2;
+        return outlines.some((o) => inside(c, o)) ? [i] : [];
+      });
+    const tucks = src.steps.map(
+      (st) =>
+        st.tuck && {
+          layers: st.tuck.layers.map(facesIn),
+          flaps: st.tuck.flaps.map(facesIn)
+        }
+    );
+    motionOrders(fold, tucks as (Tuck<number> | undefined)[]);
+  }
+  // the homepage opens the finished model out all at once; finely, so the paper stays joined
+  // toward the angles as the swings of tucks left them (the same pose), then the tucks' last relabel
+  const swung = frames.reduce((at: number[], frame, i) => {
+    const knot = frame['foldapp:path']?.at(-1);
+    return frame.edges_foldAngle.map((a, e) => {
+      if (src.steps[i].tuck && knot && Math.abs(a) === 180 && knot[e] === -a) return knot[e];
+      return i && a === frames[i - 1].edges_foldAngle[e] ? at[e] : a;
+    });
+  }, []);
+  const end = frames[frames.length - 1].edges_foldAngle;
+  const last: { edges_foldAngle: number[]; 'foldapp:path'?: number[][] } = {
+    ...frames[frames.length - 1],
+    edges_foldAngle: swung,
+    'foldapp:path': undefined
+  };
+  solvePaths({ ...fold, file_frames: [last] }, UNFOLD_KNOTS);
+  const knots = [...(last['foldapp:path'] ?? []), ...(swung.some((a, e) => a !== end[e]) ? [swung] : [])];
+  const unfold = knots.map((knot) => knot.map((a) => Math.round(a * 100) / 100));
+  return unfold.length ? { ...fold, 'foldapp:unfold': unfold } : fold;
 }
 
 /** The library entry for `src`. */

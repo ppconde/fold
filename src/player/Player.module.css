@@ -30,6 +30,7 @@
 }
 
 .stage {
+  view-transition-name: paper;
   grid-area: stage;
   position: relative;
   min-height: 0;

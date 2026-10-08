@@ -25,8 +25,8 @@ describe('fetchIndex', () => {
   it('returns the entries in models.json', async () => {
     serve({ '/models/models.json': { body: file('models.json') } });
     const index = await fetchIndex();
-    expect(index.models.map((e) => e.id)).toEqual(['dog-face', 'tulip', 'fold-in-half', 'fold-in-quarters']);
-    expect(index.defaultModel).toBe('fold-in-quarters');
+    expect(index.models.map((e) => e.id)).toEqual(['crane', 'dog-face', 'tulip', 'fold-in-half', 'fold-in-quarters']);
+    expect(index.defaultModel).toBe('crane');
   });
 
   it('throws a FoldError when the index has no models array', async () => {
@@ -53,7 +53,7 @@ describe('fetchModel', () => {
 
   it('returns null for an id that is not in the index, even if the SPA fallback answers 200', async () => {
     serve({ '/models/models.json': { body: file('models.json') } });
-    expect(await fetchModel('crane')).toBeNull();
+    expect(await fetchModel('kabuto')).toBeNull();
   });
 
   it('throws a readable FoldError when a listed file is missing', async () => {

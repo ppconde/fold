@@ -20,7 +20,6 @@ function About() {
       <h2>{t.credits}</h2>
       <ul className={pages.plain}>
         <li>{t.creditFold}</li>
-        <li>{t.creditCrane}</li>
         <li>{t.creditFonts}</li>
       </ul>
       <p className={pages.prose}>{t.licence}</p>
