@@ -69,7 +69,8 @@ const centroid = (poly: Vec2[]): Vec2 => [
   poly.reduce((s, v) => s + v[1], 0) / poly.length
 ];
 
-type Pick = (tags: string[], at: Vec2) => boolean;
+/** Picks pieces by their tags and a point inside them on the flat sheet. */
+type PieceTest = (tags: string[], at: Vec2) => boolean;
 
 export type FoldOptions = Text & {
   /**
@@ -78,7 +79,7 @@ export type FoldOptions = Text & {
    */
   valley: boolean | ((tags: string[], at: Vec2) => boolean);
   /** Fold only pieces that pass this test, given their tags and a point inside them on the flat sheet. */
-  only?: (tags: string[], at: Vec2) => boolean;
+  only?: PieceTest;
   /** Tag added to every piece this fold moves, for later `only` tests. */
   tag?: string;
   /** A point (view coordinates) on paper that stays still in this step. */
@@ -433,7 +434,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
      */
     collapse(
       fold: Record<string, number>,
-      opts: Text & { hold: Vec2; tuck?: { layers: [Pick, Pick]; flaps: [Pick, Pick] } }
+      opts: Text & { hold: Vec2; tuck?: { layers: [PieceTest, PieceTest]; flaps: [PieceTest, PieceTest] } }
     ) {
       for (const [k, a] of Object.entries(fold)) {
         if (!creases[k]) throw new Error(`Collapse sets ${k}, which is not a crease.`);
@@ -448,13 +449,13 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       if (!still) throw new Error('Collapse holds a point that is not on the paper.');
       const held = apply(still.toView.clone().invert(), opts.hold);
       pieces = relayer(held, still);
-      const outlines = (pick: Pick) =>
+      const outlines = (pick: PieceTest) =>
         pieces.filter((pc) => pick(pc.tags, centroid(pc.outline))).map((pc) => pc.outline);
       const tuck: Tuck | undefined = opts.tuck && {
         layers: [outlines(opts.tuck.layers[0]), outlines(opts.tuck.layers[1])],
         flaps: [outlines(opts.tuck.flaps[0]), outlines(opts.tuck.flaps[1])]
       };
-      steps.push({ fold, en: opts.en, pt: opts.pt, hold: held, stack: pieces, ...(tuck ? { tuck } : {}) });
+      steps.push({ fold, en: opts.en, pt: opts.pt, hold: held, stack: pieces, tuck });
     },
     /** Split crease `name` at `x` (flat-sheet coordinates); returns the name of the part past x. */
     split(name: string, x: Vec2): string {
