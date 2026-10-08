@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fixture } from './fixtures';
+import { fixture, type SlitJson, slitFixture } from './fixtures';
 import { FoldError, loadModel } from './load-model';
 
 type Json = Record<string, unknown> & { file_frames: Record<string, unknown>[] };
@@ -232,4 +232,95 @@ describe('loadModel', () => {
       expect(run).toThrow(message);
     });
   }
+});
+
+describe('cuts', () => {
+  const slit = (edit: (j: SlitJson) => void) => {
+    const j = structuredClone(slitFixture());
+    edit(j);
+    return j;
+  };
+
+  it('reads which step cuts each slit edge, and how far along the cut its ends lie', () => {
+    const model = loadModel(slitFixture());
+    const never = Number.POSITIVE_INFINITY;
+    expect(model.cutAt).toEqual([never, never, never, never, never, never, never, 1, 1, never, never]);
+    expect(model.steps[1].cuts).toEqual([
+      { edge: 7, from: 0, to: 0.5 },
+      { edge: 8, from: 0.5, to: 1 }
+    ]);
+    expect(model.steps[0].cuts).toEqual([]);
+    expect(model.steps[2].cuts).toEqual([]);
+  });
+
+  it.each([
+    [
+      'a cut edge no step cuts',
+      (j: SlitJson) => {
+        delete j.file_frames[0]['foldapp:cut'];
+      },
+      /Edge 7 is a cut, but no step cuts it/
+    ],
+    [
+      'an edge cut twice',
+      (j: SlitJson) => {
+        j.file_frames[0]['foldapp:cut'] = [
+          [7, 0, 0.5],
+          [7, 0, 0.5],
+          [8, 0.5, 1]
+        ];
+      },
+      /Edge 7 is cut twice/
+    ],
+    [
+      'cutting an edge that is not a cut',
+      (j: SlitJson) => {
+        j.file_frames[0]['foldapp:cut'] = [
+          [7, 0, 0.5],
+          [8, 0.5, 1],
+          [9, 0, 1]
+        ];
+      },
+      /cuts edge 9, which is not a cut \(C\) edge/
+    ],
+    [
+      'a step that cuts and folds',
+      (j: SlitJson) => {
+        j.file_frames[1]['foldapp:cut'] = j.file_frames[0]['foldapp:cut'];
+        delete j.file_frames[0]['foldapp:cut'];
+      },
+      /Step 2 cuts and folds at once/
+    ],
+    [
+      'a cut position past the end',
+      (j: SlitJson) => {
+        j.file_frames[0]['foldapp:cut'] = [
+          [7, 0, 1.5],
+          [8, 0.5, 1]
+        ];
+      },
+      /foldapp:cut needs \[edge, from, to\]/
+    ],
+    [
+      'folding a cut edge',
+      (j: SlitJson) => {
+        (j.file_frames[1].edges_foldAngle as number[])[7] = 90;
+      },
+      /folds edge 7, which is a cut, not a crease/
+    ],
+    [
+      'cuts that cut a piece off',
+      (j: SlitJson) => {
+        j.edges_assignment[9] = 'C';
+        j.file_frames[0]['foldapp:cut'] = [
+          [7, 0, 0.25],
+          [8, 0.25, 0.5],
+          [9, 0.5, 1]
+        ];
+      },
+      /The cuts cut the paper into separate pieces/
+    ]
+  ])('rejects %s', (_, edit, message) => {
+    expect(() => loadModel(slit(edit))).toThrow(message);
+  });
 });

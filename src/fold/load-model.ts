@@ -1,10 +1,10 @@
-import type { Assignment, Edge, FaceOrder, Model, Step, Vec2, Vec3 } from './types';
+import type { Assignment, Cut, Edge, FaceOrder, Model, Step, Vec2, Vec3 } from './types';
 
 export class FoldError extends Error {
   override name = 'FoldError';
 }
 
-const ASSIGNMENTS = new Set(['M', 'V', 'B', 'F', 'U']);
+const ASSIGNMENTS = new Set(['M', 'V', 'B', 'F', 'U', 'C']);
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
 const edgeKey = (a: number, b: number) => (a < b ? `${a},${b}` : `${b},${a}`);
@@ -40,7 +40,7 @@ export function loadModel(json: unknown): Model {
 
   const assignments = readArray(json, 'edges_assignment');
   if (assignments.length !== edges.length || !assignments.every((a) => ASSIGNMENTS.has(a as string))) {
-    throw new FoldError(`edges_assignment needs one of M, V, B, F, U for each of the ${edges.length} edges.`);
+    throw new FoldError(`edges_assignment needs one of M, V, B, F, U, C for each of the ${edges.length} edges.`);
   }
 
   const faces = readArray(json, 'faces_vertices').map((f, i) => {
@@ -79,7 +79,14 @@ export function loadModel(json: unknown): Model {
   const ys = vertices.map((v) => v[1]);
   const center: Vec2 = [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
 
-  assertConnected(faces.length, faceEdges, edgeFaces);
+  assertConnected(faces.length, faceEdges, edgeFaces, () => false, 'The paper is in separate pieces.');
+  assertConnected(
+    faces.length,
+    faceEdges,
+    edgeFaces,
+    (e) => assignments[e] === 'C',
+    'The cuts cut the paper into separate pieces.'
+  );
 
   const frames = readArray(json, 'file_frames');
   if (frames.length === 0) throw new FoldError('The model has no steps.');
@@ -99,7 +106,8 @@ export function loadModel(json: unknown): Model {
       fixedFace: nearestToCenter,
       rotation: [0, 0, 0],
       faceOrders: [],
-      path: []
+      path: [],
+      cuts: []
     }
   ];
   frames.forEach((frame, i) => {
@@ -114,7 +122,7 @@ export function loadModel(json: unknown): Model {
 
     angles.forEach((a, e) => {
       if (Math.abs(a) > 180) throw new FoldError(`Step ${n} folds edge ${e} past 180°.`);
-      const kind = { B: 'border', F: 'flat line' }[assignments[e] as string];
+      const kind = { B: 'border', F: 'flat line', C: 'cut' }[assignments[e] as string];
       if (a !== 0 && kind) throw new FoldError(`Step ${n} folds edge ${e}, which is a ${kind}, not a crease.`);
     });
 
@@ -142,8 +150,31 @@ export function loadModel(json: unknown): Model {
 
     const path = readPath(frame['foldapp:path'], edges.length, `Step ${n} foldapp:path`);
 
-    steps.push({ angles: [...angles], instruction, fixedFace, rotation: [...rotation] as Vec3, faceOrders, path });
+    const cuts = readCuts(frame['foldapp:cut'], n, assignments as Assignment[]);
+    if (cuts.length && (path.length || angles.some((a, e) => a !== prev.angles[e]))) {
+      throw new FoldError(`Step ${n} cuts and folds at once; make the fold its own step.`);
+    }
+
+    steps.push({
+      angles: [...angles],
+      instruction,
+      fixedFace,
+      rotation: [...rotation] as Vec3,
+      faceOrders,
+      path,
+      cuts
+    });
   });
+
+  const cutAt = edges.map(() => Number.POSITIVE_INFINITY);
+  steps.forEach((s, k) => {
+    for (const c of s.cuts) {
+      if (cutAt[c.edge] !== Number.POSITIVE_INFINITY) throw new FoldError(`Edge ${c.edge} is cut twice.`);
+      cutAt[c.edge] = k;
+    }
+  });
+  const uncut = assignments.findIndex((a, e) => a === 'C' && cutAt[e] === Number.POSITIVE_INFINITY);
+  if (uncut !== -1) throw new FoldError(`Edge ${uncut} is a cut, but no step cuts it.`);
 
   return deepFreeze({
     title: typeof json.file_title === 'string' ? json.file_title : 'Untitled',
@@ -154,6 +185,7 @@ export function loadModel(json: unknown): Model {
     faces,
     faceEdges,
     edgeFaces,
+    cutAt,
     faceCentroids,
     center,
     steps,
@@ -175,6 +207,27 @@ function readFaceOrders(raw: unknown, n: number, faceCount: number): FaceOrder[]
   });
 }
 
+/** A frame's slit edges, each with how far along the cut its two ends lie; none when absent. */
+function readCuts(raw: unknown, n: number, assignments: Assignment[]): Cut[] {
+  if (raw === undefined) return [];
+  const bad = () =>
+    new FoldError(`Step ${n} foldapp:cut needs [edge, from, to] triples, from and to different and between 0 and 1.`);
+  if (!Array.isArray(raw)) throw bad();
+  return raw.map((c): Cut => {
+    if (
+      !Array.isArray(c) ||
+      c.length !== 3 ||
+      !isIndex(c[0], assignments.length) ||
+      ![c[1], c[2]].every((x) => isNum(x) && x >= 0 && x <= 1) ||
+      c[1] === c[2]
+    ) {
+      throw bad();
+    }
+    if (assignments[c[0]] !== 'C') throw new FoldError(`Step ${n} cuts edge ${c[0]}, which is not a cut (C) edge.`);
+    return { edge: c[0], from: c[1], to: c[2] };
+  });
+}
+
 function deepFreeze<T>(value: T): T {
   if (typeof value === 'object' && value !== null && !Object.isFrozen(value)) {
     Object.freeze(value);
@@ -183,12 +236,19 @@ function deepFreeze<T>(value: T): T {
   return value;
 }
 
-function assertConnected(faceCount: number, faceEdges: number[][], edgeFaces: number[][]) {
+function assertConnected(
+  faceCount: number,
+  faceEdges: number[][],
+  edgeFaces: number[][],
+  skip: (e: number) => boolean,
+  message: string
+) {
   const seen = new Set([0]);
   const queue = [0];
   while (queue.length) {
     const f = queue.shift() as number;
     for (const e of faceEdges[f]) {
+      if (skip(e)) continue;
       for (const g of edgeFaces[e]) {
         if (!seen.has(g)) {
           seen.add(g);
@@ -197,7 +257,7 @@ function assertConnected(faceCount: number, faceEdges: number[][], edgeFaces: nu
       }
     }
   }
-  if (seen.size !== faceCount) throw new FoldError('The paper is in separate pieces.');
+  if (seen.size !== faceCount) throw new FoldError(message);
 }
 
 /** Lists of one angle per edge, each within 180°; none when absent. */
