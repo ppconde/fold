@@ -127,7 +127,8 @@ h1:focus {
   }
 }
 
-/* the homepage's unfolded sheet moves into the lesson's stage, scaled, not stretched; the stage's own first
+/* the homepage's unfolded sheet moves into the lesson's stage, kept centred and scaled by how far each camera
+   sits from it (--paper-from, --paper-to), so it lands as the stage first shows it; the stage's own first
    snapshot (its loading placeholder) stays hidden, and the live stage replaces the sheet when the move ends */
 ::view-transition-group(paper) {
   animation-duration: 550ms;
@@ -135,9 +136,17 @@ h1:focus {
 }
 
 ::view-transition-old(paper) {
+  inset: 50% auto auto 50%;
+  translate: -50% -50%;
+  width: auto;
   height: 100%;
-  object-fit: contain;
-  animation: none;
+  animation: paper-lands 550ms var(--ease) both;
+}
+
+@keyframes paper-lands {
+  to {
+    height: calc(100% * var(--paper-from, 1) / var(--paper-to, 1));
+  }
 }
 
 ::view-transition-new(paper) {

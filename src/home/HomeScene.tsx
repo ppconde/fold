@@ -3,8 +3,9 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { type Group, MathUtils } from 'three';
 import { foldedPositions } from '../fold/fold';
-import type { Model } from '../fold/types';
+import type { Model, Vec3 } from '../fold/types';
 import { Paper } from '../player/Paper';
+import { frameReach, STAGE_FOV, STAGE_POLAR, stageDistance } from '../player/paper-geometry';
 
 /** Pitch toward the viewer and yaw of the model at rest, in radians. */
 const REST = [0.3, 0.1];
@@ -12,6 +13,10 @@ const REST = [0.3, 0.1];
 const RAISE = 0.02;
 /** How much larger the model at rest is drawn than its framing. */
 const GROW = 0.15;
+/** The camera, looking at the middle. */
+const CAMERA: Vec3 = [0, 0.6, 3.3];
+/** Pitch of the unfolded sheet that, seen from the camera, matches the lesson stage's view from above. */
+const END_PITCH = Math.PI / 2 - STAGE_POLAR - Math.atan2(CAMERA[1], CAMERA[2]);
 
 type Props = {
   /** A model of one step (see unfoldAll). */
@@ -31,7 +36,7 @@ export function HomeScene(props: Props) {
       frameloop={props.still ? 'demand' : 'always'}
       dpr={[1, 2]}
       gl={{ alpha: true }}
-      camera={{ fov: 38, position: [0, 0.6, 3.3] }}
+      camera={{ fov: STAGE_FOV, position: CAMERA }}
       role="img"
       aria-label={props.label}
     >
@@ -64,6 +69,15 @@ function Folded({ model, at, settle, pointer, still }: Props) {
   const fit = useRef<Group>(null);
   const shift = useRef<Group>(null);
   const target = useMemo(() => framing(model, at), [model, at]);
+  // the flat sheet ends where the lesson's stage first shows it: as far off as the stage would set it in this
+  // view, or as the stage last did if that's further (its view may be narrower); the hand-off scales by the two
+  const aspect = useThree((s) => s.size.width / s.size.height);
+  const far = useMemo(() => {
+    const stage = Number(getComputedStyle(document.documentElement).getPropertyValue('--paper-to')) || 0;
+    return Math.max(stageDistance(aspect), stage);
+  }, [aspect]);
+  useEffect(() => document.documentElement.style.setProperty('--paper-from', String(far)), [far]);
+  const flat = useMemo(() => Math.hypot(...CAMERA) / (far * frameReach(model, 0)), [far, model]);
 
   const invalidate = useThree((s) => s.invalidate);
   useEffect(() => {
@@ -76,9 +90,11 @@ function Folded({ model, at, settle, pointer, still }: Props) {
     const p = shift.current;
     if (!g || !f || !p) return;
     // the framing follows the paper's size and centre gently, so the opening shape doesn't pump the zoom
-    const scale = (0.9 * (1 + GROW * (1 - settle))) / target.reach;
+    const scale = MathUtils.lerp((0.82 * (1 + GROW)) / target.reach, flat, settle);
     const [x, y, z] = target.centre.map((c) => -c);
-    const ease = (from: number, to: number) => (still || !f.userData.framed ? to : MathUtils.damp(from, to, 5, delta));
+    // eased, but exact once settled
+    const ease = (from: number, to: number) =>
+      still || !f.userData.framed ? to : MathUtils.lerp(MathUtils.damp(from, to, 5, delta), to, settle);
     f.scale.setScalar(ease(f.scale.x, scale));
     p.position.set(ease(p.position.x, x), ease(p.position.y, y), ease(p.position.z, z));
     f.userData.framed = true;
@@ -88,22 +104,23 @@ function Folded({ model, at, settle, pointer, still }: Props) {
     const targetYaw =
       drift * (Math.sin((time / 7) * Math.PI * 2) * MathUtils.degToRad(6) + pointer.x * MathUtils.degToRad(10));
     const targetPitch = drift * pointer.y * MathUtils.degToRad(6);
-    g.rotation.y = MathUtils.damp(g.rotation.y, targetYaw, 2.5, delta);
-    g.rotation.x = MathUtils.damp(g.rotation.x, targetPitch, 2.5, delta);
+    g.rotation.y = MathUtils.lerp(MathUtils.damp(g.rotation.y, targetYaw, 2.5, delta), 0, settle);
+    g.rotation.x = MathUtils.lerp(MathUtils.damp(g.rotation.x, targetPitch, 2.5, delta), 0, settle);
     g.position.y = drift * Math.sin((time / 7) * Math.PI * 2) * 0.04;
   });
 
   return (
     <group ref={group}>
       {/* turned a little toward the viewer, so a model that lies flat still shows its face; once unfolded,
-          seen from the lesson stage's angle (0.9 rad off straight down) */}
+          seen as the lesson's stage sees it */}
       <group
         ref={fit}
         position={[0, RAISE * (1 - settle), 0]}
-        rotation={[MathUtils.lerp(REST[0], Math.PI / 2 - 0.9, settle), MathUtils.lerp(REST[1], 0, settle), 0]}
+        rotation={[MathUtils.lerp(REST[0], END_PITCH, settle), MathUtils.lerp(REST[1], 0, settle), 0]}
       >
         <group ref={shift}>
-          <Paper model={model} step={1} t={at} />
+          {/* once flat, the lesson's first step: no creases drawn yet */}
+          <Paper model={model} step={at > 0 ? 1 : 0} t={at} />
         </group>
       </group>
     </group>
