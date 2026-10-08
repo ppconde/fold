@@ -148,6 +148,8 @@ export function loadModel(json: unknown): Model {
     const faceOrders =
       frame.faceOrders === undefined ? prev.faceOrders : readFaceOrders(frame.faceOrders, n, faces.length);
 
+    const landed = frame['foldapp:landedOrders'];
+    const landedOrders = landed === undefined ? undefined : readFaceOrders(landed, n, faces.length);
     const path = readPath(frame['foldapp:path'], edges.length, `Step ${n} foldapp:path`);
 
     const cuts = readCuts(frame['foldapp:cut'], n, assignments as Assignment[]);
@@ -161,6 +163,7 @@ export function loadModel(json: unknown): Model {
       fixedFace,
       rotation: [...rotation] as Vec3,
       faceOrders,
+      ...(landedOrders ? { landedOrders } : {}),
       path,
       cuts
     });

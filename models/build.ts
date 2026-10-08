@@ -173,6 +173,22 @@ export function buildFold(src: ModelSource) {
   };
   if (src.solve) {
     solvePaths(fold);
+    // a collapse that tucks: the paper lands at 9/10 and holds still while the layers change places
+    src.steps.forEach((st, i) => {
+      const frame = frames[i] as { edges_foldAngle: number[]; 'foldapp:path'?: number[][] };
+      if (!st.tuck || st.path) return;
+      const start = i ? frames[i - 1].edges_foldAngle : frame.edges_foldAngle.map(() => 0);
+      const end = frame.edges_foldAngle;
+      const knots = frame['foldapp:path'] ?? [];
+      // the motion as nine evenly spaced knots (the solver's own, resampled), then one where nothing moves
+      const at = (u: number) => {
+        const all = [start, ...knots, end];
+        const x = u * (all.length - 1);
+        const j = Math.min(Math.floor(x), all.length - 2);
+        return all[j].map((a, e) => a + (all[j + 1][e] - a) * (x - j));
+      };
+      frame['foldapp:path'] = [...Array.from({ length: 8 }, (_, j) => at((j + 1) / 9)), end];
+    });
     // a tuck's outlines as the faces inside them
     const facesIn = (outlines: Vec2[][]) =>
       faces.flatMap((f, i) => {

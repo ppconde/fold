@@ -69,6 +69,8 @@ const centroid = (poly: Vec2[]): Vec2 => [
   poly.reduce((s, v) => s + v[1], 0) / poly.length
 ];
 
+type Pick = (tags: string[], at: Vec2) => boolean;
+
 export type FoldOptions = Text & {
   /**
    * true: the flap comes toward the viewer. false: it goes behind. A function decides per piece, for a
@@ -429,7 +431,10 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
      * A step that moves several creases at once (a collapse, squash, petal fold): set them, and the layers
      * are worked out again from the flat-folded crease pattern, the piece under `hold` staying put.
      */
-    collapse(fold: Record<string, number>, opts: Text & { hold: Vec2 }) {
+    collapse(
+      fold: Record<string, number>,
+      opts: Text & { hold: Vec2; tuck?: { layers: [Pick, Pick]; flaps: [Pick, Pick] } }
+    ) {
       for (const [k, a] of Object.entries(fold)) {
         if (!creases[k]) throw new Error(`Collapse sets ${k}, which is not a crease.`);
         state[k] = a;
@@ -443,7 +448,13 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       if (!still) throw new Error('Collapse holds a point that is not on the paper.');
       const held = apply(still.toView.clone().invert(), opts.hold);
       pieces = relayer(held, still);
-      steps.push({ fold, en: opts.en, pt: opts.pt, hold: held, stack: pieces });
+      const outlines = (pick: Pick) =>
+        pieces.filter((pc) => pick(pc.tags, centroid(pc.outline))).map((pc) => pc.outline);
+      const tuck: Tuck | undefined = opts.tuck && {
+        layers: [outlines(opts.tuck.layers[0]), outlines(opts.tuck.layers[1])],
+        flaps: [outlines(opts.tuck.flaps[0]), outlines(opts.tuck.flaps[1])]
+      };
+      steps.push({ fold, en: opts.en, pt: opts.pt, hold: held, stack: pieces, ...(tuck ? { tuck } : {}) });
     },
     /** Split crease `name` at `x` (flat-sheet coordinates); returns the name of the part past x. */
     split(name: string, x: Vec2): string {
