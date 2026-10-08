@@ -13,6 +13,15 @@ describe('loadModel', () => {
     expect(load('Fold').steps[1].instruction).toEqual({ en: 'Fold' });
   });
 
+  it('loads a step path and rejects one with the wrong number of angles', () => {
+    const load = (path: unknown) =>
+      loadModel({ ...half(), file_frames: [{ ...half().file_frames[0], 'foldapp:path': path }] });
+    const angles = half().file_frames[0].edges_foldAngle;
+    expect(load([angles]).steps[1].path).toEqual([angles]);
+    expect(load(undefined).steps[1].path).toEqual([]);
+    expect(() => load([[90]])).toThrow(FoldError);
+  });
+
   it('loads fold-in-half with an implicit flat step 0', () => {
     const model = loadModel(fixture('fold-in-half'));
     expect(model.title).toBe('Fold in half');

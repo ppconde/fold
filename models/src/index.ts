@@ -1,13 +1,14 @@
 import type { ModelEntry } from '../../src/models/catalog';
 import type { ModelSource } from '../build';
+import crane from './crane';
 import dogFace from './dog-face';
 import tulip from './tulip';
 
 /** Models authored as code, in library order. */
-export const sources: ModelSource[] = [dogFace, tulip];
+export const sources: ModelSource[] = [crane, dogFace, tulip];
 
 /** The lesson the homepage opens. */
-export const DEFAULT_MODEL = 'fold-in-quarters';
+export const DEFAULT_MODEL = 'crane';
 
 /** Hand-written practice files in public/models, listed after the authored models. */
 export const FIXTURES: ModelEntry[] = [

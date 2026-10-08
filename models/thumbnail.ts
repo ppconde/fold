@@ -5,11 +5,20 @@ const BACK = '#F3EDE2';
 const INK = '#33302C';
 const SIZE = 240;
 
+/** The last step that ends with the paper lying flat: from above, a model stood up or opened out is a sliver. */
+export function flatStep(model: Model): number {
+  for (let k = model.steps.length - 1; k > 0; k--) {
+    const zs = foldedPositions(model, k, 1).flatMap((face) => face.map((p) => p[2]));
+    if (Math.max(...zs) - Math.min(...zs) < 0.1) return k;
+  }
+  return 0;
+}
+
 /**
- * The paper at the end of `step` seen from above, as a small SVG. Faces are painted far to near
- * by mean height, which follows the stack because every layer is lifted by its place in it.
+ * The paper at the end of `step` (by default the last flat one) seen from above, as a small SVG. Faces are
+ * painted far to near by mean height, which follows the stack because every layer is lifted by its place in it.
  */
-export function thumbnail(model: Model, step = model.steps.length - 1): string {
+export function thumbnail(model: Model, step = flatStep(model)): string {
   const faces = foldedPositions(model, step, 1);
   const xs = faces.flat().map((p) => p[0]);
   const ys = faces.flat().map((p) => -p[1]);

@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture } from '../src/fold/fixtures';
 import { loadModel } from '../src/fold/load-model';
-import { thumbnail } from './thumbnail';
+import { flatStep, thumbnail } from './thumbnail';
 
 describe('thumbnail', () => {
   it('draws one polygon per face, coloured front up on the flat sheet', () => {
@@ -19,5 +20,11 @@ describe('thumbnail', () => {
   // Safari draws an SVG image that uses a filter at 1×, so it blurs on Retina screens
   it('uses no SVG filter, so Safari draws it sharp', () => {
     expect(thumbnail(loadModel(fixture('fold-in-half')))).not.toContain('filter');
+  });
+
+  it('draws a model that ends standing up at its last flat step', () => {
+    const model = loadModel(JSON.parse(readFileSync(new URL('../public/models/crane.fold', import.meta.url), 'utf8')));
+    expect(flatStep(model)).toBe(model.steps.length - 3); // before standing up and spreading the wings
+    expect(flatStep(loadModel(fixture('fold-in-half')))).toBe(1);
   });
 });

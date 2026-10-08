@@ -23,8 +23,7 @@ export const en = {
   home: {
     lede: 'Choose an origami and follow it fold by fold, turning the paper in 3D as you go.',
     start: 'start folding',
-    craneSoon: 'learning the crane — coming soon',
-    craneLabel: 'A paper crane, drifting slowly. Tap anywhere to start folding.'
+    modelLabel: (name: string) => `${name} in paper, drifting slowly. Tap anywhere to unfold it and start folding.`
   },
   library: {
     title: 'Library',
@@ -44,7 +43,6 @@ export const en = {
       'Press next to watch each fold, drag the slider to go at your own pace, and turn the paper to see it from any side.',
     credits: 'Credits',
     creditFold: 'Models use the FOLD file format by Erik Demaine and others.',
-    creditCrane: '“3D Origami crane” by JuanG3D, licensed CC BY 4.0.',
     creditFonts: 'Shippori Mincho, Instrument Sans and Zen Kurenaido, under the SIL Open Font License.',
     licence: 'The code is free software under the GPLv3. Models are shared under CC BY-NC-SA unless stated otherwise.'
   },

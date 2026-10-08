@@ -118,9 +118,9 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
       );
       if (jump > 1e-9) problems.push(`Step ${k + 1} starts ${jump.toExponential(1)} away from where step ${k} ended.`);
     }
-    for (const t of [0.25, 0.5, 0.75, 1]) {
-      const gap = spread(model, k, t);
-      if (gap > budget) problems.push(`Step ${k} at ${t * 100}% opens a ${gap.toFixed(3)} gap (budget ${budget}).`);
+    for (let i = 1; i <= 10; i++) {
+      const gap = spread(model, k, i / 10);
+      if (gap > budget) problems.push(`Step ${k} at ${i * 10}% opens a ${gap.toFixed(3)} gap (budget ${budget}).`);
     }
     for (let i = 1; i <= 10; i++) {
       const hits = crossings(model, k, i / 10);

@@ -5,13 +5,7 @@ import type { Model } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import { prefersReducedMotion } from './browser';
 import { Paper } from './Paper';
-import { endCentre, frameReach, paperExtent } from './paper-geometry';
-
-/** Vertical field of view in degrees, and the camera's angle from straight down, in radians. */
-const FOV = 35;
-const POLAR = 0.9;
-/** Room left around the paper's furthest reach. */
-const MARGIN = 1.08;
+import { endCentre, frameReach, paperExtent, STAGE_FOV, STAGE_POLAR, stageDistance } from './paper-geometry';
 
 type Props = { model: Model; step: number; t: number; playing: boolean; resetCount: number; frameStep: number };
 
@@ -21,7 +15,7 @@ export function Stage(props: Props) {
     <Canvas
       frameloop="demand"
       dpr={[1, 2]}
-      camera={{ fov: FOV, near: 0.01, far: 100, position: [0, 2, 2] }}
+      camera={{ fov: STAGE_FOV, near: 0.01, far: 100, position: [0, 2, 2] }}
       gl={{ alpha: true }}
       role="img"
       aria-label={t.player.stageLabel}
@@ -51,10 +45,10 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
     if (!c) return;
     const animate = !firstFrame.current && !prefersReducedMotion();
     firstFrame.current = false;
-    // far enough that a ball holding the paper fits the narrower side
-    const half = (FOV / 2) * (Math.PI / 180);
-    const d = (reach * MARGIN) / Math.sin(Math.min(half, Math.atan(Math.tan(half) * aspect)));
-    void c.setLookAt(cx, d * Math.cos(POLAR), cz + d * Math.sin(POLAR), cx, 0, cz, animate);
+    // the homepage's sheet is handed over to this view (global.css, ::view-transition-old(paper))
+    document.documentElement.style.setProperty('--paper-to', String(stageDistance(aspect)));
+    const d = reach * stageDistance(aspect);
+    void c.setLookAt(cx, d * Math.cos(STAGE_POLAR), cz + d * Math.sin(STAGE_POLAR), cx, 0, cz, animate);
   }, [cx, cz, reach, aspect, resetCount]);
 
   return (

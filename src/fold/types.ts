@@ -16,6 +16,10 @@ export type Step = {
   rotation: Vec3;
   /** How overlapping faces stack at the end of the step (FOLD faceOrders, unknown orders dropped). */
   faceOrders: FaceOrder[];
+  /** Angles the faceOrders were given at, when not the step's own (the homepage's unfold ends with flaps on edge). */
+  orderedAt?: number[];
+  /** Angles of every edge partway through the step, evenly spaced (k of n at (k + 1) / (n + 1)). Empty: straight. */
+  path: number[][];
 };
 
 export type Model = {
@@ -34,4 +38,6 @@ export type Model = {
   center: Vec2;
   /** steps[0] is the flat sheet; steps[k] comes from file_frames[k - 1]. */
   steps: Step[];
+  /** Angles partway from the flat sheet straight to the finished model, every crease at once (as `Step.path`). */
+  unfold: number[][];
 };

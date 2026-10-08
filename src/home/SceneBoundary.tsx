@@ -2,8 +2,8 @@ import { Component, type ReactNode } from 'react';
 
 type Props = { children: ReactNode };
 
-// a failed crane chunk (offline, redeploy) just drops the decoration; the homepage stays usable
-export class CraneBoundary extends Component<Props, { failed: boolean }> {
+// a failed 3D chunk (offline, redeploy) just drops the decoration; the homepage stays usable
+export class SceneBoundary extends Component<Props, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };

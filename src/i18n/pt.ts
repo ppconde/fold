@@ -25,8 +25,8 @@ export const pt: Dictionary = {
   home: {
     lede: 'Escolhe um origami e segue-o dobra a dobra, rodando o papel em 3D enquanto avanças.',
     start: 'começar a dobrar',
-    craneSoon: 'aprender o grou — em breve',
-    craneLabel: 'Um grou de papel a flutuar devagar. Toca em qualquer lado para começar a dobrar.'
+    modelLabel: (name: string) =>
+      `${name} em papel, a flutuar devagar. Toca em qualquer lado para o desdobrar e começar a dobrar.`
   },
   library: {
     title: 'Biblioteca',
@@ -46,7 +46,6 @@ export const pt: Dictionary = {
       'Carrega em seguinte para ver cada dobra, arrasta a barra para avançar ao teu ritmo e roda o papel para o veres de qualquer lado.',
     credits: 'Créditos',
     creditFold: 'Os modelos usam o formato de ficheiro FOLD, de Erik Demaine e outros.',
-    creditCrane: '“3D Origami crane” de JuanG3D, licenciado CC BY 4.0.',
     creditFonts: 'Shippori Mincho, Instrument Sans e Zen Kurenaido, sob a SIL Open Font License.',
     licence:
       'O código é software livre sob a GPLv3. Os modelos são partilhados sob CC BY-NC-SA, salvo indicação em contrário.'

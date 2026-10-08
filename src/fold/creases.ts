@@ -7,10 +7,12 @@ export function stepCreases(model: Model, step: number): { active: number[]; pas
   assertStep(model, step);
   if (step === 0) return { active: [], past: [] };
   const prev = model.steps[step - 1].angles;
-  const active = model.steps[step].angles.flatMap((a, e) => (a !== prev[e] ? [e] : []));
+  // a crease that folds and unfolds within the step (a path) is active too
+  const knots = [...model.steps[step].path, model.steps[step].angles];
+  const active = prev.flatMap((a, e) => (knots.some((k) => k[e] !== a) ? [e] : []));
   const isActive = new Set(active);
   const past = model.edges.flatMap((_, e) =>
-    !isActive.has(e) && model.steps.slice(1, step).some((s) => s.angles[e] !== 0) ? [e] : []
+    !isActive.has(e) && model.steps.slice(1, step).some((s) => [...s.path, s.angles].some((a) => a[e] !== 0)) ? [e] : []
   );
   return { active, past };
 }

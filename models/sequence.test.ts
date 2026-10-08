@@ -118,4 +118,29 @@ describe('foldSequence', () => {
       }
     }
   });
+
+  it('creases and unfolds in one step: the crease peaks short of flat and ends flat', () => {
+    const s = foldSequence();
+    s.crease('middle', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
+    const src = s.source({ ...entry, tags: [] });
+    expect(src.steps[0].fold).toEqual({ middle1: 0 });
+    expect(src.steps[0].path?.[0].middle1).toBeGreaterThan(170);
+    expect(checkModel(loadModel(buildFold(src)))).toEqual([]);
+  });
+
+  it('collapses fold-and-unfold creases into a square base that passes every check', () => {
+    const s = foldSequence();
+    for (const [name, p, q] of [
+      ['d', [0, 0], [1, 1]],
+      ['e', [1, 0], [0, 1]],
+      ['v', [0.5, 0], [0.5, 1]],
+      ['h', [0, 0.5], [1, 0.5]]
+    ] as const)
+      s.crease(name, [...p], [...q], { valley: name === 'd' || name === 'e', hold: [0.9, 0.2], ...text });
+    s.collapse({ d1: 180, e1: 0, v1: -180, h1: -180 }, { hold: [0.6, 0.1], ...text });
+    const src = s.source({ ...entry, tags: [], solve: true });
+    const model = loadModel(buildFold(src));
+    expect(model.steps[5].path.length).toBeGreaterThan(0);
+    expect(checkModel(model)).toEqual([]);
+  });
 });

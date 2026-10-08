@@ -1,9 +1,10 @@
 import { createFileRoute, type ErrorComponentProps, Link, notFound } from '@tanstack/react-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { FoldError } from '../fold/load-model';
 import { useT } from '../i18n/LanguageProvider';
 import { currentLang, localized, titles } from '../i18n/lang';
 import { fetchModel } from '../models/catalog';
+import { writeLastModel } from '../player/browser';
 import { loadStage } from '../player/load-stage';
 import { Player } from '../player/Player';
 import pages from '../styles/pages.module.css';
@@ -31,6 +32,7 @@ function FoldPage() {
   const { entry, model } = Route.useLoaderData();
   const { step } = Route.useSearch();
   const navigate = Route.useNavigate();
+  useEffect(() => writeLastModel(entry.id), [entry.id]);
   const onSettle = useCallback(
     (settled: number) => {
       if (settled !== step) void navigate({ search: { step: settled }, replace: true });

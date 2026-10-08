@@ -25,6 +25,19 @@ export function paperExtent(model: Model): Extent {
   return { minX, minY, maxX, maxY, width, height, size: Math.max(width, height), center: model.center };
 }
 
+/** The lesson stage's camera: vertical field of view in degrees, and its angle from straight down in radians. */
+export const STAGE_FOV = 35;
+export const STAGE_POLAR = 0.9;
+
+/**
+ * How far the stage's camera sits from the paper, per unit of the paper's reach, in a view `aspect` wide: far
+ * enough that a ball holding the paper, with some room, fits the narrower side.
+ */
+export function stageDistance(aspect: number): number {
+  const half = (STAGE_FOV / 2) * (Math.PI / 180);
+  return 1.08 / Math.sin(Math.min(half, Math.atan(Math.tan(half) * aspect)));
+}
+
 /** World (x, z) centre of the paper's bounding box once `step` has settled; paper (x, y) maps to world (x − cx, −(y − cy)). */
 export function endCentre(model: Model, step: number): [number, number] {
   const points = foldedPositions(model, step, step === 0 ? 0 : 1).flat();

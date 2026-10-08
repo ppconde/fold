@@ -184,6 +184,12 @@ describe('anglesAt', () => {
     expect(anglesAt(half(), 1, 1)[6]).toBeCloseTo(180);
   });
 
+  it('goes through the step path, evenly spaced, so a fold can open again', () => {
+    const creased = withSteps(half(), (s) => [s[0], { ...s[1], angles: s[0].angles, path: [s[1].angles] }]);
+    expect(anglesAt(creased, 1, 0.5)[6]).toBeCloseTo(180);
+    expect(anglesAt(creased, 1, 1)[6]).toBeCloseTo(0);
+  });
+
   it('throws RangeError for a missing step', () => {
     expect(() => anglesAt(half(), 5, 0)).toThrow(RangeError);
   });

@@ -98,7 +98,8 @@ export function loadModel(json: unknown): Model {
       instruction: { en: '' },
       fixedFace: nearestToCenter,
       rotation: [0, 0, 0],
-      faceOrders: []
+      faceOrders: [],
+      path: []
     }
   ];
   frames.forEach((frame, i) => {
@@ -139,7 +140,9 @@ export function loadModel(json: unknown): Model {
     const faceOrders =
       frame.faceOrders === undefined ? prev.faceOrders : readFaceOrders(frame.faceOrders, n, faces.length);
 
-    steps.push({ angles: [...angles], instruction, fixedFace, rotation: [...rotation] as Vec3, faceOrders });
+    const path = readPath(frame['foldapp:path'], edges.length, `Step ${n} foldapp:path`);
+
+    steps.push({ angles: [...angles], instruction, fixedFace, rotation: [...rotation] as Vec3, faceOrders, path });
   });
 
   return deepFreeze({
@@ -153,7 +156,8 @@ export function loadModel(json: unknown): Model {
     edgeFaces,
     faceCentroids,
     center,
-    steps
+    steps,
+    unfold: readPath(json['foldapp:unfold'], edges.length, 'foldapp:unfold')
   });
 }
 
@@ -194,4 +198,16 @@ function assertConnected(faceCount: number, faceEdges: number[][], edgeFaces: nu
     }
   }
   if (seen.size !== faceCount) throw new FoldError('The paper is in separate pieces.');
+}
+
+/** Lists of one angle per edge, each within 180°; none when absent. */
+function readPath(raw: unknown, edgeCount: number, what: string): number[][] {
+  const path = raw ?? [];
+  if (
+    !Array.isArray(path) ||
+    !path.every((a) => Array.isArray(a) && a.length === edgeCount && a.every((x) => isNum(x) && Math.abs(x) <= 180))
+  ) {
+    throw new FoldError(`${what} needs lists of ${edgeCount} angles within 180°.`);
+  }
+  return path.map((a) => [...a]);
 }

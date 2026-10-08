@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { loadModel } from '../src/fold/load-model';
+import { unfoldAll } from '../src/home/unfold';
 import { buildFold, entryOf } from './build';
 import { checkModel } from './check';
 import { DEFAULT_MODEL, FIXTURES, sources } from './src/index';
@@ -9,15 +10,30 @@ import { thumbnail } from './thumbnail';
 const committed = (path: string) =>
   JSON.parse(readFileSync(new URL(`../public/models/${path}`, import.meta.url), 'utf8'));
 
+/** A committed file with every number matched within 0.05: the solver's last digits differ between CPUs (CI is
+ * x64), and can tip an unfold angle rounded to 0.01. */
+const near = (path: string) =>
+  JSON.parse(readFileSync(new URL(`../public/models/${path}`, import.meta.url), 'utf8'), (_, v) =>
+    typeof v === 'number' ? expect.closeTo(v, 1) : v
+  );
+
 describe.each(sources.map((s) => [s.id, s] as const))('%s', (_, src) => {
+  const built = buildFold(src);
+
   it('passes every check', () => {
-    expect(checkModel(loadModel(buildFold(src)))).toEqual([]);
+    expect(checkModel(loadModel(built))).toEqual([]);
+  });
+
+  it('opens out all at once without tearing', () => {
+    // ponytail: layers may pass through each other (the crane's do, briefly); only the joins are held
+    const tears = checkModel(unfoldAll(loadModel(built))).filter((p) => !p.includes('pass through'));
+    expect(tears).toEqual([]);
   });
 
   it('is committed as built (run pnpm models)', () => {
-    expect(committed(`${src.id}.fold`)).toEqual(JSON.parse(JSON.stringify(buildFold(src))));
+    expect(JSON.parse(JSON.stringify(built))).toEqual(near(`${src.id}.fold`));
     const svg = readFileSync(new URL(`../public/models/${src.id}.svg`, import.meta.url), 'utf8');
-    expect(svg).toBe(thumbnail(loadModel(buildFold(src))));
+    expect(svg).toBe(thumbnail(loadModel(built)));
   });
 
   it('has a Portuguese name and instructions', () => {
