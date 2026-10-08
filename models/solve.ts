@@ -178,13 +178,11 @@ export function solvePaths(fold: Fold, knots = KNOTS): void {
       // angles only matter along the spanning tree; read the rest off the folded paper, so any tree agrees
       const T = rootTransforms(model, solved, k);
       const knot = solved.map((a, e) =>
-        model.assignments[e] === 'C'
+        model.assignments[e] === 'B' || model.assignments[e] === 'C'
           ? 0
           : model.edgeFaces[e].length === 2
             ? measure(model, T, e, a)
-            : model.assignments[e] === 'B'
-              ? 0
-              : a
+            : a
       );
       // creases that don't move stay exactly where they were, so the step highlights only what moves
       path.push(knot.map((a, e) => (end[e] === prev[e] ? prev[e] : a)));

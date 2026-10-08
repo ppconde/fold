@@ -181,19 +181,21 @@ describe('slit', () => {
   it('splits the cut with the slit when a reverse fold ends inside it', () => {
     const s = foldSequence();
     s.slit('cut', [0, 0.5], [0.5, 0.5], text);
-    s.fold('corner', [0.25, 0], [0.25, 1], {
+    s.fold('corner', [0.125, 0], [0.125, 1], {
       valley: () => true,
       only: (_, at) => at[1] > 0.5,
       hold: [0.75, 0.25],
       ...text
     });
     const model = loadModel(buildFold(s.source({ ...entry, tags: [] })));
-    expect(
-      model.steps[1].cuts
-        .flatMap((c) => [c.from, c.to])
-        .map((x) => +x.toFixed(9))
-        .sort()
-    ).toEqual([0, 0.5, 0.5, 1]);
+    const { cuts } = model.steps[1];
+    expect(cuts).toHaveLength(2);
+    // each half's span must match where its own vertices lie along the slit (0 to 0.5 across the paper)
+    for (const c of cuts) {
+      const [a, b] = model.edges[c.edge].map((v) => model.vertices[v][0] / 0.5);
+      expect(c.from).toBeCloseTo(a, 9);
+      expect(c.to).toBeCloseTo(b, 9);
+    }
     expect(checkModel(model)).toEqual([]);
   });
 

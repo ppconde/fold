@@ -16,10 +16,7 @@
   fill: none;
 }
 
-.border {
-  stroke-width: 2px;
-}
-
+.border,
 .cut {
   stroke-width: 2px;
 }

@@ -159,7 +159,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     name: string,
     from: Vec2,
     to: Vec2,
-    assignment: 'M' | 'V' | 'C' | 'F',
+    assignment: Crease['assignment'],
     splitEnds: boolean
   ): string[] => {
     for (const x of splitEnds ? [from, to] : []) {
