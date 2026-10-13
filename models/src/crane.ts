@@ -141,27 +141,19 @@ const mirror = ([px, py]: At, [a, b]: [At, At]): At => {
  * the flap just past the line, coming in from `side` of it (1: its right looking from `at` to the tip, −1: its
  * left), and the tip's swing to where it lands, curving `bend` of its way.
  */
-const reverseCues = (
-  line: [At, At],
-  at: At,
-  tip: At,
-  side: 1 | -1,
-  bend: 'left' | 'right',
-  /** how far toward the far side of the axis both cues move: the head's thin flap has no paper on the axis itself */
-  inset = 0,
-  /** how far along the flap, from `at` to the tip, the swing starts: short of the head's tip, which is too narrow */
-  reach = 0.95
-): CueSpec[] => {
+const reverseCues = (line: [At, At], at: At, tip: At, side: 1 | -1, bend: 'left' | 'right'): CueSpec[] => {
   const [dx, dy] = [tip[0] - at[0], tip[1] - at[1]];
   const l = Math.hypot(dx, dy);
   const [nx, ny] = [(side * dy) / l, (-side * dx) / l];
-  const [ix, iy] = [-nx * inset, -ny * inset];
-  const q: At = [at[0] + dx * 0.15 + ix, at[1] + dy * 0.15 + iy];
+  const q: At = [at[0] + dx * 0.15, at[1] + dy * 0.15];
   const p: At = [q[0] + nx * 0.12, q[1] + ny * 0.12];
-  const from: At = [at[0] + dx * reach + ix, at[1] + dy * reach + iy];
+  const from: At = [at[0] + dx * 0.95, at[1] + dy * 0.95];
   return [{ push: [p, q] }, { swing: [from, mirror(from, line)], bend }];
 };
 // neck and tail stand 70° up, leaning out; the head turns down and out
+// the lesson shows the body mirrored from 'Unfold the two flaps' on (see carry-forward.md): this left flap goes up
+// on the right there, so its push sits on the builder's left (side 1) and its swing bends right, outward; the
+// swing's bend is worked out as the lesson shows it, so it is not mirrored back
 const base: At = [0.5, 0.24];
 const neck = turnFlap(base, -90, 110, B);
 s.fold('neck', neck[0], neck[1], {
@@ -171,7 +163,7 @@ s.fold('neck', neck[0], neck[1], {
   only: leftLeg,
   tag: 'neck',
   hold: d(1, 0.3),
-  cues: reverseCues(neck, base, B, -1, 'left'),
+  cues: reverseCues(neck, base, B, 1, 'right'),
   en: 'Reverse-fold the left flap up inside the body to make the neck.',
   pt: 'Faz uma dobra invertida na aba da esquerda, para cima e por dentro do corpo, para fazer o pescoço.'
 });
@@ -182,20 +174,26 @@ s.fold('tail', tail[0], tail[1], {
   tuck: true,
   only: rightLeg,
   hold: d(1, 0.3),
-  cues: reverseCues(tail, base, B, 1, 'right'),
+  cues: reverseCues(tail, base, B, -1, 'left'),
   en: 'Reverse-fold the right flap up the same way to make the tail.',
   pt: 'Faz o mesmo à aba da direita para fazer a cauda.'
 });
 const tip = mirror(B, neck);
 const headAt: At = [base[0] + (tip[0] - base[0]) * 0.8, base[1] + (tip[1] - base[1]) * 0.8];
 const head = turnFlap(headAt, 110, 215, tip);
+// the head is a sliver at its tip, which the swing can't start on: 1% of the way back, a hair inside the paper
+const [hx, hy] = [tip[0] - headAt[0], tip[1] - headAt[1]];
+const headFrom: At = [
+  headAt[0] + hx * 0.99 - (hy / Math.hypot(hx, hy)) * 0.0002,
+  headAt[1] + hy * 0.99 + (hx / Math.hypot(hx, hy)) * 0.0002
+];
 s.fold('head', head[0], head[1], {
   valley: tuckIn,
   over: true,
   tuck: true,
   only: has('neck'),
   hold: d(1, 0.3),
-  cues: reverseCues(head, headAt, tip, 1, 'right', 0.01, 0.7),
+  cues: [{ swing: [headFrom, mirror(headFrom, head)], bend: 'left' }],
   en: 'Reverse-fold the tip of the neck down to make the head.',
   pt: 'Faz uma dobra invertida na ponta do pescoço, para baixo, para fazer a cabeça.'
 });

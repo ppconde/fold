@@ -1,6 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from '../fold/fixtures';
-import { LAYER_GAP } from '../fold/fold';
+import { foldedPositions, LAYER_GAP } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import type { Cue } from '../fold/types';
 import { cueOpacity, cueSegments } from './cues';
@@ -82,6 +83,55 @@ describe('cueSegments', () => {
     const p = points(cueSegments(loadModel(json), 1));
     expect(p.some((v) => near(v, [0.8, 0.25, 3 * LAYER_GAP]))).toBe(true);
     for (const v of p) expect(v[2]).toBeCloseTo(3 * LAYER_GAP, 9);
+  });
+});
+
+describe("the crane's cues, as the lesson shows them", () => {
+  const crane = loadModel(JSON.parse(readFileSync('public/models/crane.fold', 'utf8')));
+  const xy = (v: number[]) => [v[0], v[1]];
+  const cross = (a: number[], b: number[]) => a[0] * b[1] - a[1] * b[0];
+  const steps = crane.steps.flatMap((s, i) => (s.cues.length ? [i] : []));
+
+  it('has cues on the neck, tail and head; the head only a swing', () => {
+    expect(steps.map((i) => crane.steps[i].cues.map((c) => c.kind))).toEqual([
+      ['push', 'swing'],
+      ['push', 'swing'],
+      ['swing']
+    ]);
+  });
+
+  it.each(steps)('step %i: the swing ends where the tip lands, bulging outward, away from the body', (i) => {
+    const [a, b] = [foldedPositions(crane, i, 0), foldedPositions(crane, i, 1)];
+    // the tip: the vertex that travels farthest
+    const tip = a
+      .flatMap((f, k) => f.map((v, j) => ({ from: xy(v), to: xy(b[k][j]) })))
+      .reduce((best, m) =>
+        Math.hypot(m.to[0] - m.from[0], m.to[1] - m.from[1]) >
+        Math.hypot(best.to[0] - best.from[0], best.to[1] - best.from[1])
+          ? m
+          : best
+      );
+    const p = points(cueSegments(crane, i)).slice(-36);
+    const [start, end, mid] = [xy(p[0]), xy(p[31]), xy(p[16])];
+    expect(Math.hypot(end[0] - tip.to[0], end[1] - tip.to[1])).toBeLessThan(0.06);
+    const all = a.flat();
+    const centre = [0, 1].map((d) => all.reduce((s, v) => s + v[d], 0) / all.length);
+    const chord = [end[0] - start[0], end[1] - start[1]];
+    const half = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
+    const bulge = cross(chord, [mid[0] - half[0], mid[1] - half[1]]);
+    const body = cross(chord, [centre[0] - half[0], centre[1] - half[1]]);
+    expect(Math.sign(bulge)).toBe(-Math.sign(body));
+  });
+
+  it.each(steps.slice(0, 2))('step %i: the push sits on the flap that moves, pointing at the spine', (i) => {
+    const [a, b] = [foldedPositions(crane, i, 0), foldedPositions(crane, i, 1)];
+    const moving = a.filter((f, k) => f.some((v, j) => Math.hypot(...v.map((x, d) => x - b[k][j][d])) > 1e-3));
+    const spine = 0.5; // the legs part along the middle line, x = 0.5 in the lesson
+    const flap = Math.sign(moving.flat().reduce((s, v) => s + v[0], 0) / moving.flat().length - spine);
+    const p = points(cueSegments(crane, i));
+    const [tail, head] = [(p[0][0] + p[12][0]) / 2, p[6][0]];
+    expect(Math.sign(tail - spine)).toBe(flap);
+    expect(Math.abs(head - spine)).toBeLessThan(Math.abs(tail - spine));
   });
 });
 
