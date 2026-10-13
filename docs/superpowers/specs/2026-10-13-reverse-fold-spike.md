@@ -68,6 +68,17 @@ Smaller lessons for the real solver:
 - The direction each fold-line crease turns can't be read off its ±180° label (one pose). My first reading of the end stack gave the wrong way round; the pushed paper chose the engine's labels' direction. A solver must not be told directions it can work out for itself.
 - Vertex-triangle contact alone lets edges slip through 0.002 stacks. It needs edge-edge contact and continuous collision detection (CCD) as well.
 
+## Follow-up: tear the paper instead (spike/tear.ts)
+
+I cut the flap's spine (creases 60 and 18) for the one step. The halves {2, 34, 3, 22} and {5, 35, 4, 23} each turn rigidly about the fold line, then rejoin in the last tenth. Both directions:
+
+| halves turn | widest tear | pairs passing through each other |
+|---|---|---|
+| apart (A up, B down) | 0.881 at 45% | 21, e.g. 2×27, 2×6, 6×34 (38–85%) |
+| toward each other (A down, B up) | 0.881 at 45% | 27, e.g. 2×5, 5×34, 33×35 from 3% on |
+
+On rigid faces the tear can't stay small. It opens along the whole spine, in proportion to the distance from the fold line, so mid-step the leg splits into two leaves standing out either side (frames: `spike/out/tear-outward-side.png`, `tear-inward-side.png`). It doesn't read as a reverse fold, it is 15× the seam budget, and the leaves still pass through the body. Today's swing tears by 0.026 and keeps the flap whole. A small tear only becomes possible with extra hinges near the fold line, and that is the transient-hinge idea below.
+
 ## Recommendation
 
 1. **Drop A.** For the neck, and for any reverse fold in a closed body, it is proven impossible short of unfolding.
