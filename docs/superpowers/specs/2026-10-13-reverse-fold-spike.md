@@ -79,6 +79,21 @@ I cut the flap's spine (creases 60 and 18) for the one step. The halves {2, 34, 
 
 On rigid faces the tear can't stay small. It opens along the whole spine, in proportion to the distance from the fold line, so mid-step the leg splits into two leaves standing out either side (frames: `spike/out/tear-outward-side.png`, `tear-inward-side.png`). It doesn't read as a reverse fold, it is 15× the seam budget, and the leaves still pass through the body. Today's swing tears by 0.026 and keeps the flap whole. A small tear only becomes possible with extra hinges near the fold line, and that is the transient-hinge idea below.
 
+## Follow-up: open the body, as hands do (spike/bend.ts, `EXPAND`)
+
+**Rigid paper.** It has to open all the way. At V0, V1 and V2 every crease must reach 0 at once, and those creases were made at steps 7 (47, 48: the square base), 8/11 (45, 61) and 13/15 (43, 63). Rigidly, "open the body" means unfolding that side back to about the square base, folding the neck as a plain fold, and collapsing again.
+
+**Bending paper.** I added a drive to the solver that opens the body's spine (47, 48) and the side edges (43, 45, 61, 63) by E degrees mid-step and closes them again, while the spine is pushed in.
+
+| what's free | contact | E | body spine 47 at 50% | worst stretch |
+|---|---|---|---|---|
+| leg and body faces | on | 60–170° | stays 143–150° | 67–160% |
+| leg and body faces | off | 120° | stays 146° | 76% |
+| everything but the held face | off | 90° | opens to 93° | 31% |
+| everything but the held face | on | 90° | stays 138° | 94% (325% on the fine mesh) |
+
+The body won't open on its own: it is joined through the centre to the wings, and the wings' layers lie over and under it. Opening it means moving the whole bird, and with contact on the solver can't coordinate that. The fine run takes 113 s (3009 triangles). Frames are in `spike/out/expand-side.png`: the pocket does show, dark at 86%, but the paper crumples. So hands-like opening is the right picture of the motion, and it is exactly what the path optimizer in the recommendation has to find for itself.
+
 ## Recommendation
 
 1. **Drop A.** For the neck, and for any reverse fold in a closed body, it is proven impossible short of unfolding.
