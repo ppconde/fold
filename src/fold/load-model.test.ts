@@ -84,6 +84,16 @@ describe('loadModel', () => {
     expect(model.steps[2].faceOrders).toEqual([[0, 1, 1]]);
   });
 
+  it("reads a tuck's landed orders for its step only", () => {
+    const json = fixture('fold-in-quarters') as Json;
+    json.file_frames[0]['foldapp:landedOrders'] = [[0, 1, -1]];
+    const model = loadModel(json);
+    expect(model.steps[1].landedOrders).toEqual([[0, 1, -1]]);
+    expect(model.steps[2].landedOrders).toBeUndefined();
+    json.file_frames[0]['foldapp:landedOrders'] = [[0, 1, 2]];
+    expect(() => loadModel(json)).toThrow(/faceOrders/);
+  });
+
   const broken: [string, (j: Json) => unknown, RegExp][] = [
     ['not an object', () => 42, /not a FOLD object/],
     ['missing faces', (j) => ({ ...j, faces_vertices: undefined }), /faces_vertices/],

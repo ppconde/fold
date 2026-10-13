@@ -19,6 +19,8 @@ export type Step = {
   rotation: Vec3;
   /** How overlapping faces stack at the end of the step (FOLD faceOrders, unknown orders dropped). */
   faceOrders: FaceOrder[];
+  /** A tuck's stack as the paper lands, before its layers change places in the step's last stretch. */
+  landedOrders?: FaceOrder[];
   /** Angles the faceOrders were given at, when not the step's own (the homepage's unfold ends with flaps on edge). */
   orderedAt?: number[];
   /** Angles of every edge partway through the step, evenly spaced (k of n at (k + 1) / (n + 1)). Empty: straight. */

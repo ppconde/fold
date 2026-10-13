@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { foldedPositions, layerHeights } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
+import type { Vec2 } from '../src/fold/types';
 import { buildFold } from './build';
 import { checkModel } from './check';
 import { diamond, diamondSequence, foldSequence } from './sequence';
@@ -154,26 +155,65 @@ describe('foldSequence', () => {
   });
 
   it('orders faces that land exactly on each other through a many-layer fold', () => {
-    // the Snail's opening: corners to the middle, in half twice, then the squash's lines
-    const d = diamond;
-    const flat = (x: number, y: number): [number, number] => [(2 - x + y) / 2, (x + y) / 2];
-    const s = diamondSequence();
-    s.crease('across', d(2, 0), d(0, 0), { valley: true, hold: d(1, 0.5), ...text });
-    s.crease('upright', d(1, -1), d(1, 1), { valley: true, hold: d(1.5, 0), ...text });
-    s.together(text, () => {
-      s.fold('sideL', d(0.5, -0.5), d(0.5, 0.5), { valley: true, hold: d(1, 0), ...text });
-      s.fold('sideR', d(1.5, 0.5), d(1.5, -0.5), { valley: true, ...text });
-    });
-    s.split('across1', flat(0.5, 0));
-    s.split('across1.2', flat(1.5, 0));
-    s.fold('half', d(0, 0), d(2, 0), { valley: true, hold: d(1, -0.5), ...text });
-    s.split('upright1', flat(1, 0));
-    s.fold('quarter', d(1, 0), d(1, -1), { valley: true, hold: d(0.75, -0.5), ...text });
-    s.mark('mid', d(0.5, -0.5), d(1, 0), { valley: true, ...text });
-    const model = loadModel(buildFold(s.source({ ...entry, tags: [], solve: true })));
+    const model = loadModel(buildFold(snailOpening().source({ ...entry, tags: [], solve: true })));
     expect(checkModel(model)).toEqual([]);
   });
+
+  it('tucks the flaps a collapse swings outside in between the layers it passed', () => {
+    const s = snailOpening();
+    // the sheet's corner squares, by its midlines
+    const square =
+      (cx: boolean, cy: boolean) =>
+      (_: string[], [x, y]: Vec2) =>
+        x > 0.5 === cx && y > 0.5 === cy;
+    const [left, top, right, bottom] = [
+      square(true, false),
+      square(true, true),
+      square(false, true),
+      square(false, false)
+    ];
+    const none = () => false;
+    s.collapse(
+      { upright1: 0, 'upright1.2': 0, mid3: 180, mid4: 180 },
+      { hold: diamond(0.75, -0.25), ...text, tuck: { layers: [bottom, top], flaps: [right, none] } }
+    );
+    s.turn([0, 0, 45], text);
+    s.collapse(
+      { mid1: 180, mid2: 180 },
+      { hold: diamond(1, -0.5), ...text, tuck: { layers: [bottom, top], flaps: [left, none] } }
+    );
+    const model = loadModel(buildFold(s.source({ ...entry, tags: [], solve: true })));
+    expect(checkModel(model)).toEqual([]);
+    // a square base: the bottom corner's square in front, the side corners inside, the top corner's behind
+    const k = model.steps.length - 1;
+    const h = layerHeights(model, k);
+    const inSquare = (f: number, pick: (t: string[], at: Vec2) => boolean) => pick([], model.faceCentroids[f]);
+    const heights = (pick: (t: string[], at: Vec2) => boolean) => h.filter((_, f) => inSquare(f, pick));
+    expect(Math.min(...heights(bottom))).toBeGreaterThan(Math.max(...heights(left), ...heights(right)));
+    expect(Math.max(...heights(top))).toBeLessThan(Math.min(...heights(left), ...heights(right)));
+  });
 });
+
+/** The Snail's opening: corners to the middle, in half twice, then the squash's lines. */
+function snailOpening() {
+  const d = diamond;
+  const flat = (x: number, y: number): Vec2 => [(2 - x + y) / 2, (x + y) / 2];
+  const s = diamondSequence();
+  s.crease('across', d(2, 0), d(0, 0), { valley: true, hold: d(1, 0.5), ...text });
+  s.crease('upright', d(1, -1), d(1, 1), { valley: true, hold: d(1.5, 0), ...text });
+  s.together(text, () => {
+    s.fold('sideL', d(0.5, -0.5), d(0.5, 0.5), { valley: true, hold: d(1, 0), ...text });
+    s.fold('sideR', d(1.5, 0.5), d(1.5, -0.5), { valley: true, ...text });
+  });
+  s.split('across1', flat(0.5, 0));
+  s.split('across1.2', flat(1.5, 0));
+  s.fold('half', d(0, 0), d(2, 0), { valley: true, hold: d(1, -0.5), ...text });
+  s.split('upright1', flat(1, 0));
+  s.fold('quarter', d(1, 0), d(1, -1), { valley: true, hold: d(0.75, -0.5), ...text });
+  s.split('across1.2', flat(1, 0));
+  s.mark('mid', d(0.5, -0.5), d(1, 0), { valley: true, ...text });
+  return s;
+}
 
 describe('slit', () => {
   /** Slit the left half of the middle line, then fold the top-left corner over x = 0.25. */
