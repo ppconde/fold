@@ -17,3 +17,14 @@ export function writeSegments(geometry: LineSegmentsGeometry, points: number[]) 
   geometry.computeBoundingBox();
   geometry.computeBoundingSphere();
 }
+
+/** Show a fat line with these segments, or hide it when there are none. */
+export function setSegments(
+  line: { visible: boolean; material: { visible: boolean }; geometry: LineSegmentsGeometry } | null,
+  points: number[]
+) {
+  if (!line) return;
+  // drei hands `visible={false}` to the material as well, and three skips a hidden material, so switch both
+  line.visible = line.material.visible = points.length > 0;
+  if (points.length) writeSegments(line.geometry, points);
+}

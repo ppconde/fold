@@ -5,7 +5,7 @@ import { BackSide, BufferAttribute, BufferGeometry, FrontSide } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
 import { fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
-import { writeSegments } from './segments';
+import { setSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
 type LineRef = ComponentRef<typeof Line>;
@@ -17,12 +17,6 @@ const PLACEHOLDER: Vec3[] = [
   [0, 0, 0],
   [0, 0, 0]
 ];
-
-function setSegments(line: LineRef | null, points: number[]) {
-  if (!line) return;
-  line.visible = points.length > 0;
-  if (points.length) writeSegments(line.geometry, points);
-}
 
 const toPoints = (flat: number[]): Vec3[] =>
   flat.length
