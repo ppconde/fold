@@ -43,4 +43,10 @@ describe('unfoldAll', () => {
     expect(once.steps[1].cuts).toEqual([]);
     expect(checkConsistency(once, 1)).toEqual({ ok: true });
   });
+
+  it('shows no movement arrows', () => {
+    const json = fixture('fold-in-quarters') as Record<string, unknown> & { file_frames: Record<string, unknown>[] };
+    json.file_frames[1]['foldapp:cues'] = [{ kind: 'push', face: 0, from: [0.1, 0.2], to: [0.3, 0.2] }];
+    expect(unfoldAll(loadModel(json)).steps[1].cues).toEqual([]);
+  });
 });

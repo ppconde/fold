@@ -9,6 +9,9 @@ export type FaceOrder = [number, number, 1 | -1];
 /** A stretch of a slit cut in a step: edge `edge` is cut from its first vertex at `from` to its second at `to`, as shares (0 to 1) of the way along the scissors' cut. */
 export type Cut = { edge: number; from: number; to: number };
 
+/** A book arrow drawn on a step's starting pose: push (hollow, a finger goes in here) or swing (a flap travels). */
+export type Cue = { kind: 'push' | 'swing'; face: number; from: Vec2; to: Vec2 };
+
 export type Step = {
   /** Fold angle of every edge at the end of the step, in degrees (+valley, −mountain). */
   angles: number[];
@@ -25,6 +28,8 @@ export type Step = {
   path: number[][];
   /** Slit edges cut in this step (a step that cuts moves no crease). */
   cuts: Cut[];
+  /** Movement arrows for this step, anchored on a face, as flat-sheet points in its plane. */
+  cues: Cue[];
 };
 
 export type Model = {

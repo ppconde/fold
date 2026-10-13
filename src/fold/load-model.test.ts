@@ -84,6 +84,34 @@ describe('loadModel', () => {
     expect(model.steps[2].faceOrders).toEqual([[0, 1, 1]]);
   });
 
+  it('reads cues for their own step only', () => {
+    const json = fixture('fold-in-quarters') as Json;
+    json.file_frames[0]['foldapp:cues'] = [
+      { kind: 'push', face: 0, from: [0.1, 0.2], to: [0.3, 0.2] },
+      { kind: 'swing', face: 1, from: [0.6, 0.1], to: [0.6, 0.9] }
+    ];
+    const model = loadModel(json);
+    expect(model.steps[0].cues).toEqual([]);
+    expect(model.steps[1].cues).toEqual([
+      { kind: 'push', face: 0, from: [0.1, 0.2], to: [0.3, 0.2] },
+      { kind: 'swing', face: 1, from: [0.6, 0.1], to: [0.6, 0.9] }
+    ]);
+    expect(model.steps[2].cues).toEqual([]);
+  });
+
+  it.each([
+    ['an unknown kind', { kind: 'pull', face: 0, from: [0, 0], to: [1, 0] }],
+    ['a missing face', { kind: 'push', face: 99, from: [0, 0], to: [1, 0] }],
+    ['a bad point', { kind: 'push', face: 0, from: [0], to: [1, 0] }],
+    ['the same point twice', { kind: 'swing', face: 0, from: [0.5, 0.5], to: [0.5, 0.5] }]
+  ])('rejects a cue with %s', (_, cue) => {
+    const json = fixture('fold-in-quarters') as Json;
+    json.file_frames[1]['foldapp:cues'] = [cue];
+    expect(() => loadModel(json)).toThrow(
+      'Step 2 foldapp:cues needs {kind: push|swing, face, from: [x, y], to: [x, y]} with from and to apart.'
+    );
+  });
+
   const broken: [string, (j: Json) => unknown, RegExp][] = [
     ['not an object', () => 42, /not a FOLD object/],
     ['missing faces', (j) => ({ ...j, faces_vertices: undefined }), /faces_vertices/],

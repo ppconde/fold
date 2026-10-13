@@ -1,4 +1,4 @@
-import type { Assignment, Cut, Edge, FaceOrder, Model, Step, Vec2, Vec3 } from './types';
+import type { Assignment, Cue, Cut, Edge, FaceOrder, Model, Step, Vec2, Vec3 } from './types';
 
 export class FoldError extends Error {
   override name = 'FoldError';
@@ -107,7 +107,8 @@ export function loadModel(json: unknown): Model {
       rotation: [0, 0, 0],
       faceOrders: [],
       path: [],
-      cuts: []
+      cuts: [],
+      cues: []
     }
   ];
   frames.forEach((frame, i) => {
@@ -155,6 +156,8 @@ export function loadModel(json: unknown): Model {
       throw new FoldError(`Step ${n} cuts and folds at once; make the fold its own step.`);
     }
 
+    const cues = readCues(frame['foldapp:cues'], n, faces.length);
+
     steps.push({
       angles: [...angles],
       instruction,
@@ -162,7 +165,8 @@ export function loadModel(json: unknown): Model {
       rotation: [...rotation] as Vec3,
       faceOrders,
       path,
-      cuts
+      cuts,
+      cues
     });
   });
 
@@ -225,6 +229,30 @@ function readCuts(raw: unknown, n: number, assignments: Assignment[]): Cut[] {
     }
     if (assignments[c[0]] !== 'C') throw new FoldError(`Step ${n} cuts edge ${c[0]}, which is not a cut (C) edge.`);
     return { edge: c[0], from: c[1], to: c[2] };
+  });
+}
+
+/** A frame's movement arrows; none when absent. */
+function readCues(raw: unknown, n: number, faceCount: number): Cue[] {
+  if (raw === undefined) return [];
+  const bad = () =>
+    new FoldError(
+      `Step ${n} foldapp:cues needs {kind: push|swing, face, from: [x, y], to: [x, y]} with from and to apart.`
+    );
+  const point = (p: unknown): p is Vec2 => Array.isArray(p) && p.length === 2 && p.every(isNum);
+  if (!Array.isArray(raw)) throw bad();
+  return raw.map((c): Cue => {
+    if (
+      !isRecord(c) ||
+      (c.kind !== 'push' && c.kind !== 'swing') ||
+      !isIndex(c.face, faceCount) ||
+      !point(c.from) ||
+      !point(c.to) ||
+      (c.from[0] === c.to[0] && c.from[1] === c.to[1])
+    ) {
+      throw bad();
+    }
+    return { kind: c.kind, face: c.face, from: [c.from[0], c.from[1]], to: [c.to[0], c.to[1]] };
   });
 }
 
