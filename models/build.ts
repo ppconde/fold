@@ -36,7 +36,7 @@ export type SourceStep = {
   /** Slit crease name → how far along the cut its `from` and `to` ends lie (written by foldSequence's `slit`). */
   cut?: Record<string, [number, number]>;
   /** Movement arrows, as flat-sheet points through the layer under each one's anchor (written by foldSequence). */
-  cues?: { kind: 'push' | 'swing'; from: Vec2; to: Vec2 }[];
+  cues?: { kind: 'push' | 'swing'; from: Vec2; to: Vec2; bend?: -1 }[];
 };
 
 export type ModelSource = Omit<ModelEntry, 'thumbnail'> & {
@@ -161,7 +161,7 @@ export function buildFold(src: ModelSource) {
       );
       if (face === -1) throw new Error(`${src.id} step ${i + 1}'s ${c.kind} cue is off the paper.`);
       const r = (p: Vec2) => p.map((x) => +x.toFixed(6));
-      return { kind: c.kind, face, from: r(c.from), to: r(c.to) };
+      return { kind: c.kind, face, from: r(c.from), to: r(c.to), ...(c.bend ? { bend: c.bend } : {}) };
     });
     return {
       edges_foldAngle: edgeCrease.map((name) => (name && angles[name]) || 0),

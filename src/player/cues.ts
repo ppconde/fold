@@ -4,12 +4,12 @@ import type { Cue, Model, Vec2, Vec3 } from '../fold/types';
 const add = (a: Vec3, b: Vec3): Vec3 => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const scale = (a: Vec3, k: number): Vec3 => [a[0] * k, a[1] * k, a[2] * k];
-const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const cross = (a: Vec3, b: Vec3): Vec3 => [
   a[1] * b[2] - a[2] * b[1],
   a[2] * b[0] - a[0] * b[2],
   a[0] * b[1] - a[1] * b[0]
 ];
+const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
 const unit = (a: Vec3): Vec3 => scale(a, 1 / Math.hypot(...a));
 
 /**
@@ -53,30 +53,38 @@ function cueLines(cue: Cue, map: ReturnType<typeof faceMap>): Vec3[] {
   const length = Math.hypot(...sub(to, from));
   const along = unit(sub(to, from));
   if (cue.kind === 'push') {
-    // a hollow arrow lying on the face: shaft, then head
+    // a hollow arrow lying on the face: shaft, then head; glyph sizes, not fractions of its length
     const side = unit(cross(map.up, along));
-    const neck = add(from, scale(along, 0.65 * length));
+    const h = Math.min(0.07, 0.7 * length);
+    const neck = add(from, scale(along, length - h));
     const corners = [
-      add(from, scale(side, 0.09 * length)),
-      add(neck, scale(side, 0.09 * length)),
-      add(neck, scale(side, 0.225 * length)),
+      add(from, scale(side, 0.0175)),
+      add(neck, scale(side, 0.0175)),
+      add(neck, scale(side, 0.04)),
       to,
-      add(neck, scale(side, -0.225 * length)),
-      add(neck, scale(side, -0.09 * length)),
-      add(from, scale(side, -0.09 * length))
+      add(neck, scale(side, -0.04)),
+      add(neck, scale(side, -0.0175)),
+      add(from, scale(side, -0.0175))
     ];
     return corners.flatMap((v, i) => [v, corners[(i + 1) % corners.length]]);
   }
-  // an arc rising off the paper, then a V head along its last tangent
-  const control = add(scale(add(from, to), 0.5), scale(map.up, 0.35 * length));
+  // an arc bulging sideways in the paper (left of from -> to seen from above, unless bend is -1) and barely
+  // rising, so the lesson's top-down view sees a curve; then a V head, spread in the paper plane
+  const side = unit(cross([0, 0, 1], along));
+  const control = add(
+    add(scale(add(from, to), 0.5), scale(side, 0.5 * length * (cue.bend ?? 1))),
+    scale(map.up, 0.1 * length)
+  );
   const arc = Array.from({ length: 17 }, (_, i) => {
     const t = i / 16;
     return add(add(scale(from, (1 - t) ** 2), scale(control, 2 * (1 - t) * t)), scale(to, t * t));
   });
-  const back = unit(sub(control, to));
-  const across = unit(sub(map.up, scale(back, dot(map.up, back))));
+  // flattened into the paper, so the whole V lies on the face
+  const way = sub(control, to);
+  const back = unit(sub(way, scale(map.up, dot(way, map.up))));
+  const across = unit(cross(map.up, back));
   const [c, s] = [Math.cos((25 * Math.PI) / 180), Math.sin((25 * Math.PI) / 180)];
-  const head = [1, -1].map((k) => add(to, scale(add(scale(back, c), scale(across, k * s)), 0.18 * length)));
+  const head = [1, -1].map((k) => add(to, scale(add(scale(back, c), scale(across, k * s)), 0.06)));
   return [...arc.slice(1).flatMap((v, i) => [arc[i], v]), to, head[0], to, head[1]];
 }
 

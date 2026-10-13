@@ -146,7 +146,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           points={PLACEHOLDER}
           segments
           color={HIGHLIGHT}
-          lineWidth={2.2}
+          lineWidth={2.8}
           transparent
           renderOrder={3}
           depthTest={false}

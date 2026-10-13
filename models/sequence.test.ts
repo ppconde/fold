@@ -31,7 +31,8 @@ describe('foldSequence', () => {
           swing: [
             [0.7, 0.2],
             [0.7, 0.8]
-          ]
+          ],
+          bend: 'right'
         },
         {
           push: [
@@ -44,7 +45,7 @@ describe('foldSequence', () => {
     const src = s.source({ ...entry, tags: [] });
     const round = (p: Vec2) => p.map((x) => +x.toFixed(6));
     expect(src.steps[1].cues?.map((c) => ({ ...c, from: round(c.from), to: round(c.to) }))).toEqual([
-      { kind: 'swing', from: [0.3, 0.2], to: [0.3, 0.8] },
+      { kind: 'swing', from: [0.3, 0.2], to: [0.3, 0.8], bend: -1 },
       { kind: 'push', from: [-0.2, 0.3], to: [0.4, 0.3] }
     ]);
     const fold = buildFold(src);

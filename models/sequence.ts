@@ -70,7 +70,8 @@ const centroid = (poly: Vec2[]): Vec2 => [
 ];
 
 /** A book arrow in view coordinates: push (hollow, from p to the paper at q) or swing (a flap travels p → q). */
-export type CueSpec = { push: [Vec2, Vec2] } | { swing: [Vec2, Vec2] };
+/** A movement arrow in view coordinates; a swing curves 'left' (default) or 'right' of its way. */
+export type CueSpec = { push: [Vec2, Vec2] } | { swing: [Vec2, Vec2]; bend?: 'left' | 'right' };
 
 export type FoldOptions = Text & {
   /**
@@ -247,7 +248,8 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         );
       }
       const back = piece.toView.clone().invert();
-      return { kind, from: apply(back, p), to: apply(back, q) };
+      const bend = 'bend' in spec && spec.bend === 'right' ? ({ bend: -1 } as const) : {};
+      return { kind, from: apply(back, p), to: apply(back, q), ...bend };
     });
 
   const api = {

@@ -23,7 +23,7 @@ describe('cueSegments', () => {
     expect(cueSegments(withCues([]), 1)).toEqual([]);
   });
 
-  it('draws a push as a closed hollow arrow just above its face, its tip at `to`', () => {
+  it('draws a push as a closed hollow arrow just above its face, its tip at `to`, a fixed 0.08 wide', () => {
     const model = withCues([{ kind: 'push', face: 0, from: [0.1, 0.25], to: [0.4, 0.25] }]);
     const p = points(cueSegments(model, 1));
     expect(p).toHaveLength(14); // 7 sides, 2 points each
@@ -31,16 +31,48 @@ describe('cueSegments', () => {
     for (const v of p) expect(v[2]).toBeCloseTo(3 * LAYER_GAP, 9);
     expect(p.some((v) => near(v, [0.4, 0.25, 3 * LAYER_GAP]))).toBe(true);
     const ys = p.map((v) => v[1]);
-    expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(0.45 * 0.3, 9);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(0.08, 9);
   });
 
-  it('draws a swing as an arc from `from` to `to`, peaking 0.175 × its length up, with a V head', () => {
-    const model = withCues([{ kind: 'swing', face: 0, from: [0.1, 0.25], to: [0.4, 0.25] }]);
+  it('keeps a short push a full arrow: head 0.7 of its length, still 0.08 wide', () => {
+    const model = withCues([{ kind: 'push', face: 0, from: [0.1, 0.25], to: [0.15, 0.25] }]);
     const p = points(cueSegments(model, 1));
+    expect(p).toHaveLength(14);
+    const ys = p.map((v) => v[1]);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(0.08, 9);
+    expect(p.some((v) => near(v, [0.15 - 0.035, 0.25 + 0.0175, 3 * LAYER_GAP]))).toBe(true); // the neck
+  });
+
+  const swingOf = (bend?: -1) => {
+    const cue: Cue = { kind: 'swing', face: 0, from: [0.1, 0.25], to: [0.4, 0.25], ...(bend ? { bend } : {}) };
+    return points(cueSegments(withCues([cue]), 1));
+  };
+
+  it.each([
+    [undefined, 1],
+    [-1 as const, -1]
+  ])('draws a swing (bend %s) as an arc bulging in the paper, with a V head in its plane', (bend, sign) => {
+    const p = swingOf(bend);
+    const [lift, L] = [3 * LAYER_GAP, 0.3];
     expect(p).toHaveLength(36); // 16 arc segments and 2 head strokes
-    expect(near(p[0], [0.1, 0.25, 3 * LAYER_GAP])).toBe(true);
-    expect(near(p[31], [0.4, 0.25, 3 * LAYER_GAP])).toBe(true);
-    expect(Math.max(...p.map((v) => v[2]))).toBeCloseTo(3 * LAYER_GAP + 0.175 * 0.3, 6);
+    expect(near(p[0], [0.1, 0.25, lift])).toBe(true);
+    expect(near(p[31], [0.4, 0.25, lift])).toBe(true);
+    const arc = p.slice(0, 32);
+    expect(Math.max(...arc.map((v) => v[2]))).toBeCloseTo(lift + 0.05 * L, 6);
+    const lateral = arc.map((v) => (v[1] - 0.25) * sign);
+    expect(Math.max(...lateral)).toBeCloseTo(0.25 * L, 6);
+    expect(Math.min(...lateral)).toBeGreaterThan(-1e-9);
+    // the head: two strokes of 0.06 from `to`, flat in the face plane, 25 degrees either side of the way back
+    const to = p[31];
+    // the way back from `to` toward the control point (0.25, 0.25 + sign * 0.15), flattened into the plane
+    const backAngle = Math.atan2(sign * 0.15, -0.15);
+    for (const k of [32, 34]) {
+      expect(near(p[k], to)).toBe(true);
+      const d = [p[k + 1][0] - to[0], p[k + 1][1] - to[1]];
+      expect(Math.hypot(...d)).toBeCloseTo(0.06, 9);
+      expect(p[k + 1][2]).toBeCloseTo(lift, 9);
+      expect(Math.abs(Math.atan2(d[1], d[0]) - backAngle) * (180 / Math.PI)).toBeCloseTo(25, 4);
+    }
   });
 
   it('maps through a face with a corner in the middle of a side', () => {

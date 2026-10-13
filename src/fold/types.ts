@@ -10,7 +10,8 @@ export type FaceOrder = [number, number, 1 | -1];
 export type Cut = { edge: number; from: number; to: number };
 
 /** A book arrow drawn on a step's starting pose: push (hollow, a finger goes in here) or swing (a flap travels). */
-export type Cue = { kind: 'push' | 'swing'; face: number; from: Vec2; to: Vec2 };
+/** A movement arrow on a face; `bend` -1 (swing only) curves it right of from -> to instead of left. */
+export type Cue = { kind: 'push' | 'swing'; face: number; from: Vec2; to: Vec2; bend?: -1 };
 
 export type Step = {
   /** Fold angle of every edge at the end of the step, in degrees (+valley, −mountain). */
