@@ -1,5 +1,5 @@
 import { cornerKeys } from '../src/fold/cuts';
-import { checkConsistency, foldedPositions } from '../src/fold/fold';
+import { checkConsistency, foldedPositions, layerHeights } from '../src/fold/fold';
 import type { Model, Vec3 } from '../src/fold/types';
 
 /** Largest allowed gap between copies of one vertex, as a fraction of the paper's side (spec §8). */
@@ -107,6 +107,56 @@ export function flapFlips(model: Model): string[] {
   return found;
 }
 
+/**
+ * Creases folded flat that lie along the same line, their flaps on the same side, at the end of `step`, whose
+ * layers interleave in the stack: paper can only nest one fold inside the other or keep them apart. crossings()
+ * can't see it, since each pair's faces share the crease. Steps that end with a face out of the stack's plane
+ * (a flap standing out, wings opened) are skipped.
+ */
+export function interleaved(model: Model, step: number): [number, number][] {
+  const faces = foldedPositions(model, step, 1);
+  const heights = layerHeights(model, step);
+  const unit = (v: Vec3): Vec3 => {
+    const l = Math.hypot(...v);
+    return [v[0] / l, v[1] / l, v[2] / l];
+  };
+  const normalOf = ([p, q, r]: Vec3[]) => unit(cross(sub(q, p), sub(r, p)));
+  const [a, b] = faces[model.steps[step].fixedFace];
+  const normal = normalOf(faces[model.steps[step].fixedFace]);
+  if (faces.some((face) => Math.abs(dot(normalOf(face), normal)) < 1 - 1e-6)) return [];
+  // the stack's plane, as 2D coordinates
+  const u = unit(sub(b, a));
+  const v = cross(normal, u);
+  const at = (p: Vec3): [number, number] => [dot(sub(p, a), u), dot(sub(p, a), v)];
+  const angles = model.steps[step].angles;
+  const folds = model.edges.flatMap(([i, j], e) => {
+    if (Math.abs(angles[e]) !== 180 || model.edgeFaces[e].length !== 2 || model.cutAt[e] <= step) return [];
+    const [f, g] = model.edgeFaces[e];
+    const [p, q] = [i, j].map((w) => at(faces[f][model.faces[f].indexOf(w)]));
+    const m = at(centre(faces[f]));
+    const side = Math.sign((q[0] - p[0]) * (m[1] - p[1]) - (q[1] - p[1]) * (m[0] - p[0]));
+    return [{ e, p, q, side, lo: Math.min(heights[f], heights[g]), hi: Math.max(heights[f], heights[g]) }];
+  });
+  const found: [number, number][] = [];
+  folds.forEach((A, i) => {
+    const d = [A.q[0] - A.p[0], A.q[1] - A.p[1]];
+    const l2 = d[0] * d[0] + d[1] * d[1];
+    const off = (r: [number, number]) => Math.abs(d[0] * (r[1] - A.p[1]) - d[1] * (r[0] - A.p[0])) / Math.sqrt(l2);
+    const along = (r: [number, number]) => (d[0] * (r[0] - A.p[0]) + d[1] * (r[1] - A.p[1])) / l2;
+    for (const B of folds.slice(i + 1)) {
+      if (off(B.p) > 1e-6 || off(B.q) > 1e-6) continue;
+      const [s, t] = [along(B.p), along(B.q)];
+      // overlapping by more than a point, with B's flaps on A's side (B's side turned to A's direction)
+      if (Math.min(1, Math.max(s, t)) - Math.max(0, Math.min(s, t)) < 1e-6) continue;
+      if (Math.sign(t - s) * B.side !== A.side) continue;
+      const nested = (A.lo < B.lo && B.hi < A.hi) || (B.lo < A.lo && A.hi < B.hi);
+      const apart = A.hi < B.lo || B.hi < A.lo;
+      if (!nested && !apart) found.push([A.e, B.e]);
+    }
+  });
+  return found;
+}
+
 /** Everything wrong with a model, one sentence each; empty when it may ship. */
 export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
   const problems: string[] = [];
@@ -123,6 +173,9 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
     for (let i = 1; i <= 10; i++) {
       const gap = spread(model, k, i / 10);
       if (gap > budget) problems.push(`Step ${k} at ${i * 10}% opens a ${gap.toFixed(3)} gap (budget ${budget}).`);
+    }
+    for (const [a, b] of interleaved(model, k)) {
+      problems.push(`Step ${k}: the folds at edges ${a} and ${b} interleave in the stack (paper can only nest them).`);
     }
     for (let i = 1; i <= 10; i++) {
       const hits = crossings(model, k, i / 10);

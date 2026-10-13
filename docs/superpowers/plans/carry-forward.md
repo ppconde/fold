@@ -27,6 +27,10 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 - **The crane's lesson is mirrored against its builder from step 14.** From "Unfold the two flaps" on, every face's position in the builder's view coordinates is the x → 1 − x mirror of what the player shows. That collapse holds a point on the middle crease (`hold: d(1, -0.5)`), so "Reverse-fold the left flap" moves the flap drawn on the right, and "right flap" the one on the left. Moving the hold off the line (`d(1.05, -0.5)`) fixes the mirror but breaks step 17's faceOrders. The real fix rewrites the neck, tail and head folds, which the reverse-fold work will do anyway.
 - **Homepage unfold jumps.** Fixed: `solvePaths` drops knots the solver couldn't join and bisects across jumps (`bridged`), and the unfold no longer carries flaps over a stack mid-step. One jump remains in the crane's unfold (0.052, within budget, about 40 ms on screen): no joined pose lies between those two knots.
 
+## Booklet models
+
+- **The squash's tuck hint stacks the folded-in corners in an order paper can't fold.** In the Snail's square base (the `collapse(..., { tuck })` test in models/sequence.test.ts), each side corner's four triangles land between the front and back squares in their landing order. But the side corner and the front square are joined along the same outer edge as the side corner and the back square, and `interleaved` (models/check.ts) finds those two folds interleaving at steps 7–9. Splitting the corner into its two halves, or turning the four triangles over as a block, fixes the nesting but makes a face flip across a crease that didn't move (`flapFlips`). Work out the true stack for this squash (a physical fold helps) before changing the hint; the Snail waits on it. The test expects the interleaves until then.
+
 ## Resolved in M4 (part 1)
 
 - **Step count cell may overflow at 10 or more steps.** The 7th dock column is now `minmax(44px, max-content)`; asserted on the 11-step kabuto in part 2.

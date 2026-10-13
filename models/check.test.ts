@@ -3,7 +3,7 @@ import { fixture, slitFixture } from '../src/fold/fixtures';
 import { LAYER_GAP } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { buildFold } from './build';
-import { checkModel, crossings, flapFlips, spread } from './check';
+import { checkModel, crossings, flapFlips, interleaved, spread } from './check';
 import { diamond as d, diamondSequence, has, lacks } from './sequence';
 
 const quarters = () => loadModel(fixture('fold-in-quarters'));
@@ -116,6 +116,24 @@ describe('flapFlips', () => {
   it('finds none in the fixtures', () => {
     expect(flapFlips(quarters())).toEqual([]);
     expect(flapFlips(loadModel(fixture('fold-in-half')))).toEqual([]);
+  });
+});
+
+describe('interleaved', () => {
+  it('finds none when the folds on one line nest or lie apart', () => {
+    // folded in quarters: the first fold's two halves lie apart in the stack, the second's nest
+    expect(interleaved(quarters(), 2)).toEqual([]);
+  });
+
+  it('finds two folds on one line whose layers interleave', () => {
+    // the same folds stacked 1, 3, 0, 2 from the bottom: the halves of the first fold (faces 0|1 and 2|3) interleave
+    const json = fixture('fold-in-quarters') as { file_frames: { faceOrders: number[][] }[] };
+    json.file_frames[1].faceOrders = json.file_frames[1].faceOrders.map(([f, g, s]) =>
+      f === 3 && g === 0 ? [f, g, -s] : [f, g, s]
+    );
+    const model = loadModel(json);
+    expect(interleaved(model, 2)).toEqual([[8, 9]]);
+    expect(checkModel(model)).toContainEqual(expect.stringMatching(/^Step 2: the folds at edges 8 and 9 interleave/));
   });
 });
 
