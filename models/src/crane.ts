@@ -142,7 +142,15 @@ const mirror = ([px, py]: At, [a, b]: [At, At]): At => {
  * left), and the tip's swing to where it lands. A thin flap (the head) needs `inset` (its paper lies that far
  * to the other side of its axis) and a `reach` short of the tip, or the cues land off the paper.
  */
-const reverseCues = (line: [At, At], at: At, tip: At, side: 1 | -1, inset = 0, reach = 0.95): CueSpec[] => {
+const reverseCues = (
+  line: [At, At],
+  at: At,
+  tip: At,
+  side: 1 | -1,
+  bend: 'left' | 'right',
+  inset = 0,
+  reach = 0.95
+): CueSpec[] => {
   const [dx, dy] = [tip[0] - at[0], tip[1] - at[1]];
   const l = Math.hypot(dx, dy);
   const [nx, ny] = [(side * dy) / l, (-side * dx) / l];
@@ -150,7 +158,7 @@ const reverseCues = (line: [At, At], at: At, tip: At, side: 1 | -1, inset = 0, r
   const q: At = [at[0] + dx * 0.15 + ix, at[1] + dy * 0.15 + iy];
   const p: At = [q[0] + nx * 0.12, q[1] + ny * 0.12];
   const from: At = [at[0] + dx * reach + ix, at[1] + dy * reach + iy];
-  return [{ push: [p, q] }, { swing: [from, mirror(from, line)] }];
+  return [{ push: [p, q] }, { swing: [from, mirror(from, line)], bend }];
 };
 // neck and tail stand 70° up, leaning out; the head turns down and out
 const base: At = [0.5, 0.24];
@@ -162,7 +170,7 @@ s.fold('neck', neck[0], neck[1], {
   only: leftLeg,
   tag: 'neck',
   hold: d(1, 0.3),
-  cues: reverseCues(neck, base, B, -1),
+  cues: reverseCues(neck, base, B, -1, 'left'),
   en: 'Reverse-fold the left flap up inside the body to make the neck.',
   pt: 'Faz uma dobra invertida na aba da esquerda, para cima e por dentro do corpo, para fazer o pescoço.'
 });
@@ -173,7 +181,7 @@ s.fold('tail', tail[0], tail[1], {
   tuck: true,
   only: rightLeg,
   hold: d(1, 0.3),
-  cues: reverseCues(tail, base, B, 1),
+  cues: reverseCues(tail, base, B, 1, 'right'),
   en: 'Reverse-fold the right flap up the same way to make the tail.',
   pt: 'Faz o mesmo à aba da direita para fazer a cauda.'
 });
@@ -186,7 +194,7 @@ s.fold('head', head[0], head[1], {
   tuck: true,
   only: has('neck'),
   hold: d(1, 0.3),
-  cues: reverseCues(head, headAt, tip, 1, 0.01, 0.7),
+  cues: reverseCues(head, headAt, tip, 1, 'right', 0.01, 0.7),
   en: 'Reverse-fold the tip of the neck down to make the head.',
   pt: 'Faz uma dobra invertida na ponta do pescoço, para baixo, para fazer a cabeça.'
 });
