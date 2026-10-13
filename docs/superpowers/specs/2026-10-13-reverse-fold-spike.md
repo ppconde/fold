@@ -2,9 +2,16 @@
 
 2026-10-13. Question: for the crane's neck step (lesson step 16, `s.fold('neck', …)` in models/src/crane.ts), which approach gives an honest inside reverse fold, and at what cost? (A) a rigid crease-angle path that opens the layers, or (B) a build-time bending solver that bakes per-vertex keyframes.
 
-**Short answer.** A is impossible without unfolding the body back past the square base. B is the only route, but the solver needs more than the prototype had. The simulation is cheap (seconds to a minute per step). The hard part is what moves the paper: every simple drive tried either locks, crumples or tears. The real fix is a solver that finds the whole step's motion from its two end poses, with real contact. Run a second, time-boxed spike on that before committing to the four-PR plan.
+**Short answer.** Keep the swing-and-tuck for now. Five honest routes were tried on the neck, and none works:
+- a rigid path (it would have to unfold the body back past the square base);
+- tearing the spine;
+- a bending solver with simple drives, including opening the body;
+- temporary hinges;
+- rigid open, fold and close.
 
-All code was throwaway and is not committed. It sits in the spike worktree, `../fold-reverse-spike/spike/` (`vertex.ts`, `openflat.ts`, `history.ts`, `bend.ts`, `view.html`, `shoot.mjs`, `app-shots.mjs`), with images in `spike/out/`.
+The one route left is a bending solver that finds the whole step's motion from its two end poses, with real collision handling. That is research-sized work, to be started as its own project. The Snail goes ahead on the same `over` + `tuck` stand-in.
+
+All code was throwaway and is not committed. It sat in the spike worktree, `../fold-reverse-spike/spike/` (`vertex.ts`, `openflat.ts`, `history.ts`, `bend.ts`, `tear.ts`, `crane-hinges.ts`, `hinges.ts`, `unfold.ts`, `refold.ts`, `view.html`, `shoot.mjs`, `app-shots.mjs`), with images in `spike/out/`.
 
 ## The step in numbers
 
@@ -136,16 +143,15 @@ In the app (`spike/out/refold-app.png`, the model swapped in temporarily) the bi
 
 ## Recommendation
 
-1. **Drop A.** For the neck, and for any reverse fold in a closed body, it is proven impossible short of unfolding.
-2. **Keep B as the direction, but don't open the four PRs yet.** The missing piece is a drive that needs no authoring: a solver that takes only the two end poses and finds the whole step at once. That means minimizing stretch, bending and motion between frames, with a contact barrier between successive frames (IPC-style, with CCD), starting from today's swing-and-tuck as the initial guess. That is a research-sized piece; the prototype's integrator is not it.
-3. **(Superseded by the follow-ups above: temporary hinges did not work.)** **Next, a second spike, time-boxed to 2–3 days, on the neck only:**
-   - (half a day first) **transient hinges.** Rigid paper with a few extra creases that are flat at both ends of the step, added with `mark()` through V0, V1 and V2, unlocks the degree-4 vertices: degree-6 vertices have spare freedom. If a collision-aware keyframe search (`crossings` as a constraint in `solvePaths`) finds a joined, non-crossing path, the engine stays rigid. That would need no baked format, no mesh, and nothing new on phones; the hinges would need a hidden-crease assignment so they don't draw.
-   - (otherwise) **the path optimizer** described in point 2, on a properly triangulated strip.
-   - Pass: worst stretch < 1%, no crossings at 40 samples, end pose within one layer gap before landing, and a frame sheet that reads as a reverse fold.
-4. **If the spike passes with the optimizer, the PR shape holds, with these sizes:**
-   - **Engine, baked motion in `.fold`** (~700–900 lines with tests): a per-step mesh and quantised vertex frames, loader, player geometry from frames, checks (stretch, crossings on the baked mesh), homepage unfold (blend or skip baked steps), thumbnail (end pose only). Plan for size: 700 vertices × 3 × 30 frames is about 400 KB of raw JSON per step. Quantise (16-bit deltas from the rigid pose) to roughly 60–120 KB. The crane needs three such steps.
-   - **Engine, solver with `fold(…, { bend: true })`** (~800–1200 lines): triangulation, the path optimizer with contact, a deterministic seed so `pnpm models` stays byte-stable, and a time budget per step (aim for under 2 minutes).
-   - **Crane** (~200 lines): neck, tail and head; the swing-and-tuck stand-in and the mirror (see carry-forward) go.
-   - **Snail**, after the crane.
-
-   If transient hinges pass instead, the first two PRs shrink to one engine PR (~300–500 lines: hidden creases plus a collision term in `solvePaths`). That same collision term also fixes the homepage unfold's crossings noted in carry-forward.
+1. **Keep the swing-and-tuck** (`over` + `tuck`) for the crane's neck, tail and head, and use it for the Snail and other models' reverse folds. It passes every check; its one flaw is the last tenth, where the flap slides through the outer layers.
+2. **Drop the rigid routes.** For a reverse fold in a closed body, a rigid path, a torn spine, temporary hinges and rigid open-fold-close all fail, for the measured reasons above.
+3. **Option 6 later, as its own project:** a bending solver that takes only the two end poses and finds the whole step at once. It minimizes stretch, bending and motion between frames, with a collision barrier between successive frames (IPC-style, with continuous collision detection), starting from the swing-and-tuck as its initial guess. It also covers sinks and squashes.
+   - Start with a time-boxed solver prototype on the neck. Pass: worst stretch under 1%, no crossings at 40 samples, end pose within one layer gap before landing, and a frame sheet that reads as a reverse fold.
+   - Only once it passes, open the PRs:
+     - **Engine, baked motion in `.fold`** (~700–900 lines with tests): a per-step mesh and quantised vertex frames, loader, player geometry from frames, checks (stretch, crossings on the baked mesh), homepage unfold (blend or skip baked steps), thumbnail (end pose only). Plan for size: 700 vertices × 3 × 30 frames is about 400 KB of raw JSON per step. Quantise (16-bit deltas from the rigid pose) to roughly 60–120 KB. The crane needs three such steps.
+     - **Engine, the solver with `fold(…, { bend: true })`** (~800–1200 lines): triangulation, the path optimizer with collisions, a deterministic seed so `pnpm models` stays byte-stable, and a time budget per step (aim for under 2 minutes).
+     - **Crane and Snail** (~200 lines each): their reverse folds move onto it; the swing-and-tuck stand-in and the crane's mirror (see carry-forward) go.
+4. **Lessons for any path-solver work,** learnt in the hinge attempt:
+   - Solve a step's path under the chain of creases it will play with; moving creases changes that chain.
+   - Take a ±180 crease's approach side from its vertex's branch, not from its label.
+   - Mark extra creases through exact points, not rounded ones.
