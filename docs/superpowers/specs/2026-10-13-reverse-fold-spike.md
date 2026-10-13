@@ -94,11 +94,35 @@ On rigid faces the tear can't stay small. It opens along the whole spine, in pro
 
 The body won't open on its own: it is joined through the centre to the wings, and the wings' layers lie over and under it. Opening it means moving the whole bird, and with contact on the solver can't coordinate that. The fine run takes 113 s (3009 triangles). Frames are in `spike/out/expand-side.png`: the pocket does show, dark at 86%, but the paper crumples. So hands-like opening is the right picture of the motion, and it is exactly what the path optimizer in the recommendation has to find for itself.
 
+## Follow-up: temporary hinges (option 4; spike/crane-hinges.ts, spike/hinges.ts)
+
+**Setup.**
+- In a copy of the crane, `mark()` lines through the three lock points, each bisecting the flap's corner there and, in a second pass, the body's corner (in view: 230° and 140° through V0; −28.75° and 61.25° through the side edges' point). V0, V1 and V2 go from 4 creases to 8 each (56 faces).
+- The path for the neck step is solved with the path solver's projection. Every crease in the leg's quarter is free (44); the hinge creases are flat at both ends; the fold line goes straight and the spine through flat.
+- It's scored with the engine's own `spread` and `crossings` at 40 samples.
+
+**Two solver pitfalls, fixed on the way; both matter for a real PR:**
+- **The crease chain.** The engine joins faces through the creases a step leaves alone, so making the hinges move changes that chain. Knots solved under the old chain tore by up to 0.17 when played, so I re-solved until the chain settled (three rounds; knots then joined within 0.011).
+- **Exact hinge points.** A hinge must pass exactly through the lock point. Rounding its view coordinates by 1e-4 made sliver faces and left the lock in place.
+
+**Result.** The joined path stalls. With a weak pull toward the target angles, the knots stay joined, but the fold line gets no further than:
+
+| hinge directions (flap; body) | fold line by the last knot (needs 171°) | crossings |
+|---|---|---|
+| 230°, −28.75°; 140°, 61.25° | 36° | from 43% of the step |
+| 210°, −10°; 120°, 40° | 54° | from 45% |
+| 250°, −48°; 160°, 80° | 10° | from 48% |
+| 200°, −50°; 100°, 30° | 56° | from 35% |
+
+The step then jumps the rest of the way (tear 0.86–0.89). Pulling the fold line ten to fifty times harder makes it follow, but the knots tear (0.10–0.30), faces cross from 5%, and the hinges fold flat to ±180°: they become real folds, not flexes.
+
+**Verdict: no** (as far as a local search on rigid paper goes). A few hinges unlock the first 10–56° of the fold, then the paper locks again and the layers collide. Rigid paper with this many extra creases still can't open the body enough. Hinges spread over the whole body would be a coarse version of the bending solver (option 6). The time box is spent.
+
 ## Recommendation
 
 1. **Drop A.** For the neck, and for any reverse fold in a closed body, it is proven impossible short of unfolding.
 2. **Keep B as the direction, but don't open the four PRs yet.** The missing piece is a drive that needs no authoring: a solver that takes only the two end poses and finds the whole step at once. That means minimizing stretch, bending and motion between frames, with a contact barrier between successive frames (IPC-style, with CCD), starting from today's swing-and-tuck as the initial guess. That is a research-sized piece; the prototype's integrator is not it.
-3. **Next, a second spike, time-boxed to 2–3 days, on the neck only:**
+3. **(Superseded by the follow-ups above: temporary hinges did not work.)** **Next, a second spike, time-boxed to 2–3 days, on the neck only:**
    - (half a day first) **transient hinges.** Rigid paper with a few extra creases that are flat at both ends of the step, added with `mark()` through V0, V1 and V2, unlocks the degree-4 vertices: degree-6 vertices have spare freedom. If a collision-aware keyframe search (`crossings` as a constraint in `solvePaths`) finds a joined, non-crossing path, the engine stays rigid. That would need no baked format, no mesh, and nothing new on phones; the hinges would need a hidden-crease assignment so they don't draw.
    - (otherwise) **the path optimizer** described in point 2, on a properly triangulated strip.
    - Pass: worst stretch < 1%, no crossings at 40 samples, end pose within one layer gap before landing, and a frame sheet that reads as a reverse fold.
