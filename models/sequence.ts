@@ -69,8 +69,8 @@ const centroid = (poly: Vec2[]): Vec2 => [
   poly.reduce((s, v) => s + v[1], 0) / poly.length
 ];
 
-/** A movement arrow in view coordinates; a swing bends left (default) or right as seen in the lesson — from above, after the step's turn — which matches view coordinates except where carry-forward's crane mirror applies (from crane step 14 on). */
-export type CueSpec = { push: [Vec2, Vec2] } | { swing: [Vec2, Vec2]; bend?: 'left' | 'right' };
+/** A curved movement arrow in view coordinates, from -> to; it bends left (default) or right as seen in the lesson — from above, after the step's turn — which matches view coordinates except where carry-forward's crane mirror applies (from crane step 14 on). */
+export type CueSpec = { from: Vec2; to: Vec2; bend?: 'left' | 'right' };
 
 export type FoldOptions = Text & {
   /**
@@ -230,25 +230,19 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     });
   };
 
-  /** Cues as flat-sheet points through the top piece under each one's anchor, on the pieces before the step. */
+  /** Cues as flat-sheet points through the top piece under each one's start, on the pieces before the step. */
   const cuesOf = (specs: CueSpec[] | undefined): SourceStep['cues'] =>
     specs?.map((spec) => {
-      const [kind, [p, q]] = 'push' in spec ? (['push', spec.push] as const) : (['swing', spec.swing] as const);
-      const anchor = kind === 'push' ? q : p;
       const piece = [...pieces].reverse().find((pc) =>
         inside(
-          anchor,
+          spec.from,
           pc.outline.map((v) => apply(pc.toView, v))
         )
       );
-      if (!piece) {
-        throw new Error(
-          `Step ${steps.length + 1}'s ${kind} cue ${kind === 'push' ? 'points' : 'starts'} off the paper.`
-        );
-      }
+      if (!piece) throw new Error(`Step ${steps.length + 1}'s cue starts off the paper.`);
       const back = piece.toView.clone().invert();
-      const bend = 'bend' in spec && spec.bend === 'right' ? ({ bend: -1 } as const) : {};
-      return { kind, from: apply(back, p), to: apply(back, q), ...bend };
+      const bend = spec.bend === 'right' ? ({ bend: -1 } as const) : {};
+      return { from: apply(back, spec.from), to: apply(back, spec.to), ...bend };
     });
 
   const api = {

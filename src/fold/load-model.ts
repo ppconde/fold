@@ -236,24 +236,21 @@ function readCuts(raw: unknown, n: number, assignments: Assignment[]): Cut[] {
 function readCues(raw: unknown, n: number, faceCount: number): Cue[] {
   if (raw === undefined) return [];
   const bad = () =>
-    new FoldError(
-      `Step ${n} foldapp:cues needs {kind: push|swing, face, from: [x, y], to: [x, y], bend?: 1|-1 on a swing} with from and to apart.`
-    );
+    new FoldError(`Step ${n} foldapp:cues needs {face, from: [x, y], to: [x, y], bend?: -1} with from and to apart.`);
   const point = (p: unknown): p is Vec2 => Array.isArray(p) && p.length === 2 && p.every(isNum);
   if (!Array.isArray(raw)) throw bad();
   return raw.map((c): Cue => {
     if (
       !isRecord(c) ||
-      (c.kind !== 'push' && c.kind !== 'swing') ||
       !isIndex(c.face, faceCount) ||
       !point(c.from) ||
       !point(c.to) ||
       (c.from[0] === c.to[0] && c.from[1] === c.to[1]) ||
-      (c.bend !== undefined && (c.kind !== 'swing' || (c.bend !== 1 && c.bend !== -1)))
+      (c.bend !== undefined && c.bend !== 1 && c.bend !== -1)
     ) {
       throw bad();
     }
-    const cue: Cue = { kind: c.kind, face: c.face, from: [c.from[0], c.from[1]], to: [c.to[0], c.to[1]] };
+    const cue: Cue = { face: c.face, from: [c.from[0], c.from[1]], to: [c.to[0], c.to[1]] };
     return c.bend === -1 ? { ...cue, bend: -1 } : cue;
   });
 }

@@ -46,22 +46,6 @@ function cueLines(cue: Cue, map: ReturnType<typeof faceMap>): Vec3[] {
   const [from, to] = [add(map.at(cue.from), lift), add(map.at(cue.to), lift)];
   const length = Math.hypot(...sub(to, from));
   const along = unit(sub(to, from));
-  if (cue.kind === 'push') {
-    // a hollow arrow lying on the face: shaft, then head; glyph sizes, not fractions of its length
-    const side = unit(cross(map.up, along));
-    const h = Math.min(0.07, 0.7 * length);
-    const neck = add(from, scale(along, length - h));
-    const corners = [
-      add(from, scale(side, 0.0175)),
-      add(neck, scale(side, 0.0175)),
-      add(neck, scale(side, 0.04)),
-      to,
-      add(neck, scale(side, -0.04)),
-      add(neck, scale(side, -0.0175)),
-      add(from, scale(side, -0.0175))
-    ];
-    return corners.flatMap((v, i) => [v, corners[(i + 1) % corners.length]]);
-  }
   // an arc bulging sideways in the paper (left of from -> to seen from above, unless bend is -1) and barely
   // rising, so the lesson's top-down view sees a curve; then a V head, spread in the paper plane
   const side = unit(cross([0, 0, 1], along));

@@ -24,28 +24,8 @@ describe('cueSegments', () => {
     expect(cueSegments(withCues([]), 1)).toEqual([]);
   });
 
-  it('draws a push as a closed hollow arrow just above its face, its tip at `to`, a fixed 0.08 wide', () => {
-    const model = withCues([{ kind: 'push', face: 0, from: [0.1, 0.25], to: [0.4, 0.25] }]);
-    const p = points(cueSegments(model, 1));
-    expect(p).toHaveLength(14); // 7 sides, 2 points each
-    for (let i = 0; i < 14; i += 2) expect(near(p[i + 1], p[(i + 2) % 14])).toBe(true);
-    for (const v of p) expect(v[2]).toBeCloseTo(3 * LAYER_GAP, 9);
-    expect(p.some((v) => near(v, [0.4, 0.25, 3 * LAYER_GAP]))).toBe(true);
-    const ys = p.map((v) => v[1]);
-    expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(0.08, 9);
-  });
-
-  it('keeps a short push a full arrow: head 0.7 of its length, still 0.08 wide', () => {
-    const model = withCues([{ kind: 'push', face: 0, from: [0.1, 0.25], to: [0.15, 0.25] }]);
-    const p = points(cueSegments(model, 1));
-    expect(p).toHaveLength(14);
-    const ys = p.map((v) => v[1]);
-    expect(Math.max(...ys) - Math.min(...ys)).toBeCloseTo(0.08, 9);
-    expect(p.some((v) => near(v, [0.15 - 0.035, 0.25 + 0.0175, 3 * LAYER_GAP]))).toBe(true); // the neck
-  });
-
   const swingOf = (bend?: -1) => {
-    const cue: Cue = { kind: 'swing', face: 0, from: [0.1, 0.25], to: [0.4, 0.25], ...(bend ? { bend } : {}) };
+    const cue: Cue = { face: 0, from: [0.1, 0.25], to: [0.4, 0.25], ...(bend ? { bend } : {}) };
     return points(cueSegments(withCues([cue]), 1));
   };
 
@@ -79,10 +59,11 @@ describe('cueSegments', () => {
   it('maps through a face with a corner in the middle of a side', () => {
     // the slit fixture's face 0, the bottom half, has the slit's end (0.5, 0.5) as a corner on its top side
     const json = slitFixture();
-    json.file_frames[0]['foldapp:cues'] = [{ kind: 'push', face: 0, from: [0.2, 0.25], to: [0.8, 0.25] }];
+    json.file_frames[0]['foldapp:cues'] = [{ face: 0, from: [0.2, 0.25], to: [0.8, 0.25] }];
     const p = points(cueSegments(loadModel(json), 1));
-    expect(p.some((v) => near(v, [0.8, 0.25, 3 * LAYER_GAP]))).toBe(true);
-    for (const v of p) expect(v[2]).toBeCloseTo(3 * LAYER_GAP, 9);
+    expect(near(p[0], [0.2, 0.25, 3 * LAYER_GAP])).toBe(true);
+    expect(near(p[31], [0.8, 0.25, 3 * LAYER_GAP])).toBe(true);
+    for (const v of p.slice(32)) expect(v[2]).toBeCloseTo(3 * LAYER_GAP, 9);
   });
 });
 
@@ -92,12 +73,8 @@ describe("the crane's cues, as the lesson shows them", () => {
   const cross = (a: number[], b: number[]) => a[0] * b[1] - a[1] * b[0];
   const steps = crane.steps.flatMap((s, i) => (s.cues.length ? [i] : []));
 
-  it('has cues on the neck, tail and head; the head only a swing', () => {
-    expect(steps.map((i) => crane.steps[i].cues.map((c) => c.kind))).toEqual([
-      ['push', 'swing'],
-      ['push', 'swing'],
-      ['swing']
-    ]);
+  it('has one cue each on the neck, tail and head', () => {
+    expect(steps.map((i) => crane.steps[i].cues.length)).toEqual([1, 1, 1]);
   });
 
   it.each(steps)('step %i: the swing ends where the tip lands, bulging outward, away from the body', (i) => {
@@ -111,7 +88,7 @@ describe("the crane's cues, as the lesson shows them", () => {
           ? m
           : best
       );
-    const p = points(cueSegments(crane, i)).slice(-36);
+    const p = points(cueSegments(crane, i));
     const [start, end, mid] = [xy(p[0]), xy(p[31]), xy(p[16])];
     expect(Math.hypot(end[0] - tip.to[0], end[1] - tip.to[1])).toBeLessThan(0.06);
     const all = a.flat();
@@ -121,17 +98,6 @@ describe("the crane's cues, as the lesson shows them", () => {
     const bulge = cross(chord, [mid[0] - half[0], mid[1] - half[1]]);
     const body = cross(chord, [centre[0] - half[0], centre[1] - half[1]]);
     expect(Math.sign(bulge)).toBe(-Math.sign(body));
-  });
-
-  it.each(steps.slice(0, 2))('step %i: the push sits on the flap that moves, pointing at the spine', (i) => {
-    const [a, b] = [foldedPositions(crane, i, 0), foldedPositions(crane, i, 1)];
-    const moving = a.filter((f, k) => f.some((v, j) => Math.hypot(...v.map((x, d) => x - b[k][j][d])) > 1e-3));
-    const spine = 0.5; // the legs part along the middle line, x = 0.5 in the lesson
-    const flap = Math.sign(moving.flat().reduce((s, v) => s + v[0], 0) / moving.flat().length - spine);
-    const p = points(cueSegments(crane, i));
-    const [tail, head] = [(p[0][0] + p[12][0]) / 2, p[6][0]];
-    expect(Math.sign(tail - spine)).toBe(flap);
-    expect(Math.abs(head - spine)).toBeLessThan(Math.abs(tail - spine));
   });
 });
 

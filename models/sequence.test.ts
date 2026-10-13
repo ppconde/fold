@@ -17,7 +17,7 @@ const entry = {
 const text = { en: 'Fold.', pt: 'Dobra.' };
 
 describe('foldSequence', () => {
-  it('reads cues through the top layer under their anchor, and builds them on its face', () => {
+  it('reads cues through the top layer under their start, and builds them on its face', () => {
     const s = foldSequence();
     // the left half over the right: at x > 0.5 the top layer is the flap, mirrored about x = 0.5
     s.fold('half', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
@@ -25,28 +25,12 @@ describe('foldSequence', () => {
       valley: true,
       hold: [0.75, 0.75],
       ...text,
-      // the push starts off the paper: it anchors on its head
-      cues: [
-        {
-          swing: [
-            [0.7, 0.2],
-            [0.7, 0.8]
-          ],
-          bend: 'right'
-        },
-        {
-          push: [
-            [1.2, 0.3],
-            [0.6, 0.3]
-          ]
-        }
-      ]
+      cues: [{ from: [0.7, 0.2], to: [0.7, 0.8], bend: 'right' }]
     });
     const src = s.source({ ...entry, tags: [] });
     const round = (p: Vec2) => p.map((x) => +x.toFixed(6));
     expect(src.steps[1].cues?.map((c) => ({ ...c, from: round(c.from), to: round(c.to) }))).toEqual([
-      { kind: 'swing', from: [0.3, 0.2], to: [0.3, 0.8], bend: -1 },
-      { kind: 'push', from: [-0.2, 0.3], to: [0.4, 0.3] }
+      { from: [0.3, 0.2], to: [0.3, 0.8], bend: -1 }
     ]);
     const fold = buildFold(src);
     const cues = (fold.file_frames[1] as Record<string, unknown>)['foldapp:cues'] as {
@@ -56,66 +40,30 @@ describe('foldSequence', () => {
     }[];
     const poly = (f: number) => fold.faces_vertices[f].map((v) => fold.vertices_coords[v] as Vec2);
     expect(inside([0.3, 0.2], poly(cues[0].face))).toBe(true);
-    expect(inside([0.4, 0.3], poly(cues[1].face))).toBe(true);
     expect(checkModel(loadModel(fold))).toEqual([]);
   });
 
-  it('names a cue whose anchor is off the paper, and keeps cues through together', () => {
+  it('names a cue that starts off the paper, and keeps cues through together', () => {
     const s = foldSequence();
     expect(() =>
       s.fold('a', [0.5, 0], [0.5, 1], {
         valley: true,
         ...text,
-        cues: [
-          {
-            swing: [
-              [2, 2],
-              [0.5, 0.5]
-            ]
-          }
-        ]
+        cues: [{ from: [2, 2], to: [0.5, 0.5] }]
       })
-    ).toThrow("Step 1's swing cue starts off the paper.");
-    expect(() =>
-      s.fold('b', [0.5, 0], [0.5, 1], {
-        valley: true,
-        ...text,
-        cues: [
-          {
-            push: [
-              [0.5, 0.5],
-              [2, 2]
-            ]
-          }
-        ]
-      })
-    ).toThrow("Step 1's push cue points off the paper.");
+    ).toThrow("Step 1's cue starts off the paper.");
     const t = foldSequence();
     t.together(text, () => {
       t.fold('l', [0.25, 0], [0.25, 1], {
         valley: true,
         hold: [0.5, 0.5],
         ...text,
-        cues: [
-          {
-            swing: [
-              [0.1, 0.5],
-              [0.4, 0.5]
-            ]
-          }
-        ]
+        cues: [{ from: [0.1, 0.5], to: [0.4, 0.5] }]
       });
       t.fold('r', [0.75, 1], [0.75, 0], {
         valley: true,
         ...text,
-        cues: [
-          {
-            swing: [
-              [0.9, 0.5],
-              [0.6, 0.5]
-            ]
-          }
-        ]
+        cues: [{ from: [0.9, 0.5], to: [0.6, 0.5] }]
       });
     });
     expect(t.source({ ...entry, tags: [] }).steps[0].cues).toHaveLength(2);
