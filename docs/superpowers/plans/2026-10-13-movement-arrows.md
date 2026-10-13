@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- Two kinds only: `push` and `swing`. No "press flat", no arrows in the crease diagram, none on ordinary folds.
+- Two kinds only: `push` and `swing`. No "press flat", no arrows in the crease diagram, none on ordinary folds. (Revised 2026-10-13: push dropped; a cue is now just a swing, `{ face, from, to, bend? }` with no `kind` — see the spec.)
 - `foldapp:cues` entries: `{ kind: 'push' | 'swing', face, from: [x, y], to: [x, y] }`, flat-sheet points, 6 decimals; on its own frame only (not inherited).
 - Anchor: the top layer under `to` for a push, under `from` for a swing.
 - Arrows: highlight colour `#A5633F`, `lineWidth` 2.2, `depthTest={false}`, drawn `3 × LAYER_GAP` above their face.
