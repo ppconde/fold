@@ -139,8 +139,7 @@ const mirror = ([px, py]: At, [a, b]: [At, At]): At => {
 /**
  * A book's arrows for a reverse fold along `line` through `at`, turning the flap whose tip is `tip`: a push at
  * the flap just past the line, coming in from `side` of it (1: its right looking from `at` to the tip, −1: its
- * left), and the tip's swing to where it lands. A thin flap (the head) needs `inset` (its paper lies that far
- * to the other side of its axis) and a `reach` short of the tip, or the cues land off the paper.
+ * left), and the tip's swing to where it lands, curving `bend` of its way.
  */
 const reverseCues = (
   line: [At, At],
@@ -148,7 +147,9 @@ const reverseCues = (
   tip: At,
   side: 1 | -1,
   bend: 'left' | 'right',
+  /** how far toward the far side of the axis both cues move: the head's thin flap has no paper on the axis itself */
   inset = 0,
+  /** how far along the flap, from `at` to the tip, the swing starts: short of the head's tip, which is too narrow */
   reach = 0.95
 ): CueSpec[] => {
   const [dx, dy] = [tip[0] - at[0], tip[1] - at[1]];

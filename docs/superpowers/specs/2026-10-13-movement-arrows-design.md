@@ -47,7 +47,7 @@ New pure module `src/player/cues.ts`:
   - **swing:** a quadratic arc from `from` to `to` whose control point is the midpoint plus 0.5 × length sideways in the paper (left of from → to as seen from above, or right when `bend` is -1) and 0.1 × length along the face normal, so it bulges 0.25 × length sideways and lifts 0.05 × length; 16 segments, plus a V head at `to` (two strokes of 0.06 each, 25° either side of the way back toward the control point, spread in the paper plane so they show from above).
 - `cueOpacity(t): number`: 1 for t ≤ 0.1, then linear to 0 at t = 0.5, 0 after.
 
-`src/player/Paper.tsx`: one more drei `Line` (segments) in the highlight colour `#A5633F`, `lineWidth` 2.2, `depthTest={false}`, `renderOrder` above the cut trace, `transparent`. Its points are `cueSegments(model, step)` (recomputed when the step changes), its material opacity `cueOpacity(t)`, hidden when there are no cues or the opacity is 0.
+`src/player/Paper.tsx`: one more drei `Line` (segments) in the highlight colour `#A5633F`, `lineWidth` 2.8, `depthTest={false}`, `renderOrder` above the cut trace, `transparent`. Its points are `cueSegments(model, step)` (recomputed when the step changes), its material opacity `cueOpacity(t)`, hidden when there are no cues or the opacity is 0.
 
 The homepage unfold (`src/home/unfold.ts`) drops `foldapp:cues` from its frames, as it does the cut trace. The crease diagram is unchanged.
 
