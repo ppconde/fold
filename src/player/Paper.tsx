@@ -4,6 +4,7 @@ import { type ComponentRef, useEffect, useLayoutEffect, useMemo, useRef } from '
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
+import { cueOpacity, cueSegments } from './cues';
 import { fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
 import { writeSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
@@ -47,6 +48,8 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
   const cut = useRef<LineRef>(null);
+  const cue = useRef<LineRef>(null);
+  const cuePoints = useMemo(() => cueSegments(model, step), [model, step]);
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
@@ -62,8 +65,12 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     setSegments(flat.current, groups.flat);
     setSegments(active.current, groups.active);
     setSegments(cut.current, groups.cut);
+    // arrows sit on the step's starting pose and fade as the paper moves off it
+    const opacity = cueOpacity(t);
+    setSegments(cue.current, opacity > 0 ? cuePoints : []);
+    if (cue.current) cue.current.material.opacity = opacity;
     invalidate();
-  }, [model, step, t, geometry, invalidate]);
+  }, [model, step, t, geometry, invalidate, cuePoints]);
 
   useEffect(() => () => washi.dispose(), [washi]);
 
@@ -130,6 +137,18 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           color={INK}
           lineWidth={2.6}
           renderOrder={2}
+          depthTest={false}
+          frustumCulled={false}
+          visible={false}
+        />
+        <Line
+          ref={cue}
+          points={PLACEHOLDER}
+          segments
+          color={HIGHLIGHT}
+          lineWidth={2.2}
+          transparent
+          renderOrder={3}
           depthTest={false}
           frustumCulled={false}
           visible={false}
