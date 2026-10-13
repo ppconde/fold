@@ -118,6 +118,22 @@ The step then jumps the rest of the way (tear 0.86–0.89). Pulling the fold lin
 
 **Verdict: no** (as far as a local search on rigid paper goes). A few hinges unlock the first 10–56° of the fold, then the paper locks again and the layers collide. Rigid paper with this many extra creases still can't open the body enough. Hinges spread over the whole body would be a coarse version of the bending solver (option 6). The time box is spent.
 
+## Follow-up: rigid open, fold, close (option 2; spike/unfold.ts, spike/refold.ts)
+
+**The opened state.** Holding every lock crease at V0, V1 and V2 flat and letting the rest move, the nearest joined pose tears by 0.027 (within budget). But 35 of the crane's 53 creases have moved, wings included, many to about 90°. The whole bird opens into a 3D shape, not just the side the neck is on.
+
+**Opening: works.** From the end of step 15 to that pose, the solved path stays joined (tear ≤ 0.038) with at most one crossing pair, and none at 35–48% of the step.
+
+**Closing with the neck inside: not found.**
+- From the opened pose, the neck creases and every crease that opened must refold, each coming in from the side its vertex's branch allows (±180 is one pose, so the labels don't say which).
+- I fixed V0's signs from its branch (fold line −180 ⇒ body spine −180, leg spine +180) and searched the side points' signs: 16 combinations, with a weak and a strong pull toward the targets.
+- With a weak pull the close stalls with the fold line near 0. With a strong pull the angles follow, but the knots themselves tear by 0.27–0.50, and faces cross in 22–35 of 40 samples.
+- Closing is a full re-collapse of the bird base with branch choices at many vertices. Local path solving (the same projection `solvePaths` uses) doesn't find one.
+
+In the app (`spike/out/refold-app.png`, the model swapped in temporarily) the bird bursts open into a big 3D shape and then scrambles back with visible tears.
+
+**Verdict: no**, not with the path solver we have. A real version would replay the base's own collapses (square base, both petal folds) with the neck creases folded in from the flat sheet. That redesigns the lesson, and each replayed collapse would need the same branch search.
+
 ## Recommendation
 
 1. **Drop A.** For the neck, and for any reverse fold in a closed body, it is proven impossible short of unfolding.
