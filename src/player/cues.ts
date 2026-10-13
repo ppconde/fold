@@ -19,18 +19,12 @@ const unit = (a: Vec3): Vec3 => scale(a, 1 / Math.hypot(...a));
 function faceMap(model: Model, pose: Vec3[][], f: number): { at: (p: Vec2) => Vec3; up: Vec3 } {
   const flat = model.faces[f].map((v) => model.vertices[v]);
   const a = 0;
+  const far = (score: (v: Vec2) => number) => flat.reduce((best, v, i) => (score(v) > score(flat[best]) ? i : best), 0);
   // the corner farthest from the first, then the one farthest off that line: corners mid-side are collinear
-  const b = flat.reduce(
-    (best, v, i) =>
-      Math.hypot(v[0] - flat[a][0], v[1] - flat[a][1]) >
-      Math.hypot(flat[best][0] - flat[a][0], flat[best][1] - flat[a][1])
-        ? i
-        : best,
-    1
-  );
+  const b = far((v) => Math.hypot(v[0] - flat[a][0], v[1] - flat[a][1]));
   const off = (v: Vec2) =>
     Math.abs((flat[b][0] - flat[a][0]) * (v[1] - flat[a][1]) - (flat[b][1] - flat[a][1]) * (v[0] - flat[a][0]));
-  const c = flat.reduce((best, v, i) => (off(v) > off(flat[best]) ? i : best), 0);
+  const c = far(off);
   const [u, w] = [sub([...flat[b], 0], [...flat[a], 0]), sub([...flat[c], 0], [...flat[a], 0])];
   const det = u[0] * w[1] - u[1] * w[0];
   const [A, U, W] = [pose[f][a], sub(pose[f][b], pose[f][a]), sub(pose[f][c], pose[f][a])];
