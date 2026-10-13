@@ -69,6 +69,9 @@ const centroid = (poly: Vec2[]): Vec2 => [
   poly.reduce((s, v) => s + v[1], 0) / poly.length
 ];
 
+/** A book arrow in view coordinates: push (hollow, from p to the paper at q) or swing (a flap travels p → q). */
+export type CueSpec = { push: [Vec2, Vec2] } | { swing: [Vec2, Vec2] };
+
 export type FoldOptions = Text & {
   /**
    * true: the flap comes toward the viewer. false: it goes behind. A function decides per piece, for a
@@ -88,6 +91,8 @@ export type FoldOptions = Text & {
   over?: boolean;
   /** With `over`: end tucked inside as a real reverse fold does all the same, the layers changing places as it lands (see `Tuck`). */
   tuck?: boolean;
+  /** Movement arrows for this step, drawn on the paper as it lies before it. */
+  cues?: CueSpec[];
 };
 
 /**
@@ -125,6 +130,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     if (!gathering) return void steps.push(step);
     gathering.fold = { ...gathering.fold, ...step.fold };
     gathering.hold ??= step.hold;
+    if (step.cues) gathering.cues = [...(gathering.cues ?? []), ...step.cues];
     gathering.stack = step.stack;
   };
 
@@ -224,6 +230,26 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     });
   };
 
+  /** Cues as flat-sheet points through the top piece under each one's anchor, on the pieces before the step. */
+  const cuesOf = (specs: CueSpec[] | undefined): SourceStep['cues'] =>
+    specs?.map((spec) => {
+      const [kind, [p, q]] = 'push' in spec ? (['push', spec.push] as const) : (['swing', spec.swing] as const);
+      const anchor = kind === 'push' ? q : p;
+      const piece = [...pieces].reverse().find((pc) =>
+        inside(
+          anchor,
+          pc.outline.map((v) => apply(pc.toView, v))
+        )
+      );
+      if (!piece) {
+        throw new Error(
+          `Step ${steps.length + 1}'s ${kind} cue ${kind === 'push' ? 'points' : 'starts'} off the paper.`
+        );
+      }
+      const back = piece.toView.clone().invert();
+      return { kind, from: apply(back, p), to: apply(back, q) };
+    });
+
   const api = {
     /**
      * A step that only turns the model (absolute Euler XYZ, degrees). The first turn sets up the view the
@@ -253,6 +279,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       );
     },
     fold(name: string, p: Vec2, q: Vec2, opts: FoldOptions) {
+      const cues = cuesOf(opts.cues);
       const fold: Record<string, number> = {};
       /** The angles the flap swings through as one stack (a reverse fold's animation). */
       const swing: Record<string, number> = {};
@@ -344,6 +371,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         pt: opts.pt,
         ...(hold ? { hold } : {}),
         ...(opts.tuck ? { tuck } : {}),
+        ...(cues ? { cues } : {}),
         stack: pieces
       });
     },
@@ -429,7 +457,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
      * A step that moves several creases at once (a collapse, squash, petal fold): set them, and the layers
      * are worked out again from the flat-folded crease pattern, the piece under `hold` staying put.
      */
-    collapse(fold: Record<string, number>, opts: Text & { hold: Vec2 }) {
+    collapse(fold: Record<string, number>, opts: Text & { hold: Vec2; cues?: CueSpec[] }) {
       for (const [k, a] of Object.entries(fold)) {
         if (!creases[k]) throw new Error(`Collapse sets ${k}, which is not a crease.`);
         state[k] = a;
@@ -442,8 +470,9 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       );
       if (!still) throw new Error('Collapse holds a point that is not on the paper.');
       const held = apply(still.toView.clone().invert(), opts.hold);
+      const cues = cuesOf(opts.cues);
       pieces = relayer(held, still);
-      steps.push({ fold, en: opts.en, pt: opts.pt, hold: held, stack: pieces });
+      steps.push({ fold, en: opts.en, pt: opts.pt, hold: held, ...(cues ? { cues } : {}), stack: pieces });
     },
     /** Split crease `name` at `x` (flat-sheet coordinates); returns the name of the part past x. */
     split(name: string, x: Vec2): string {

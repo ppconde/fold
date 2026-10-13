@@ -35,6 +35,8 @@ export type SourceStep = {
   tuck?: Tuck;
   /** Slit crease name → how far along the cut its `from` and `to` ends lie (written by foldSequence's `slit`). */
   cut?: Record<string, [number, number]>;
+  /** Movement arrows, as flat-sheet points through the layer under each one's anchor (written by foldSequence). */
+  cues?: { kind: 'push' | 'swing'; from: Vec2; to: Vec2 }[];
 };
 
 export type ModelSource = Omit<ModelEntry, 'thumbnail'> & {
@@ -148,6 +150,19 @@ export function buildFold(src: ModelSource) {
       };
       return [[e, at(a), at(b)]];
     });
+    // each arrow on the face under its anchor: a push's head, a swing's tail
+    const cues = (step.cues ?? []).map((c) => {
+      const anchor = c.kind === 'push' ? c.to : c.from;
+      const face = faces.findIndex((f) =>
+        inside(
+          anchor,
+          f.map((v) => vertices[v])
+        )
+      );
+      if (face === -1) throw new Error(`${src.id} step ${i + 1}'s ${c.kind} cue is off the paper.`);
+      const r = (p: Vec2) => p.map((x) => +x.toFixed(6));
+      return { kind: c.kind, face, from: r(c.from), to: r(c.to) };
+    });
     return {
       edges_foldAngle: edgeCrease.map((name) => (name && angles[name]) || 0),
       'foldapp:instruction': { en: step.en, pt: step.pt },
@@ -155,6 +170,7 @@ export function buildFold(src: ModelSource) {
       ...(step.rotation ? { 'foldapp:rotation': step.rotation } : {}),
       ...(path.length ? { 'foldapp:path': path } : {}),
       ...(cut.length ? { 'foldapp:cut': cut } : {}),
+      ...(cues.length ? { 'foldapp:cues': cues } : {}),
       ...(changed ? { faceOrders } : {})
     };
   });
