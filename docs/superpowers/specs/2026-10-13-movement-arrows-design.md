@@ -23,7 +23,7 @@ A new FOLD frame field, on the frame of the step it belongs to only (not inherit
 ]
 ```
 
-- `face`: the face the arrow starts on (the top layer under `from` on the step's starting pose).
+- `face`: the face the arrow is anchored on: the top layer, on the step's starting pose, under `to` for a push (it points at the paper and may start off it) and under `from` for a swing (it starts on the flap).
 - `from`, `to`: flat-sheet points in that face's plane. `to` may lie outside the face (a swing ends where the flap lands).
 - Loader (`src/fold/load-model.ts`): reads it into `Step.cues: Cue[]` (`type Cue = { kind: 'push' | 'swing'; face: number; from: Vec2; to: Vec2 }`, empty when absent). A cue with an unknown kind, a face that does not exist, a point that is not two finite numbers, or `from` equal to `to` throws a `FoldError` naming the step: `Step N foldapp:cues needs {kind: push|swing, face, from: [x, y], to: [x, y]} with from and to apart.`
 
@@ -31,9 +31,9 @@ A new FOLD frame field, on the frame of the step it belongs to only (not inherit
 
 `fold`, `crease` and `collapse` in `models/sequence.ts` take an optional `cues?: CueSpec[]` with `type CueSpec = { push: [Vec2, Vec2] } | { swing: [Vec2, Vec2] }`. Points are view coordinates, the same space as `hold`.
 
-- They are read against the pieces as they lie before the step: the top piece (last in the stack) whose view outline contains `p` anchors the cue, and both points go to flat-sheet coordinates through that piece's `toView` inverse.
-- `SourceStep` gains `cues?: { kind; at: Vec2; from: Vec2; to: Vec2 }[]`, where `at` is a point inside the anchoring piece; `buildFold` resolves it to a face index the way it resolves `hold` (the face containing it) and writes `foldapp:cues`.
-- A cue whose `p` is not on the paper throws: `Step N's {kind} cue starts off the paper.`
+- They are read against the pieces as they lie before the step: the top piece (last in the stack) whose view outline contains the anchor point (`q` for a push, `p` for a swing) anchors the cue, and both points go to flat-sheet coordinates through that piece's `toView` inverse.
+- `SourceStep` gains `cues?: { kind: 'push' | 'swing'; from: Vec2; to: Vec2 }[]` in flat-sheet points; `buildFold` resolves the face containing the anchor point (as it does for `hold`; every face inside one piece lies in one plane at the step's start, since later creases are still flat) and writes `foldapp:cues`, points rounded to 6 decimals.
+- A cue whose anchor point is not on the paper throws: `Step N's push cue points off the paper.` / `Step N's swing cue starts off the paper.`
 - `together` passes cues through from the folds it gathers (the gathered step's cues are the concatenation).
 
 ## Player
@@ -63,7 +63,7 @@ Its three reverse folds get two cues each, in `models/src/crane.ts`, from the fo
 ## Testing
 
 - Loader: a valid cue list loads on its own step only; each malformed case throws its message.
-- Builder: a cue's points come back as flat-sheet points on the face under `p` (the top layer where layers overlap); `p` off the paper throws; `together` keeps cues.
+- Builder: a cue's points come back as flat-sheet points through the top layer under its anchor point; an anchor off the paper throws; `together` keeps cues; `buildFold` writes the face containing the anchor.
 - `cues.ts`: a push outline is closed, lies in its face plane `3 × LAYER_GAP` above it, and its tip is at `to`; a swing arc starts at `from`, ends at `to`, and its highest point is 0.35 × |to − from| / 2 above the face (a quadratic's peak is half its control height); `cueOpacity` gives 1, 1, 0.5, 0, 0 at 0, 0.1, 0.3, 0.5, 1.
 - Models: every model passes `checkModel`; `pnpm models` changes only `crane.fold`, only by the new field.
 - Existing e2e passes. Manual check in the browser: the crane's neck step at its start (arrows), while playing (fading, gone by mid-step) and at its end (none); preview server stopped afterwards.
