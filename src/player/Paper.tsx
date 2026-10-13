@@ -42,6 +42,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
   const cut = useRef<LineRef>(null);
+  const cueHalo = useRef<LineRef>(null);
   const cue = useRef<LineRef>(null);
   const cuePoints = useMemo(() => cueSegments(model, step), [model, step]);
   const { center } = paperExtent(model);
@@ -61,8 +62,10 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     setSegments(cut.current, groups.cut);
     // arrows sit on the step's starting pose and fade as the paper moves off it
     const opacity = cueOpacity(t);
-    setSegments(cue.current, opacity > 0 ? cuePoints : []);
-    if (cue.current) cue.current.material.opacity = opacity;
+    for (const line of [cueHalo.current, cue.current]) {
+      setSegments(line, opacity > 0 ? cuePoints : []);
+      if (line) line.material.opacity = opacity;
+    }
     invalidate();
   }, [model, step, t, geometry, invalidate, cuePoints]);
 
@@ -135,14 +138,27 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
           frustumCulled={false}
           visible={false}
         />
+        {/* arrows: dark ink over a light halo, so they stand out on the coloured paper */}
+        <Line
+          ref={cueHalo}
+          points={PLACEHOLDER}
+          segments
+          color={BACK}
+          lineWidth={5.5}
+          transparent
+          renderOrder={3}
+          depthTest={false}
+          frustumCulled={false}
+          visible={false}
+        />
         <Line
           ref={cue}
           points={PLACEHOLDER}
           segments
-          color={HIGHLIGHT}
+          color={INK}
           lineWidth={2.8}
           transparent
-          renderOrder={3}
+          renderOrder={4}
           depthTest={false}
           frustumCulled={false}
           visible={false}

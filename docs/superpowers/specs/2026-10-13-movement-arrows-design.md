@@ -47,7 +47,7 @@ New pure module `src/player/cues.ts`:
   - **swing:** a quadratic arc from `from` to `to` whose control point is the midpoint plus 0.5 × length sideways in the paper (left of from → to as seen from above, or right when `bend` is -1) and 0.1 × length along the face normal, so it bulges 0.25 × length sideways and lifts 0.05 × length; 16 segments, plus a V head at `to` (two strokes of 0.06 each, 25° either side of the way back toward the control point, spread in the paper plane so they show from above).
 - `cueOpacity(t): number`: 1 for t ≤ 0.1, then linear to 0 at t = 0.5, 0 after.
 
-`src/player/Paper.tsx`: one more drei `Line` (segments) in the highlight colour `#A5633F`, `lineWidth` 2.8, `depthTest={false}`, `renderOrder` above the cut trace, `transparent`. Its points are `cueSegments(model, step)` (recomputed when the step changes), its material opacity `cueOpacity(t)`, hidden when there are no cues or the opacity is 0.
+`src/player/Paper.tsx`: two drei `Line`s (segments) sharing the same points: a light halo in the paper's back colour `#F3EDE2`, `lineWidth` 5.5, under a dark ink line `#33302C` (the crease ink), `lineWidth` 2.8; both `depthTest={false}`, `transparent`, `renderOrder` above the cut trace, the ink after the halo. (Revised in fix round 2: the highlight colour sat too close to the terracotta paper.) Its points are `cueSegments(model, step)` (recomputed when the step changes), its material opacity `cueOpacity(t)`, hidden when there are no cues or the opacity is 0.
 
 The homepage unfold (`src/home/unfold.ts`) drops `foldapp:cues` from its frames, as it does the cut trace. The crease diagram is unchanged.
 
@@ -55,10 +55,10 @@ Reduced motion follows the same rule: the arrows show whenever the step sits at 
 
 ## The crane
 
-Its three reverse folds get two cues each, in `models/src/crane.ts`, from the fold lines `turnFlap` already gives:
+Its neck and tail reverse folds get two cues each and its head one (a swing: its thin tip has no room for a push), in `models/src/crane.ts`, from the fold lines `turnFlap` already gives:
 
 - **push:** on the flap, a short arrow just below the fold line, pointing at the flap's folded back edge (where the fold is pushed in).
-- **swing:** from the flap's tip (`B` for the neck and tail, the neck's tip for the head) to where the tip lands (`mirror(tip, foldLine)`).
+- **swing:** from the flap's tip (`B` for the neck and tail, the neck's tip for the head) to where the tip lands (`mirror(tip, foldLine)`), bulging outward, away from the body. From "Unfold the two flaps" on, the lesson shows the body mirrored against the builder's view coordinates (carry-forward.md), so the crane picks each push's side and swing's bend for what the lesson shows.
 
 `crane.fold` changes only by gaining `foldapp:cues` on those three frames. Its SVG, and every file of the dog face and the tulip, stay byte-identical. PR #445 also rebuilds `crane.fold`; whichever merges second reruns `pnpm models`.
 
