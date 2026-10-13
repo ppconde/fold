@@ -9,8 +9,7 @@ export type FaceOrder = [number, number, 1 | -1];
 /** A stretch of a slit cut in a step: edge `edge` is cut from its first vertex at `from` to its second at `to`, as shares (0 to 1) of the way along the scissors' cut. */
 export type Cut = { edge: number; from: number; to: number };
 
-/** A book arrow drawn on a step's starting pose: push (hollow, a finger goes in here) or swing (a flap travels). */
-/** A movement arrow on a face; `bend` -1 (swing only) curves it right of from -> to instead of left. */
+/** A movement arrow on a face; `bend` -1 (swing only) = right as seen in the lesson; absent = left. */
 export type Cue = { kind: 'push' | 'swing'; face: number; from: Vec2; to: Vec2; bend?: -1 };
 
 export type Step = {

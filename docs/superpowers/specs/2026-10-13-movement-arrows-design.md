@@ -1,8 +1,6 @@
 # Movement arrows — design
 
-Date: 2026-10-13. Status: approved in conversation, awaiting spec review.
-
-Revised 2026-10-13 after the first screenshots: fixed glyph sizes, arcs bend in the paper plane.
+Date: 2026-10-13. Status: approved; revised 2026-10-13 after the first screenshots (fixed glyph sizes, arcs bend in the paper plane, ink over a halo).
 
 ## Why
 
@@ -31,10 +29,10 @@ A new FOLD frame field, on the frame of the step it belongs to only (not inherit
 
 ## Builder
 
-`fold`, `crease` and `collapse` in `models/sequence.ts` take an optional `cues?: CueSpec[]` with `type CueSpec = { push: [Vec2, Vec2] } | { swing: [Vec2, Vec2] }`. Points are view coordinates, the same space as `hold`.
+`fold`, `crease` and `collapse` in `models/sequence.ts` take an optional `cues?: CueSpec[]` with `type CueSpec = { push: [Vec2, Vec2] } | { swing: [Vec2, Vec2]; bend?: 'left' | 'right' }`. Points are view coordinates, the same space as `hold`.
 
 - They are read against the pieces as they lie before the step: the top piece (last in the stack) whose view outline contains the anchor point (`q` for a push, `p` for a swing) anchors the cue, and both points go to flat-sheet coordinates through that piece's `toView` inverse.
-- `SourceStep` gains `cues?: { kind: 'push' | 'swing'; from: Vec2; to: Vec2; bend?: -1 }[]` in flat-sheet points (`CueSpec` swings take `bend: 'left' | 'right'`, left by default as seen in view coordinates); `buildFold` resolves the face containing the anchor point (as it does for `hold`; every face inside one piece lies in one plane at the step's start, since later creases are still flat) and writes `foldapp:cues`, points rounded to 6 decimals.
+- `SourceStep` gains `cues?: { kind: 'push' | 'swing'; from: Vec2; to: Vec2; bend?: -1 }[]` in flat-sheet points (`CueSpec` swings take `bend: 'left' | 'right'`, left (default) or right as seen in the lesson — from above, after the step's turn — which matches view coordinates except where carry-forward's crane mirror applies (from crane step 14 on)); `buildFold` resolves the face containing the anchor point (as it does for `hold`; every face inside one piece lies in one plane at the step's start, since later creases are still flat) and writes `foldapp:cues`, points rounded to 6 decimals.
 - A cue whose anchor point is not on the paper throws: `Step N's push cue points off the paper.` / `Step N's swing cue starts off the paper.`
 - `together` passes cues through from the folds it gathers (the gathered step's cues are the concatenation).
 
@@ -47,7 +45,7 @@ New pure module `src/player/cues.ts`:
   - **swing:** a quadratic arc from `from` to `to` whose control point is the midpoint plus 0.5 × length sideways in the paper (left of from → to as seen from above, or right when `bend` is -1) and 0.1 × length along the face normal, so it bulges 0.25 × length sideways and lifts 0.05 × length; 16 segments, plus a V head at `to` (two strokes of 0.06 each, 25° either side of the way back toward the control point, spread in the paper plane so they show from above).
 - `cueOpacity(t): number`: 1 for t ≤ 0.1, then linear to 0 at t = 0.5, 0 after.
 
-`src/player/Paper.tsx`: two drei `Line`s (segments) sharing the same points: a light halo in the paper's back colour `#F3EDE2`, `lineWidth` 5.5, under a dark ink line `#33302C` (the crease ink), `lineWidth` 2.8; both `depthTest={false}`, `transparent`, `renderOrder` above the cut trace, the ink after the halo. (Revised in fix round 2: the highlight colour sat too close to the terracotta paper.) Its points are `cueSegments(model, step)` (recomputed when the step changes), its material opacity `cueOpacity(t)`, hidden when there are no cues or the opacity is 0.
+`src/player/Paper.tsx`: two drei `Line`s (segments) sharing the same points: a light halo in the paper's back colour `#F3EDE2`, `lineWidth` 5.5, under a dark ink line `#33302C` (the crease ink), `lineWidth` 2.8; both `depthTest={false}`, `transparent`, `renderOrder` above the cut trace, the ink after the halo. (Revised in fix round 2: the highlight colour sat too close to the terracotta paper.) Their points are `cueSegments(model, step)` (recomputed when the step changes), their material opacity `cueOpacity(t)`, hidden when there are no cues or the opacity is 0.
 
 The homepage unfold (`src/home/unfold.ts`) drops `foldapp:cues` from its frames, as it does the cut trace. The crease diagram is unchanged.
 

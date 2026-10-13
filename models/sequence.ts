@@ -69,8 +69,7 @@ const centroid = (poly: Vec2[]): Vec2 => [
   poly.reduce((s, v) => s + v[1], 0) / poly.length
 ];
 
-/** A book arrow in view coordinates: push (hollow, from p to the paper at q) or swing (a flap travels p → q). */
-/** A movement arrow in view coordinates; a swing curves 'left' (default) or 'right' of its way. */
+/** A movement arrow in view coordinates; a swing bends left (default) or right as seen in the lesson — from above, after the step's turn — which matches view coordinates except where carry-forward's crane mirror applies (from crane step 14 on). */
 export type CueSpec = { push: [Vec2, Vec2] } | { swing: [Vec2, Vec2]; bend?: 'left' | 'right' };
 
 export type FoldOptions = Text & {
