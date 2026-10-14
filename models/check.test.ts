@@ -3,7 +3,7 @@ import { fixture, slitFixture } from '../src/fold/fixtures';
 import { LAYER_GAP } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { buildFold } from './build';
-import { checkModel, crossings, flapFlips, interleaved, spread } from './check';
+import { checkModel, crossings, flapFlips, interleaved, spread, wrongSides } from './check';
 import { diamond as d, diamondSequence, has, lacks } from './sequence';
 
 const quarters = () => loadModel(fixture('fold-in-quarters'));
@@ -134,6 +134,24 @@ describe('interleaved', () => {
     const model = loadModel(json);
     expect(interleaved(model, 2)).toEqual([[8, 9]]);
     expect(checkModel(model)).toContainEqual(expect.stringMatching(/^Step 2: the folds at edges 8 and 9 interleave/));
+  });
+});
+
+describe('wrongSides', () => {
+  it('finds none when each valley puts its flap on the front of the face it folds onto', () => {
+    expect(wrongSides(loadModel(fixture('fold-in-half')), 1)).toEqual([]);
+    expect(wrongSides(quarters(), 2)).toEqual([]);
+  });
+
+  it('finds a valley whose flap lies behind the half it folded onto', () => {
+    // fold in half (edge 6, a valley), but stacked as a mountain would: the flap under the held half
+    const json = fixture('fold-in-half') as { file_frames: { faceOrders: number[][] }[] };
+    json.file_frames[0].faceOrders = [[0, 1, -1]];
+    const model = loadModel(json);
+    expect(wrongSides(model, 1)).toEqual([6]);
+    expect(checkModel(model)).toContainEqual(
+      expect.stringMatching(/^Step 1: the faces at edge 6 lie on the wrong side/)
+    );
   });
 });
 

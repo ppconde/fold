@@ -151,7 +151,8 @@ describe('foldSequence', () => {
     expect(s.source({ ...entry, tags: [] }).steps).toEqual([]);
     expect(Object.keys(s.source({ ...entry, tags: [] }).creases)).toEqual(['m1']);
     s.collapse({ m1: 180 }, { hold: [0.75, 0.5], ...text });
-    expect(checkModel(loadModel(buildFold(s.source({ ...entry, tags: [] }))))).toEqual([]);
+    // a collapse's layer order comes from its motion (solve); unsolved, the flap's stack is arbitrary
+    expect(checkModel(loadModel(buildFold(s.source({ ...entry, tags: [], solve: true }))))).toEqual([]);
   });
 
   it('orders faces that land exactly on each other through a many-layer fold', () => {
@@ -183,14 +184,26 @@ describe('foldSequence', () => {
       { hold: diamond(1, -0.5), ...text, tuck: { layers: [bottom, top], flaps: [left, none] } }
     );
     const model = loadModel(buildFold(s.source({ ...entry, tags: [], solve: true })));
-    // known: inside the square base the side corners' layers stack in an order paper can't fold (the folds where
-    // they meet the front and back squares interleave); the squash's layer order is the next fix (carry-forward)
-    expect(checkModel(model)).toEqual([
-      expect.stringMatching(/^Step 7: the folds at edges 20 and 21 interleave/),
-      expect.stringMatching(/^Step 8: the folds at edges 20 and 21 interleave/),
-      expect.stringMatching(/^Step 9: the folds at edges 18 and 19 interleave/),
-      expect.stringMatching(/^Step 9: the folds at edges 20 and 21 interleave/)
-    ]);
+    // known: inside the square base the side corners' layers stack in an order paper can't fold: the folds where
+    // they meet the front and back squares interleave, and those creases' faces lie on the wrong side of each other
+    // for their mountain/valley. The squash's layer order is the next fix (carry-forward)
+    const known = [
+      [7, 'edge 20 lie on the wrong side'],
+      [7, 'edge 21 lie on the wrong side'],
+      [7, 'edges 20 and 21 interleave'],
+      [8, 'edge 20 lie on the wrong side'],
+      [8, 'edge 21 lie on the wrong side'],
+      [8, 'edges 20 and 21 interleave'],
+      [9, 'edge 18 lie on the wrong side'],
+      [9, 'edge 19 lie on the wrong side'],
+      [9, 'edge 20 lie on the wrong side'],
+      [9, 'edge 21 lie on the wrong side'],
+      [9, 'edges 18 and 19 interleave'],
+      [9, 'edges 20 and 21 interleave']
+    ];
+    expect(checkModel(model)).toEqual(
+      known.map(([k, what]) => expect.stringMatching(new RegExp(`^Step ${k}: .*${what}`)))
+    );
     // a square base: the bottom corner's square in front, the side corners inside, the top corner's behind
     const k = model.steps.length - 1;
     const h = layerHeights(model, k);
