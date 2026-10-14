@@ -304,6 +304,19 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         tuck.flaps[valley ? 1 : 0].push(flap.outline);
         flaps.push(flap);
       }
+      // a page turn: an existing crease on the line joining a flap to a piece that stays is the hinge, flat
+      // to folded or folded back to flat
+      for (const [key, c] of Object.entries(creases)) {
+        if (c.assignment === 'C' || key in fold) continue;
+        const mid: Vec2 = [(c.from[0] + c.to[0]) / 2, (c.from[1] + c.to[1]) / 2];
+        const flap = flaps.find((f) => onOutline(mid, f.outline));
+        const still = flap && next.find((pc) => onOutline(mid, pc.outline));
+        if (!flap || !still || [c.from, c.to].some((v) => Math.abs(side(p, q, apply(flap.toView, v))) > 1e-9)) continue;
+        const sign = moved.get(flap) === still.frontUp ? 1 : -1;
+        const a = state[key] ?? 0;
+        if (a && Math.sign(a) !== sign) throw new Error(`Fold ${name} turns a flap through the paper at ${key}.`);
+        fold[key] = a ? 0 : sign * 180;
+      }
       if (!Object.keys(fold).length) throw new Error(`Fold ${name} doesn't fold anything.`);
       // layers that turn opposite ways swap sides: the crease joining them reverses
       for (const [key, c] of Object.entries(creases)) {

@@ -54,6 +54,30 @@ describe('foldSequence', () => {
     expect(Object.keys(s.angles('corner'))).toHaveLength(1);
   });
 
+  it('turns a flap over a crease it already has, like a page, and back the other way', () => {
+    const s = foldSequence();
+    s.fold('half', [0.5, 0], [0.5, 1], { valley: true, tag: 'flap', hold: [0.75, 0.5], ...text });
+    const flap = (t: string[]) => t.includes('flap');
+    expect(() => s.fold('back', [0.5, 1], [0.5, 0], { valley: false, only: flap, ...text })).toThrow(
+      'Fold back turns a flap through the paper at half1.'
+    );
+    s.fold('back', [0.5, 1], [0.5, 0], { valley: true, only: flap, ...text });
+    s.fold('under', [0.5, 0], [0.5, 1], { valley: false, only: flap, ...text });
+    const src = s.source({ ...entry, tags: [] });
+    expect(src.steps.map((st) => st.fold)).toEqual([{ half1: 180 }, { half1: 0 }, { half1: -180 }]);
+    expect(checkModel(loadModel(buildFold(src)))).toEqual([]);
+  });
+
+  it('turns a two-layer flap back over both its hinges', () => {
+    const s = foldSequence();
+    s.fold('half', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
+    s.fold('quarter', [0, 0.5], [1, 0.5], { valley: true, tag: 'flap', ...text });
+    s.fold('back', [1, 0.5], [0, 0.5], { valley: true, only: (t) => t.includes('flap'), ...text });
+    const src = s.source({ ...entry, tags: [] });
+    expect(Object.values(src.steps[2].fold ?? {})).toEqual([0, 0]);
+    expect(checkModel(loadModel(buildFold(src)))).toEqual([]);
+  });
+
   it('names the mistake for a fold that misses the paper or a hold on a moving piece', () => {
     const s = foldSequence();
     expect(() => s.fold('none', [2, 0], [2, 1], { valley: true, ...text })).toThrow("Fold none doesn't fold anything.");
