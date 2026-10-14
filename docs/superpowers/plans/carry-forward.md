@@ -31,6 +31,10 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 - **The squash's tuck hint stacks the folded-in corners in an order paper can't fold.** In the Snail's square base (the `collapse(..., { tuck })` test in models/sequence.test.ts), each side corner's four triangles land between the front and back squares in their landing order. But the side corner and the front square are joined along the same outer edge as the side corner and the back square, and `interleaved` (models/check.ts) finds those two folds interleaving at steps 7–9. Splitting the corner into its two halves, or turning the four triangles over as a block, fixes the nesting but makes a face flip across a crease that didn't move (`flapFlips`). Work out the true stack for this squash (a physical fold helps) before changing the hint; the Snail waits on it. The test expects the interleaves until then.
 
+## Build
+
+- **Node is pinned to 24.21.0 (`.node-version`).** It used to say `24`, so Cloudflare's Workers Builds took the newest 24.x. Node 24.22.0 (released 2026-10-14) bundles a corepack that looks for pnpm 12.9.1 at `…/corepack/v1/pnpm/12.9.1/bin/pnpm.cjs`, which isn't there, and every production build failed while installing dependencies (clearing the build cache didn't help). Go back to `24` once a later Node 24 release or corepack fixes it: try it on a branch and watch its Cloudflare preview build.
+
 ## Resolved in M4 (part 1)
 
 - **Step count cell may overflow at 10 or more steps.** The 7th dock column is now `minmax(44px, max-content)`; asserted on the 11-step kabuto in part 2.
