@@ -119,8 +119,9 @@ s.collapse(
 const below = ([x, y]: At) => Math.abs(x - y) > k - 0.5;
 const leftLeg = (_: string[], at: At) => below(at) && at[0] > 0.5 && at[1] < 0.5;
 const rightLeg = (_: string[], at: At) => below(at) && at[0] < 0.5 && at[1] > 0.5;
-// inside reverse fold: the layers facing us now (nearer the corner (0, 0)) go in behind, the far ones come forward
-const tuckIn = (_: string[], [x, y]: At) => x + y > 1;
+// inside reverse fold: each layer's crease, as its flap ends up inside the body (between the layers it passed):
+// a valley for the layers nearer the corner (0, 0), a mountain for the far ones
+const tuckIn = (_: string[], [x, y]: At) => x + y < 1;
 /**
  * The fold line through `at` that turns a flap pointing `from` degrees to point `to` degrees (reflecting a
  * direction about a line at φ gives 2φ minus it), ordered so the flap's tip lies to its left.
