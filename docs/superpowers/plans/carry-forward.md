@@ -29,7 +29,11 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 ## Booklet models
 
-- **The squash's tuck hint stacks the folded-in corners in an order paper can't fold.** In the Snail's square base (the `collapse(..., { tuck })` test in models/sequence.test.ts), each side corner's four triangles land between the front and back squares in their landing order. But the side corner and the front square are joined along the same outer edge as the side corner and the back square, and `interleaved` (models/check.ts) finds those two folds interleaving at steps 7–9. Splitting the corner into its two halves, or turning the four triangles over as a block, fixes the nesting but makes a face flip across a crease that didn't move (`flapFlips`). Work out the true stack for this squash (a physical fold helps) before changing the hint; the Snail waits on it. The test expects the interleaves until then.
+- **The Snail's squash stacks its layers in an order paper can't fold.** In the Snail's square base (the `collapse(..., { tuck })` test in models/sequence.test.ts), `checkModel` reports at steps 7–9:
+  - the folds where each side corner meets the front and back squares interleave (`interleaved`);
+  - those creases' faces lie on the wrong side of each other for their mountain/valley (`wrongSides`).
+
+  The right stack depends on the squash creases' mountain/valley, and the prototype set all four (`mid1`–`mid4`) to +180 although two are mountains. With +180, only one stack is possible (top first, in the right half after the first squash: 7, 11, 6, 5, 10, 4), and no form of the tuck hint gives it. The book's step 7 ("a diamond with a vertical strip in the middle") suggests the squashed corners lie on the front, unlike the model. Settle it from the book's drawings or a folded sheet (what's on the front after the squash, and whether the squash line is a mountain or a valley) before changing the hint. The Snail waits on it; the test expects these reports until then.
 
 ## Build
 

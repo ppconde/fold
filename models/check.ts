@@ -157,6 +157,38 @@ export function interleaved(model: Model, step: number): [number, number][] {
   return found;
 }
 
+/**
+ * Creases folded flat at the end of `step` whose faces lie on the wrong side of each other for the crease: a
+ * valley puts its second face on the first face's front (the flat sheet's +z side), a mountain on its back. The
+ * ±180° labels are one pose, so only the stack can tell them apart. Slit edges are skipped.
+ */
+export function wrongSides(model: Model, step: number): number[] {
+  const faces = foldedPositions(model, step, 1);
+  /** Face f's front, from its widest corner triple (split edges leave corners in a line). */
+  const front = (f: number): Vec3 => {
+    const flat = model.faces[f].map((v) => model.vertices[v]);
+    let best: [number, number, number] = [0, 1, 2];
+    let widest = 0;
+    for (let i = 0; i < flat.length; i++)
+      for (let j = i + 1; j < flat.length; j++)
+        for (let k = j + 1; k < flat.length; k++) {
+          const [a, b, c] = [flat[i], flat[j], flat[k]];
+          const z = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+          if (Math.abs(z) > Math.abs(widest)) [widest, best] = [z, [i, j, k]];
+        }
+    const [p, q, r] = best.map((i) => faces[f][i]);
+    const n = cross(sub(q, p), sub(r, p));
+    return widest > 0 ? n : [-n[0], -n[1], -n[2]];
+  };
+  const angles = model.steps[step].angles;
+  return model.edges.flatMap((_, e) => {
+    if (Math.abs(angles[e]) !== 180 || model.edgeFaces[e].length !== 2 || model.cutAt[e] <= step) return [];
+    const [f, g] = model.edgeFaces[e];
+    const side = Math.sign(dot(front(f), sub(centre(faces[g]), faces[f][0])));
+    return side === Math.sign(angles[e]) ? [] : [e];
+  });
+}
+
 /** Everything wrong with a model, one sentence each; empty when it may ship. */
 export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
   const problems: string[] = [];
@@ -173,6 +205,9 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
     for (let i = 1; i <= 10; i++) {
       const gap = spread(model, k, i / 10);
       if (gap > budget) problems.push(`Step ${k} at ${i * 10}% opens a ${gap.toFixed(3)} gap (budget ${budget}).`);
+    }
+    for (const e of wrongSides(model, k)) {
+      problems.push(`Step ${k}: the faces at edge ${e} lie on the wrong side of each other for its mountain/valley.`);
     }
     for (const [a, b] of interleaved(model, k)) {
       problems.push(`Step ${k}: the folds at edges ${a} and ${b} interleave in the stack (paper can only nest them).`);
