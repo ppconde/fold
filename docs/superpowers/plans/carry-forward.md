@@ -29,11 +29,7 @@ Decided during M0 and M1 reviews. Each milestone's plan must include the items f
 
 ## Booklet models
 
-- **The Snail's squash stacks its layers in an order paper can't fold.** In the Snail's square base (the `collapse(..., { tuck })` test in models/sequence.test.ts), `checkModel` reports at steps 7–9:
-  - the folds where each side corner meets the front and back squares interleave (`interleaved`);
-  - those creases' faces lie on the wrong side of each other for their mountain/valley (`wrongSides`).
-
-  The right stack depends on the squash creases' mountain/valley, and the prototype set all four (`mid1`–`mid4`) to +180 although two are mountains. With +180, only one stack is possible (top first, in the right half after the first squash: 7, 11, 6, 5, 10, 4), and no form of the tuck hint gives it. The book's step 7 ("a diamond with a vertical strip in the middle") suggests the squashed corners lie on the front, unlike the model. Settle it from the book's drawings or a folded sheet (what's on the front after the squash, and whether the squash line is a mountain or a valley) before changing the hint. The Snail waits on it; the test expects these reports until then.
+- **The Snail's squash, settled.** Every layer order its square base could fold to was enumerated (each pair of overlapping faces, under the flat-folding rules: no cycles, folds on one line nest or lie apart, layers flat across a line keep their order). Eight are foldable; only one keeps the layers the back squash doesn't move in the order the front squash left them. In it both side corners end inside, each half between the two halves of the body layer it was folded onto, and the outside layer covers the front. The creases: `mid3`/`mid4` −180, `mid1` −180, `mid2` +180. On rigid paper the back squash is two moves (the corner turns behind like a page, then the pocket opens: a single step must bend the paper), and its flaps overshoot on both sides. `tuckIn` now puts each flap face at the level between the tuck's two layer groups, against every still face it lands on (by where that face lay in the stack as the step began), which also puts the crane's neck and tail inside the body: before, they ended behind it, as only the leg's own halves were tucked.
 
 ## Build
 

@@ -184,57 +184,32 @@ describe('foldSequence', () => {
     expect(checkModel(model)).toEqual([]);
   });
 
-  it('tucks the flaps a collapse swings outside in between the layers it passed', () => {
+  it('tucks the flaps a collapse swings outside in between the layers they passed, on either side', () => {
+    // the Snail's square base: squash the front flap, turn over, then the back one (on rigid paper a corner
+    // turned behind like a page, then the pocket opened). The back squash's flaps overshoot both ways: the corner's
+    // bottom half lands below the layers behind, the rest over the outside layer; all of it belongs between them
     const s = snailOpening();
-    // the sheet's corner squares, by its midlines
-    const square =
-      (cx: boolean, cy: boolean) =>
-      (_: string[], [x, y]: Vec2) =>
-        x > 0.5 === cx && y > 0.5 === cy;
-    const [left, top, right, bottom] = [
-      square(true, false),
-      square(true, true),
-      square(false, true),
-      square(false, false)
-    ];
-    const none = () => false;
     s.collapse(
-      { upright1: 0, 'upright1.2': 0, mid3: 180, mid4: 180 },
-      { hold: diamond(0.75, -0.25), ...text, tuck: { layers: [bottom, top], flaps: [right, none] } }
+      { upright1: 0, 'across1.2.3': 0, 'across1.2.2': 0, mid3: -180, mid4: -180 },
+      { hold: diamond(0.8, -0.6), ...text }
     );
     s.turn([0, 0, 45], text);
+    s.collapse({ mid1: -180, mid2: 180 }, { hold: diamond(0.8, -0.6), ...text });
+    const flaps = (_: string[], [x, y]: Vec2) => x > 0.5 && (y < 0.5 || x > y);
+    const outside = (_: string[], [x, y]: Vec2) => x < 0.5 && y < 0.5;
+    const behind = (_: string[], [x, y]: Vec2) => y > 0.5 && (x < 0.5 || y > x);
     s.collapse(
-      { mid1: 180, mid2: 180 },
-      { hold: diamond(1, -0.5), ...text, tuck: { layers: [bottom, top], flaps: [left, none] } }
+      { 'upright1.2': 0, across1: 0, 'across1.2': 0, mid1: -180, mid2: 180 },
+      { hold: diamond(0.8, -0.6), ...text, tuck: { layers: [outside, behind], flaps: [flaps, () => false] } }
     );
     const model = loadModel(buildFold(s.source({ ...entry, tags: [], solve: true })));
-    // known: inside the square base the side corners' layers stack in an order paper can't fold: the folds where
-    // they meet the front and back squares interleave, and those creases' faces lie on the wrong side of each other
-    // for their mountain/valley. The squash's layer order is the next fix (carry-forward)
-    const known = [
-      [7, 'edge 20 lie on the wrong side'],
-      [7, 'edge 21 lie on the wrong side'],
-      [7, 'edges 20 and 21 interleave'],
-      [8, 'edge 20 lie on the wrong side'],
-      [8, 'edge 21 lie on the wrong side'],
-      [8, 'edges 20 and 21 interleave'],
-      [9, 'edge 18 lie on the wrong side'],
-      [9, 'edge 19 lie on the wrong side'],
-      [9, 'edge 20 lie on the wrong side'],
-      [9, 'edge 21 lie on the wrong side'],
-      [9, 'edges 18 and 19 interleave'],
-      [9, 'edges 20 and 21 interleave']
-    ];
-    expect(checkModel(model)).toEqual(
-      known.map(([k, what]) => expect.stringMatching(new RegExp(`^Step ${k}: .*${what}`)))
-    );
-    // a square base: the bottom corner's square in front, the side corners inside, the top corner's behind
-    const k = model.steps.length - 1;
-    const h = layerHeights(model, k);
-    const inSquare = (f: number, pick: (t: string[], at: Vec2) => boolean) => pick([], model.faceCentroids[f]);
-    const heights = (pick: (t: string[], at: Vec2) => boolean) => h.filter((_, f) => inSquare(f, pick));
-    expect(Math.min(...heights(bottom))).toBeGreaterThan(Math.max(...heights(left), ...heights(right)));
-    expect(Math.max(...heights(top))).toBeLessThan(Math.min(...heights(left), ...heights(right)));
+    expect(checkModel(model)).toEqual([]);
+    // the left corner's bottom half lies between the two halves of the bottom layer, as the front squash's does
+    const face = (pick: (x: number, y: number) => boolean) => model.faceCentroids.findIndex(([x, y]) => pick(x, y));
+    const corner = face((x, y) => x - y > 0.5 && x + y < 1);
+    const [near, far] = [face((x, y) => x < 0.5 && x + y < 1), face((x, y) => x > 0.5 && x - y < 0.5 && x + y < 1)];
+    const h = layerHeights(model, model.steps.length - 1);
+    expect((h[corner] - h[near]) * (h[corner] - h[far])).toBeLessThan(0);
   });
 });
 

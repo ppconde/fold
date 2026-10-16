@@ -326,7 +326,7 @@ export function motionOrders(fold: Fold, tucks: (Tuck<number> | undefined)[] = [
     if (tuck) {
       // the stack as the paper lands, before the tuck's layers change places (the player blends through it)
       fold.file_frames[k - 1]['foldapp:landedOrders'] = asList(next);
-      tuckIn(next, tuck);
+      tuckIn(next, tuck, orders, before, E);
     }
     orders = next;
     before = E;
@@ -338,15 +338,58 @@ export function motionOrders(fold: Fold, tucks: (Tuck<number> | undefined)[] = [
   }
 }
 
-/** Move a tuck's flaps, which landed outside the layers they passed, inside them (see `Tuck`). Edits `orders`. */
-function tuckIn(orders: Map<string, 1 | -1>, { layers, flaps }: Tuck<number>): void {
+/**
+ * Move a tuck's flaps inside, between its two groups of `layers` (see `Tuck`): each flap face ends below every
+ * still face it lands on that lay above the groups' middle when the step began, and above the rest, as a
+ * reverse fold's point goes up between the layers of the body. Flaps that turn opposite ways swap sides of each
+ * other. `before`/`was`: the previous step's orders and face transforms; `now`: this step's. Edits `orders`.
+ */
+function tuckIn(
+  orders: Map<string, 1 | -1>,
+  { layers, flaps }: Tuck<number>,
+  before: Map<string, 1 | -1>,
+  was: Matrix4[],
+  now: Matrix4[]
+): void {
+  // an order is relative to the face it is read against; turn it into "f above g" with that face's facing
+  const facing = (T: Matrix4) => Math.sign(T.elements[10]);
+  // where each face lay in the stack as the step began: the longest chains of faces over and under it, as the
+  // share of the stack above it (a face over another always has the smaller share)
+  const over = new Map<number, number[]>();
+  const under = new Map<number, number[]>();
+  for (const [key, s] of before) {
+    const [f, g] = key.split(',').map(Number);
+    if (s * facing(was[g]) > 0) {
+      over.set(g, [...(over.get(g) ?? []), f]);
+      under.set(f, [...(under.get(f) ?? []), g]);
+    }
+  }
+  const chain = (next: Map<number, number[]>) => {
+    const memo = new Map<number, number>();
+    const length = (g: number, seen = new Set<number>()): number => {
+      if (memo.has(g)) return memo.get(g) as number;
+      if (seen.has(g)) return 0;
+      seen.add(g);
+      const n = Math.max(-1, ...(next.get(g) ?? []).map((f) => length(f, seen))) + 1;
+      memo.set(g, n);
+      return n;
+    };
+    return length;
+  };
+  const [overs, unders] = [chain(over), chain(under)];
+  const share = (g: number) => overs(g) / (overs(g) + unders(g) || 1);
+  // the middle: in the gap between the higher group's deepest face and the lower group's shallowest
+  const mean = (G: number[]) => G.reduce((a, g) => a + share(g), 0) / G.length;
+  const [high, low] = mean(layers[0]) < mean(layers[1]) ? layers : [layers[1], layers[0]];
+  const [deepest, shallowest] = [Math.max(...high.map(share)), Math.min(...low.map(share))];
+  const middle = deepest < shallowest ? (deepest + shallowest) / 2 : (mean(high) + mean(low)) / 2;
   const moved = flaps.flat();
-  const landed = (p: number) => moved.map((x) => orders.get(`${x},${p}`)).find(Boolean);
-  // the group passed: the one lying on the other's side the flaps landed on
-  let past = layers[0];
-  for (const q of layers[1]) {
-    const s = layers[0].map((p) => orders.get(`${p},${q}`)).find(Boolean);
-    if (s && landed(q)) past = s === landed(q) ? layers[0] : layers[1];
+  for (const [key] of orders) {
+    const [x, g] = key.split(',').map(Number);
+    if (!moved.includes(x) || moved.includes(g)) continue;
+    const onTop = share(g) > middle;
+    orders.set(`${x},${g}`, ((onTop ? 1 : -1) * facing(now[g])) as 1 | -1);
+    orders.set(`${g},${x}`, ((onTop ? -1 : 1) * facing(now[x])) as 1 | -1);
   }
   const flip = (f: number, g: number) => {
     for (const key of [`${f},${g}`, `${g},${f}`]) {
@@ -354,15 +397,5 @@ function tuckIn(orders: Map<string, 1 | -1>, { layers, flaps }: Tuck<number>): v
       if (s) orders.set(key, -s as 1 | -1);
     }
   };
-  // the layers passed, and every still face lying on the side of one that the flaps landed on
-  const outside = new Set(past);
-  for (const p of past) {
-    const side = landed(p);
-    for (const [key, s] of orders) {
-      const [g, q] = key.split(',').map(Number);
-      if (q === p && s === side && !moved.includes(g)) outside.add(g);
-    }
-  }
-  for (const x of moved) for (const g of outside) flip(x, g);
   for (const a of flaps[0]) for (const b of flaps[1]) flip(a, b);
 }
