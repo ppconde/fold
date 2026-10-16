@@ -53,7 +53,7 @@ describe('models.json', () => {
 
 describe('crane', () => {
   it('reverse-folds the neck and the tail up inside the body, between its layers', () => {
-    const model = loadModel(buildFold(sources.find((s) => s.id === 'crane') ?? sources[0]));
+    const model = loadModel(committed('crane.fold'));
     const inside = ([x, y]: number[], poly: number[][]) => {
       let c = false;
       for (let i = 0, j = poly.length - 1; i < poly.length; j = i++)
