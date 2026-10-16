@@ -47,19 +47,39 @@ export function endCentre(model: Model, step: number): [number, number] {
   return [(Math.min(...xs) + Math.max(...xs)) / 2 - cx, -((Math.min(...ys) + Math.max(...ys)) / 2 - cy)];
 }
 
+/** How far to raise the paper so no part of it goes below the table (z = 0), as hands lift it to fold. */
+export function tableLift(faces: Vec3[][]): number {
+  let low = 0;
+  for (const face of faces) for (const p of face) low = Math.min(low, p[2]);
+  return low < 0 ? -low : 0;
+}
+
+/** World height to aim at once `step` has settled: the middle of the paper while it stands lifted, else the table. */
+export function endHeight(model: Model, step: number): number {
+  const pose = foldedPositions(model, step, step === 0 ? 0 : 1);
+  const lift = tableLift(pose);
+  if (!lift) return 0;
+  const zs = pose.flat().map((p) => p[2] + lift);
+  return Math.max(...zs) / 2;
+}
+
 /**
- * How far the paper reaches from the camera's centre (endCentre of `step`): the settled pose, or, while step
+ * How far the paper reaches from the camera's centre (endCentre and endHeight of `step`): the settled pose, or, while step
  * `playing` plays or is scrubbed, every pose it passes (a flap standing up, a turn-over). Sampled at quarter steps.
  */
 export function frameReach(model: Model, step: number, playing?: number): number {
   const [cx, cz] = endCentre(model, step);
   const [x0, y0] = [cx + model.center[0], model.center[1] - cz];
+  const h = endHeight(model, step);
   const poses =
     playing === undefined
       ? [foldedPositions(model, step, step === 0 ? 0 : 1)]
       : [0, 0.25, 0.5, 0.75, 1].map((t) => foldedPositions(model, playing, t));
   let reach = 0;
-  for (const [x, y, z] of poses.flat(2)) reach = Math.max(reach, Math.hypot(x - x0, y - y0, z));
+  for (const pose of poses) {
+    const lift = tableLift(pose);
+    for (const [x, y, z] of pose.flat()) reach = Math.max(reach, Math.hypot(x - x0, y - y0, z + lift - h));
+  }
   return reach;
 }
 

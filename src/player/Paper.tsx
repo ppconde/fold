@@ -1,10 +1,10 @@
 import { Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { type ComponentRef, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { BackSide, BufferAttribute, BufferGeometry, FrontSide } from 'three';
+import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
-import { fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import { fillTriangles, fillUVs, lineGroups, paperExtent, tableLift, triangleCount } from './paper-geometry';
 import { setSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
@@ -41,10 +41,12 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
   const cut = useRef<LineRef>(null);
+  const lifted = useRef<Group>(null);
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
     const faces = foldedPositions(model, step, t);
+    if (lifted.current) lifted.current.position.z = tableLift(faces);
     const position = geometry.getAttribute('position') as BufferAttribute;
     fillTriangles(faces, position.array as Float32Array);
     position.needsUpdate = true;
@@ -68,10 +70,11 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     [geometry]
   );
 
-  // Paper coordinates are x/y with valley folds toward +z; turn them so the sheet lies on the table (y up).
+  // Paper coordinates are x/y with valley folds toward +z; turn them so the sheet lies on the table (y up), and
+  // lift it while a flap would swing below the table.
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
-      <group position={[-center[0], -center[1], 0]}>
+      <group ref={lifted} position={[-center[0], -center[1], 0]}>
         <mesh geometry={geometry}>
           <meshStandardMaterial
             color={softenTowardIvory(model.paperColor)}

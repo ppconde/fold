@@ -5,7 +5,7 @@ import type { Model } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import { prefersReducedMotion } from './browser';
 import { Paper } from './Paper';
-import { endCentre, frameReach, paperExtent, STAGE_FOV, STAGE_POLAR, stageDistance } from './paper-geometry';
+import { endCentre, endHeight, frameReach, paperExtent, STAGE_FOV, STAGE_POLAR, stageDistance } from './paper-geometry';
 
 type Props = { model: Model; step: number; t: number; playing: boolean; resetCount: number; frameStep: number };
 
@@ -32,6 +32,7 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
   const { size } = paperExtent(model);
   // frameStep is the last settled step, so the camera never moves while a step plays
   const [cx, cz] = useMemo(() => endCentre(model, frameStep), [model, frameStep]);
+  const cy = useMemo(() => endHeight(model, frameStep), [model, frameStep]);
   // close in on the settled model; ease out to hold the whole step while it plays or is scrubbed
   const moving = playing || (step > 0 && t < 1);
   const reach = useMemo(
@@ -48,8 +49,8 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
     // the homepage's sheet is handed over to this view (global.css, ::view-transition-old(paper))
     document.documentElement.style.setProperty('--paper-to', String(stageDistance(aspect)));
     const d = reach * stageDistance(aspect);
-    void c.setLookAt(cx, d * Math.cos(STAGE_POLAR), cz + d * Math.sin(STAGE_POLAR), cx, 0, cz, animate);
-  }, [cx, cz, reach, aspect, resetCount]);
+    void c.setLookAt(cx, cy + d * Math.cos(STAGE_POLAR), cz + d * Math.sin(STAGE_POLAR), cx, cy, cz, animate);
+  }, [cx, cy, cz, reach, aspect, resetCount]);
 
   return (
     <>

@@ -9,6 +9,7 @@ import {
   frameReach,
   lineGroups,
   paperExtent,
+  tableLift,
   triangleCount
 } from './paper-geometry';
 
@@ -105,6 +106,29 @@ describe('frameReach', () => {
 
   it('holds only the folded half at rest', () => {
     expect(frameReach(half(), 1)).toBeCloseTo(Math.hypot(0.25, 0.5), 2);
+  });
+});
+
+describe('tableLift', () => {
+  it('leaves paper on the table alone and raises paper that would go below it', () => {
+    expect(
+      tableLift([
+        [
+          [0, 0, 0],
+          [1, 0, 0.02],
+          [0, 1, 0]
+        ]
+      ])
+    ).toBe(0);
+    expect(
+      tableLift([
+        [
+          [0, 0, 0],
+          [1, 0, -0.3],
+          [0, 1, 0.1]
+        ]
+      ])
+    ).toBeCloseTo(0.3);
   });
 });
 
