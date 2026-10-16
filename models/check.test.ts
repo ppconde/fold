@@ -135,6 +135,20 @@ describe('interleaved', () => {
     expect(interleaved(model, 2)).toEqual([[8, 9]]);
     expect(checkModel(model)).toContainEqual(expect.stringMatching(/^Step 2: the folds at edges 8 and 9 interleave/));
   });
+
+  it('finds two layers that cross each other along a line they lie flat across', () => {
+    // folded in half, the quarter line runs flat through both layers (edges 10 and 11); stacked 0 over 1 below
+    // it but 2 over 3 above it, the layers pass through each other there
+    const json = fixture('fold-in-quarters') as { file_frames: { faceOrders: number[][] }[] };
+    json.file_frames[0].faceOrders = [
+      [0, 1, 1],
+      [3, 2, -1]
+    ];
+    const model = loadModel(json);
+    expect(interleaved(quarters(), 1)).toEqual([]);
+    expect(interleaved(model, 1)).toEqual([[10, 11]]);
+    expect(checkModel(model)).toContainEqual(expect.stringMatching(/^Step 1: the layers at edges 10 and 11 cross/));
+  });
 });
 
 describe('wrongSides', () => {
