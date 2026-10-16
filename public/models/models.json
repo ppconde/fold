@@ -35,6 +35,21 @@
       "thumbnail": "/models/dog-face.svg"
     },
     {
+      "id": "snail",
+      "name": {
+        "en": "Snail",
+        "pt": "Caracol"
+      },
+      "japaneseName": "Katatsumuri",
+      "category": "animals",
+      "difficulty": "medium",
+      "tags": [
+        "snail",
+        "animal"
+      ],
+      "thumbnail": "/models/snail.svg"
+    },
+    {
       "id": "tulip",
       "name": {
         "en": "Tulip",

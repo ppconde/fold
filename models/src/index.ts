@@ -2,10 +2,11 @@ import type { ModelEntry } from '../../src/models/catalog';
 import type { ModelSource } from '../build';
 import crane from './crane';
 import dogFace from './dog-face';
+import snail from './snail';
 import tulip from './tulip';
 
 /** Models authored as code, in library order. */
-export const sources: ModelSource[] = [crane, dogFace, tulip];
+export const sources: ModelSource[] = [crane, dogFace, snail, tulip];
 
 /** The lesson the homepage opens. */
 export const DEFAULT_MODEL = 'crane';
