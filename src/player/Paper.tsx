@@ -1,10 +1,10 @@
 import { Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
-import { type ComponentRef, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
-import { fillTriangles, fillUVs, lineGroups, paperExtent, tableLift, triangleCount } from './paper-geometry';
+import { depthBelowTable, fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
 import { setSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
@@ -23,7 +23,18 @@ const toPoints = (flat: number[]): Vec3[] =>
     ? Array.from({ length: flat.length / 3 }, (_, i) => [flat[i * 3], flat[i * 3 + 1], flat[i * 3 + 2]])
     : PLACEHOLDER;
 
-export function Paper({ model, step, t }: { model: Model; step: number; t: number }) {
+/** `ground`: the table's shadow, lowered while a flap swings below the table so the paper never passes through it. */
+export function Paper({
+  model,
+  step,
+  t,
+  ground
+}: {
+  model: Model;
+  step: number;
+  t: number;
+  ground?: RefObject<Group | null>;
+}) {
   const invalidate = useThree((s) => s.invalidate);
   const geometry = useMemo(() => {
     const g = new BufferGeometry();
@@ -41,12 +52,11 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
   const cut = useRef<LineRef>(null);
-  const lifted = useRef<Group>(null);
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
     const faces = foldedPositions(model, step, t);
-    if (lifted.current) lifted.current.position.z = tableLift(faces);
+    if (ground?.current) ground.current.position.y = -depthBelowTable(faces);
     const position = geometry.getAttribute('position') as BufferAttribute;
     fillTriangles(faces, position.array as Float32Array);
     position.needsUpdate = true;
@@ -59,7 +69,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     setSegments(active.current, groups.active);
     setSegments(cut.current, groups.cut);
     invalidate();
-  }, [model, step, t, geometry, invalidate]);
+  }, [model, step, t, geometry, invalidate, ground]);
 
   useEffect(() => () => washi.dispose(), [washi]);
 
@@ -70,11 +80,10 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     [geometry]
   );
 
-  // Paper coordinates are x/y with valley folds toward +z; turn them so the sheet lies on the table (y up), and
-  // lift it while a flap would swing below the table.
+  // Paper coordinates are x/y with valley folds toward +z; turn them so the sheet lies on the table (y up).
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
-      <group ref={lifted} position={[-center[0], -center[1], 0]}>
+      <group position={[-center[0], -center[1], 0]}>
         <mesh geometry={geometry}>
           <meshStandardMaterial
             color={softenTowardIvory(model.paperColor)}

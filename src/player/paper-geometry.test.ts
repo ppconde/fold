@@ -3,13 +3,13 @@ import { fixture, slitFixture } from '../fold/fixtures';
 import { foldedPositions, LAYER_GAP } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import {
+  depthBelowTable,
   endCentre,
   fillTriangles,
   fillUVs,
   frameReach,
   lineGroups,
   paperExtent,
-  tableLift,
   triangleCount
 } from './paper-geometry';
 
@@ -109,10 +109,10 @@ describe('frameReach', () => {
   });
 });
 
-describe('tableLift', () => {
-  it('leaves paper on the table alone and raises paper that would go below it', () => {
+describe('depthBelowTable', () => {
+  it('is zero for paper on the table and measures paper that goes below it', () => {
     expect(
-      tableLift([
+      depthBelowTable([
         [
           [0, 0, 0],
           [1, 0, 0.02],
@@ -121,7 +121,7 @@ describe('tableLift', () => {
       ])
     ).toBe(0);
     expect(
-      tableLift([
+      depthBelowTable([
         [
           [0, 0, 0],
           [1, 0, -0.3],
