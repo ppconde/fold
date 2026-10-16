@@ -142,7 +142,7 @@ const base: At = [0.5, 0.24];
 const neck = turnFlap(base, -90, 110, B);
 s.fold('neck', neck[0], neck[1], {
   valley: tuckIn,
-  over: true,
+  over: false,
   tuck: true,
   only: leftLeg,
   tag: 'neck',
@@ -153,7 +153,7 @@ s.fold('neck', neck[0], neck[1], {
 const tail = turnFlap(base, -90, 70, B);
 s.fold('tail', tail[0], tail[1], {
   valley: tuckIn,
-  over: true,
+  over: false,
   tuck: true,
   only: rightLeg,
   hold: d(1, 0.3),
@@ -165,7 +165,7 @@ const headAt: At = [base[0] + (tip[0] - base[0]) * 0.8, base[1] + (tip[1] - base
 const head = turnFlap(headAt, 110, 215, tip);
 s.fold('head', head[0], head[1], {
   valley: tuckIn,
-  over: true,
+  over: false,
   tuck: true,
   only: has('neck'),
   hold: d(1, 0.3),
