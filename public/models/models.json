@@ -49,34 +49,6 @@
         "spring"
       ],
       "thumbnail": "/models/tulip.svg"
-    },
-    {
-      "id": "fold-in-half",
-      "name": {
-        "en": "Fold in half",
-        "pt": "Dobrar ao meio"
-      },
-      "japaneseName": "Futatsu-ori",
-      "category": "geometric",
-      "difficulty": "easy",
-      "tags": [
-        "basic",
-        "practice"
-      ]
-    },
-    {
-      "id": "fold-in-quarters",
-      "name": {
-        "en": "Fold in quarters",
-        "pt": "Dobrar em quatro"
-      },
-      "japaneseName": "Yotsu-ori",
-      "category": "geometric",
-      "difficulty": "easy",
-      "tags": [
-        "basic",
-        "practice"
-      ]
     }
   ]
 }

@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 
-/** Test helper: raw JSON of a model in public/models. */
+/** Test helper: raw JSON of a hand-written test model next to this file (not in the library). */
 export function fixture(name: 'fold-in-half' | 'fold-in-quarters'): unknown {
-  return JSON.parse(readFileSync(new URL(`../../public/models/${name}.fold`, import.meta.url), 'utf8'));
+  return JSON.parse(readFileSync(new URL(`./${name}.fold`, import.meta.url), 'utf8'));
 }
 
 export type SlitJson = { edges_assignment: string[]; file_frames: Record<string, unknown>[]; [key: string]: unknown };

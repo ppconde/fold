@@ -5,7 +5,7 @@ import { loadModel } from '../src/fold/load-model';
 import { unfoldAll } from '../src/home/unfold';
 import { buildFold, entryOf } from './build';
 import { checkModel } from './check';
-import { DEFAULT_MODEL, FIXTURES, sources } from './src/index';
+import { DEFAULT_MODEL, sources } from './src/index';
 import { thumbnail } from './thumbnail';
 
 const committed = (path: string) =>
@@ -44,9 +44,9 @@ describe.each(sources.map((s) => [s.id, s] as const))('%s', (_, src) => {
 });
 
 describe('models.json', () => {
-  it('lists every authored model, then the fixtures, and opens a listed default', () => {
+  it('lists every authored model and opens a listed default', () => {
     const index = committed('models.json');
-    expect(index.models).toEqual(JSON.parse(JSON.stringify([...sources.map(entryOf), ...FIXTURES])));
+    expect(index.models).toEqual(JSON.parse(JSON.stringify(sources.map(entryOf))));
     expect(index.models.map((m: { id: string }) => m.id)).toContain(DEFAULT_MODEL);
   });
 });
