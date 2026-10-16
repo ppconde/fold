@@ -4,7 +4,7 @@ import { foldedPositions } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { unfoldAll } from '../src/home/unfold';
 import { buildFold, entryOf } from './build';
-import { checkModel } from './check';
+import { checkModel, spread } from './check';
 import { DEFAULT_MODEL, sources } from './src/index';
 import { thumbnail } from './thumbnail';
 
@@ -81,5 +81,12 @@ describe('crane', () => {
         expect([body[0], body.at(-1)]).toEqual([true, true]);
       }
     }
+  });
+
+  it('keeps the head on the neck as it reverse-folds', () => {
+    // the seam budget is for the whole sheet; on a head this small, anything past the stack's own gap at rest shows
+    const model = loadModel(committed('crane.fold'));
+    const rest = spread(model, 18, 1);
+    for (let i = 1; i < 10; i++) expect(spread(model, 18, i / 10)).toBeLessThanOrEqual(rest);
   });
 });

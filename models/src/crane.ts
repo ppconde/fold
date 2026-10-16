@@ -165,7 +165,7 @@ const headAt: At = [base[0] + (tip[0] - base[0]) * 0.8, base[1] + (tip[1] - base
 const head = turnFlap(headAt, 110, 215, tip);
 s.fold('head', head[0], head[1], {
   valley: tuckIn,
-  over: false,
+  over: true,
   tuck: true,
   only: has('neck'),
   hold: d(1, 0.3),
