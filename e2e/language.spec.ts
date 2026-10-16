@@ -33,7 +33,7 @@ test.describe('a French browser', () => {
 test('Portuguese pages have no serious accessibility violations', async ({ page }) => {
   await page.goto('/about');
   await page.evaluate(() => localStorage.setItem('fold:lang', 'pt'));
-  for (const path of ['/', '/library', '/about', '/fold/fold-in-quarters?step=1', '/nope']) {
+  for (const path of ['/', '/library', '/about', '/fold/tulip?step=1', '/nope']) {
     await page.emulateMedia({ reducedMotion: 'reduce' }); // axe must not sample a mid-fade
     await page.goto(path);
     const { violations } = await new AxeBuilder({ page }).analyze();
@@ -42,13 +42,13 @@ test('Portuguese pages have no serious accessibility violations', async ({ page 
 });
 
 test('switching language mid-lesson keeps the step, the scrub and the panel', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=2');
+  await page.goto('/fold/tulip?step=2');
   await page.getByRole('slider', { name: 'Fold progress' }).fill('40');
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('button', { name: /PT/ }).click();
   await page.keyboard.press('Escape');
-  await expect(page.getByText('Dobra a metade de cima para baixo, sobre a metade de baixo.')).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dobrar em quatro');
+  await expect(page.getByText('Dobra o canto de baixo até ao canto de cima.')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Túlipa');
   await expect(page.locator('main')).toHaveAttribute('data-step', '2');
   await expect(page.locator('main')).toHaveAttribute('data-progress', '40');
   await expect(page.getByRole('complementary', { name: 'Instruções' })).toBeVisible();

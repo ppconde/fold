@@ -10,12 +10,12 @@ async function next(page: Page) {
 }
 
 test('steps forward and back, keeping the URL in sync', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters');
+  await page.goto('/fold/tulip');
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
   await next(page);
   await expect(page.locator('main')).toHaveAttribute('data-step', '1');
   await expect(page).toHaveURL(/step=1/);
-  await expect(page.getByText('Fold the left half over onto the right half.')).toBeVisible();
+  await expect(page.getByText('Turn the paper over, white side up, with a corner pointing at you.')).toBeVisible();
   await page.getByRole('button', { name: 'Previous step' }).click();
   await settled(page);
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
@@ -23,18 +23,18 @@ test('steps forward and back, keeping the URL in sync', async ({ page }) => {
 });
 
 test('a reload resumes the step from the URL, and bad steps are clamped', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   await page.reload();
   await expect(page.locator('main')).toHaveAttribute('data-step', '1');
-  await page.goto('/fold/fold-in-quarters?step=99');
-  await expect(page.locator('main')).toHaveAttribute('data-step', '2');
-  await expect(page).toHaveURL(/step=2/);
-  await page.goto('/fold/fold-in-quarters?step=abc');
+  await page.goto('/fold/tulip?step=99');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '4');
+  await expect(page).toHaveURL(/step=4/);
+  await page.goto('/fold/tulip?step=abc');
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
 });
 
 test('keyboard: arrows step, space replays, and the open menu takes keys away from the player', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters');
+  await page.goto('/fold/tulip');
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
   await page.keyboard.press('ArrowRight');
   await settled(page);
@@ -53,7 +53,7 @@ test('keyboard: arrows step, space replays, and the open menu takes keys away fr
 });
 
 test('finishing leaves the folded model in view, with no completion card over it', async ({ page }) => {
-  await page.goto('/fold/fold-in-half');
+  await page.goto('/fold/tulip?step=3');
   await next(page);
   await expect(page.locator('main')).toHaveAttribute('data-state', 'done');
   await expect(page.getByText('Well folded!')).toHaveCount(0);
@@ -61,7 +61,7 @@ test('finishing leaves the folded model in view, with no completion card over it
 });
 
 test('finishing stamps a small seal and tells screen readers, even with the steps hidden', async ({ page }) => {
-  await page.goto('/fold/fold-in-half');
+  await page.goto('/fold/tulip?step=3');
   await page.getByRole('button', { name: 'hide steps' }).click();
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
   const seal = page.getByText('完');
@@ -69,14 +69,14 @@ test('finishing stamps a small seal and tells screen readers, even with the step
   await next(page);
   await expect(seal).toBeVisible();
   await expect(page.getByText('Done', { exact: true })).toBeVisible();
-  await expect(page.getByRole('status')).toHaveText('Fold in half is complete.');
+  await expect(page.getByRole('status')).toHaveText('Tulip is complete.');
   await page.getByRole('slider', { name: 'Fold progress' }).fill('30');
   await expect(seal).toHaveCount(0);
   await expect(page.getByRole('status')).toHaveText('');
 });
 
 test('the instructions can be hidden and shown, and the choice survives a reload', async ({ page }) => {
-  await page.goto('/fold/fold-in-half');
+  await page.goto('/fold/tulip');
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeVisible();
   await page.getByRole('button', { name: 'Hide steps' }).click();
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
@@ -88,7 +88,7 @@ test('the instructions can be hidden and shown, and the choice survives a reload
 });
 
 test('the dock, the instructions and the title never overlap', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   const box = async (name: string) => {
     const b = await page.locator(name).boundingBox();
     if (!b) throw new Error(`${name} not visible`);
@@ -107,7 +107,7 @@ test('the dock, the instructions and the title never overlap', async ({ page }) 
 
 test('the player has no serious accessibility violations', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' }); // axe must not sample a mid-fade
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   const { violations } = await new AxeBuilder({ page }).analyze();
   const serious = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
   expect(serious.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
@@ -121,7 +121,7 @@ test('without WebGL the diagram and instructions still work', async ({ page }) =
       return (original as (...a: unknown[]) => unknown).call(this, type, ...rest);
     } as typeof original;
   });
-  await page.goto('/fold/fold-in-half');
+  await page.goto('/fold/tulip?step=3');
   await expect(page.getByText("The 3D view isn't available on this device.")).toBeVisible();
   await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
   await next(page);
@@ -129,7 +129,7 @@ test('without WebGL the diagram and instructions still work', async ({ page }) =
 });
 
 test('Escape hides the instructions and the choice survives a reload', async ({ page }) => {
-  await page.goto('/fold/fold-in-half');
+  await page.goto('/fold/tulip');
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
@@ -138,7 +138,7 @@ test('Escape hides the instructions and the choice survives a reload', async ({ 
 });
 
 test('arrow keys inside the instructions do not change the step', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters');
+  await page.goto('/fold/tulip');
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
   await page.locator('#instructions').focus();
   await page.keyboard.press('ArrowRight');
@@ -147,18 +147,18 @@ test('arrow keys inside the instructions do not change the step', async ({ page 
 });
 
 test('an external ?step change on the same model is followed', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=0');
+  await page.goto('/fold/tulip?step=0');
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
   // history.pushState + popstate: TanStack Router's history listens to popstate, so this is a client-side navigation.
   await page.evaluate(() => {
-    history.pushState(history.state, '', '/fold/fold-in-quarters?step=2');
+    history.pushState(history.state, '', '/fold/tulip?step=2');
     dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
   });
   await expect(page.locator('main')).toHaveAttribute('data-step', '2');
 });
 
 test('dock buttons explain themselves on hover, and Reset view does not look like a restart', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   for (const name of ['Previous step', 'Replay step', 'Next step', 'Speed 1×', 'Reset view']) {
     await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute('title', name);
   }
@@ -168,7 +168,7 @@ test('dock buttons explain themselves on hover, and Reset view does not look lik
 });
 
 test('Start over returns to the flat sheet from any step', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=2');
+  await page.goto('/fold/tulip?step=2');
   await expect(page.locator('main')).toHaveAttribute('data-step', '2');
   const startOver = page.getByRole('button', { name: 'Start over' });
   await expect(startOver).toHaveAttribute('title', 'Start over');
@@ -180,7 +180,7 @@ test('Start over returns to the flat sheet from any step', async ({ page }) => {
 
 test('the dock fits on screen with the steps hidden, even on a 360px phone', async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 740 });
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   await page.getByRole('button', { name: 'Hide steps' }).click();
   const dock = await page.getByTestId('dock').locator('> div').boundingBox();
   const width = page.viewportSize()?.width ?? 0;
@@ -190,7 +190,7 @@ test('the dock fits on screen with the steps hidden, even on a 360px phone', asy
 });
 
 test('scrubbing folds part-way, and Next finishes the same step', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   const progress = page.getByRole('slider', { name: 'Fold progress' });
   await progress.fill('50');
   await expect(page.locator('main')).toHaveAttribute('data-progress', '50');
@@ -203,7 +203,7 @@ test('scrubbing folds part-way, and Next finishes the same step', async ({ page 
 });
 
 test('a part-folded last step is not finished yet', async ({ page }) => {
-  await page.goto('/fold/fold-in-half?step=1');
+  await page.goto('/fold/tulip?step=4');
   const main = page.locator('main');
   await expect(main).toHaveAttribute('data-state', 'done');
   await page.getByRole('slider', { name: 'Fold progress' }).fill('30');
@@ -214,7 +214,7 @@ test('a part-folded last step is not finished yet', async ({ page }) => {
 });
 
 test('arrow keys on the slider move the fold, not the step', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   const progress = page.getByRole('slider', { name: 'Fold progress' });
   await progress.focus();
   await page.keyboard.press('Home');
@@ -225,7 +225,7 @@ test('arrow keys on the slider move the fold, not the step', async ({ page }) =>
 });
 
 test('scrubbing the last step to 100% keeps the slider focused', async ({ page }) => {
-  await page.goto('/fold/fold-in-half?step=1');
+  await page.goto('/fold/tulip?step=4');
   const progress = page.getByRole('slider', { name: 'Fold progress' });
   await progress.focus();
   await page.keyboard.press('Home');
@@ -237,14 +237,14 @@ test('scrubbing the last step to 100% keeps the slider focused', async ({ page }
 });
 
 test('Escape closes the instructions even while the slider has focus', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   await page.getByRole('slider', { name: 'Fold progress' }).focus();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('complementary', { name: 'Instructions' })).toBeHidden();
 });
 
 test('the flat sheet has no progress slider', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=0');
+  await page.goto('/fold/tulip?step=0');
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
   await expect(page.getByRole('slider', { name: 'Fold progress' })).toHaveCount(0);
 });
@@ -258,7 +258,7 @@ test('the controls work before the 3D view has loaded', async ({ page }) => {
     await held;
     await route.continue();
   });
-  await page.goto('/fold/fold-in-quarters');
+  await page.goto('/fold/tulip');
   await expect(page.locator('main')).toHaveAttribute('data-step', '0');
   await expect(page.locator('canvas')).toHaveCount(0);
   await page.getByRole('button', { name: 'Next step' }).click();
@@ -271,9 +271,9 @@ test('the controls work before the 3D view has loaded', async ({ page }) => {
 test('if the 3D view fails to load, the 2D path keeps working and Try again recovers', async ({ page }) => {
   let fail = true;
   await page.route(/\/assets\/Stage-[^/]+\.js$/, (route) => (fail ? route.abort() : route.continue()));
-  await page.goto('/fold/fold-in-quarters');
+  await page.goto('/fold/tulip');
   await expect(page.getByText("The 3D view didn't load.")).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold in quarters');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tulip');
   await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /^(Hide|Show) steps$/ })).toHaveCount(0);
   await page.getByRole('button', { name: 'Next step' }).click();
@@ -286,7 +286,7 @@ test('if the 3D view fails to load, the 2D path keeps working and Try again reco
 });
 
 test('the dock hint shows on the first visit and is gone once a step has played', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters');
+  await page.goto('/fold/tulip');
   const hint = page.getByText('← back · next → · hover for names');
   await expect(hint).toBeVisible();
   await next(page);
@@ -297,7 +297,7 @@ test('the dock hint shows on the first visit and is gone once a step has played'
 });
 
 test('every dock button has a non-empty title', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters?step=1');
+  await page.goto('/fold/tulip?step=1');
   const buttons = page.getByTestId('dock').getByRole('button');
   await expect(buttons).toHaveCount(6);
   for (const b of await buttons.all()) expect(((await b.getAttribute('title')) ?? '').length).toBeGreaterThan(0);
@@ -314,14 +314,14 @@ test('on a phone each step fits the instructions sheet without scrolling', async
 });
 
 test('the step menu jumps straight to a step', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters');
+  await page.goto('/fold/tulip');
   await page.getByRole('combobox', { name: 'Go to step' }).selectOption('2');
   await expect(page.locator('main')).toHaveAttribute('data-step', '2');
   await expect(page).toHaveURL(/step=2/);
 });
 
 test('next skips a step that is still playing', async ({ page }) => {
-  await page.goto('/fold/fold-in-quarters');
+  await page.goto('/fold/tulip');
   const next = page.getByRole('button', { name: 'Next step' });
   await next.click();
   await expect(page.locator('main')).toHaveAttribute('data-state', 'playing');
