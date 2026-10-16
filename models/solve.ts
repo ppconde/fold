@@ -354,15 +354,27 @@ function tuckIn(orders: Map<string, 1 | -1>, { layers, flaps }: Tuck<number>): v
       if (s) orders.set(key, -s as 1 | -1);
     }
   };
-  // the layers passed, and every still face lying on the side of one that the flaps landed on
-  const outside = new Set(past);
-  for (const p of past) {
-    const side = landed(p);
-    for (const [key, s] of orders) {
-      const [g, q] = key.split(',').map(Number);
-      if (q === p && s === side && !moved.includes(g)) outside.add(g);
+  // a collapse's flaps can overshoot either group: one that landed beyond the other group passed that one
+  const other = past === layers[0] ? layers[1] : layers[0];
+  const apart = other.flatMap((q) => past.map((p) => orders.get(`${q},${p}`))).find(Boolean);
+  const passed = (x: number) =>
+    apart &&
+    other.some((q) => orders.get(`${x},${q}`) === apart) &&
+    !past.some((p) => orders.get(`${x},${p}`) === -apart)
+      ? other
+      : past;
+  // each flap swaps sides with the layers it passed, and every still face lying on the side of one it landed on
+  for (const x of moved) {
+    const group = passed(x);
+    const outside = new Set(group);
+    for (const p of group) {
+      const side = orders.get(`${x},${p}`) ?? landed(p);
+      for (const [key, s] of orders) {
+        const [g, q] = key.split(',').map(Number);
+        if (q === p && s === side && !moved.includes(g)) outside.add(g);
+      }
     }
+    for (const g of outside) flip(x, g);
   }
-  for (const x of moved) for (const g of outside) flip(x, g);
   for (const a of flaps[0]) for (const b of flaps[1]) flip(a, b);
 }
