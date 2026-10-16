@@ -47,6 +47,13 @@ export function endCentre(model: Model, step: number): [number, number] {
   return [(Math.min(...xs) + Math.max(...xs)) / 2 - cx, -((Math.min(...ys) + Math.max(...ys)) / 2 - cy)];
 }
 
+/** How far the paper's lowest point goes below the table (z = 0); 0 while it stays on or above it. */
+export function depthBelowTable(faces: Vec3[][]): number {
+  let low = 0;
+  for (const face of faces) for (const p of face) low = Math.min(low, p[2]);
+  return low < 0 ? -low : 0;
+}
+
 /**
  * How far the paper reaches from the camera's centre (endCentre of `step`): the settled pose, or, while step
  * `playing` plays or is scrubbed, every pose it passes (a flap standing up, a turn-over). Sampled at quarter steps.

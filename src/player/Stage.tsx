@@ -1,6 +1,7 @@
 import { CameraControls, ContactShadows } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { type ComponentRef, useEffect, useMemo, useRef } from 'react';
+import type { Group } from 'three';
 import type { Model } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import { prefersReducedMotion } from './browser';
@@ -27,6 +28,7 @@ export function Stage(props: Props) {
 
 function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
   const controls = useRef<ComponentRef<typeof CameraControls>>(null);
+  const ground = useRef<Group>(null);
   const firstFrame = useRef(true);
   const aspect = useThree((s) => s.size.width / s.size.height);
   const { size } = paperExtent(model);
@@ -56,8 +58,17 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
       <hemisphereLight args={['#fffaf0', '#e6dccb', 1.1]} />
       <directionalLight position={[-2, 4, 3]} intensity={1.6} color="#fff4e6" />
       <directionalLight position={[3, 2, -2]} intensity={0.45} />
-      <Paper model={model} step={step} t={t} />
-      <ContactShadows position={[0, -0.002, 0]} scale={size * 3} blur={3.2} opacity={0.25} color="#5b4a3a" far={size} />
+      <Paper model={model} step={step} t={t} ground={ground} />
+      <group ref={ground}>
+        <ContactShadows
+          position={[0, -0.002, 0]}
+          scale={size * 3}
+          blur={3.2}
+          opacity={0.25}
+          color="#5b4a3a"
+          far={size}
+        />
+      </group>
       <CameraControls ref={controls} makeDefault minDistance={size * 0.4} maxDistance={size * 6} />
     </>
   );

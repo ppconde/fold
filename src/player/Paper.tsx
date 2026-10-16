@@ -1,10 +1,10 @@
 import { Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
-import { type ComponentRef, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { BackSide, BufferAttribute, BufferGeometry, FrontSide } from 'three';
+import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
-import { fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import { depthBelowTable, fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
 import { setSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
@@ -23,7 +23,18 @@ const toPoints = (flat: number[]): Vec3[] =>
     ? Array.from({ length: flat.length / 3 }, (_, i) => [flat[i * 3], flat[i * 3 + 1], flat[i * 3 + 2]])
     : PLACEHOLDER;
 
-export function Paper({ model, step, t }: { model: Model; step: number; t: number }) {
+/** `ground`: the table's shadow, lowered while a flap swings below the table so the paper never passes through it. */
+export function Paper({
+  model,
+  step,
+  t,
+  ground
+}: {
+  model: Model;
+  step: number;
+  t: number;
+  ground?: RefObject<Group | null>;
+}) {
   const invalidate = useThree((s) => s.invalidate);
   const geometry = useMemo(() => {
     const g = new BufferGeometry();
@@ -45,6 +56,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
 
   useLayoutEffect(() => {
     const faces = foldedPositions(model, step, t);
+    if (ground?.current) ground.current.position.y = -depthBelowTable(faces);
     const position = geometry.getAttribute('position') as BufferAttribute;
     fillTriangles(faces, position.array as Float32Array);
     position.needsUpdate = true;
@@ -57,7 +69,7 @@ export function Paper({ model, step, t }: { model: Model; step: number; t: numbe
     setSegments(active.current, groups.active);
     setSegments(cut.current, groups.cut);
     invalidate();
-  }, [model, step, t, geometry, invalidate]);
+  }, [model, step, t, geometry, invalidate, ground]);
 
   useEffect(() => () => washi.dispose(), [washi]);
 

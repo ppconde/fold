@@ -3,6 +3,7 @@ import { fixture, slitFixture } from '../fold/fixtures';
 import { foldedPositions, LAYER_GAP } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import {
+  depthBelowTable,
   endCentre,
   fillTriangles,
   fillUVs,
@@ -105,6 +106,29 @@ describe('frameReach', () => {
 
   it('holds only the folded half at rest', () => {
     expect(frameReach(half(), 1)).toBeCloseTo(Math.hypot(0.25, 0.5), 2);
+  });
+});
+
+describe('depthBelowTable', () => {
+  it('is zero for paper on the table and measures paper that goes below it', () => {
+    expect(
+      depthBelowTable([
+        [
+          [0, 0, 0],
+          [1, 0, 0.02],
+          [0, 1, 0]
+        ]
+      ])
+    ).toBe(0);
+    expect(
+      depthBelowTable([
+        [
+          [0, 0, 0],
+          [1, 0, -0.3],
+          [0, 1, 0.1]
+        ]
+      ])
+    ).toBeCloseTo(0.3);
   });
 });
 
