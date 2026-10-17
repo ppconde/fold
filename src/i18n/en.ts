@@ -55,7 +55,7 @@ export const en = {
     hideSteps: 'hide steps',
     showSteps: 'show steps',
     reverseFold: 'reverse fold',
-    how: 'How',
+    how: 'Moves',
     creases: 'Creases',
     howSteps: ['Open the two layers a little', 'Push the flap in between them, along your crease', 'Close and flatten'],
     shortcut: 'The paper on screen takes a shortcut through the body. Yours goes inside, like this.',

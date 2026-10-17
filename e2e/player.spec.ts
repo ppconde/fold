@@ -363,7 +363,7 @@ test.describe('a reverse fold step', () => {
     await next(page);
     await next(page);
     await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 2));
-    await expect(page.getByRole('button', { name: 'How' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Moves' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   test('a swipe moves through the sketches, and the animation leaves them be', async ({ page }, info) => {
