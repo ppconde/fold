@@ -68,6 +68,31 @@ describe('foldSequence', () => {
     expect(checkModel(loadModel(buildFold(src)))).toEqual([]);
   });
 
+  it('lets a reverse fold relabel the crease a pre-crease made, as if it had made it', () => {
+    const build = (precrease: boolean) => {
+      const s = foldSequence();
+      s.fold('half', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
+      if (precrease) s.crease('pre', [0.5, 0.6], [0.9, 1], { valley: true, hold: [0.75, 0.3], ...text });
+      // inside reverse fold of the top corner: the layer nearer the viewer folds one way, the far one the other
+      s.fold('tip', [0.5, 0.6], [0.9, 1], {
+        valley: (_, [x]) => x > 0.5,
+        over: true,
+        tuck: true,
+        hold: [0.75, 0.3],
+        ...text
+      });
+      return s.source({ ...entry, tags: [] });
+    };
+    const senses = (src: ReturnType<typeof build>) =>
+      Object.values(src.creases)
+        .filter((c) => c.assignment !== 'F')
+        .map((c) => `${c.from.map((v) => v.toFixed(3))}→${c.to.map((v) => v.toFixed(3))} ${c.assignment}`)
+        .sort();
+    const [plain, pre] = [build(false), build(true)];
+    expect(Object.keys(pre.steps[2].fold ?? {}).every((k) => k.startsWith('pre') || k.startsWith('half'))).toBe(true);
+    expect(senses(pre)).toEqual(senses(plain));
+  });
+
   it('turns a two-layer flap back over both its hinges', () => {
     const s = foldSequence();
     s.fold('half', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });

@@ -140,6 +140,15 @@ const mirror = ([px, py]: At, [a, b]: [At, At]): At => {
 // neck and tail stand 70° up, leaning out; the head turns down and out
 const base: At = [0.5, 0.24];
 const neck = turnFlap(base, -90, 110, B);
+// each reverse fold is pre-creased first, folding the flap over the front of the body,
+// where it doesn't pass through the paper (the reverse fold relabels the crease)
+s.crease('neckPre', neck[0], neck[1], {
+  valley: true,
+  only: leftLeg,
+  hold: d(1, 0.3),
+  en: 'Fold the left flap up along this line, then unfold it.',
+  pt: 'Dobra a aba da esquerda para cima por esta linha e desdobra.'
+});
 s.fold('neck', neck[0], neck[1], {
   valley: tuckIn,
   over: false,
@@ -151,6 +160,13 @@ s.fold('neck', neck[0], neck[1], {
   pt: 'Faz uma dobra invertida na aba da esquerda, para cima e por dentro do corpo, para fazer o pescoço.'
 });
 const tail = turnFlap(base, -90, 70, B);
+s.crease('tailPre', tail[0], tail[1], {
+  valley: true,
+  only: rightLeg,
+  hold: d(1, 0.3),
+  en: 'Fold the right flap up along this line, then unfold it.',
+  pt: 'Dobra a aba da direita para cima por esta linha e desdobra.'
+});
 s.fold('tail', tail[0], tail[1], {
   valley: tuckIn,
   over: false,
@@ -163,6 +179,13 @@ s.fold('tail', tail[0], tail[1], {
 const tip = mirror(B, neck);
 const headAt: At = [base[0] + (tip[0] - base[0]) * 0.8, base[1] + (tip[1] - base[1]) * 0.8];
 const head = turnFlap(headAt, 110, 215, tip);
+s.crease('headPre', head[0], head[1], {
+  valley: true,
+  only: has('neck'),
+  hold: d(1, 0.3),
+  en: 'Fold the tip of the neck down along this line, then unfold it.',
+  pt: 'Dobra a ponta do pescoço para baixo por esta linha e desdobra.'
+});
 s.fold('head', head[0], head[1], {
   valley: tuckIn,
   over: true,

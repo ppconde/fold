@@ -156,14 +156,16 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
   };
   /**
    * The crease names covering the segment from→to, made where missing (`name1`, `name2`, …): parts that
-   * lie on an existing crease reuse it, and with `splitEnds` existing creases it meets end-on split there.
+   * lie on an existing crease reuse it, and with `splitEnds` existing creases it meets end-on split there. With
+   * `relabel` a reused crease takes `assignment`: a reverse fold over a pre-crease folds some layers the other way.
    */
   const claim = (
     name: string,
     from: Vec2,
     to: Vec2,
     assignment: Crease['assignment'],
-    splitEnds: boolean
+    splitEnds: boolean,
+    relabel = false
   ): string[] => {
     for (const x of splitEnds ? [from, to] : []) {
       for (const [k, c] of Object.entries(creases)) if (onSegment(x, c.from, c.to, true)) split(k, x);
@@ -182,7 +184,10 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       const same = Object.entries(creases).find(
         ([, c]) => (near(c.from, a) && near(c.to, b)) || (near(c.from, b) && near(c.to, a))
       );
-      if (same) return same[0];
+      if (same) {
+        if (relabel) same[1].assignment = assignment;
+        return same[0];
+      }
       let n = 1;
       while (creases[`${name}${n}`]) n++;
       creases[`${name}${n}`] = { from: a, to: b, assignment };
@@ -286,7 +291,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
           const angle = (valley === piece.frontUp ? 1 : -1) * 180;
           const [from, to] = cutEnds.map((e) => apply(back, e));
           const reverse = typeof opts.valley === 'function';
-          for (const key of claim(name, from, to, angle > 0 ? 'V' : 'M', reverse)) {
+          for (const key of claim(name, from, to, angle > 0 ? 'V' : 'M', reverse, opts.tuck)) {
             fold[key] = angle;
             if (opts.over !== undefined) swing[key] = (opts.over === piece.frontUp ? 1 : -1) * 180;
           }
