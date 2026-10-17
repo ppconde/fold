@@ -332,8 +332,8 @@ test('next skips a step that is still playing', async ({ page }) => {
 
 test.describe('a reverse fold step', () => {
   // the crane's neck; the step before it pre-creases the neck's line, a plain fold and unfold
-  const NECK = 17;
-  const NORMAL = 16;
+  const NECK = 16;
+  const NORMAL = 15;
 
   test('on a wide screen shows how and the creases together', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'the side panel has room for both');
@@ -359,10 +359,8 @@ test.describe('a reverse fold step', () => {
     test.skip(info.project.name !== 'phone', 'the toggle is for the phone sheet');
     await page.goto(`/fold/crane?step=${NECK}`);
     await page.getByRole('button', { name: 'Creases' }).click();
-    // on past the tail's pre-crease to the tail
     await next(page);
-    await next(page);
-    await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 2));
+    await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 1));
     await expect(page.getByRole('button', { name: 'Moves' })).toHaveAttribute('aria-pressed', 'true');
   });
 
