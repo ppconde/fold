@@ -82,7 +82,7 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
       <Paper model={model} step={step} t={t} ground={ground} />
       <group ref={ground}>
         <ContactShadows
-          position={[0, -0.002, 0]}
+          position={[0, -0.02, 0]}
           scale={size * 3}
           blur={3.2}
           opacity={0.25}
