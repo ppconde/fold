@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync } from 'node:fs';
-import { Euler, Line3, Quaternion, Vector3 } from 'three';
+import { Euler, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from './fixtures';
 import {
@@ -10,9 +10,13 @@ import {
   isReverseFold,
   LAYER_GAP,
   layerHeights,
-  movingFaces
+  movingFaces,
+  progress,
+  REVERSE_SWAP,
+  swapFade
 } from './fold';
 import { loadModel } from './load-model';
+import { tuckArrow } from './reverse';
 import type { Model, Step, Vec3 } from './types';
 
 const half = () => loadModel(fixture('fold-in-half'));
@@ -620,35 +624,7 @@ describe('reverse folds', () => {
   const crane = committed('crane');
   const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
 
-  const side = Math.max(...crane.vertices.map((p) => p[0])) - Math.min(...crane.vertices.map((p) => p[0]));
   const sub = (a: Vec3, b: Vec3) => new Vector3(...a).sub(new Vector3(...b));
-  /** The moving faces' outline as step `k` starts against where step k − 1 left it, in the held face's plane. */
-  const outlineJump = (k: number) => {
-    const [a, b] = [foldedPositions(crane, k, 0), foldedPositions(crane, k - 1, 1)];
-    const [p, q, r] = a[crane.steps[k].fixedFace];
-    const n = sub(q, p).cross(sub(r, p)).normalize();
-    const flat = (x: Vec3) => {
-      const v = sub(x, p);
-      return v.addScaledVector(n, -v.dot(n));
-    };
-    const edges = (faces: Vec3[][]) =>
-      [...movingFaces(crane, k)].flatMap((f) =>
-        faces[f].map((x, i) => [flat(x), flat(faces[f][(i + 1) % faces[f].length])])
-      );
-    const away = (from: Vector3[][], to: Vector3[][]) =>
-      Math.max(
-        ...from.flatMap(([u, v]) =>
-          Array.from({ length: 21 }, (_, i) => {
-            const x = u.clone().lerp(v, i / 20);
-            return Math.min(
-              ...to.map(([c, d]) => x.distanceTo(new Line3(c, d).closestPointToPoint(x, true, new Vector3())))
-            );
-          })
-        )
-      );
-    const [ea, eb] = [edges(a), edges(b)];
-    return Math.max(away(ea, eb), away(eb, ea));
-  };
   const moving = (k: number) => [...movingFaces(crane, k)];
   const length = (f: number, faces: Vec3[][], i: number) =>
     sub(faces[f][i], faces[f][(i + 1) % faces[f].length]).length();
@@ -672,26 +648,54 @@ describe('reverse folds', () => {
     }
   });
 
-  it('swaps the flap at the first frame: the outline barely moves', () => {
-    // ≤ 2.5 mm on a 15 cm sheet; a corner fit gives 1.2 / 0.7 / 2.1 mm
-    for (const k of reverse) expect(outlineJump(k)).toBeLessThanOrEqual((2.5 / 150) * side);
-    // already tucked: at its end heights over the held face, only turned in its plane
+  it('keeps the flap at its pivot, on the body, all step', () => {
     for (const k of reverse) {
-      const [start, end] = [foldedPositions(crane, k, 0), foldedPositions(crane, k, 1)];
-      const [p, q, r] = end[crane.steps[k].fixedFace];
-      const n = sub(q, p).cross(sub(r, p)).normalize();
-      for (const f of moving(k)) {
-        start[f].forEach((x, c) => {
-          expect(sub(x, p).dot(n)).toBeCloseTo(sub(end[f][c], p).dot(n), 9);
-        });
-      }
+      const at = [0, 0.1, 0.5, 1].map((t) => foldedPositions(crane, k, t));
+      // some corner of the flap that a still face shares stays put
+      const held = moving(k).some((f) =>
+        crane.faces[f].some(
+          (v, c) =>
+            crane.faces.some((face, g) => !movingFaces(crane, k).has(g) && face.includes(v)) &&
+            at.every((faces) => sub(faces[f][c], at[0][f][c]).length() < 1e-9)
+        )
+      );
+      expect(held).toBe(true);
     }
+  });
+
+  it('turns the flap the way its tuck arrow bows', () => {
+    const [neck, tail] = reverse;
+    for (const k of [neck, tail]) {
+      const arrow = tuckArrow(crane, k);
+      if (!arrow) throw new Error('no tuck arrow');
+      const [start, end] = [arrow.shaft[0], arrow.shaft[arrow.shaft.length - 1]];
+      const chord = new Vector3(...start).lerp(new Vector3(...end), 0.5);
+      const bow = new Vector3(...arrow.shaft[8]).sub(chord);
+      // the flap's tip: the corner that ends nearest the arrow's head
+      const [last, mid] = [foldedPositions(crane, k, 1), foldedPositions(crane, k, 0.5)];
+      const [f, c] = moving(k)
+        .flatMap((g) => last[g].map((p, i) => [g, i, sub(p, end).length()]))
+        .reduce((best, x) => (x[2] < best[2] ? x : best));
+      expect(new Vector3(...mid[f][c]).sub(chord).dot(bow)).toBeGreaterThan(0);
+    }
+  });
+
+  it('fades the tucked flap in over the swap, then holds it', () => {
+    const [neck] = reverse;
+    expect(swapFade(crane, neck - 1, 0.05)).toBe(1);
+    expect(swapFade(crane, neck, 0)).toBe(0);
+    expect(swapFade(crane, neck, 1)).toBe(1);
+    const fades = Array.from({ length: 101 }, (_, i) => swapFade(crane, neck, i / 100));
+    expect(fades.every((x, i) => i === 0 || x >= fades[i - 1])).toBe(true);
+    const full = fades.indexOf(1) / 100;
+    expect(progress(full)).toBeGreaterThanOrEqual(REVERSE_SWAP);
+    expect(progress(full - 0.01)).toBeLessThan(REVERSE_SWAP);
   });
 
   it('pivots the flap rigidly', () => {
     for (const k of reverse) {
       expect(moving(k).length).toBeGreaterThan(0);
-      for (const t of [0, 0.5, 1]) {
+      for (const t of [0, 0.1, 0.5, 1]) {
         const faces = foldedPositions(crane, k, t);
         for (const f of moving(k))
           crane.faces[f].forEach((_, i) => {

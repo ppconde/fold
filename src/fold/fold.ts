@@ -8,6 +8,8 @@ const EPSILON = 1e-6;
 export const LAYER_GAP = 0.002;
 /** Layers each side of a reverse fold's flap shift apart at the peak of the open. */
 export const REVERSE_OPEN = 2;
+/** Share of a reverse fold (eased) in which its tucked flap holds still, fading in over the flap as it was. */
+export const REVERSE_SWAP = 0.15;
 /** Share of a step at each end in which a travelling flap rises off, and settles back onto, the stack. */
 const LIFT_SPAN = 0.15;
 
@@ -317,7 +319,9 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   const swap = swapTurn(model, step);
   const swapped = swap ? movingFaces(model, step) : new Set<number>();
   const T1 = swap ? rootTransforms(model, anglesAt(model, step, 1), step) : T;
-  const turnBack = swap && turnAbout(new Vector3(...swap.pivot), new Vector3(...swap.axis), -swap.angle * (1 - s));
+  const pivoted = Math.max(0, (s - REVERSE_SWAP) / (1 - REVERSE_SWAP));
+  const turnBack =
+    swap && turnAbout(new Vector3(...swap.pivot), new Vector3(...swap.axis), -swap.angle * (1 - pivoted));
   const poses = model.faces.map((_, f) => {
     if (turnBack && swapped.has(f))
       return turnBack
@@ -497,28 +501,60 @@ export function swapTurn(model: Model, step: number): { pivot: Vec3; axis: Vec3;
   };
   // the turn about the pivot that best fits the corners, end onto start
   let [dot, crs] = [0, 0];
-  let tip = [0, 0];
   for (const f of moving) {
     const end = base.clone().multiply(T[f]);
     for (const v of model.faces[f]) {
       const [e, st] = [flat(...model.vertices[v], end), flat(...model.vertices[v], start[f])];
       dot += e[0] * st[0] + e[1] * st[1];
       crs += e[0] * st[1] - e[1] * st[0];
-      if (Math.hypot(...e) > Math.hypot(...tip)) tip = e;
     }
   }
   const short = -Math.atan2(crs, dot);
-  // the way round that bows out, like the tuck arrow: the flap's tip halfway farther from the model's middle
-  const corners = model.faces.flatMap((face, f) => face.map((v) => flat(...model.vertices[v], start[f])));
-  const middle = [0, 1].map((j) => corners.reduce((acc, p) => acc + p[j], 0) / corners.length);
-  const out = (angle: number) => {
-    const [c, sn] = [Math.cos(-angle / 2), Math.sin(-angle / 2)];
-    return Math.hypot(c * tip[0] - sn * tip[1] - middle[0], sn * tip[0] + c * tip[1] - middle[1]);
-  };
+  // the way round its tuck arrow bows: the arrow's tip, half way round, on the arrow's outward side
+  const corners = (poses: Matrix4[]) =>
+    model.faces.map((face, f) =>
+      face.map(
+        (v) => new Vector3(model.vertices[v][0], model.vertices[v][1], 0).applyMatrix4(poses[f]).toArray() as Vec3
+      )
+    );
+  const bow = tuckBow(model, step, corners(start), corners(T.map((m) => base.clone().multiply(m))));
+  const chord = bow.tip.clone().lerp(bow.landed, 0.5);
+  const out = (angle: number) =>
+    bow.landed
+      .clone()
+      .applyMatrix4(turnAbout(pivot, axis, -angle / 2))
+      .sub(chord)
+      .dot(bow.out);
   const long = short - 2 * Math.PI * Math.sign(short);
   const angle = out(long) > out(short) ? long : short;
   list[step] = { pivot: pivot.toArray() as Vec3, axis: axis.toArray() as Vec3, angle };
   return list[step];
+}
+
+/** How opaque a reverse fold's tucked flap is at `t`: 0 to 1 over the swap, then 1. 1 for every other step. */
+export const swapFade = (model: Model, step: number, t: number): number =>
+  isReverseFold(model, step) ? Math.min(1, progress(t) / REVERSE_SWAP) : 1;
+
+/**
+ * A reverse fold's tuck, from the corners of every face as the flap was (`from`) and as it lands (`to`): the tip,
+ * the moving corner that travels farthest, where it lands, and the unit direction the tuck bows out, away from the
+ * middle of the model and across the tip's path.
+ */
+export function tuckBow(
+  model: Model,
+  step: number,
+  from: Vec3[][],
+  to: Vec3[][]
+): { tip: Vector3; landed: Vector3; out: Vector3 } {
+  const v = (p: Vec3) => new Vector3(...p);
+  const [tip, landed] = [...movingFaces(model, step)]
+    .flatMap((f) => from[f].map((p, i) => [v(p), v(to[f][i])]))
+    .reduce((best, m) => (m[0].distanceTo(m[1]) > best[0].distanceTo(best[1]) ? m : best));
+  const all = from.flat();
+  const center = all.reduce((c, p) => c.add(v(p)), new Vector3()).divideScalar(all.length);
+  const out = tip.clone().lerp(landed, 0.5).sub(center);
+  const chord = landed.clone().sub(tip).normalize();
+  return { tip, landed, out: out.addScaledVector(chord, -out.dot(chord)).normalize() };
 }
 
 const travels = new WeakMap<Model, number[][]>();

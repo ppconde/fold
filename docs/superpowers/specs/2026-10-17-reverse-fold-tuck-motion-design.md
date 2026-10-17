@@ -23,7 +23,7 @@ The rigid engine can't make the real motion (see `2026-10-13-reverse-fold-spike.
 
 ## Anti-goals
 
-- A visible jump. The swap must be small enough not to read as one (see the measurement below).
+- A visible jump. The swap is a crossfade, never a cut.
 - The flap leaving the space between the body's layers mid-step.
 - Blending vertex positions to turn the flap inside out. That squashes every face to a sliver at the halfway point and flips its normal (the builder check found this).
 
@@ -31,31 +31,23 @@ The rigid engine can't make the real motion (see `2026-10-13-reverse-fold-spike.
 
 For a reverse-fold step (`isReverseFold(model, step)`, `src/fold/reverse.ts`):
 
-1. **Swap (at `s = 0`).** Take the moving faces' final pose: their positions at `t = 1`, layer heights included. Apply the rigid in-plane transform `R⁻¹` that best fits them back onto their start pose. Draw the flap there from the first frame instead of the start pose. Its layer order is the final one: spine on the inside, between the body's layers. Nothing is blended.
+1. **Swap, as a crossfade (first 15% of the step).** The tucked flap is the moving faces' final pose (their positions at `t = 1`, layer heights included) turned back around the pivot by the pivot angle. It holds still while the flap as it was (the previous step's end) fades out and the tucked flap fades in over it. Its layer order is the final one: spine on the inside, between the body's layers.
 2. **Open.** Shift the body layers that the flap ends up between apart along the stack normal. The spread rises from zero, peaks while the flap pivots, and returns to zero by the end. These layers are the faces whose order changes in the step, minus the moving faces. It's a shift only, no rotation, like the existing `travel` clearance. "A little" means a few `LAYER_GAP`s, enough that the flap's layers clear them.
-3. **Pivot.** Carry the swapped flap rigidly from `R⁻¹` back to identity (rotation angle × eased progress, around `R`'s fixed point in the body's plane). At `s = 1` it is exactly the final pose.
+3. **Pivot (the rest of the step).** Carry the tucked flap rigidly around the **pivot**: the point where the reverse-fold crease meets the flap's spine. The angle is the best-fit rotation about that point, end pose onto start pose. At `s = 1` it is exactly the final pose. The base stays on the body at the pivot; the crease's far end comes away from the body mid-step, between the body's layers (a rigid turn can't keep that hinge closed).
 4. **Close.** The spread is back to zero, and everything sits at the final pose.
 
-**Pivot direction.** The neck and tail turn about 180°. Of the two directions, the engine must take the one that keeps the flap clear of the body's inner layers, rather than sweeping across the inside where the other flaps are. Proposed: pick the direction whose swept path stays on the outside of the fixed face (for example, test both with `crossings()` at a few samples and keep the clean one). This is my read of the geometry and hasn't been tested.
+**Pivot direction.** The neck and tail turn about 180°, so both senses are possible. The flap turns the way its tuck arrow bows: the arrow (`tuckArrow`) bows out away from the model's middle, and the flap's tip at mid-pivot lies on that side of the arrow's chord.
 
 A reverse-fold step's motion comes from its two end poses, not from `Step.path`. Every other step is unchanged.
 
-### Measured swap jump
+### Why a crossfade (decided 2026-10-17, after building)
 
-Measured on `public/models/crane.fold` (origin/main, 2026-10-17) on a 15 cm sheet: the gap between the start outline and the swapped outline, after the best-fit `R⁻¹`.
-
-| Step | Flap length | Biggest jump | Average jump | Pivot |
-|---|---|---|---|---|
-| Neck | 86 mm | 1.4 mm | 0.7 mm | ~184° |
-| Tail | 88 mm | 0.5 mm | 0.4 mm | ~178° |
-| Head | 16 mm | 1.7 mm | 0.7 mm | ~111° |
-
-There is no crossfade. If the head's swap shows in the browser when zoomed in, add a short crossfade there, using a transparent copy of the faces like the one the ghost used. That would be a follow-up, not part of this work.
+A rigid turn can't give both a small swap and an attached base. Pivoting near the flap's middle gives a ~1 mm swap, but the flap spins like a propeller, its base comes off the body and it pokes past the body's edge. Pivoting at the crease/spine point keeps the base on, but the tucked flap's outline differs from the start by about the flap's width (≈25 mm on the neck and tail, ≈4 mm on the head, on a 15 cm sheet). The user compared three previews (base + crossfade, twist while pivoting, propeller) and chose base + crossfade.
 
 ## What gets removed
 
 - **The pre-crease steps** before the neck, tail and head (#473). The crane goes back to its step count before #473.
-- **The ghost flap** (#469): `ghostFaces`, the transparent material and their tests. There is no shortcut left to ghost.
+- **The ghost flap** (#469): `ghostFaces` and its tests. There is no shortcut left to ghost. The transparent material stays: the crossfade draws with it.
 - `landingAt` and the mid-stack swap no longer apply to reverse-fold steps. They stay for collapse tucks.
 
 Kept: `isReverseFold`, the tuck arrow (#475), the "How" sketches and the step label suffix (#470). The tuck arrow currently fades out at `landingAt`. For reverse folds it gets its own fade, finishing by the time the pivot ends; the exact timing is the builder's call.
