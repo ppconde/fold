@@ -52,7 +52,7 @@
   stroke: var(--clay);
 }
 
-/* wide screens show all three; the dots are for the phone sheet, where one sketch plays at a time */
+/* wide screens show all three; the dots are for the phone sheet, where one sketch shows at a time */
 .dots {
   display: none;
 }
@@ -83,6 +83,11 @@
   /* a little shorter than square, so the longest caption still fits a small phone's sheet */
   .frames svg {
     aspect-ratio: 4 / 3;
+  }
+
+  /* the phone's sketches don't follow the animation, so none is singled out */
+  .frames li[data-current] svg {
+    outline-color: rgb(51 48 44 / 0.15);
   }
 
   .dots {
