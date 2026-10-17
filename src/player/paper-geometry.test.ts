@@ -76,7 +76,7 @@ describe('lineGroups', () => {
     const model = quarters();
     const g = lineGroups(model, foldedPositions(model, 2, 0), 2, 0);
     expect(g.active).toHaveLength(2 * 2 * 6);
-    expect(g.folded).toHaveLength(2 * 6);
+    expect(g.folded).toHaveLength(2 * 2 * 6);
     expect(g.flat).toEqual([]);
   });
 });
