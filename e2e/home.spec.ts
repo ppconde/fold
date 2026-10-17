@@ -82,6 +82,36 @@ test('the homepage shows the lesson opened last and unfolds into it', async ({ p
   await expect(page).toHaveURL(/\/fold\/tulip/, { timeout: 6000 });
 });
 
+test('back on the homepage, the lesson just opened shows from the start', async ({ page }) => {
+  // every model the homepage names, in order, across client-side navigation
+  await page.addInitScript(() => {
+    const seen: string[] = [];
+    const last = new WeakMap<Element, string>();
+    (window as unknown as { seen: string[] }).seen = seen;
+    new MutationObserver(() => {
+      for (const el of document.querySelectorAll('[aria-label*=" in paper"]')) {
+        const label = el.getAttribute('aria-label') as string;
+        if (last.get(el) !== label) seen.push(label);
+        last.set(el, label);
+      }
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['aria-label'] });
+  });
+  await page.goto('/fold/tulip');
+  const menu = async (to: string) => {
+    await page.getByRole('button', { name: 'Menu' }).click();
+    await page.getByRole('link', { name: to }).click();
+  };
+  await menu('Home');
+  await expect(page.getByRole('img', { name: /^Tulip in paper/ })).toBeVisible();
+  await menu('Library');
+  await page.getByRole('link', { name: /Dog face/ }).click();
+  await expect(page.getByRole('heading', { name: 'Dog face' })).toBeVisible();
+  await menu('Home');
+  await expect(page.getByRole('img', { name: /^Dog face in paper/ })).toBeVisible();
+  const seen = await page.evaluate(() => (window as unknown as { seen: string[] }).seen);
+  expect(seen.map((l) => l.split(' in paper')[0])).toEqual(['Tulip', 'Dog face']);
+});
+
 // the stage only reports how far its camera sits once it mounts, after the hand-off has started
 test('the sheet lands in the lesson without zooming in first', async ({ page }) => {
   await page.addInitScript(() => {

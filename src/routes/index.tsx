@@ -16,14 +16,15 @@ const REST_SECONDS = 0.3;
 
 export const Route = createFileRoute('/')({
   head: () => ({ meta: [{ title: titles().home }] }),
-  loader: async () => {
+  // keyed on the lesson opened last: a cached homepage for another lesson would show it until the reload lands
+  loaderDeps: () => ({ last: readLastModel() }),
+  loader: async ({ deps: { last } }) => {
     void loadScene().catch(() => {});
     // the lesson opened last, else the library's default; the homepage still works without either
     const fallback = await fetchIndex().then(
       (i) => i.defaultModel,
       () => 'crane'
     );
-    const last = readLastModel();
     const found =
       (last && (await fetchModel(last).catch(() => null))) || (await fetchModel(fallback).catch(() => null));
     return { id: found?.entry.id ?? fallback, found };
