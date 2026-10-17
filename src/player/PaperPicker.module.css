@@ -34,8 +34,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(6, 36px);
-  gap: 0.35rem;
+  grid-template-columns: repeat(4, 72px);
+  gap: 0.4rem 0.25rem;
   margin: 0;
   padding: 0;
   border: 0;
@@ -47,13 +47,18 @@
   font-size: 1rem;
 }
 
+/* swatch over its name */
 .option {
   position: relative;
   display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
+  justify-items: center;
+  gap: 0.25rem;
+  padding: 0.3rem 0.15rem;
   border-radius: 4px;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
   cursor: pointer;
 }
 
@@ -112,14 +117,8 @@
   }
 
   .grid {
-    grid-template-columns: repeat(auto-fill, 44px);
-    justify-content: center;
-    gap: 0.5rem;
-  }
-
-  .option {
-    width: 44px;
-    height: 44px;
+    grid-template-columns: repeat(auto-fill, 76px);
+    gap: 0.5rem 0.25rem;
   }
 
   .option .swatch {

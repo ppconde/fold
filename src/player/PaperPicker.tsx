@@ -43,16 +43,10 @@ export function PaperPicker({ paper, plainColor, onChange }: Props) {
         <fieldset className={styles.grid}>
           <legend>{t.player.paper}</legend>
           {IDS.map((pid) => (
-            <label key={pid} className={styles.option} title={t.papers[pid]}>
-              <input
-                type="radio"
-                name={id}
-                value={pid}
-                checked={pid === paper}
-                aria-label={t.papers[pid]}
-                onChange={() => onChange(pid)}
-              />
+            <label key={pid} className={styles.option}>
+              <input type="radio" name={id} checked={pid === paper} onChange={() => onChange(pid)} />
               <span className={styles.swatch} style={swatch(pid)} />
+              {t.papers[pid]}
             </label>
           ))}
         </fieldset>
