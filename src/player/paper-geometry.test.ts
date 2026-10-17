@@ -5,6 +5,7 @@ import { loadModel } from '../fold/load-model';
 import {
   depthBelowTable,
   endCentre,
+  faceGroups,
   fillTriangles,
   fillUVs,
   frameReach,
@@ -160,5 +161,23 @@ describe('slits', () => {
     const borders = (step: number) => lineGroups(model, foldedPositions(model, step, 0), step, 0).borders.length / 6;
     expect(borders(1)).toBe(7);
     expect(borders(2)).toBe(7 + 4);
+  });
+});
+
+describe('faceGroups', () => {
+  it('covers every triangle once, ghosted faces on material 1', () => {
+    const model = loadModel(fixture('fold-in-quarters'));
+    const groups = faceGroups(model, new Set([1]));
+    expect(groups.reduce((n, g) => n + g.count, 0)).toBe(triangleCount(model) * 3);
+    groups.forEach((g, i) => expect(g.start).toBe(i ? groups[i - 1].start + groups[i - 1].count : 0));
+    const one = model.faces.slice(0, 1).reduce((n, f) => n + (f.length - 2) * 3, 0);
+    expect(groups.filter((g) => g.materialIndex === 1)).toEqual([
+      { start: one, count: (model.faces[1].length - 2) * 3, materialIndex: 1 }
+    ]);
+  });
+
+  it('is one solid group when nothing is ghosted', () => {
+    const model = loadModel(fixture('fold-in-quarters'));
+    expect(faceGroups(model, new Set())).toEqual([{ start: 0, count: triangleCount(model) * 3, materialIndex: 0 }]);
   });
 });

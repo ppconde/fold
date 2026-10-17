@@ -3,8 +3,17 @@ import { useThree } from '@react-three/fiber';
 import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
 import { foldedPositions } from '../fold/fold';
+import { ghostFaces } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
-import { depthBelowTable, fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import {
+  depthBelowTable,
+  faceGroups,
+  fillTriangles,
+  fillUVs,
+  lineGroups,
+  paperExtent,
+  triangleCount
+} from './paper-geometry';
 import { setSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
@@ -13,6 +22,8 @@ type LineRef = ComponentRef<typeof Line>;
 const INK = '#33302C';
 const HIGHLIGHT = '#A5633F';
 const BACK = '#F3EDE2';
+/** A reverse fold's flap, while it takes its shortcut through the body. */
+const GHOST_OPACITY = 0.3;
 const PLACEHOLDER: Vec3[] = [
   [0, 0, 0],
   [0, 0, 0]
@@ -60,6 +71,8 @@ export function Paper({
     const position = geometry.getAttribute('position') as BufferAttribute;
     fillTriangles(faces, position.array as Float32Array);
     position.needsUpdate = true;
+    geometry.clearGroups();
+    for (const g of faceGroups(model, ghostFaces(model, step, t))) geometry.addGroup(g.start, g.count, g.materialIndex);
     geometry.computeVertexNormals();
     geometry.computeBoundingSphere();
     const groups = lineGroups(model, faces, step, t);
@@ -84,30 +97,30 @@ export function Paper({
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
       <group position={[-center[0], -center[1], 0]}>
-        <mesh geometry={geometry}>
-          <meshStandardMaterial
-            color={softenTowardIvory(model.paperColor)}
-            roughness={0.92}
-            metalness={0}
-            map={washi}
-            side={FrontSide}
-            polygonOffset
-            polygonOffsetFactor={1}
-            polygonOffsetUnits={1}
-          />
-        </mesh>
-        <mesh geometry={geometry}>
-          <meshStandardMaterial
-            color={BACK}
-            roughness={0.92}
-            metalness={0}
-            map={washi}
-            side={BackSide}
-            polygonOffset
-            polygonOffsetFactor={1}
-            polygonOffsetUnits={1}
-          />
-        </mesh>
+        {[
+          { color: softenTowardIvory(model.paperColor), side: FrontSide },
+          { color: BACK, side: BackSide }
+        ].map(({ color, side }) => (
+          <mesh key={side} geometry={geometry}>
+            {[1, GHOST_OPACITY].map((opacity, i) => (
+              <meshStandardMaterial
+                key={opacity}
+                attach={`material-${i}`}
+                color={color}
+                roughness={0.92}
+                metalness={0}
+                map={washi}
+                side={side}
+                transparent={opacity < 1}
+                opacity={opacity}
+                depthWrite={opacity === 1}
+                polygonOffset
+                polygonOffsetFactor={1}
+                polygonOffsetUnits={1}
+              />
+            ))}
+          </mesh>
+        ))}
         <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7} />
         <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.0} visible={false} />
         <Line

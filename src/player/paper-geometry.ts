@@ -89,6 +89,24 @@ export function fillTriangles(faces: Vec3[][], out: Float32Array): void {
   }
 }
 
+/** Draw ranges (in vertices, fillTriangles order) for a mesh with two materials: 1 for `ghost` faces, 0 for the rest. */
+export function faceGroups(
+  model: Model,
+  ghost: ReadonlySet<number>
+): { start: number; count: number; materialIndex: 0 | 1 }[] {
+  const groups: { start: number; count: number; materialIndex: 0 | 1 }[] = [];
+  let start = 0;
+  model.faces.forEach((face, f) => {
+    const count = (face.length - 2) * 3;
+    const materialIndex = ghost.has(f) ? 1 : 0;
+    const last = groups[groups.length - 1];
+    if (last?.materialIndex === materialIndex) last.count += count;
+    else groups.push({ start, count, materialIndex });
+    start += count;
+  });
+  return groups;
+}
+
 /** Flat-paper UVs (0..1) in the same triangle order as fillTriangles, 6 floats per triangle. */
 export function fillUVs(model: Model, out: Float32Array): void {
   const { minX, minY, size } = paperExtent(model);
