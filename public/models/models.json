@@ -66,32 +66,21 @@
       "thumbnail": "/models/tulip.svg"
     },
     {
-      "id": "fold-in-half",
+      "id": "cicada",
       "name": {
-        "en": "Fold in half",
-        "pt": "Dobrar ao meio"
+        "en": "Cicada",
+        "pt": "Cigarra"
       },
-      "japaneseName": "Futatsu-ori",
-      "category": "geometric",
+      "japaneseName": "Semi",
+      "category": "animals",
       "difficulty": "easy",
       "tags": [
-        "basic",
-        "practice"
-      ]
-    },
-    {
-      "id": "fold-in-quarters",
-      "name": {
-        "en": "Fold in quarters",
-        "pt": "Dobrar em quatro"
-      },
-      "japaneseName": "Yotsu-ori",
-      "category": "geometric",
-      "difficulty": "easy",
-      "tags": [
-        "basic",
-        "practice"
-      ]
+        "cicada",
+        "insect",
+        "animal",
+        "summer"
+      ],
+      "thumbnail": "/models/cicada.svg"
     }
   ]
 }

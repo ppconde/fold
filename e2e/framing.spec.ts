@@ -72,3 +72,52 @@ test.describe('on a phone held sideways', () => {
     await expect.poll(async () => (await page.locator('canvas').boundingBox())?.height ?? 0).toBeGreaterThan(375 * 0.5);
   });
 });
+
+/** Share of pixels that differ between two screenshots of the 3D view. */
+async function difference(page: Page, a: Buffer, b: Buffer) {
+  return page.evaluate(
+    async ([a, b]) => {
+      const pixels = async (src: string) => {
+        const img = new Image();
+        img.src = `data:image/png;base64,${src}`;
+        await img.decode();
+        const c = document.createElement('canvas');
+        [c.width, c.height] = [img.width, img.height];
+        const g = c.getContext('2d') as CanvasRenderingContext2D;
+        g.drawImage(img, 0, 0);
+        return g.getImageData(0, 0, c.width, c.height).data;
+      };
+      const [p, q] = [await pixels(a), await pixels(b)];
+      let n = 0;
+      for (let i = 0; i < p.length; i += 4) n += +(Math.abs(p[i] - q[i]) + Math.abs(p[i + 1] - q[i + 1]) > 30);
+      return n / (p.length / 4);
+    },
+    [a.toString('base64'), b.toString('base64')]
+  );
+}
+
+test('replaying a step leaves a camera the reader has moved where it is', async ({ page }) => {
+  await page.goto('/fold/tulip?step=3');
+  const canvas = page.locator('canvas');
+  await expect(canvas).toBeVisible();
+  await page.waitForTimeout(600); // the camera eases into place
+  const framed = await canvas.screenshot();
+
+  // orbit, then zoom out
+  const box = (await canvas.boundingBox()) as { x: number; y: number; width: number; height: number };
+  const [x, y] = [box.x + box.width / 2, box.y + box.height / 2];
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 120, y - 60, { steps: 10 });
+  await page.mouse.up();
+  await page.mouse.wheel(0, 400);
+  await page.waitForTimeout(800);
+  const moved = await canvas.screenshot();
+  expect(await difference(page, framed, moved)).toBeGreaterThan(0.05);
+
+  await page.getByRole('button', { name: 'Replay step' }).click();
+  await expect(page.locator('main')).toHaveAttribute('data-state', 'playing');
+  await expect(page.locator('main')).not.toHaveAttribute('data-state', 'playing', { timeout: 10000 });
+  await page.waitForTimeout(800);
+  expect(await difference(page, moved, await canvas.screenshot())).toBeLessThan(0.03);
+});

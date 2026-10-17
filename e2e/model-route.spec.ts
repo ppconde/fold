@@ -12,7 +12,7 @@ test('each page has its own title', async ({ page }) => {
     ['/', 'Fold'],
     ['/library', 'Library · Fold'],
     ['/about', 'About · Fold'],
-    ['/fold/fold-in-half', 'Fold in half · Fold']
+    ['/fold/tulip', 'Tulip · Fold']
   ];
   for (const [path, title] of titles) {
     await page.goto(path);
@@ -28,11 +28,11 @@ test('focus moves to the new page heading after navigating', async ({ page }) =>
 });
 
 test('focus lands on the model heading after navigating to a page that loads data', async ({ page }) => {
-  await page.goto('/fold/fold-in-half');
+  await page.goto('/fold/tulip');
   await page.getByRole('button', { name: 'Menu' }).click();
   await page.getByRole('link', { name: 'About' }).click();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('About');
   await page.goBack();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Fold in half');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tulip');
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
 });

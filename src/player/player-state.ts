@@ -1,4 +1,4 @@
-export const SPEEDS = [0.5, 1, 1.5, 2] as const;
+const SPEEDS = [0.5, 1, 1.5, 2] as const;
 export type Speed = (typeof SPEEDS)[number];
 /** Seconds one step takes at 1×. */
 export const STEP_SECONDS = 2.4;
@@ -16,7 +16,7 @@ export type PlayerState = {
   hold: number;
 };
 
-export type PlayerAction =
+type PlayerAction =
   | { type: 'next' }
   | { type: 'prev' }
   | { type: 'replay' }

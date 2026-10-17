@@ -1,4 +1,4 @@
-import { Euler, Quaternion, Vector3 } from 'three';
+import { Euler, MathUtils, Quaternion, Vector3 } from 'three';
 import { diamond as d, foldSequence, has } from '../sequence';
 
 const [L, T, R, B] = [d(0, 0), d(1, 1), d(2, 0), d(1, -1)];
@@ -127,7 +127,7 @@ const tuckIn = (_: string[], [x, y]: At) => x + y < 1;
  * direction about a line at φ gives 2φ minus it), ordered so the flap's tip lies to its left.
  */
 const turnFlap = (at: At, from: number, to: number, tip: At): [At, At] => {
-  const phi = ((from + to) / 2) * (Math.PI / 180);
+  const phi = MathUtils.degToRad((from + to) / 2);
   const q: At = [at[0] + Math.cos(phi), at[1] + Math.sin(phi)];
   const left = (q[0] - at[0]) * (tip[1] - at[1]) - (q[1] - at[1]) * (tip[0] - at[0]) > 0;
   return left ? [at, q] : [q, at];
@@ -165,7 +165,7 @@ const headAt: At = [base[0] + (tip[0] - base[0]) * 0.8, base[1] + (tip[1] - base
 const head = turnFlap(headAt, 110, 215, tip);
 s.fold('head', head[0], head[1], {
   valley: tuckIn,
-  over: false,
+  over: true,
   tuck: true,
   only: has('neck'),
   hold: d(1, 0.3),
@@ -184,7 +184,7 @@ s.collapse(
   }
 );
 // stood up off the table (its side view up), then turned a little so both wings show as they open
-const D = Math.PI / 180;
+const D = MathUtils.DEG2RAD;
 const standing = new Euler().setFromQuaternion(
   new Quaternion()
     .setFromAxisAngle(new Vector3(0, 0, 1), -145 * D)

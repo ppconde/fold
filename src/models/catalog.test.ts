@@ -25,14 +25,7 @@ describe('fetchIndex', () => {
   it('returns the entries in models.json', async () => {
     serve({ '/models/models.json': { body: file('models.json') } });
     const index = await fetchIndex();
-    expect(index.models.map((e) => e.id)).toEqual([
-      'crane',
-      'dog-face',
-      'snail',
-      'tulip',
-      'fold-in-half',
-      'fold-in-quarters'
-    ]);
+    expect(index.models.map((e) => e.id)).toEqual(['crane', 'dog-face', 'snail', 'tulip', 'cicada']);
     expect(index.defaultModel).toBe('crane');
   });
 
@@ -51,11 +44,11 @@ describe('fetchModel', () => {
   it('loads a listed model', async () => {
     serve({
       '/models/models.json': { body: file('models.json') },
-      '/models/fold-in-half.fold': { body: file('fold-in-half.fold') }
+      '/models/tulip.fold': { body: file('tulip.fold') }
     });
-    const result = await fetchModel('fold-in-half');
-    expect(result?.entry.name.en).toBe('Fold in half');
-    expect(result?.model.steps).toHaveLength(2);
+    const result = await fetchModel('tulip');
+    expect(result?.entry.name.en).toBe('Tulip');
+    expect(result?.model.steps).toHaveLength(5);
   });
 
   it('returns null for an id that is not in the index, even if the SPA fallback answers 200', async () => {
@@ -66,22 +59,22 @@ describe('fetchModel', () => {
   it('throws a readable FoldError when a listed file is missing', async () => {
     serve({
       '/models/models.json': { body: file('models.json') },
-      '/models/fold-in-half.fold': { status: 404, body: 'Not found' }
+      '/models/tulip.fold': { status: 404, body: 'Not found' }
     });
-    await expect(fetchModel('fold-in-half')).rejects.toThrow(/could not be downloaded \(404\)/);
+    await expect(fetchModel('tulip')).rejects.toThrow(/could not be downloaded \(404\)/);
   });
 
   it('throws a readable FoldError when a listed file is the SPA fallback page', async () => {
     serve({ '/models/models.json': { body: file('models.json') } });
-    // fold-in-quarters is listed but not served, so the fallback HTML comes back with 200
-    await expect(fetchModel('fold-in-quarters')).rejects.toThrow(/not a FOLD file/);
+    // the crane is listed but not served, so the fallback HTML comes back with 200
+    await expect(fetchModel('crane')).rejects.toThrow(/not a FOLD file/);
   });
 
   it('passes loadModel errors through', async () => {
     serve({
       '/models/models.json': { body: file('models.json') },
-      '/models/fold-in-half.fold': { body: '{"vertices_coords": []}' }
+      '/models/tulip.fold': { body: '{"vertices_coords": []}' }
     });
-    await expect(fetchModel('fold-in-half')).rejects.toThrow(FoldError);
+    await expect(fetchModel('tulip')).rejects.toThrow(FoldError);
   });
 });

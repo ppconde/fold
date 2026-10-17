@@ -1,7 +1,7 @@
 import { stepCreases } from '../fold/creases';
 import type { Model, Vec2 } from '../fold/types';
 
-export type DiagramLine = {
+type DiagramLine = {
   edge: number;
   from: Vec2;
   to: Vec2;

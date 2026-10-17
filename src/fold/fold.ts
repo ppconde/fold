@@ -1,8 +1,8 @@
-import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three';
+import { Box3, Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
 import { assertStep } from './assert-step';
 import type { Model, Vec3 } from './types';
 
-const DEG = Math.PI / 180;
+const DEG = MathUtils.DEG2RAD;
 const EPSILON = 1e-6;
 /** Rise per layer of a stack, as a fraction of the paper's side. */
 export const LAYER_GAP = 0.002;
@@ -417,14 +417,23 @@ function travel(model: Model, step: number): number[] {
     }, 0);
     return rise >= 0;
   });
+  // a tuck swings over as one stack from where it starts, and only then do its layers slip in where they land
+  const tuck = !!model.steps[step].landedOrders;
   const range = (pick: (f: number) => boolean) => {
     // a face that turns over has its lift blended through 0 on the way
-    const hs = moving.flatMap((_, f) =>
-      pick(f) ? [from[f], to[f], ...(before.up[f] !== after.up[f] ? [0] : [])] : []
+    const hs = moving.flatMap((m, f) =>
+      pick(f) ? [from[f], ...(tuck && m ? [] : [to[f]]), ...(before.up[f] !== after.up[f] ? [0] : [])] : []
     );
     return { min: Math.min(...hs), max: Math.max(...hs) };
   };
-  const stay = range((f) => !moving[f]);
+  // only the still faces a moving face lies against (as the step starts, lands or ends) are in its way: a small
+  // flap swinging past a few layers clears those, not the whole stack, or it lifts off its hinge
+  const near = new Set<number>();
+  const cur = model.steps[step];
+  for (const [f, g] of [...model.steps[step - 1].faceOrders, ...(cur.landedOrders ?? []), ...cur.faceOrders]) {
+    if (moving[f] !== moving[g]) near.add(moving[f] ? g : f);
+  }
+  const stay = range((f) => !moving[f] && near.has(f));
   const up = range((f) => moving[f] && over[f]);
   const down = range((f) => moving[f] && !over[f]);
   // a step that keeps the stacking (a turn, or opening a model out) has no flap to carry over the stack, nor

@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { loadModel } from '../src/fold/load-model';
 import { buildFold, entryOf } from './build';
 import { checkModel } from './check';
-import { DEFAULT_MODEL, FIXTURES, sources } from './src/index';
+import { DEFAULT_MODEL, sources } from './src/index';
 import { thumbnail } from './thumbnail';
 
 const root = new URL('../', import.meta.url);
@@ -26,7 +26,7 @@ export function main() {
     // per-step drawings for the maintainer's review; models/out is gitignored
     for (let k = 0; k < model.steps.length; k++) write(`models/out/${src.id}-${k}.svg`, thumbnail(model, k));
   }
-  const index = { defaultModel: DEFAULT_MODEL, models: [...sources.map(entryOf), ...FIXTURES] };
+  const index = { defaultModel: DEFAULT_MODEL, models: sources.map(entryOf) };
   write('public/models/models.json', `${JSON.stringify(index, null, 2)}\n`);
   if (failed) {
     console.log(`${failed} model(s) failed. Fix them before committing.`);

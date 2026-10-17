@@ -3,7 +3,7 @@ import { checkConsistency, foldedPositions, layerHeights } from '../src/fold/fol
 import type { Model, Vec3 } from '../src/fold/types';
 
 /** Largest allowed gap between copies of one vertex, as a fraction of the paper's side (spec §8). */
-export const SEAM_BUDGET = 0.06;
+const SEAM_BUDGET = 0.06;
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const cross = (a: Vec3, b: Vec3): Vec3 => [
