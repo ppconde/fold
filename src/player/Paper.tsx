@@ -2,8 +2,8 @@ import { Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
-import { foldedPositions } from '../fold/fold';
-import { ghostFaces } from '../fold/reverse';
+import { foldedPositions, landingAt, progress } from '../fold/fold';
+import { arrowOpacity, ghostFaces, tuckArrow } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
 import {
   depthBelowTable,
@@ -63,6 +63,9 @@ export function Paper({
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
   const cut = useRef<LineRef>(null);
+  // which flap a reverse fold moves and where it tucks in, an ink stroke like the dock's chevrons
+  const tuck = useMemo(() => tuckArrow(model, step), [model, step]);
+  const tuckStrength = tuck ? arrowOpacity(progress(t), landingAt(model, step)) : 0;
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
@@ -153,6 +156,20 @@ export function Paper({
           frustumCulled={false}
           visible={false}
         />
+        {tuck &&
+          tuckStrength > 0 &&
+          [tuck.shaft, [tuck.head[0], tuck.shaft[tuck.shaft.length - 1], tuck.head[1]]].map((points) => (
+            <Line
+              key={points.length}
+              points={points}
+              color={INK}
+              lineWidth={1.4}
+              transparent
+              opacity={tuckStrength}
+              renderOrder={3}
+              depthTest={false}
+            />
+          ))}
       </group>
     </group>
   );
