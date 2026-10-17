@@ -29,7 +29,9 @@ export function Stage(props: Props) {
     <Canvas
       frameloop="demand"
       dpr={[1, 2]}
-      camera={{ fov: STAGE_FOV, near: 0.01, far: 100, position: [0, 2, 2] }}
+      // a tight near/far keeps stacked layers (LAYER_GAP apart) from z-fighting into stripes on phones'
+      // coarser depth buffers, where the narrow view also sits the camera twice as far back
+      camera={{ fov: STAGE_FOV, near: 0.1, far: 20, position: [0, 2, 2] }}
       gl={{ alpha: true }}
       role="img"
       aria-label={t.player.stageLabel}
@@ -80,7 +82,7 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
       <Paper model={model} step={step} t={t} ground={ground} />
       <group ref={ground}>
         <ContactShadows
-          position={[0, -0.002, 0]}
+          position={[0, -0.02, 0]}
           scale={size * 3}
           blur={3.2}
           opacity={0.25}

@@ -96,6 +96,14 @@ export function Paper({
     [geometry]
   );
 
+  // setSegments swaps in geometries drei didn't make, so it won't dispose them
+  useEffect(
+    () => () => {
+      for (const line of [borders, folded, flat, active, cut]) line.current?.geometry.dispose();
+    },
+    []
+  );
+
   // Paper coordinates are x/y with valley folds toward +z; turn them so the sheet lies on the table (y up).
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
@@ -117,9 +125,10 @@ export function Paper({
                 transparent={opacity < 1}
                 opacity={opacity}
                 depthWrite={opacity === 1}
+                // pushes the paper back far enough that crease lines (flat-depth screen quads) don't sink into sloped faces
                 polygonOffset
-                polygonOffsetFactor={1}
-                polygonOffsetUnits={1}
+                polygonOffsetFactor={4}
+                polygonOffsetUnits={4}
               />
             ))}
           </mesh>
