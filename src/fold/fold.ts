@@ -6,6 +6,8 @@ const DEG = MathUtils.DEG2RAD;
 const EPSILON = 1e-6;
 /** Rise per layer of a stack, as a fraction of the paper's side. */
 export const LAYER_GAP = 0.002;
+/** Layers each side of a reverse fold's flap shift apart at the peak of the open. */
+export const REVERSE_OPEN = 2;
 /** Share of a step at each end in which a travelling flap rises off, and settles back onto, the stack. */
 const LIFT_SPAN = 0.15;
 
@@ -21,12 +23,15 @@ function hinge(model: Model, e: number, g: number, angle: number): Matrix4 {
   const [cx, cy] = model.faceCentroids[g];
   // Valley (+) lifts the face toward +z whichever side of the crease it is on.
   const side = axis.x * (cy - ay) - axis.y * (cx - ax) > 0 ? 1 : -1;
-  const pivot = new Vector3(ax, ay, 0);
-  return new Matrix4()
-    .makeTranslation(pivot)
-    .multiply(new Matrix4().makeRotationAxis(axis, side * angle * DEG))
-    .multiply(new Matrix4().makeTranslation(pivot.clone().negate()));
+  return turnAbout(new Vector3(ax, ay, 0), axis, side * angle * DEG);
 }
+
+/** Rotation by `angle` radians about the line through `pivot` along the unit `axis`. */
+const turnAbout = (pivot: Vector3, axis: Vector3, angle: number) =>
+  new Matrix4()
+    .makeTranslation(pivot)
+    .multiply(new Matrix4().makeRotationAxis(axis, angle))
+    .multiply(new Matrix4().makeTranslation(pivot.clone().negate()));
 
 type Tree = { order: number[]; parent: number[]; parentEdge: number[]; treeEdges: Set<number> };
 
@@ -308,17 +313,28 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   const rise = progress(t / LIFT_SPAN) * progress((1 - t) / LIFT_SPAN);
 
   const C = treeChange(model, step);
+  // a reverse fold's flap starts tucked: its end pose, turned in the body's plane, pivoting home as the step runs
+  const swap = swapTurn(model, step);
+  const swapped = swap ? movingFaces(model, step) : new Set<number>();
+  const T1 = swap ? rootTransforms(model, anglesAt(model, step, 1), step) : T;
+  const turnBack = swap && turnAbout(new Vector3(...swap.pivot), new Vector3(...swap.axis), -swap.angle * (1 - s));
   const poses = model.faces.map((_, f) => {
+    if (turnBack && swapped.has(f))
+      return turnBack
+        .clone()
+        .multiply(anchorFor(model, step))
+        .multiply(T1[cur.fixedFace].clone().invert())
+        .multiply(T1[f]);
     const m = pose.clone().multiply(T[f]);
     return C ? m.multiply(fade(C[f], s)) : m;
   });
   // a tuck lands on the stack its motion makes, then its layers change places while the paper holds still
-  const landing = landingAt(model, step);
-  const mid = cur.landedOrders ? stackAt(model, step, true) : to;
+  const landing = swap ? 1 : landingAt(model, step);
+  const mid = cur.landedOrders && !swap ? stackAt(model, step, true) : to;
   const [a0, a1, u] = s <= landing ? [from, mid, s / landing] : [mid, to, (s - landing) / (1 - landing)];
   const lifts = model.faces.map((_, f) => {
     const a = a0.heights[f] * a0.up[f];
-    return LAYER_GAP * (a + (a1.heights[f] * a1.up[f] - a) * u);
+    return LAYER_GAP * (a + (a1.heights[f] * a1.up[f] - a) * (swapped.has(f) ? 1 : u));
   });
   // only in a step that ends open (a flap standing out of the stack); flat steps blend their heights alone
   const open = endsOpen(model, step);
@@ -388,6 +404,106 @@ function flapRoots(model: Model, poses: Matrix4[], lifts: number[], held: number
   });
 }
 
+/** Per face, does it sit elsewhere at `angles` than as `step` starts? */
+function movedTo(model: Model, step: number, angles: number[]): boolean[] {
+  const start = startPose(model, step);
+  const T = rootTransforms(model, angles, step);
+  const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
+  return T.map((m, f) => {
+    const end = base.clone().multiply(m).elements;
+    return start[f].elements.some((x, i) => Math.abs(x - end[i]) > 1e-9);
+  });
+}
+
+const movers = new WeakMap<Model, ReadonlySet<number>[]>();
+
+/** Faces that end `step` elsewhere than they start it, relative to its fixed face (none at step 0). */
+export function movingFaces(model: Model, step: number): ReadonlySet<number> {
+  const list = movers.get(model) ?? [new Set()];
+  movers.set(model, list);
+  list[step] ??= new Set(movedTo(model, step, model.steps[step].angles).flatMap((m, f) => (m ? [f] : [])));
+  return list[step];
+}
+
+/**
+ * A reverse fold turns a flap's spine inside out: a crease already folded flat flips sign (+180 to −180 or
+ * back), while new creases appear along one line, valley on some layers and mountain on others.
+ */
+export function isReverseFold(model: Model, step: number): boolean {
+  if (step === 0) return false;
+  const before = model.steps[step - 1].angles;
+  const after = model.steps[step].angles;
+  const flips = after.some((a, e) => Math.abs(before[e]) === 180 && a === -before[e]);
+  const made = after.filter((a, e) => before[e] === 0 && a !== 0);
+  return flips && made.some((a) => a > 0) && made.some((a) => a < 0);
+}
+
+/**
+ * A reverse fold opens the body around its flap instead: REVERSE_OPEN layers up for each still face that ends
+ * above every moving face it is ordered against, down for one below them all, 0 for the others.
+ */
+function opening(model: Model, step: number): number[] {
+  const moving = movingFaces(model, step);
+  const { heights } = stackAt(model, step);
+  const side = model.faces.map((): number[] => []);
+  for (const [f, g] of model.steps[step].faceOrders) {
+    if (moving.has(f) === moving.has(g)) continue;
+    const [still, flap] = moving.has(f) ? [g, f] : [f, g];
+    side[still].push(Math.sign(heights[still] - heights[flap]));
+  }
+  return side.map((ss) => (ss.length && ss.every((x) => x === ss[0]) ? ss[0] * REVERSE_OPEN : 0));
+}
+
+const swaps = new WeakMap<Model, ({ pivot: Vec3; axis: Vec3; angle: number } | null)[]>();
+
+/**
+ * A reverse fold's pivot: the rotation (radians, about `axis`, the fixed face's normal, through `pivot`) that
+ * carries its flap, swapped in at s = 0, to its end pose at s = 1: the turn that best fits the moving faces'
+ * corners at the end back onto where they start. Null unless `isReverseFold`.
+ */
+export function swapTurn(model: Model, step: number): { pivot: Vec3; axis: Vec3; angle: number } | null {
+  const list = swaps.get(model) ?? [];
+  swaps.set(model, list);
+  if (list[step] !== undefined) return list[step];
+  list[step] = null;
+  if (!isReverseFold(model, step)) return null;
+  const moving = [...movingFaces(model, step)];
+  const T = rootTransforms(model, anglesAt(model, step, 1), step);
+  const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
+  const start = startPose(model, step);
+  const axis = new Vector3(0, 0, 1).transformDirection(anchorFor(model, step));
+  // the plane's coordinates
+  const u = new Vector3(1, 0, 0).cross(axis).lengthSq() > 1e-6 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0);
+  u.addScaledVector(axis, -u.dot(axis)).normalize();
+  const w = axis.clone().cross(u);
+  const flat = (v: number, m: Matrix4) => {
+    const p = new Vector3(model.vertices[v][0], model.vertices[v][1], 0).applyMatrix4(m);
+    return [p.dot(u), p.dot(w)];
+  };
+  const pairs = moving.flatMap((f) => {
+    const end = base.clone().multiply(T[f]);
+    return model.faces[f].map((v) => [flat(v, end), flat(v, start[f])]);
+  });
+  const mean = (i: 0 | 1) => [0, 1].map((j) => pairs.reduce((acc, p) => acc + p[i][j], 0) / pairs.length);
+  const [ce, cs] = [mean(0), mean(1)];
+  // 2D Procrustes, end → start: the turn φ that best fits the corners, then (I − R)c = cs − R·ce for its fixed point c
+  let [dot, crs] = [0, 0];
+  for (const [e, st] of pairs) {
+    const [ex, ey, sx, sy] = [e[0] - ce[0], e[1] - ce[1], st[0] - cs[0], st[1] - cs[1]];
+    dot += ex * sx + ey * sy;
+    crs += ex * sy - ey * sx;
+  }
+  const phi = Math.atan2(crs, dot);
+  const [cos, sin] = [Math.cos(phi), Math.sin(phi)];
+  const [rx, ry] = [cs[0] - (cos * ce[0] - sin * ce[1]), cs[1] - (sin * ce[0] + cos * ce[1])];
+  const det = 2 - 2 * cos;
+  const [cx, cy] = [((1 - cos) * rx - sin * ry) / det, (sin * rx + (1 - cos) * ry) / det];
+  const pivot = u.multiplyScalar(cx).addScaledVector(w, cy);
+  // the shorter way round; crossings() lives in models/, so the engine can't test the other way (the tests do)
+  list[step] = { pivot: pivot.toArray() as Vec3, axis: axis.toArray() as Vec3, angle: -phi };
+  return list[step];
+}
+
 const travels = new WeakMap<Model, number[][]>();
 
 /**
@@ -399,16 +515,15 @@ function travel(model: Model, step: number): number[] {
   const list = travels.get(model) ?? [];
   travels.set(model, list);
   if (list[step]) return list[step];
+  if (isReverseFold(model, step)) {
+    list[step] = opening(model, step);
+    return list[step];
+  }
   const start = startPose(model, step);
   const cur = model.steps[step];
   // a fold-and-unfold ends where it started: its flap is the paper that moves on the way, at the path's peak
   const peaks = cur.path.length > 0 && cur.angles.every((a, e) => a === model.steps[step - 1].angles[e]);
-  const T = rootTransforms(model, peaks ? cur.path[0] : cur.angles, step);
-  const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
-  const moving = T.map((m, f) => {
-    const end = base.clone().multiply(m).elements;
-    return start[f].elements.some((x, i) => Math.abs(x - end[i]) > 1e-9);
-  });
+  const moving = movedTo(model, step, peaks ? cur.path[0] : cur.angles);
   const before = stackAt(model, step - 1);
   const after = stackAt(model, step);
   const [from, to] = [before.heights, after.heights];

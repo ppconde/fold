@@ -1,10 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { foldedPositions } from '../src/fold/fold';
+import { foldedPositions, isReverseFold, movingFaces } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { unfoldAll } from '../src/home/unfold';
 import { buildFold, entryOf } from './build';
-import { checkModel, spread } from './check';
+import { checkModel, crossings, spread } from './check';
 import { DEFAULT_MODEL, sources } from './src/index';
 import { thumbnail } from './thumbnail';
 
@@ -89,5 +89,36 @@ describe('crane', () => {
     const head = model.steps.findIndex((s) => s.instruction.en.startsWith('Reverse-fold the tip of the neck'));
     const rest = spread(model, head, 1);
     for (let i = 1; i < 10; i++) expect(spread(model, head, i / 10)).toBeLessThanOrEqual(rest);
+  });
+
+  describe('reverse folds', () => {
+    const model = loadModel(committed('crane.fold'));
+    const reverse = model.steps.flatMap((_, k) => (isReverseFold(model, k) ? [k] : []));
+
+    it("the crane's reverse folds pass no paper through paper", () => {
+      for (const k of reverse) for (let i = 0; i <= 40; i++) expect(crossings(model, k, i / 40)).toEqual([]);
+    });
+
+    it("still measures the body's own seams while the flap pivots", () => {
+      // the neck's two layers, either side of the head, part at the neck's spine as the head tucks between them
+      const head = reverse[2];
+      const faces = foldedPositions(model, head, 0.7);
+      const at = (f: number) => faces[f][model.faces[f].indexOf(17)];
+      const gap = Math.hypot(...at(34).map((x, i) => x - at(35)[i]));
+      expect([34, 35].some((f) => movingFaces(model, head).has(f))).toBe(false);
+      expect(gap).toBeGreaterThan(0);
+      expect(spread(model, head, 0.7)).toBeGreaterThanOrEqual(gap);
+    });
+
+    it('still faces of a reverse fold start where the last step ended', () => {
+      for (const k of reverse) {
+        const [was, now] = [foldedPositions(model, k - 1, 1), foldedPositions(model, k, 0)];
+        now.forEach((face, f) => {
+          // as exact as checkModel's continuity check
+          if (!movingFaces(model, k).has(f))
+            expect(face.flat()).toEqual(was[f].flat().map((x) => expect.closeTo(x, 9)));
+        });
+      }
+    });
   });
 });

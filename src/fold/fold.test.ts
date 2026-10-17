@@ -1,7 +1,17 @@
-import { Euler, Quaternion, Vector3 } from 'three';
+import { createHash } from 'node:crypto';
+import { readdirSync, readFileSync } from 'node:fs';
+import { Euler, Line3, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from './fixtures';
-import { anglesAt, checkConsistency, foldedPositions, LAYER_GAP, layerHeights } from './fold';
+import {
+  anglesAt,
+  checkConsistency,
+  foldedPositions,
+  isReverseFold,
+  LAYER_GAP,
+  layerHeights,
+  movingFaces
+} from './fold';
 import { loadModel } from './load-model';
 import type { Model, Step, Vec3 } from './types';
 
@@ -601,5 +611,139 @@ describe('slits', () => {
     json.edges_assignment[8] = 'F';
     delete json.file_frames[0]['foldapp:cut'];
     expect(checkConsistency(loadModel(json), 2).ok).toBe(false);
+  });
+});
+
+describe('reverse folds', () => {
+  const committed = (id: string) =>
+    loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
+  const crane = committed('crane');
+  const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
+
+  const side = Math.max(...crane.vertices.map((p) => p[0])) - Math.min(...crane.vertices.map((p) => p[0]));
+  const sub = (a: Vec3, b: Vec3) => new Vector3(...a).sub(new Vector3(...b));
+  /** The moving faces' outline as step `k` starts against where step k − 1 left it, in the held face's plane. */
+  const outlineJump = (k: number) => {
+    const [a, b] = [foldedPositions(crane, k, 0), foldedPositions(crane, k - 1, 1)];
+    const [p, q, r] = a[crane.steps[k].fixedFace];
+    const n = sub(q, p).cross(sub(r, p)).normalize();
+    const flat = (x: Vec3) => {
+      const v = sub(x, p);
+      return v.addScaledVector(n, -v.dot(n));
+    };
+    const edges = (faces: Vec3[][]) =>
+      [...movingFaces(crane, k)].flatMap((f) =>
+        faces[f].map((x, i) => [flat(x), flat(faces[f][(i + 1) % faces[f].length])])
+      );
+    const away = (from: Vector3[][], to: Vector3[][]) =>
+      Math.max(
+        ...from.flatMap(([u, v]) =>
+          Array.from({ length: 21 }, (_, i) => {
+            const x = u.clone().lerp(v, i / 20);
+            return Math.min(
+              ...to.map(([c, d]) => x.distanceTo(new Line3(c, d).closestPointToPoint(x, true, new Vector3())))
+            );
+          })
+        )
+      );
+    const [ea, eb] = [edges(a), edges(b)];
+    return Math.max(away(ea, eb), away(eb, ea));
+  };
+  const moving = (k: number) => [...movingFaces(crane, k)];
+  const length = (f: number, faces: Vec3[][], i: number) =>
+    sub(faces[f][i], faces[f][(i + 1) % faces[f].length]).length();
+  const flatLength = (f: number, i: number) => {
+    const [u, v] = [crane.faces[f][i], crane.faces[f][(i + 1) % crane.faces[f].length]];
+    return Math.hypot(crane.vertices[u][0] - crane.vertices[v][0], crane.vertices[u][1] - crane.vertices[v][1]);
+  };
+
+  it('ends exactly on the final pose', () => {
+    // step k's own end is held by the snapshot below; the next step starts there, but for the faces a reverse fold
+    // swaps
+    for (const k of reverse) {
+      const end = foldedPositions(crane, k, 1);
+      const swapped = isReverseFold(crane, k + 1) ? movingFaces(crane, k + 1) : new Set();
+      foldedPositions(crane, k + 1, 0).forEach((face, f) => {
+        if (!swapped.has(f))
+          face.forEach((p, c) => {
+            expectClose(p, end[f][c], 9);
+          });
+      });
+    }
+  });
+
+  it('swaps the flap at the first frame: the outline barely moves', () => {
+    // ≤ 2.5 mm on a 15 cm sheet; a corner fit gives 1.2 / 0.7 / 2.1 mm
+    for (const k of reverse) expect(outlineJump(k)).toBeLessThanOrEqual((2.5 / 150) * side);
+    // already tucked: at its end heights over the held face, only turned in its plane
+    for (const k of reverse) {
+      const [start, end] = [foldedPositions(crane, k, 0), foldedPositions(crane, k, 1)];
+      const [p, q, r] = end[crane.steps[k].fixedFace];
+      const n = sub(q, p).cross(sub(r, p)).normalize();
+      for (const f of moving(k)) {
+        start[f].forEach((x, c) => {
+          expect(sub(x, p).dot(n)).toBeCloseTo(sub(end[f][c], p).dot(n), 9);
+        });
+      }
+    }
+  });
+
+  it('pivots the flap rigidly', () => {
+    for (const k of reverse) {
+      expect(moving(k).length).toBeGreaterThan(0);
+      for (const t of [0, 0.5, 1]) {
+        const faces = foldedPositions(crane, k, t);
+        for (const f of moving(k))
+          crane.faces[f].forEach((_, i) => {
+            expect(length(f, faces, i)).toBeCloseTo(flatLength(f, i), 9);
+          });
+      }
+    }
+  });
+
+  it('opens the body and closes it again', () => {
+    for (const k of reverse) {
+      const turning = movingFaces(crane, k);
+      const next = crane.steps[k].faceOrders.flatMap(([f, g]) =>
+        turning.has(f) === turning.has(g) ? [] : [turning.has(f) ? g : f]
+      );
+      const at = (t: number) => foldedPositions(crane, k, t);
+      const [p, q, r] = at(1)[crane.steps[k].fixedFace];
+      const n = sub(q, p).cross(sub(r, p)).normalize();
+      const height = (faces: Vec3[][], f: number) =>
+        faces[f].reduce((h, x) => h + sub(x, p).dot(n), 0) / faces[f].length;
+      const [start, mid, end] = [at(0), at(0.5), at(1)];
+      expect(
+        next.some(
+          (f) => Math.abs(height(mid, f) - height(end, f)) > Math.abs(height(start, f) - height(end, f)) + LAYER_GAP
+        )
+      ).toBe(true);
+    }
+  });
+
+  it('leaves collapse tucks and ordinary steps alone', () => {
+    // hashes of foldedPositions from before reverse folds swapped their flap (rounded to 1e-9, -0 as 0); a reverse
+    // fold's own step only at its end
+    const digest = (faces: Vec3[][]) =>
+      createHash('sha256')
+        .update(JSON.stringify(faces.flat(2).map((x) => Math.round(x * 1e9) + 0)))
+        .digest('hex')
+        .slice(0, 16);
+    const ids = readdirSync(new URL('../../public/models/', import.meta.url)).flatMap((f) =>
+      f.endsWith('.fold') ? [f.slice(0, -5)] : []
+    );
+    const hashes = Object.fromEntries(
+      ids.map((id) => {
+        const m = committed(id);
+        return [
+          id,
+          m.steps.map((_, k) =>
+            (isReverseFold(m, k) ? [1] : [0, 0.5, 1]).map((t) => digest(foldedPositions(m, k, t))).join(' ')
+          )
+        ];
+      })
+    );
+    expect(reverse).toHaveLength(3);
+    expect(hashes).toMatchSnapshot();
   });
 });

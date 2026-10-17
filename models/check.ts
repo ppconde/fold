@@ -1,5 +1,5 @@
 import { cornerKeys } from '../src/fold/cuts';
-import { checkConsistency, foldedPositions, layerHeights } from '../src/fold/fold';
+import { checkConsistency, foldedPositions, isReverseFold, layerHeights, movingFaces } from '../src/fold/fold';
 import type { Model, Vec3 } from '../src/fold/types';
 
 /** Largest allowed gap between copies of one vertex, as a fraction of the paper's side (spec §8). */
@@ -22,14 +22,18 @@ const centre = (face: Vec3[]) =>
 export function spread(model: Model, step: number, t: number): number {
   const faces = foldedPositions(model, step, t);
   const keys = cornerKeys(model, step);
-  const first = new Map<number, Vec3>();
+  // a reverse fold's flap pivots rigidly in the body's plane, and a rigid turn can't keep the crease it shares with
+  // the body closed: only the flap's seams among themselves, and the body's, are held
+  const moving = isReverseFold(model, step) ? movingFaces(model, step) : new Set();
+  const first = new Map<string, Vec3>();
   let worst = 0;
   model.faces.forEach((face, f) => {
     face.forEach((_, c) => {
       const p = faces[f][c];
-      const q = first.get(keys[f][c]);
+      const key = `${keys[f][c]} ${moving.has(f)}`;
+      const q = first.get(key);
       if (q) worst = Math.max(worst, Math.hypot(...sub(p, q)));
-      else first.set(keys[f][c], p);
+      else first.set(key, p);
     });
   });
   return worst;
@@ -218,8 +222,12 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
     if (!c.ok) problems.push(`Step ${k} does not fold flat: edges ${c.edges.join(', ')} disagree.`);
     if (k + 1 < model.steps.length) {
       const end = foldedPositions(model, k, 1);
+      // a reverse fold swaps its flap in at the start: only the paper that stays must join
+      const swapped = isReverseFold(model, k + 1) ? movingFaces(model, k + 1) : new Set();
       const jump = Math.max(
-        ...foldedPositions(model, k + 1, 0).flatMap((face, f) => face.map((p, i) => Math.hypot(...sub(p, end[f][i]))))
+        ...foldedPositions(model, k + 1, 0).flatMap((face, f) =>
+          swapped.has(f) ? [] : face.map((p, i) => Math.hypot(...sub(p, end[f][i])))
+        )
       );
       if (jump > 1e-9) problems.push(`Step ${k + 1} starts ${jump.toExponential(1)} away from where step ${k} ended.`);
     }
