@@ -117,9 +117,10 @@ export function Paper({
                 transparent={opacity < 1}
                 opacity={opacity}
                 depthWrite={opacity === 1}
+                // pushes the paper back far enough that crease lines (flat-depth screen quads) don't sink into sloped faces
                 polygonOffset
-                polygonOffsetFactor={1}
-                polygonOffsetUnits={1}
+                polygonOffsetFactor={4}
+                polygonOffsetUnits={4}
               />
             ))}
           </mesh>
