@@ -49,6 +49,23 @@
         "spring"
       ],
       "thumbnail": "/models/tulip.svg"
+    },
+    {
+      "id": "cicada",
+      "name": {
+        "en": "Cicada",
+        "pt": "Cigarra"
+      },
+      "japaneseName": "Semi",
+      "category": "animals",
+      "difficulty": "easy",
+      "tags": [
+        "cicada",
+        "insect",
+        "animal",
+        "summer"
+      ],
+      "thumbnail": "/models/cicada.svg"
     }
   ]
 }

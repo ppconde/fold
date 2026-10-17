@@ -25,7 +25,7 @@ describe('fetchIndex', () => {
   it('returns the entries in models.json', async () => {
     serve({ '/models/models.json': { body: file('models.json') } });
     const index = await fetchIndex();
-    expect(index.models.map((e) => e.id)).toEqual(['crane', 'dog-face', 'tulip']);
+    expect(index.models.map((e) => e.id)).toEqual(['crane', 'dog-face', 'tulip', 'cicada']);
     expect(index.defaultModel).toBe('crane');
   });
 
