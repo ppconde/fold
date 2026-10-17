@@ -46,6 +46,7 @@ export const en = {
     creditFonts: 'Shippori Mincho, Instrument Sans and Zen Kurenaido, under the SIL Open Font License.',
     licence: 'The code is free software under the GPLv3. Models are shared under CC BY-NC-SA unless stated otherwise.'
   },
+  papers: { plain: 'Plain', ichimatsu: 'Ichimatsu' } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
     stepOf: (n: number, total: number) => `Step ${n} · ${total}`,
@@ -72,6 +73,8 @@ export const en = {
     foldProgress: 'Fold progress',
     percentFolded: (n: number) => `${n}% folded`,
     hint: '← back · next → · hover for names',
+    paper: 'Paper',
+    paperIs: (name: string) => `Paper: ${name}`,
     done: 'Done',
     isComplete: (name: string) => `${name} is complete.`,
     diagramTitle: (active: number) =>

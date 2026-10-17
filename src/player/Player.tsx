@@ -5,16 +5,26 @@ import type { Model } from '../fold/types';
 import { useLang, useT } from '../i18n/LanguageProvider';
 import { localized } from '../i18n/lang';
 import type { ModelEntry } from '../models/catalog';
-import { hasWebGL, markHintSeen, readPanelOpen, shouldShowHint, writePanelOpen } from './browser';
+import {
+  hasWebGL,
+  markHintSeen,
+  readPanelOpen,
+  readPaper,
+  shouldShowHint,
+  writePanelOpen,
+  writePaper
+} from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
 import { HowSketch } from './HowSketch';
 import { sketchFrame } from './how';
 import { AgainIcon, BackIcon, NextIcon, StartIcon, ViewIcon } from './icons';
 import { loadStage } from './load-stage';
+import { PaperPicker } from './PaperPicker';
 import styles from './Player.module.css';
 import { playerStatus } from './player-state';
 import { StageBoundary } from './StageBoundary';
 import { usePlayer } from './use-player';
+import { softenTowardIvory } from './washi';
 
 type Props = { entry: ModelEntry; model: Model; initialStep: number; onSettle: (step: number) => void };
 
@@ -26,6 +36,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [state, dispatch] = usePlayer(model, initialStep);
   const status = playerStatus(state);
   const [panelOpen, setPanelOpen] = useState(readPanelOpen);
+  const [paper, setPaper] = useState(readPaper);
   const [resetCount, setResetCount] = useState(0);
   const [frameStep, setFrameStep] = useState(state.step);
   const [webgl] = useState(hasWebGL);
@@ -37,6 +48,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const reverse = isReverseFold(model, state.step);
   const slot = creasesAt === state.step ? 'creases' : 'how';
   const instruction = state.step === 0 ? t.firstInstruction : localized(model.steps[state.step].instruction, lang);
+
+  const choosePaper = (id: string) => {
+    setPaper(id);
+    writePaper(id);
+  };
 
   const togglePanel = (open: boolean) => {
     setPanelOpen(open);
@@ -82,7 +98,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === ' ')
       )
         return;
-      if (document.querySelector('dialog[open]') || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (document.querySelector('dialog[open], :popover-open') || e.altKey || e.ctrlKey || e.metaKey) return;
       const onControl = e.target instanceof Element && e.target.closest('button, a, input, textarea, select');
       const inPanel = e.target instanceof Element && e.target.closest('#instructions');
       if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === ' ') && inPanel) return;
@@ -108,6 +124,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
       data-state={status}
       data-progress={Math.round(state.t * 100)}
       data-panel={showPanel ? 'open' : 'closed'}
+      data-paper={paper}
     >
       <div className={styles.title}>
         <h1>{localized(entry.name, lang)}</h1>
@@ -125,6 +142,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
                 playing={state.playing}
                 resetCount={resetCount}
                 frameStep={frameStep}
+                paper={paper}
               />
             </Suspense>
           </StageBoundary>
@@ -272,6 +290,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
               </option>
             ))}
           </select>
+          {webgl && !stageFailed ? (
+            <PaperPicker paper={paper} plainColor={softenTowardIvory(model.paperColor)} onChange={choosePaper} />
+          ) : (
+            <span aria-hidden="true" />
+          )}
         </div>
         {hint !== 'gone' && (
           <p className={`${styles.hint} ${hint === 'fading' ? styles.hintOut : ''}`} aria-hidden="true">

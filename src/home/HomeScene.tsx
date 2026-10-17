@@ -1,9 +1,10 @@
 import { ContactShadows } from '@react-three/drei';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Group, MathUtils } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
+import { readPaper } from '../player/browser';
 import { Paper } from '../player/Paper';
 import { frameReach, STAGE_FOV, STAGE_POLAR, stageDistance } from '../player/paper-geometry';
 
@@ -68,6 +69,8 @@ function Folded({ model, at, settle, pointer, still }: Props) {
   const group = useRef<Group>(null);
   const fit = useRef<Group>(null);
   const shift = useRef<Group>(null);
+  // the paper picked in a lesson, read once: the homepage has no picker of its own
+  const [paper] = useState(readPaper);
   const target = useMemo(() => framing(model, at), [model, at]);
   // the flat sheet ends where the lesson's stage first shows it: as far off as the stage would set it in this
   // view, or as the stage last did if that's further (its view may be narrower); the hand-off scales by the two
@@ -120,7 +123,7 @@ function Folded({ model, at, settle, pointer, still }: Props) {
       >
         <group ref={shift}>
           {/* once flat, the lesson's first step: no creases drawn yet */}
-          <Paper model={model} step={at > 0 ? 1 : 0} t={at} />
+          <Paper model={model} step={at > 0 ? 1 : 0} t={at} paper={paper} />
         </group>
       </group>
     </group>
