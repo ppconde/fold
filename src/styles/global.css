@@ -122,7 +122,9 @@ h1:focus {
   *,
   *::before,
   *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override every component's timing */
     transition-duration: 0ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must override every component's timing */
     animation-duration: 0ms !important;
   }
 }
