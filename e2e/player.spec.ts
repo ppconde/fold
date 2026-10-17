@@ -331,7 +331,7 @@ test('next skips a step that is still playing', async ({ page }) => {
 });
 
 test.describe('a reverse fold step', () => {
-  // the crane's neck; the step before it pre-creases the neck's line, a plain fold and unfold
+  // the crane's neck
   const NECK = 16;
   const NORMAL = 15;
 
@@ -386,6 +386,22 @@ test.describe('a reverse fold step', () => {
     await page.goto(`/fold/crane?step=${NORMAL}`);
     await expect(page.locator('#instructions')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Creases' })).toHaveCount(0);
+  });
+
+  test('the neck turns over, and the flap changes', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
+    page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+    await page.goto(`/fold/crane?step=${NECK}`);
+    const slider = page.getByRole('slider', { name: 'Fold progress' });
+    const canvas = page.locator('canvas');
+    await slider.fill('5');
+    await expect(page.locator('main')).toHaveAttribute('data-progress', '5');
+    const early = await canvas.screenshot();
+    await slider.fill('100');
+    await expect(page.locator('main')).toHaveAttribute('data-progress', '100');
+    await expect(async () => expect((await canvas.screenshot()).equals(early)).toBe(false)).toPass();
+    expect(errors).toEqual([]);
   });
 
   test.describe('on a phone in Portuguese', () => {
