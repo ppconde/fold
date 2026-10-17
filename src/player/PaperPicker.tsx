@@ -17,7 +17,8 @@ export function PaperPicker({ paper, plainColor, onChange }: Props) {
   const swatch = (pid: string): CSSProperties => {
     const p = paperById(pid);
     if (!p) return { background: plainColor };
-    return opened || pid === paper ? { backgroundImage: `url(${swatchUrl(p)})` } : {};
+    const url = opened || pid === paper ? swatchUrl(p) : '';
+    return url ? { backgroundImage: `url(${url})` } : { background: p.ground };
   };
 
   return (

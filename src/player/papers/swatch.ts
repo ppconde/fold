@@ -9,10 +9,24 @@ const CROP = 0.25;
 const cache = new Map<string, string>();
 let renderer: WebGLRenderer | undefined;
 
-/** The paper as a small image, drawn once by the same shader as the sheet and kept for the visit. */
+/**
+ * The paper as a small image, drawn once by the same shader as the sheet and kept for the visit.
+ * '' when the browser refuses another WebGL context: the picker sits outside the stage's error boundary.
+ */
 export function swatchUrl(p: PaperPattern): string {
   const hit = cache.get(p.id);
   if (hit) return hit;
+  try {
+    const url = draw(p);
+    cache.set(p.id, url);
+    return url;
+  } catch {
+    renderer = undefined;
+    return '';
+  }
+}
+
+function draw(p: PaperPattern): string {
   renderer ??= new WebGLRenderer({ canvas: document.createElement('canvas'), preserveDrawingBuffer: true });
   renderer.setSize(SIZE, SIZE, false);
   const material = new ShaderMaterial({
@@ -38,6 +52,5 @@ void main() {
   const url = renderer.domElement.toDataURL();
   material.dispose();
   geometry.dispose();
-  cache.set(p.id, url);
   return url;
 }
