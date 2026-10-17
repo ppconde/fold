@@ -10,7 +10,7 @@ export const LAYER_GAP = 0.002;
 const LIFT_SPAN = 0.15;
 
 const ease = (t: number) => t * t * (3 - 2 * t);
-const progress = (t: number) => ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
+export const progress = (t: number) => ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
 
 /** Rotation of face `g` about edge `e` by `angle` degrees, in flat-paper coordinates. */
 function hinge(model: Model, e: number, g: number, angle: number): Matrix4 {
@@ -283,6 +283,10 @@ export function layerHeights(model: Model, step: number): number[] {
   return stackAt(model, step).heights;
 }
 
+/** Eased progress through `step` at which a tuck has landed and its layers start changing places (1: no tuck). */
+export const landingAt = (model: Model, step: number): number =>
+  model.steps[step].landedOrders ? 1 - 1 / (model.steps[step].path.length + 1) : 1;
+
 /** Corners of every face (in `model.faces` order) at progress `t` through `step`. */
 export function foldedPositions(model: Model, step: number, t: number): Vec3[][] {
   assertStep(model, step);
@@ -309,7 +313,7 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
     return C ? m.multiply(fade(C[f], s)) : m;
   });
   // a tuck lands on the stack its motion makes, then its layers change places while the paper holds still
-  const landing = cur.landedOrders ? 1 - 1 / (cur.path.length + 1) : 1;
+  const landing = landingAt(model, step);
   const mid = cur.landedOrders ? stackAt(model, step, true) : to;
   const [a0, a1, u] = s <= landing ? [from, mid, s / landing] : [mid, to, (s - landing) / (1 - landing)];
   const lifts = model.faces.map((_, f) => {
