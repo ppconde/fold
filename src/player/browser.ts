@@ -1,6 +1,9 @@
+import { resolvePaperId } from './papers';
+
 const PANEL_KEY = 'fold:panelOpen';
 const HINT_KEY = 'fold:dockHint';
 const LAST_KEY = 'fold:lastModel';
+const PAPER_KEY = 'fold:paper';
 
 export function hasWebGL(): boolean {
   try {
@@ -41,3 +44,7 @@ export const markHintSeen = () => writeStored(HINT_KEY, 'seen');
 /** The lesson opened last: the homepage shows it. */
 export const readLastModel = () => readStored(LAST_KEY);
 export const writeLastModel = (id: string) => writeStored(LAST_KEY, id);
+
+/** The paper picked last, on every model. */
+export const readPaper = () => resolvePaperId(readStored(PAPER_KEY));
+export const writePaper = (id: string) => writeStored(PAPER_KEY, id);
