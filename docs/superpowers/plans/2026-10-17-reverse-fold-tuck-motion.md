@@ -132,51 +132,26 @@ PR title: `Engine: a reverse fold tucks its flap in first, then pivots it up bet
 
 ---
 
-### Task 2: Remove the ghost flap; the tuck arrow fades on its own
+### Task 2: The swap crossfade replaces the ghost flap; the tuck arrow fades on its own
 
 **Files:**
-- Modify: `src/fold/reverse.ts` (delete `ghostFaces` and the local `movingFaces`; `tuckArrow` uses `movingFaces` from `fold.ts`)
-- Modify: `src/player/Paper.tsx` (drop ghost groups, the second material and `GHOST_OPACITY`; arrow opacity)
-- Modify: `src/player/paper-geometry.ts` (delete `faceGroups` if nothing else uses it) and `paper-geometry.test.ts`
-- Test: `src/fold/reverse.test.ts`
+- Modify: `src/fold/reverse.ts` (delete `ghostFaces` and any leftover local moving-face code; `arrowOpacity` signature)
+- Modify: `src/player/Paper.tsx` (the crossfade; drop ghost groups; arrow opacity)
+- Modify: `src/player/paper-geometry.ts` / `paper-geometry.test.ts` only as the crossfade needs (reuse `faceGroups` if it fits)
+- Test: `src/fold/reverse.test.ts`, `src/player/paper-geometry.test.ts`, `e2e/player.spec.ts`
 
 **Interfaces:**
-- Consumes: `isReverseFold` and `movingFaces` from Task 1.
-- Produces: `arrowOpacity(s: number): number`, full until `s = 0.75`, falling linearly to 0 at `s = 1`. The `landing` parameter is gone.
+- Consumes from Task 1 (`src/fold/fold.ts`): `isReverseFold`, `movingFaces`, `REVERSE_SWAP = 0.15`, `swapFade(model, step, t): number` (0 at the step's start, 1 from eased progress `REVERSE_SWAP` on, always 1 outside reverse folds).
+- Produces: `arrowOpacity(s: number): number`: 1 until `s = 0.75`, linear to 0 at `s = 1`. The `landing` parameter is gone.
 
-- [ ] **Step 1: Update the tests in `reverse.test.ts`**
+**The crossfade:** while `swapFade < 1`, Paper draws the moving faces twice. The outgoing copy is at `foldedPositions(model, step - 1, 1)` (the flap as the last step left it), with opacity `1 − swapFade`. The incoming copy is the current pose, with opacity `swapFade`. Both use the existing transparent material (`GHOST_OPACITY`'s material, renamed for what it does now). When `swapFade` is 1, only the normal opaque mesh draws. Still faces always draw opaque.
 
-Delete the `ghostFaces` describe block. Replace the `arrowOpacity` cases:
-
-```ts
-expect(arrowOpacity(0)).toBe(1);
-expect(arrowOpacity(0.75)).toBe(1);
-expect(arrowOpacity(0.875)).toBeCloseTo(0.5);
-expect(arrowOpacity(1)).toBe(0);
-```
-
-In `tuckArrow`'s test, replace `ghostFaces(crane, neck, 0.5)` with `movingFaces(crane, neck)`.
-
-- [ ] **Step 2: Run them to make sure they fail**
-
-Run: `pnpm vitest run src/fold/reverse.test.ts`
-Expected: FAIL on `arrowOpacity`'s new signature.
-
-- [ ] **Step 3: Remove the ghost and change `arrowOpacity`**
-
-In `Paper.tsx`, call `arrowOpacity(progress(t))`. Keep a single material. Remove `landingAt` from Paper's imports if it's unused.
-
-- [ ] **Step 4: Run everything**
-
-Run: `pnpm vitest run && pnpm check && pnpm build && pnpm test:e2e`
-Expected: all PASS. No e2e test refers to the ghost; if one does, delete that assertion.
-
-- [ ] **Step 5: Commit and open PR 2**
-
-```bash
-git add src
-git commit -m "Player: no ghost flap on reverse folds, now that the flap goes inside"
-```
+- [ ] **Step 1: Update the tests.** In `reverse.test.ts`, delete the `ghostFaces` block. Change `arrowOpacity` to `(0) → 1`, `(0.75) → 1`, `(0.875) ≈ 0.5`, `(1) → 0`. In the `tuckArrow` test, use `movingFaces`. Add a unit test for whatever pure helper Paper uses to choose the two copies and their opacities: at t = 0 the outgoing copy is 1 and the incoming 0; at the swap's end the outgoing copy is gone; on a non-reverse step there's never a second copy. In `e2e/player.spec.ts`, the neck step still renders, with no console errors.
+- [ ] **Step 2: Run them to make sure they fail.** `pnpm vitest run src/fold/reverse.test.ts src/player`
+- [ ] **Step 3: Build the crossfade, remove the ghost, change `arrowOpacity`.** Paper calls `arrowOpacity(progress(t))`.
+- [ ] **Step 4: Run everything.** `pnpm vitest run && pnpm check && pnpm build && pnpm test:e2e`, all PASS.
+- [ ] **Step 5: Browser check.** On the neck, tail and head at t = 0, 0.05, 0.1 and 0.2: the old flap fades into the tucked one with no cut, and there's no sorting flicker between the two copies. Orbit as in Global Constraints.
+- [ ] **Step 6: Commit** on branch `reverse-no-ghost`, stacked on `reverse-tuck-motion`: `Player: a reverse fold crossfades its flap into the tuck, no ghost`.
 
 ---
 

@@ -1,5 +1,4 @@
-import { Vector3 } from 'three';
-import { foldedPositions, isReverseFold, landingAt, movingFaces, progress } from './fold';
+import { foldedPositions, isReverseFold, landingAt, movingFaces, progress, tuckBow } from './fold';
 import type { Model, Vec3 } from './types';
 
 export { isReverseFold };
@@ -19,21 +18,16 @@ export function ghostFaces(model: Model, step: number, t: number): ReadonlySet<n
  */
 export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [Vec3, Vec3] } | null {
   if (!isReverseFold(model, step)) return null;
-  const [from, to] = [foldedPositions(model, step, 0), foldedPositions(model, step, 1)];
-  const v = (p: Vec3) => new Vector3(...p);
-  // the tip: the corner of the swinging faces that travels farthest
-  const [tip, landed] = [...movingFaces(model, step)]
-    .flatMap((f) => from[f].map((p, i) => [v(p), v(to[f][i])]))
-    .reduce((best, m) => (m[0].distanceTo(m[1]) > best[0].distanceTo(best[1]) ? m : best));
-  // bowed outward, away from the middle of the model
-  const all = from.flat();
-  const center = all.reduce((c, p) => c.add(v(p)), new Vector3()).divideScalar(all.length);
+  // from the flap as the last step left it: at t = 0 it is already tucked
+  const { tip, landed, out } = tuckBow(
+    model,
+    step,
+    foldedPositions(model, step - 1, 1),
+    foldedPositions(model, step, 1)
+  );
   const span = tip.distanceTo(landed);
   const [start, end] = [tip.clone().lerp(landed, 0.08), landed.clone().lerp(tip, 0.08)];
   const mid = start.clone().lerp(end, 0.5);
-  const out = mid.clone().sub(center);
-  const chord = end.clone().sub(start).normalize();
-  out.addScaledVector(chord, -out.dot(chord)).normalize();
   const bow = mid.clone().addScaledVector(out, 0.35 * span);
   const at = (k: number) =>
     start
