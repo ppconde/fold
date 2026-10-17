@@ -58,6 +58,15 @@ export const pt: Dictionary = {
     instructions: 'Instruções',
     hideSteps: 'esconder passos',
     showSteps: 'mostrar passos',
+    reverseFold: 'dobra invertida',
+    how: 'Como',
+    creases: 'Vincos',
+    howSteps: [
+      'Abre um pouco as duas camadas',
+      'Empurra a aba para dentro, entre elas, pelo teu vinco',
+      'Fecha e alisa'
+    ],
+    shortcut: 'O papel no ecrã atravessa o corpo por um atalho. O teu vai por dentro, assim.',
     stageLabel: 'Vista 3D do papel. Arrasta para o rodar; aperta ou desliza para aproximar.',
     noWebgl: 'A vista 3D não está disponível neste dispositivo. Segue o padrão de vincos e as instruções.',
     stageFailed: 'A vista 3D não carregou. Segue o padrão de vincos e as instruções.',

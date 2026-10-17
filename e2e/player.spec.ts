@@ -329,3 +329,65 @@ test('next skips a step that is still playing', async ({ page }) => {
   await next.click();
   await expect(page.locator('main')).toHaveAttribute('data-step', '2');
 });
+
+test.describe('a reverse fold step', () => {
+  // the crane's neck, then its tail; the step before the neck is a petal fold
+  const NECK = 16;
+  const NORMAL = 15;
+
+  test('on a wide screen shows how and the creases together', async ({ page }, info) => {
+    test.skip(info.project.name !== 'desktop', 'the side panel has room for both');
+    await page.goto(`/fold/crane?step=${NECK}`);
+    await expect(page.getByRole('img', { name: /takes a shortcut/ })).toBeVisible();
+    await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Creases' })).toBeHidden();
+  });
+
+  test('shows how, with the creases one tap away', async ({ page }, info) => {
+    test.skip(info.project.name !== 'phone', 'the toggle is for the phone sheet');
+    await page.goto(`/fold/crane?step=${NECK}`);
+    await expect(page.locator('#instructions')).toContainText(/reverse fold/i);
+    await expect(page.getByRole('img', { name: /takes a shortcut/ })).toBeVisible();
+    await page.getByRole('button', { name: 'Creases' }).click();
+    await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
+    const { violations } = await new AxeBuilder({ page }).include('#instructions').analyze();
+    const serious = violations.filter((v) => v.impact === 'serious' || v.impact === 'critical');
+    expect(serious.map((v) => `${v.id}: ${v.help}`)).toEqual([]);
+  });
+
+  test('the toggle resets on the next step', async ({ page }, info) => {
+    test.skip(info.project.name !== 'phone', 'the toggle is for the phone sheet');
+    await page.goto(`/fold/crane?step=${NECK}`);
+    await page.getByRole('button', { name: 'Creases' }).click();
+    await next(page);
+    await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 1));
+    await expect(page.getByRole('button', { name: 'How' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('a normal step has no toggle', async ({ page }) => {
+    await page.goto(`/fold/crane?step=${NORMAL}`);
+    await expect(page.locator('#instructions')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Creases' })).toHaveCount(0);
+  });
+
+  test.describe('on a phone in Portuguese', () => {
+    test.use({ viewport: { width: 360, height: 640 }, locale: 'pt-PT' });
+
+    test('the how sheet fits without scrolling', async ({ page }) => {
+      await page.goto(`/fold/crane?step=${NECK}`);
+      const sheet = page.locator('#instructions');
+      if (!(await sheet.isVisible())) await page.getByRole('button', { name: 'mostrar passos' }).click();
+      await expect(sheet).toContainText(/dobra invertida/i);
+      // every sketch, its caption the longest at the second: the sheet neither scrolls nor changes height
+      await page.getByRole('slider').waitFor();
+      const heights: number[] = [];
+      for (const at of ['10', '50', '100']) {
+        await page.getByRole('slider').fill(at);
+        const { scroll, client } = await sheet.evaluate((el) => ({ scroll: el.scrollHeight, client: el.clientHeight }));
+        expect(scroll).toBeLessThanOrEqual(client);
+        heights.push(client);
+      }
+      expect(new Set(heights).size).toBe(1);
+    });
+  });
+});
