@@ -12,6 +12,7 @@ import { sketchFrame } from './how';
 import { AgainIcon, BackIcon, NextIcon, StartIcon, ViewIcon } from './icons';
 import { loadStage } from './load-stage';
 import styles from './Player.module.css';
+import { PLAIN } from './papers';
 import { playerStatus } from './player-state';
 import { StageBoundary } from './StageBoundary';
 import { usePlayer } from './use-player';
@@ -125,6 +126,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
                 playing={state.playing}
                 resetCount={resetCount}
                 frameStep={frameStep}
+                paper={PLAIN}
               />
             </Suspense>
           </StageBoundary>
