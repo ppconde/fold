@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
 import { foldedPositions, landingAt } from './fold';
 import { loadModel } from './load-model';
-import { ghostFaces, isReverseFold, pushArrow, pushOpacity } from './reverse';
+import { arrowOpacity, ghostFaces, isReverseFold, tuckArrow } from './reverse';
 
 const committed = (id: string) =>
   loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
@@ -44,42 +44,46 @@ describe('ghostFaces', () => {
   });
 });
 
-describe('pushArrow', () => {
-  const at = (f: number, v: number) => foldedPositions(crane, neck, 0)[f][crane.faces[f].indexOf(v)];
+describe('tuckArrow', () => {
   const dist = (p: number[], q: number[]) => Math.hypot(...p.map((x, i) => x - q[i]));
+  // the leg's tip: the corner of the swinging faces that travels farthest
+  const tip = (t: number) => {
+    const [from, to] = [foldedPositions(crane, neck, 0), foldedPositions(crane, neck, 1)];
+    const moved = [...ghostFaces(crane, neck, 0.5)].flatMap((f) => from[f].map((p, i) => [p, to[f][i]]));
+    const far = moved.reduce((best, m) => (dist(m[0], m[1]) > dist(best[0], best[1]) ? m : best));
+    return far[t];
+  };
 
-  it("points at the neck's spine from outside, toward the layers it goes in between", () => {
-    const arrow = pushArrow(crane, neck);
-    expect(arrow).not.toBeNull();
-    const [tail, head] = [arrow!.shaft[0], arrow!.shaft[arrow!.shaft.length - 1]];
-    // the spine is the crease that flips; the head stops just short of it, the tail lies farther out
-    const len = (e: number) => dist(crane.vertices[crane.edges[e][0]], crane.vertices[crane.edges[e][1]]);
-    const spine = crane.steps[neck].angles
-      .map((a, e) =>
-        Math.abs(crane.steps[neck - 1].angles[e]) === 180 && a === -crane.steps[neck - 1].angles[e] ? e : -1
-      )
-      .filter((e) => e >= 0)
-      .reduce((best, e) => (len(e) > len(best) ? e : best));
-    const [f] = crane.edgeFaces[spine];
-    const mid = [0, 1, 2].map((i) => (at(f, crane.edges[spine][0])[i] + at(f, crane.edges[spine][1])[i]) / 2);
-    expect(dist(tail, mid)).toBeGreaterThan(dist(head, mid));
-    expect(dist(head, mid)).toBeLessThan(0.08);
-    expect(arrow!.head).toHaveLength(2);
+  it('runs from the leg where it is to where it tucks in', () => {
+    const arrow = tuckArrow(crane, neck);
+    if (!arrow) throw new Error('no tuck arrow on the neck');
+    const [start, end] = [arrow.shaft[0], arrow.shaft[arrow.shaft.length - 1]];
+    const span = dist(tip(0), tip(1));
+    expect(dist(start, tip(0))).toBeLessThan(0.2 * span);
+    expect(dist(end, tip(1))).toBeLessThan(0.2 * span);
+    expect(arrow.head).toHaveLength(2);
+  });
+
+  it('curves, like a diagram arrow', () => {
+    const shaft = tuckArrow(crane, neck)?.shaft ?? [];
+    const [start, mid, end] = [shaft[0], shaft[Math.floor(shaft.length / 2)], shaft[shaft.length - 1]];
+    const chord = [0, 1, 2].map((i) => (start[i] + end[i]) / 2);
+    expect(dist(mid, chord)).toBeGreaterThan(0.1 * dist(start, end));
   });
 
   it('is only for reverse folds', () => {
-    expect(pushArrow(crane, neck - 1)).toBeNull();
-    expect(pushArrow(crane, 0)).toBeNull();
+    expect(tuckArrow(crane, neck - 1)).toBeNull();
+    expect(tuckArrow(crane, 0)).toBeNull();
   });
 });
 
-describe('pushOpacity', () => {
-  it('shows at the start of the step and is gone before the flap has swung far from where it is pushed', () => {
-    expect(pushOpacity(0, 0.9)).toBe(1);
-    expect(pushOpacity(0.05, 0.9)).toBe(1);
-    expect(pushOpacity(0.12, 0.9)).toBeGreaterThan(0);
-    expect(pushOpacity(0.12, 0.9)).toBeLessThan(1);
-    expect(pushOpacity(0.2, 0.9)).toBe(0);
-    expect(pushOpacity(0.5, 0.9)).toBe(0);
+describe('arrowOpacity', () => {
+  it('shows through the swing and fades as the flap lands', () => {
+    expect(arrowOpacity(0, 0.9)).toBe(1);
+    expect(arrowOpacity(0.5, 0.9)).toBe(1);
+    expect(arrowOpacity(0.8, 0.9)).toBeGreaterThan(0);
+    expect(arrowOpacity(0.8, 0.9)).toBeLessThan(1);
+    expect(arrowOpacity(0.9, 0.9)).toBe(0);
+    expect(arrowOpacity(1, 0.9)).toBe(0);
   });
 });
