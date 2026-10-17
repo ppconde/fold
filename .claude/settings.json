@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/ppconde/.local/bin/graphify hook-guard search",
+            "command": "graphify hook-guard search",
             "timeout": 10
           }
         ]
@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "/Users/ppconde/.local/bin/graphify hook-guard read",
+            "command": "graphify hook-guard read",
             "timeout": 10
           }
         ]
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"$CLAUDE_PROJECT_DIR\" && /Users/ppconde/.local/bin/graphify update . >/dev/null 2>&1 || true",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" && graphify update . >/dev/null 2>&1 || true",
             "timeout": 120
           }
         ]
