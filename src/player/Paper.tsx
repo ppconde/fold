@@ -2,9 +2,18 @@ import { Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
-import { foldedPositions } from '../fold/fold';
+import { foldedPositions, landingAt, progress } from '../fold/fold';
+import { arrowOpacity, ghostFaces, tuckArrow } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
-import { depthBelowTable, fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import {
+  depthBelowTable,
+  faceGroups,
+  fillTriangles,
+  fillUVs,
+  lineGroups,
+  paperExtent,
+  triangleCount
+} from './paper-geometry';
 import { setSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
@@ -13,6 +22,8 @@ type LineRef = ComponentRef<typeof Line>;
 const INK = '#33302C';
 const HIGHLIGHT = '#A5633F';
 const BACK = '#F3EDE2';
+/** A reverse fold's flap, while it takes its shortcut through the body. */
+const GHOST_OPACITY = 0.3;
 const PLACEHOLDER: Vec3[] = [
   [0, 0, 0],
   [0, 0, 0]
@@ -52,6 +63,9 @@ export function Paper({
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
   const cut = useRef<LineRef>(null);
+  // which flap a reverse fold moves and where it tucks in, an ink stroke like the dock's chevrons
+  const tuck = useMemo(() => tuckArrow(model, step), [model, step]);
+  const tuckStrength = tuck ? arrowOpacity(progress(t), landingAt(model, step)) : 0;
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
@@ -60,6 +74,8 @@ export function Paper({
     const position = geometry.getAttribute('position') as BufferAttribute;
     fillTriangles(faces, position.array as Float32Array);
     position.needsUpdate = true;
+    geometry.clearGroups();
+    for (const g of faceGroups(model, ghostFaces(model, step, t))) geometry.addGroup(g.start, g.count, g.materialIndex);
     geometry.computeVertexNormals();
     geometry.computeBoundingSphere();
     const groups = lineGroups(model, faces, step, t);
@@ -84,30 +100,30 @@ export function Paper({
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
       <group position={[-center[0], -center[1], 0]}>
-        <mesh geometry={geometry}>
-          <meshStandardMaterial
-            color={softenTowardIvory(model.paperColor)}
-            roughness={0.92}
-            metalness={0}
-            map={washi}
-            side={FrontSide}
-            polygonOffset
-            polygonOffsetFactor={1}
-            polygonOffsetUnits={1}
-          />
-        </mesh>
-        <mesh geometry={geometry}>
-          <meshStandardMaterial
-            color={BACK}
-            roughness={0.92}
-            metalness={0}
-            map={washi}
-            side={BackSide}
-            polygonOffset
-            polygonOffsetFactor={1}
-            polygonOffsetUnits={1}
-          />
-        </mesh>
+        {[
+          { color: softenTowardIvory(model.paperColor), side: FrontSide },
+          { color: BACK, side: BackSide }
+        ].map(({ color, side }) => (
+          <mesh key={side} geometry={geometry}>
+            {[1, GHOST_OPACITY].map((opacity, i) => (
+              <meshStandardMaterial
+                key={opacity}
+                attach={`material-${i}`}
+                color={color}
+                roughness={0.92}
+                metalness={0}
+                map={washi}
+                side={side}
+                transparent={opacity < 1}
+                opacity={opacity}
+                depthWrite={opacity === 1}
+                polygonOffset
+                polygonOffsetFactor={1}
+                polygonOffsetUnits={1}
+              />
+            ))}
+          </mesh>
+        ))}
         <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7} />
         <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.0} visible={false} />
         <Line
@@ -140,6 +156,20 @@ export function Paper({
           frustumCulled={false}
           visible={false}
         />
+        {tuck &&
+          tuckStrength > 0 &&
+          [tuck.shaft, [tuck.head[0], tuck.shaft[tuck.shaft.length - 1], tuck.head[1]]].map((points) => (
+            <Line
+              key={points.length}
+              points={points}
+              color={INK}
+              lineWidth={1.4}
+              transparent
+              opacity={tuckStrength}
+              renderOrder={3}
+              depthTest={false}
+            />
+          ))}
       </group>
     </group>
   );
