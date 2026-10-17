@@ -458,8 +458,9 @@ const swaps = new WeakMap<Model, ({ pivot: Vec3; axis: Vec3; angle: number } | n
 
 /**
  * A reverse fold's pivot: the rotation (radians, about `axis`, the fixed face's normal, through `pivot`) that
- * carries its flap, swapped in at s = 0, to its end pose at s = 1: the turn that best fits the moving faces'
- * corners at the end back onto where they start. Null unless `isReverseFold`.
+ * carries its flap, swapped in at s = 0, to its end pose at s = 1. The pivot is where the new crease meets the
+ * flipped spine, the reflection's fixed point; the angle best fits the moving faces' corners at the end back onto
+ * where they start. Null unless `isReverseFold`.
  */
 export function swapTurn(model: Model, step: number): { pivot: Vec3; axis: Vec3; angle: number } | null {
   const list = swaps.get(model) ?? [];
@@ -468,39 +469,55 @@ export function swapTurn(model: Model, step: number): { pivot: Vec3; axis: Vec3;
   list[step] = null;
   if (!isReverseFold(model, step)) return null;
   const moving = [...movingFaces(model, step)];
+  const before = model.steps[step - 1].angles;
+  const after = model.steps[step].angles;
+  const ends = (keep: (e: number) => boolean) => new Set(model.edges.flatMap((ab, e) => (keep(e) ? ab : [])));
+  const spine = ends(
+    (e) =>
+      Math.abs(before[e]) === 180 &&
+      after[e] === -before[e] &&
+      model.edgeFaces[e].every((f) => movingFaces(model, step).has(f))
+  );
+  const crease = ends((e) => before[e] === 0 && after[e] !== 0);
+  const at = [...spine].find((v) => crease.has(v));
+  if (at === undefined) return null;
   const T = rootTransforms(model, anglesAt(model, step, 1), step);
   const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
   const start = startPose(model, step);
   const axis = new Vector3(0, 0, 1).transformDirection(anchorFor(model, step));
-  // the plane's coordinates
+  // the plane's coordinates, from the pivot
   const u = new Vector3(1, 0, 0).cross(axis).lengthSq() > 1e-6 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0);
   u.addScaledVector(axis, -u.dot(axis)).normalize();
   const w = axis.clone().cross(u);
-  const flat = (v: number, m: Matrix4) => {
-    const p = new Vector3(model.vertices[v][0], model.vertices[v][1], 0).applyMatrix4(m);
+  const pivotFace = moving.find((f) => model.faces[f].includes(at)) as number;
+  const pivot = new Vector3(...model.vertices[at], 0).applyMatrix4(base.clone().multiply(T[pivotFace]));
+  const flat = (x: number, y: number, m: Matrix4) => {
+    const p = new Vector3(x, y, 0).applyMatrix4(m).sub(pivot);
     return [p.dot(u), p.dot(w)];
   };
-  const pairs = moving.flatMap((f) => {
-    const end = base.clone().multiply(T[f]);
-    return model.faces[f].map((v) => [flat(v, end), flat(v, start[f])]);
-  });
-  const mean = (i: 0 | 1) => [0, 1].map((j) => pairs.reduce((acc, p) => acc + p[i][j], 0) / pairs.length);
-  const [ce, cs] = [mean(0), mean(1)];
-  // 2D Procrustes, end → start: the turn φ that best fits the corners, then (I − R)c = cs − R·ce for its fixed point c
+  // the turn about the pivot that best fits the corners, end onto start
   let [dot, crs] = [0, 0];
-  for (const [e, st] of pairs) {
-    const [ex, ey, sx, sy] = [e[0] - ce[0], e[1] - ce[1], st[0] - cs[0], st[1] - cs[1]];
-    dot += ex * sx + ey * sy;
-    crs += ex * sy - ey * sx;
+  let tip = [0, 0];
+  for (const f of moving) {
+    const end = base.clone().multiply(T[f]);
+    for (const v of model.faces[f]) {
+      const [e, st] = [flat(...model.vertices[v], end), flat(...model.vertices[v], start[f])];
+      dot += e[0] * st[0] + e[1] * st[1];
+      crs += e[0] * st[1] - e[1] * st[0];
+      if (Math.hypot(...e) > Math.hypot(...tip)) tip = e;
+    }
   }
-  const phi = Math.atan2(crs, dot);
-  const [cos, sin] = [Math.cos(phi), Math.sin(phi)];
-  const [rx, ry] = [cs[0] - (cos * ce[0] - sin * ce[1]), cs[1] - (sin * ce[0] + cos * ce[1])];
-  const det = 2 - 2 * cos;
-  const [cx, cy] = [((1 - cos) * rx - sin * ry) / det, (sin * rx + (1 - cos) * ry) / det];
-  const pivot = u.multiplyScalar(cx).addScaledVector(w, cy);
-  // the shorter way round; crossings() lives in models/, so the engine can't test the other way (the tests do)
-  list[step] = { pivot: pivot.toArray() as Vec3, axis: axis.toArray() as Vec3, angle: -phi };
+  const short = -Math.atan2(crs, dot);
+  // the way round that bows out, like the tuck arrow: the flap's tip halfway farther from the model's middle
+  const corners = model.faces.flatMap((face, f) => face.map((v) => flat(...model.vertices[v], start[f])));
+  const middle = [0, 1].map((j) => corners.reduce((acc, p) => acc + p[j], 0) / corners.length);
+  const out = (angle: number) => {
+    const [c, sn] = [Math.cos(-angle / 2), Math.sin(-angle / 2)];
+    return Math.hypot(c * tip[0] - sn * tip[1] - middle[0], sn * tip[0] + c * tip[1] - middle[1]);
+  };
+  const long = short - 2 * Math.PI * Math.sign(short);
+  const angle = out(long) > out(short) ? long : short;
+  list[step] = { pivot: pivot.toArray() as Vec3, axis: axis.toArray() as Vec3, angle };
   return list[step];
 }
 
