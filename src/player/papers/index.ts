@@ -1,4 +1,5 @@
 import { ichimatsu } from './ichimatsu';
+import { shippo } from './shippo';
 
 /**
  * A booklet paper drawn by a shader. `ground`/`ink` are sRGB hex. `glsl` defines `vec3 paperColor(vec2 uv)` in sheet
@@ -10,7 +11,7 @@ export type PaperPattern = { id: string; ground: string; ink: string; glsl: stri
 export const PLAIN = 'plain';
 
 /** Picker order; Plain comes first, ahead of these. */
-export const PAPERS: PaperPattern[] = [ichimatsu];
+export const PAPERS: PaperPattern[] = [ichimatsu, shippo];
 
 export const paperById = (id: string) => PAPERS.find((p) => p.id === id);
 
