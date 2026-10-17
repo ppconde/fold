@@ -1,4 +1,4 @@
-import { Euler, Matrix3, Matrix4, Vector2 } from 'three';
+import { Euler, MathUtils, Matrix3, Matrix4, Vector2 } from 'three';
 import type { Vec2, Vec3 } from '../src/fold/types';
 import { arrange, type Crease, signedArea } from './arrange';
 import { inside, type ModelSource, type SourceStep, type Tuck } from './build';
@@ -52,7 +52,7 @@ function onSegment(v: Vec2, a: Vec2, b: Vec2, interior = false): boolean {
   return t > m && t < 1 - m;
 }
 const onOutline = (v: Vec2, poly: Vec2[]) => poly.some((a, i) => onSegment(v, a, poly[(i + 1) % poly.length]));
-const D = Math.PI / 180;
+const D = MathUtils.DEG2RAD;
 const rotationOf = (e: Vec3) => new Matrix4().makeRotationFromEuler(new Euler(e[0] * D, e[1] * D, e[2] * D)).elements;
 /** Paper → view on the table plane for a whole-model rotation: R (p − c) + c, c the sheet's middle. */
 function viewOf(e: Vec3): Matrix3 {
@@ -72,7 +72,7 @@ const centroid = (poly: Vec2[]): Vec2 => [
 /** Picks pieces by their tags and a point inside them on the flat sheet. */
 type PieceTest = (tags: string[], at: Vec2) => boolean;
 
-export type FoldOptions = Text & {
+type FoldOptions = Text & {
   /**
    * true: the flap comes toward the viewer. false: it goes behind. A function decides per piece, for a
    * reverse fold: layers that turn opposite ways reverse the crease that joins them past the fold line.
@@ -493,7 +493,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
 
 const H = Math.SQRT1_2;
 /** The turn most diamond models start with: white side up, a corner pointing at the viewer. */
-export const DIAMOND: Vec3 = [0, 180, 45];
+const DIAMOND: Vec3 = [0, 180, 45];
 /** Diamond coordinates after DIAMOND → view: left corner (0, 0), top (1, 1), right (2, 0), bottom (1, −1). */
 export const diamond = (x: number, y: number): Vec2 => [0.5 + (x - 1) * H, 0.5 + y * H];
 /** A sequence that starts with the DIAMOND turn as step 1. */

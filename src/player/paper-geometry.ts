@@ -1,8 +1,9 @@
+import { MathUtils } from 'three';
 import { stepCreases } from '../fold/creases';
 import { anglesAt, foldedPositions } from '../fold/fold';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 
-export type Extent = {
+type Extent = {
   minX: number;
   minY: number;
   maxX: number;
@@ -34,7 +35,7 @@ export const STAGE_POLAR = 0.9;
  * enough that a ball holding the paper, with some room, fits the narrower side.
  */
 export function stageDistance(aspect: number): number {
-  const half = (STAGE_FOV / 2) * (Math.PI / 180);
+  const half = MathUtils.degToRad(STAGE_FOV / 2);
   return 1.08 / Math.sin(Math.min(half, Math.atan(Math.tan(half) * aspect)));
 }
 
