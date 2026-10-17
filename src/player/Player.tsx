@@ -277,11 +277,6 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           ) : (
             <span aria-hidden="true" />
           )}
-          {webgl && !stageFailed ? (
-            <PaperPicker paper={paper} plainColor={softenTowardIvory(model.paperColor)} onChange={choosePaper} />
-          ) : (
-            <span aria-hidden="true" />
-          )}
           <select
             className={styles.count}
             aria-label={t.goToStep}
@@ -295,6 +290,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
               </option>
             ))}
           </select>
+          {webgl && !stageFailed ? (
+            <PaperPicker paper={paper} plainColor={softenTowardIvory(model.paperColor)} onChange={choosePaper} />
+          ) : (
+            <span aria-hidden="true" />
+          )}
         </div>
         {hint !== 'gone' && (
           <p className={`${styles.hint} ${hint === 'fading' ? styles.hintOut : ''}`} aria-hidden="true">

@@ -242,7 +242,10 @@
   display: grid;
   /* the step count grows past 44px at 10 steps or more */
   /* the 44px columns give a little on narrow phones, so the paper swatch fits beside them */
-  grid-template-columns: repeat(3, minmax(36px, 44px)) 56px repeat(3, minmax(36px, 44px)) minmax(44px, max-content);
+  grid-template-columns: repeat(3, minmax(36px, 44px)) 56px repeat(2, minmax(36px, 44px)) minmax(44px, max-content) minmax(
+      36px,
+      44px
+    );
   justify-items: center;
   align-items: center;
 }
