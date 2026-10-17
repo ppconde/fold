@@ -169,7 +169,9 @@ describe('faceGroups', () => {
     const model = loadModel(fixture('fold-in-quarters'));
     const groups = faceGroups(model, new Set([1]));
     expect(groups.reduce((n, g) => n + g.count, 0)).toBe(triangleCount(model) * 3);
-    groups.forEach((g, i) => expect(g.start).toBe(i ? groups[i - 1].start + groups[i - 1].count : 0));
+    groups.forEach((g, i) => {
+      expect(g.start).toBe(i ? groups[i - 1].start + groups[i - 1].count : 0);
+    });
     const one = model.faces.slice(0, 1).reduce((n, f) => n + (f.length - 2) * 3, 0);
     expect(groups.filter((g) => g.materialIndex === 1)).toEqual([
       { start: one, count: (model.faces[1].length - 2) * 3, materialIndex: 1 }
