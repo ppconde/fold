@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from '../src/fold/fixtures';
 import { LAYER_GAP } from '../src/fold/fold';
@@ -7,6 +8,8 @@ import { checkModel, crossings, flapFlips, interleaved, spread, wrongSides } fro
 import { diamond as d, diamondSequence, has, lacks } from './sequence';
 
 const quarters = () => loadModel(fixture('fold-in-quarters'));
+const crane = () =>
+  loadModel(JSON.parse(readFileSync(new URL('../public/models/crane.fold', import.meta.url), 'utf8')));
 
 describe('checkModel', () => {
   it('passes both hand-written fixtures', () => {
@@ -174,5 +177,20 @@ describe('slits', () => {
     const model = loadModel(slitFixture());
     expect(spread(model, 2, 0.5)).toBeLessThan(6 * LAYER_GAP + 1e-9);
     expect(checkModel(model)).toEqual([]);
+  });
+});
+
+describe('a fold-and-unfold', () => {
+  it("lifts its flap clear of the paper in front of it, though the step's stacking never changes", () => {
+    // pre-crease the crane's left leg where the neck will reverse-fold: the leg swings as one stack, as the neck
+    // step's swing does, short of flat, and back; it has to clear the other leg lying in front of it
+    const model = crane();
+    const neck = model.steps.findIndex((s) => s.instruction.en.startsWith('Reverse-fold the left flap'));
+    const [prev, cur] = [model.steps[neck - 1], model.steps[neck]];
+    const swing = cur.path[cur.path.length - 2].map((a, e) => (Math.abs(prev.angles[e]) === 180 ? prev.angles[e] : a));
+    const pre = { ...prev, instruction: { en: 'Fold the left flap along this line, then unfold it.' }, path: [swing] };
+    const steps = [...model.steps.slice(0, neck), pre, ...model.steps.slice(neck)];
+    const problems = checkModel({ ...model, steps }).filter((p) => p.startsWith(`Step ${neck} `));
+    expect(problems).toEqual([]);
   });
 });

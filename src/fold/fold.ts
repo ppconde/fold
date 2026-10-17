@@ -400,7 +400,10 @@ function travel(model: Model, step: number): number[] {
   travels.set(model, list);
   if (list[step]) return list[step];
   const start = startPose(model, step);
-  const T = rootTransforms(model, model.steps[step].angles, step);
+  const cur = model.steps[step];
+  // a fold-and-unfold ends where it started: its flap is the paper that moves on the way, at the path's peak
+  const peaks = cur.path.length > 0 && cur.angles.every((a, e) => a === model.steps[step - 1].angles[e]);
+  const T = rootTransforms(model, peaks ? cur.path[0] : cur.angles, step);
   const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
   const moving = T.map((m, f) => {
     const end = base.clone().multiply(m).elements;
@@ -433,8 +436,11 @@ function travel(model: Model, step: number): number[] {
   // only the still faces a moving face lies against (as the step starts, lands or ends) are in its way: a small
   // flap swinging past a few layers clears those, not the whole stack, or it lifts off its hinge
   const near = new Set<number>();
-  const cur = model.steps[step];
-  for (const [f, g] of [...model.steps[step - 1].faceOrders, ...(cur.landedOrders ?? []), ...cur.faceOrders]) {
+  // a fold-and-unfold changes no stacking, so what its flap lies against was ordered in some earlier step
+  const orders = peaks
+    ? model.steps.slice(0, step + 1).flatMap((st) => st.faceOrders)
+    : [...model.steps[step - 1].faceOrders, ...(cur.landedOrders ?? []), ...cur.faceOrders];
+  for (const [f, g] of orders) {
     if (moving[f] !== moving[g]) near.add(moving[f] ? g : f);
   }
   const stay = range((f) => !moving[f] && near.has(f));
@@ -442,7 +448,8 @@ function travel(model: Model, step: number): number[] {
   const down = range((f) => moving[f] && !over[f]);
   // a step that keeps the stacking (a turn, or opening a model out) has no flap to carry over the stack, nor
   // has the homepage's unfold, every crease moving at once
-  const restack = model.steps[step].path !== model.unfold && to.some((h, f) => h !== from[f]) && moving.includes(false);
+  const restack =
+    model.steps[step].path !== model.unfold && (peaks || to.some((h, f) => h !== from[f])) && moving.includes(false);
   list[step] = moving.map((m, f) =>
     !restack || !m ? 0 : over[f] ? Math.max(0, stay.max + 1 - up.min) : -Math.max(0, down.max + 1 - stay.min)
   );
