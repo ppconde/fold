@@ -9,7 +9,8 @@ export const LAYER_GAP = 0.002;
 /** Share of a step at each end in which a travelling flap rises off, and settles back onto, the stack. */
 const LIFT_SPAN = 0.15;
 
-const ease = (t: number) => t * t * (3 - 2 * t);
+/** Cubic ease-in-out: the paper starts and settles gently, fastest mid-fold. */
+const ease = (t: number) => (t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2);
 const progress = (t: number) => ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
 
 /** Rotation of face `g` about edge `e` by `angle` degrees, in flat-paper coordinates. */

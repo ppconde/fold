@@ -180,7 +180,9 @@ describe('anglesAt', () => {
 
   it('eases each crease from the previous step to this one', () => {
     expect(anglesAt(half(), 1, 0)[6]).toBeCloseTo(0);
+    expect(anglesAt(half(), 1, 0.25)[6]).toBeCloseTo(11.25); // cubic: slow start, slow finish
     expect(anglesAt(half(), 1, 0.5)[6]).toBeCloseTo(90);
+    expect(anglesAt(half(), 1, 0.75)[6]).toBeCloseTo(168.75);
     expect(anglesAt(half(), 1, 1)[6]).toBeCloseTo(180);
   });
 
