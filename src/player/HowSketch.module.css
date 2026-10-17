@@ -56,12 +56,24 @@
 }
 
 @media (max-width: 899px) and (orientation: portrait), (max-width: 899px) and (min-height: 501px) {
+  /* one sketch at a time, all three in one cell: the box keeps the longest caption's height, so the sheet
+     doesn't resize (and the stage jump) as the sketches change */
   .frames {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "sketch";
+  }
+
+  .frames li {
+    grid-area: sketch;
   }
 
   .frames li:not([data-current="true"]) {
-    display: none;
+    visibility: hidden;
+  }
+
+  /* a little shorter than square, so the longest caption still fits a small phone's sheet */
+  .frames svg {
+    aspect-ratio: 4 / 3;
   }
 
   .dots {

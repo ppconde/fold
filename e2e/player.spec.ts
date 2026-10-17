@@ -378,8 +378,16 @@ test.describe('a reverse fold step', () => {
       const sheet = page.locator('#instructions');
       if (!(await sheet.isVisible())) await page.getByRole('button', { name: 'mostrar passos' }).click();
       await expect(sheet).toContainText(/dobra invertida/i);
-      const { scroll, client } = await sheet.evaluate((el) => ({ scroll: el.scrollHeight, client: el.clientHeight }));
-      expect(scroll).toBeLessThanOrEqual(client);
+      // every sketch, its caption the longest at the second: the sheet neither scrolls nor changes height
+      await page.getByRole('slider').waitFor();
+      const heights: number[] = [];
+      for (const at of ['10', '50', '100']) {
+        await page.getByRole('slider').fill(at);
+        const { scroll, client } = await sheet.evaluate((el) => ({ scroll: el.scrollHeight, client: el.clientHeight }));
+        expect(scroll).toBeLessThanOrEqual(client);
+        heights.push(client);
+      }
+      expect(new Set(heights).size).toBe(1);
     });
   });
 });
