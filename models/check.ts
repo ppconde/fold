@@ -24,7 +24,7 @@ export function spread(model: Model, step: number, t: number): number {
   const keys = cornerKeys(model, step);
   // a reverse fold's flap pivots rigidly in the body's plane, and a rigid turn can't keep the crease it shares with
   // the body closed: only the flap's seams among themselves, and the body's, are held
-  const moving = isReverseFold(model, step) ? movingFaces(model, step) : new Set();
+  const moving = isReverseFold(model, step) ? movingFaces(model, step) : new Set<number>();
   const first = new Map<string, Vec3>();
   let worst = 0;
   model.faces.forEach((face, f) => {
@@ -223,7 +223,7 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
     if (k + 1 < model.steps.length) {
       const end = foldedPositions(model, k, 1);
       // a reverse fold swaps its flap in at the start: only the paper that stays must join
-      const swapped = isReverseFold(model, k + 1) ? movingFaces(model, k + 1) : new Set();
+      const swapped = isReverseFold(model, k + 1) ? movingFaces(model, k + 1) : new Set<number>();
       const jump = Math.max(
         ...foldedPositions(model, k + 1, 0).flatMap((face, f) =>
           swapped.has(f) ? [] : face.map((p, i) => Math.hypot(...sub(p, end[f][i])))
