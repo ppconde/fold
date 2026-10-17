@@ -141,13 +141,15 @@ export function Paper({
             ))}
           </mesh>
         ))}
+        {/* after the paper and without depth, so the ink lines (drawn next) always sit on top of the halo */}
         <Line
           ref={bordersHalo}
           points={borderPoints}
           segments
           color={BACK}
           lineWidth={3.3}
-          renderOrder={-1}
+          renderOrder={0.5}
+          depthWrite={false}
           visible={false}
         />
         <Line
@@ -156,11 +158,20 @@ export function Paper({
           segments
           color={BACK}
           lineWidth={2.6}
-          renderOrder={-1}
+          renderOrder={0.5}
+          depthWrite={false}
           visible={false}
         />
-        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7} />
-        <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.0} visible={false} />
+        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7} renderOrder={0.6} />
+        <Line
+          ref={folded}
+          points={PLACEHOLDER}
+          segments
+          color={INK}
+          lineWidth={1.0}
+          renderOrder={0.6}
+          visible={false}
+        />
         <Line
           ref={flat}
           points={PLACEHOLDER}
