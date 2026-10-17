@@ -1,4 +1,4 @@
-import { CameraControls, ContactShadows } from '@react-three/drei';
+import { CameraControls, CameraControlsImpl, ContactShadows } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
 import { type ComponentRef, useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
@@ -10,6 +10,16 @@ import { endCentre, frameReach, paperExtent, STAGE_FOV, STAGE_POLAR, stageDistan
 
 /** Zoom per wheel notch or pinch, against camera-controls' default of 1. */
 const ZOOM_SPEED = 2;
+
+/**
+ * The canvas renders on demand, so the first frame after a pause reports the whole pause as its delta, and
+ * the camera would cover most of a reframe in that one frame. Capped, it eases from where it was.
+ */
+class SteadyControls extends CameraControlsImpl {
+  override update(delta: number) {
+    return super.update(Math.min(delta, 1 / 30));
+  }
+}
 
 type Props = { model: Model; step: number; t: number; playing: boolean; resetCount: number; frameStep: number };
 
@@ -80,6 +90,7 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
       </group>
       <CameraControls
         ref={controls}
+        impl={SteadyControls}
         makeDefault
         minDistance={size * 0.4}
         maxDistance={size * 6}
