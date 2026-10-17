@@ -1,10 +1,14 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { landingAt, progress } from '../fold/fold';
+import { isReverseFold } from '../fold/reverse';
 import type { Model } from '../fold/types';
 import { useLang, useT } from '../i18n/LanguageProvider';
 import { localized } from '../i18n/lang';
 import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, markHintSeen, readPanelOpen, shouldShowHint, writePanelOpen } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
+import { HowSketch } from './HowSketch';
+import { sketchFrame } from './how';
 import { AgainIcon, BackIcon, NextIcon, StartIcon, ViewIcon } from './icons';
 import { loadStage } from './load-stage';
 import styles from './Player.module.css';
@@ -28,6 +32,10 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [stageFailed, setStageFailed] = useState(false);
   const [hint, setHint] = useState<'show' | 'fading' | 'gone'>(() => (shouldShowHint() ? 'show' : 'gone'));
   const showPanel = panelOpen || !webgl || stageFailed;
+  // the step whose slot was flipped to the crease pattern; any other reverse fold opens on "how"
+  const [creasesAt, setCreasesAt] = useState<number | null>(null);
+  const reverse = isReverseFold(model, state.step);
+  const slot = creasesAt === state.step ? 'creases' : 'how';
   const instruction = state.step === 0 ? t.firstInstruction : localized(model.steps[state.step].instruction, lang);
 
   const togglePanel = (open: boolean) => {
@@ -149,12 +157,32 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         hidden={!showPanel}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: the sheet scrolls on phones and must be keyboard reachable
         tabIndex={0}
+        data-slot={reverse ? slot : undefined}
       >
-        <p className={styles.stepLabel}>{t.stepOf(state.step, state.last)}</p>
+        <p className={styles.stepLabel}>
+          {t.stepOf(state.step, state.last)}
+          {reverse && ` · ${t.reverseFold}`}
+        </p>
         <p className={styles.instruction} aria-live="polite">
           {instruction}
         </p>
-        <CreaseDiagram model={model} step={state.step} />
+        {reverse ? (
+          <div className={styles.slot}>
+            <div className={styles.slotToggle}>
+              <button type="button" aria-pressed={slot === 'how'} onClick={() => setCreasesAt(null)}>
+                {t.how}
+              </button>
+              <button type="button" aria-pressed={slot === 'creases'} onClick={() => setCreasesAt(state.step)}>
+                {t.creases}
+              </button>
+            </div>
+            <HowSketch frame={sketchFrame(progress(state.t), landingAt(model, state.step))} />
+            <p className={styles.shortcut}>{t.shortcut}</p>
+            <CreaseDiagram model={model} step={state.step} />
+          </div>
+        ) : (
+          <CreaseDiagram model={model} step={state.step} />
+        )}
       </aside>
 
       <div className={styles.dock} data-testid="dock">

@@ -157,6 +157,40 @@
   color: var(--charcoal);
 }
 
+.slot {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.slotToggle {
+  display: none;
+  justify-self: center;
+  gap: 0.2rem;
+}
+
+.slotToggle button {
+  padding: 0.15rem 0.55rem;
+  border: 1px solid var(--sand);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: 0.75rem var(--font-sans);
+  cursor: pointer;
+}
+
+.slotToggle button[aria-pressed="true"] {
+  border-color: var(--charcoal);
+  background: var(--charcoal);
+  color: var(--ivory);
+}
+
+.shortcut {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
 .dock {
   grid-area: dock;
   display: flex;
@@ -330,6 +364,26 @@
   .panel > svg {
     grid-area: diagram;
     max-width: none;
+  }
+
+  /* a reverse fold: the sketch or the crease pattern in the diagram's place, the toggle above it */
+  .slot {
+    grid-area: diagram;
+    gap: 0.4rem;
+  }
+
+  .slotToggle {
+    display: flex;
+  }
+
+  .slot > svg {
+    max-width: none;
+  }
+
+  .shortcut,
+  .panel[data-slot="how"] .slot > svg,
+  .panel[data-slot="creases"] .slot > [role="img"]:not(svg) {
+    display: none;
   }
 }
 

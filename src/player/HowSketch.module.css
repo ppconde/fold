@@ -1,0 +1,83 @@
+.how {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.frames {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.frames li {
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.frames svg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  background: var(--grain), var(--ivory);
+  outline: 1px solid rgb(51 48 44 / 0.15);
+}
+
+.frames li[data-current="true"] svg {
+  outline-color: var(--charcoal);
+}
+
+.layers,
+.flap {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 2.5;
+}
+
+.layers {
+  stroke: var(--sand);
+}
+
+.flap {
+  stroke: var(--clay);
+}
+
+/* wide screens show all three; the dots are for the phone sheet, where one sketch plays at a time */
+.dots {
+  display: none;
+}
+
+@media (max-width: 899px) and (orientation: portrait), (max-width: 899px) and (min-height: 501px) {
+  .frames {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .frames li:not([data-current="true"]) {
+    display: none;
+  }
+
+  .dots {
+    display: flex;
+    justify-content: center;
+    gap: 0.3rem;
+  }
+
+  .dots i {
+    width: 0.3rem;
+    height: 0.3rem;
+    border-radius: 50%;
+    background: rgb(51 48 44 / 0.25);
+  }
+
+  .dots i[data-current="true"] {
+    background: var(--charcoal);
+  }
+}
