@@ -1,14 +1,14 @@
 import { type Matrix3, Vector2 } from 'three';
 import type { Vec2, Vec3 } from '../src/fold/types';
 import type { ModelEntry } from '../src/models/catalog';
-import { arrange, type Crease, signedArea } from './arrange';
+import { arrange, type Crease, overlap } from './arrange';
 import { motionOrders, solvePaths } from './solve';
 
 /** Keyframes on the homepage's all-at-once unfold: every crease travels far, so the solver needs small steps. */
 const UNFOLD_KNOTS = 59;
 
 /** A flat piece of paper at the end of a step: its outline in paper coordinates, where it lies in the view. */
-export type StackPiece = { outline: Vec2[]; toView: Matrix3; frontUp: boolean };
+type StackPiece = { outline: Vec2[]; toView: Matrix3; frontUp: boolean };
 
 /**
  * A reverse fold that swings its flaps over one group of `layers` as one stack, but ends tucked in: between
@@ -56,29 +56,6 @@ export function inside(p: Vec2, poly: Vec2[]): boolean {
   return hit;
 }
 
-/** Clip convex polygon `a` by convex polygon `b` (Sutherland–Hodgman) and return the area left. */
-function overlap(a: Vec2[], b: Vec2[]): number {
-  const clip = signedArea(b) < 0 ? [...b].reverse() : b;
-  let out = a;
-  clip.forEach((p, i) => {
-    const q = clip[(i + 1) % clip.length];
-    const keep = (v: Vec2) => (q[0] - p[0]) * (v[1] - p[1]) - (q[1] - p[1]) * (v[0] - p[0]) >= 0;
-    const next: Vec2[] = [];
-    out.forEach((v, j) => {
-      const w = out[(j + 1) % out.length];
-      if (keep(v)) next.push(v);
-      if (keep(v) !== keep(w)) {
-        const [dx, dy] = [w[0] - v[0], w[1] - v[1]];
-        const t =
-          ((q[0] - p[0]) * (v[1] - p[1]) - (q[1] - p[1]) * (v[0] - p[0])) / ((q[1] - p[1]) * dx - (q[0] - p[0]) * dy);
-        next.push([v[0] + dx * t, v[1] + dy * t]);
-      }
-    });
-    out = next;
-  });
-  return out.length < 3 ? 0 : Math.abs(signedArea(out));
-}
-
 /**
  * FOLD faceOrders for a stack: [f, g, s] for every two faces whose pieces overlap in the view, with
  * s = +1 when f lies on the side g's normal points to. Faces of one piece lie side by side, never stacked.
@@ -102,7 +79,7 @@ function faceOrdersOf(stack: StackPiece[], vertices: Vec2[], faces: number[][]):
   for (let f = 0; f < faces.length; f++) {
     for (let g = f + 1; g < faces.length; g++) {
       const [a, b] = [at[f], at[g]];
-      if (a.layer === b.layer || overlap(a.view, b.view) < 1e-9) continue;
+      if (a.layer === b.layer || overlap(a.view, b.view).area < 1e-9) continue;
       const above = a.layer > b.layer ? 1 : -1;
       orders.push([f, g, (above * (stack[b.layer].frontUp ? 1 : -1)) as 1 | -1]);
     }

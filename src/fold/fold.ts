@@ -1,8 +1,8 @@
-import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three';
+import { Box3, Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
 import { assertStep } from './assert-step';
 import type { Model, Vec3 } from './types';
 
-const DEG = Math.PI / 180;
+const DEG = MathUtils.DEG2RAD;
 const EPSILON = 1e-6;
 /** Rise per layer of a stack, as a fraction of the paper's side. */
 export const LAYER_GAP = 0.002;
