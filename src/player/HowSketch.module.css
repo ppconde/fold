@@ -29,6 +29,8 @@
   aspect-ratio: 1;
   background: var(--grain), var(--ivory);
   outline: 1px solid rgb(51 48 44 / 0.15);
+  /* inside the box, so the phone's swipe row doesn't clip it */
+  outline-offset: -1px;
 }
 
 .frames li[data-current="true"] svg {
@@ -50,30 +52,42 @@
   stroke: var(--clay);
 }
 
-/* wide screens show all three; the dots are for the phone sheet, where one sketch plays at a time */
+/* wide screens show all three; the dots are for the phone sheet, where one sketch shows at a time */
 .dots {
   display: none;
 }
 
 @media (max-width: 899px) and (orientation: portrait), (max-width: 899px) and (min-height: 501px) {
-  /* one sketch at a time, all three in one cell: the box keeps the longest caption's height, so the sheet
-     doesn't resize (and the stage jump) as the sketches change */
+  /* one sketch at a time in a row you can swipe; every sketch stretches to the longest caption's height, so the
+     sheet doesn't resize (and the stage jump) as the sketches change */
   .frames {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "sketch";
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .frames::-webkit-scrollbar {
+    display: none;
   }
 
   .frames li {
-    grid-area: sketch;
-  }
-
-  .frames li:not([data-current="true"]) {
-    visibility: hidden;
+    flex: 0 0 100%;
+    /* the row's width is fractional (32vw), so a snap can land a pixel short: keep the outline off the edge */
+    padding-inline: 1px;
+    scroll-snap-align: start;
   }
 
   /* a little shorter than square, so the longest caption still fits a small phone's sheet */
   .frames svg {
     aspect-ratio: 4 / 3;
+  }
+
+  /* the phone's sketches don't follow the animation, so none is singled out */
+  .frames li[data-current] svg {
+    outline-color: rgb(51 48 44 / 0.15);
   }
 
   .dots {

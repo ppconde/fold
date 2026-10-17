@@ -59,7 +59,7 @@ export const pt: Dictionary = {
     hideSteps: 'esconder passos',
     showSteps: 'mostrar passos',
     reverseFold: 'dobra invertida',
-    how: 'Como',
+    how: 'Gestos',
     creases: 'Vincos',
     howSteps: [
       'Abre um pouco as duas camadas',

@@ -363,7 +363,24 @@ test.describe('a reverse fold step', () => {
     await next(page);
     await next(page);
     await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 2));
-    await expect(page.getByRole('button', { name: 'How' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByRole('button', { name: 'Moves' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  test('a swipe moves through the sketches, and the animation leaves them be', async ({ page }, info) => {
+    test.skip(info.project.name !== 'phone', 'one sketch at a time is the phone sheet');
+    await page.goto(`/fold/crane?step=${NECK}`);
+    const sheet = page.locator('#instructions');
+    if (!(await sheet.isVisible())) await page.getByRole('button', { name: 'Show steps' }).click();
+    const slider = page.getByRole('slider');
+    const frames = sheet.locator('ol');
+    const dots = sheet.locator('[aria-hidden="true"] > i');
+    await slider.fill('100');
+    await expect(dots.nth(0)).toHaveAttribute('data-current', 'true');
+    await frames.evaluate((el) => el.scrollTo({ left: 2 * el.clientWidth }));
+    await expect(dots.nth(2)).toHaveAttribute('data-current', 'true');
+    await slider.fill('10');
+    await expect(dots.nth(2)).toHaveAttribute('data-current', 'true');
+    expect(await frames.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(2);
   });
 
   test('a normal step has no toggle', async ({ page }) => {
