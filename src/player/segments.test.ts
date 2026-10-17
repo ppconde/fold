@@ -8,22 +8,27 @@ const buffer = (g: LineSegmentsGeometry) =>
 
 describe('writeSegments', () => {
   it('reuses the buffer while the segment count stays the same', () => {
-    const g = new LineSegmentsGeometry();
-    writeSegments(g, [0, 0, 0, 1, 0, 0]);
-    const first = buffer(g).data;
-    writeSegments(g, [0, 0, 0, 0, 2, 0]);
-    expect(buffer(g).data).toBe(first);
-    expect([...buffer(g).data.array]).toEqual([0, 0, 0, 0, 2, 0]);
-    expect(g.boundingSphere?.radius).toBeCloseTo(1);
+    const line = { geometry: new LineSegmentsGeometry() };
+    writeSegments(line, [0, 0, 0, 1, 0, 0]);
+    const first = line.geometry;
+    writeSegments(line, [0, 0, 0, 0, 2, 0]);
+    expect(line.geometry).toBe(first);
+    expect([...buffer(line.geometry).data.array]).toEqual([0, 0, 0, 0, 2, 0]);
+    expect(line.geometry.boundingSphere?.radius).toBeCloseTo(1);
   });
 
-  it('allocates a new buffer when the count changes', () => {
-    const g = new LineSegmentsGeometry();
-    writeSegments(g, [0, 0, 0, 1, 0, 0]);
-    const first = buffer(g).data;
-    writeSegments(g, [0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0]);
-    expect(buffer(g).data).not.toBe(first);
-    expect(buffer(g).data.array).toHaveLength(12);
+  it('swaps in a new geometry when the count changes, since three caches the instance count', () => {
+    const line = { geometry: new LineSegmentsGeometry() };
+    writeSegments(line, [0, 0, 0, 1, 0, 0]);
+    const first = line.geometry;
+    let disposed = false;
+    first.addEventListener('dispose', () => {
+      disposed = true;
+    });
+    writeSegments(line, [0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 1, 0]);
+    expect(line.geometry).not.toBe(first);
+    expect(disposed).toBe(true);
+    expect(buffer(line.geometry).data.array).toHaveLength(12);
   });
 });
 

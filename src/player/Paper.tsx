@@ -96,6 +96,14 @@ export function Paper({
     [geometry]
   );
 
+  // setSegments swaps in geometries drei didn't make, so it won't dispose them
+  useEffect(
+    () => () => {
+      for (const line of [borders, folded, flat, active, cut]) line.current?.geometry.dispose();
+    },
+    []
+  );
+
   // Paper coordinates are x/y with valley folds toward +z; turn them so the sheet lies on the table (y up).
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
