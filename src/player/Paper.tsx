@@ -14,6 +14,8 @@ import {
   paperExtent,
   triangleCount
 } from './paper-geometry';
+import { patternHooks } from './paper-material';
+import { PLAIN, paperById } from './papers';
 import { setSegments } from './segments';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
@@ -34,16 +36,21 @@ const toPoints = (flat: number[]): Vec3[] =>
     ? Array.from({ length: flat.length / 3 }, (_, i) => [flat[i * 3], flat[i * 3 + 1], flat[i * 3 + 2]])
     : PLACEHOLDER;
 
-/** `ground`: the table's shadow, lowered while a flap swings below the table so the paper never passes through it. */
+/**
+ * `ground`: the table's shadow, lowered while a flap swings below the table so the paper never passes through it.
+ * `paper`: a booklet paper id printed on the front face, or Plain (the model's own colour).
+ */
 export function Paper({
   model,
   step,
   t,
+  paper = PLAIN,
   ground
 }: {
   model: Model;
   step: number;
   t: number;
+  paper?: string;
   ground?: RefObject<Group | null>;
 }) {
   const invalidate = useThree((s) => s.invalidate);
@@ -63,6 +70,12 @@ export function Paper({
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
   const cut = useRef<LineRef>(null);
+  // an ivory edge under the creases, so they still read on dark patterns and on the ivory back
+  const bordersHalo = useRef<LineRef>(null);
+  const foldedHalo = useRef<LineRef>(null);
+  const activeHalo = useRef<LineRef>(null);
+  const cutHalo = useRef<LineRef>(null);
+  const pattern = paperById(paper);
   // which flap a reverse fold moves and where it tucks in, an ink stroke like the dock's chevrons
   const tuck = useMemo(() => tuckArrow(model, step), [model, step]);
   const tuckStrength = tuck ? arrowOpacity(progress(t), landingAt(model, step)) : 0;
@@ -84,8 +97,12 @@ export function Paper({
     setSegments(flat.current, groups.flat);
     setSegments(active.current, groups.active);
     setSegments(cut.current, groups.cut);
+    setSegments(bordersHalo.current, pattern ? groups.borders : []);
+    setSegments(foldedHalo.current, pattern ? groups.folded : []);
+    setSegments(activeHalo.current, pattern ? groups.active : []);
+    setSegments(cutHalo.current, pattern ? groups.cut : []);
     invalidate();
-  }, [model, step, t, geometry, invalidate, ground]);
+  }, [model, step, t, geometry, invalidate, ground, pattern]);
 
   useEffect(() => () => washi.dispose(), [washi]);
 
@@ -101,13 +118,17 @@ export function Paper({
     <group rotation={[-Math.PI / 2, 0, 0]}>
       <group position={[-center[0], -center[1], 0]}>
         {[
-          { color: softenTowardIvory(model.paperColor), side: FrontSide },
-          { color: BACK, side: BackSide }
-        ].map(({ color, side }) => (
+          // white under a pattern: the pattern brings its own colours and the washi map still multiplies them
+          { color: pattern ? '#ffffff' : softenTowardIvory(model.paperColor), side: FrontSide, hooks: pattern },
+          { color: BACK, side: BackSide, hooks: undefined }
+        ].map(({ color, side, hooks }) => (
           <mesh key={side} geometry={geometry}>
             {[1, GHOST_OPACITY].map((opacity, i) => (
               <meshStandardMaterial
-                key={opacity}
+                // a new material per paper; ponytail: the first switch to a paper compiles its program (about a
+                // frame), one shared program with a pattern-index uniform if that hitch ever shows
+                key={`${opacity}:${hooks?.id ?? 'plain'}`}
+                {...(hooks && patternHooks(hooks))}
                 attach={`material-${i}`}
                 color={color}
                 roughness={0.92}
@@ -124,8 +145,37 @@ export function Paper({
             ))}
           </mesh>
         ))}
-        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7} />
-        <Line ref={folded} points={PLACEHOLDER} segments color={INK} lineWidth={1.0} visible={false} />
+        {/* after the paper and without depth, so the ink lines (drawn next) always sit on top of the halo */}
+        <Line
+          ref={bordersHalo}
+          points={borderPoints}
+          segments
+          color={BACK}
+          lineWidth={3.3}
+          renderOrder={0.5}
+          depthWrite={false}
+          visible={false}
+        />
+        <Line
+          ref={foldedHalo}
+          points={PLACEHOLDER}
+          segments
+          color={BACK}
+          lineWidth={2.6}
+          renderOrder={0.5}
+          depthWrite={false}
+          visible={false}
+        />
+        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7} renderOrder={0.6} />
+        <Line
+          ref={folded}
+          points={PLACEHOLDER}
+          segments
+          color={INK}
+          lineWidth={1.0}
+          renderOrder={0.6}
+          visible={false}
+        />
         <Line
           ref={flat}
           points={PLACEHOLDER}
@@ -137,6 +187,17 @@ export function Paper({
           visible={false}
         />
         <Line
+          ref={activeHalo}
+          points={PLACEHOLDER}
+          segments
+          color={BACK}
+          lineWidth={3.4}
+          renderOrder={0.9}
+          depthWrite={false}
+          frustumCulled={false}
+          visible={false}
+        />
+        <Line
           ref={active}
           points={PLACEHOLDER}
           segments
@@ -144,6 +205,17 @@ export function Paper({
           renderOrder={1}
           lineWidth={1.8}
           frustumCulled={false}
+        />
+        <Line
+          ref={cutHalo}
+          points={PLACEHOLDER}
+          segments
+          color={BACK}
+          lineWidth={4.2}
+          renderOrder={1.9}
+          depthTest={false}
+          frustumCulled={false}
+          visible={false}
         />
         <Line
           ref={cut}
@@ -158,7 +230,19 @@ export function Paper({
         />
         {tuck &&
           tuckStrength > 0 &&
-          [tuck.shaft, [tuck.head[0], tuck.shaft[tuck.shaft.length - 1], tuck.head[1]]].map((points) => (
+          [tuck.shaft, [tuck.head[0], tuck.shaft[tuck.shaft.length - 1], tuck.head[1]]].flatMap((points) => [
+            pattern && (
+              <Line
+                key={`halo${points.length}`}
+                points={points}
+                color={BACK}
+                lineWidth={3}
+                transparent
+                opacity={tuckStrength}
+                renderOrder={2.9}
+                depthTest={false}
+              />
+            ),
             <Line
               key={points.length}
               points={points}
@@ -169,7 +253,7 @@ export function Paper({
               renderOrder={3}
               depthTest={false}
             />
-          ))}
+          ])}
       </group>
     </group>
   );

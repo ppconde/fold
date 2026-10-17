@@ -50,6 +50,7 @@ export const pt: Dictionary = {
     licence:
       'O código é software livre sob a GPLv3. Os modelos são partilhados sob CC BY-NC-SA, salvo indicação em contrário.'
   },
+  papers: { plain: 'Liso', ichimatsu: 'Ichimatsu' },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
     stepOf: (n, total) => `Passo ${n} · ${total}`,
@@ -80,6 +81,8 @@ export const pt: Dictionary = {
     foldProgress: 'Progresso da dobra',
     percentFolded: (n) => `${n}% dobrado`,
     hint: '← anterior · seguinte → · passa o rato para ver os nomes',
+    paper: 'Papel',
+    paperIs: (name: string) => `Papel: ${name}`,
     done: 'Feito',
     isComplete: (name) => `${name} está concluído.`,
     diagramTitle: (active) =>

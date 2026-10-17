@@ -299,7 +299,7 @@ test('the dock hint shows on the first visit and is gone once a step has played'
 test('every dock button has a non-empty title', async ({ page }) => {
   await page.goto('/fold/tulip?step=1');
   const buttons = page.getByTestId('dock').getByRole('button');
-  await expect(buttons).toHaveCount(6);
+  await expect(buttons).toHaveCount(7);
   for (const b of await buttons.all()) expect(((await b.getAttribute('title')) ?? '').length).toBeGreaterThan(0);
 });
 

@@ -21,7 +21,15 @@ class SteadyControls extends CameraControlsImpl {
   }
 }
 
-type Props = { model: Model; step: number; t: number; playing: boolean; resetCount: number; frameStep: number };
+type Props = {
+  model: Model;
+  step: number;
+  t: number;
+  playing: boolean;
+  resetCount: number;
+  frameStep: number;
+  paper: string;
+};
 
 export function Stage(props: Props) {
   const t = useT();
@@ -39,7 +47,7 @@ export function Stage(props: Props) {
   );
 }
 
-function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
+function Scene({ model, step, t, playing, resetCount, frameStep, paper }: Props) {
   const controls = useRef<ComponentRef<typeof CameraControls>>(null);
   const ground = useRef<Group>(null);
   const firstFrame = useRef(true);
@@ -77,7 +85,7 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
       <hemisphereLight args={['#fffaf0', '#e6dccb', 1.1]} />
       <directionalLight position={[-2, 4, 3]} intensity={1.6} color="#fff4e6" />
       <directionalLight position={[3, 2, -2]} intensity={0.45} />
-      <Paper model={model} step={step} t={t} ground={ground} />
+      <Paper model={model} step={step} t={t} paper={paper} ground={ground} />
       <group ref={ground}>
         <ContactShadows
           position={[0, -0.002, 0]}
