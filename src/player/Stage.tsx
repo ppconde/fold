@@ -8,6 +8,9 @@ import { prefersReducedMotion } from './browser';
 import { Paper } from './Paper';
 import { endCentre, frameReach, paperExtent, STAGE_FOV, STAGE_POLAR, stageDistance } from './paper-geometry';
 
+/** Zoom per wheel notch or pinch, against camera-controls' default of 1. */
+const ZOOM_SPEED = 2;
+
 type Props = { model: Model; step: number; t: number; playing: boolean; resetCount: number; frameStep: number };
 
 export function Stage(props: Props) {
@@ -30,6 +33,8 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
   const controls = useRef<ComponentRef<typeof CameraControls>>(null);
   const ground = useRef<Group>(null);
   const firstFrame = useRef(true);
+  /** The step and recentre count last framed, and whether the reader has moved the camera since. */
+  const framed = useRef({ frameStep, resetCount, moved: false });
   const aspect = useThree((s) => s.size.width / s.size.height);
   const { size } = paperExtent(model);
   // frameStep is the last settled step, so the camera never moves while a step plays
@@ -45,6 +50,10 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
   useEffect(() => {
     const c = controls.current;
     if (!c) return;
+    // replaying a step (or playing it back) leaves a camera the reader has moved where they put it
+    const last = framed.current;
+    if (last.moved && last.frameStep === frameStep && last.resetCount === resetCount && step === frameStep) return;
+    framed.current = { frameStep, resetCount, moved: false };
     const animate = !firstFrame.current && !prefersReducedMotion();
     firstFrame.current = false;
     // the homepage's sheet is handed over to this view (global.css, ::view-transition-old(paper))
@@ -69,7 +78,17 @@ function Scene({ model, step, t, playing, resetCount, frameStep }: Props) {
           far={size}
         />
       </group>
-      <CameraControls ref={controls} makeDefault minDistance={size * 0.4} maxDistance={size * 6} />
+      <CameraControls
+        ref={controls}
+        makeDefault
+        minDistance={size * 0.4}
+        maxDistance={size * 6}
+        dollySpeed={ZOOM_SPEED}
+        // `control`, not `controlstart`: the wheel only sends the former
+        onControl={() => {
+          framed.current.moved = true;
+        }}
+      />
     </>
   );
 }
