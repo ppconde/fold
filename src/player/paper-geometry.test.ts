@@ -79,6 +79,16 @@ describe('lineGroups', () => {
     expect(g.folded).toHaveLength(2 * 2 * 6);
     expect(g.flat).toEqual([]);
   });
+
+  it('draws this step’s crease in ink when not highlighted: folded once it folds, flat before', () => {
+    const model = half();
+    const still = lineGroups(model, foldedPositions(model, 1, 0), 1, 0, false);
+    expect(still.active).toEqual([]);
+    expect(still.flat).toHaveLength(2 * 6);
+    const done = lineGroups(model, foldedPositions(model, 1, 1), 1, 1, false);
+    expect(done.active).toEqual([]);
+    expect(done.folded).toHaveLength(2 * 6);
+  });
 });
 
 describe('endCentre', () => {
