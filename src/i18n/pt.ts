@@ -64,7 +64,8 @@ export const pt: Dictionary = {
     'wavy-cords': 'Cordões ondulados',
     kusari: 'Riscas kusari',
     'sakura-komon': 'Sakura komon',
-    ume: 'Ume (flor de ameixeira)'
+    ume: 'Ume (flor de ameixeira)',
+    cho: 'Chō (borboletas)'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',

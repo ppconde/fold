@@ -1,5 +1,6 @@
 import { ajiro } from './ajiro';
 import { asanoha } from './asanoha';
+import { cho } from './cho';
 import { hanabishi } from './hanabishi';
 import { ichimatsu } from './ichimatsu';
 import { kusari } from './kusari';
@@ -35,7 +36,8 @@ export const PAPERS: PaperPattern[] = [
   wavyCords,
   kusari,
   sakuraKomon,
-  ume
+  ume,
+  cho
 ];
 
 export const paperById = (id: string) => PAPERS.find((p) => p.id === id);

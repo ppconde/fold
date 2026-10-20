@@ -60,7 +60,8 @@ export const en = {
     'wavy-cords': 'Wavy cords',
     kusari: 'Kusari stripes',
     'sakura-komon': 'Sakura komon',
-    ume: 'Ume'
+    ume: 'Ume',
+    cho: 'Chō (butterflies)'
   } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
