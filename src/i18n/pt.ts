@@ -67,7 +67,8 @@ export const pt: Dictionary = {
     ume: 'Ume (flor de ameixeira)',
     cho: 'Chō (borboletas)',
     ine: 'Ine (arroz)',
-    'tatewaku-kumo': 'Tatewaku kumo'
+    'tatewaku-kumo': 'Tatewaku kumo',
+    ryusui: 'Ryūsui (água corrente)'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
