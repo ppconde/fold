@@ -59,7 +59,8 @@ export const en = {
     ajiro: 'Ajiro weave',
     'wavy-cords': 'Wavy cords',
     kusari: 'Kusari stripes',
-    'sakura-komon': 'Sakura komon'
+    'sakura-komon': 'Sakura komon',
+    ume: 'Ume'
   } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
