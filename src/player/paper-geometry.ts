@@ -1,6 +1,7 @@
 import { MathUtils } from 'three';
 import { stepCreases } from '../fold/creases';
-import { anglesAt, foldedPositions } from '../fold/fold';
+import { anglesAt, foldedPositions, progress } from '../fold/fold';
+import { pinchOpacity } from '../fold/reverse';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 
 type Extent = {
@@ -153,4 +154,30 @@ export function lineGroups(
     }
   }
   return { borders, folded, flat, active: highlighted, cut };
+}
+
+/** The pinch arrows as ink strokes at `t`: per arrow a shaft and an open V at its tip, and their shared opacity. */
+export function pinchStrokes(arrows: { from: Vec3; to: Vec3 }[] | null, t: number) {
+  const strokes = (arrows ?? []).flatMap(({ from, to }) => {
+    const back = from.map((x, i) => (x - to[i]) / 4) as Vec3; // the wing runs a quarter of the shaft, back along it
+    // a perpendicular to the shaft: along the world axis it is least aligned with
+    const axis = back.map(Math.abs).indexOf(Math.min(...back.map(Math.abs)));
+    const side: Vec3 = [0, 0, 0];
+    side[axis] = 1;
+    const cross: Vec3 = [
+      back[1] * side[2] - back[2] * side[1],
+      back[2] * side[0] - back[0] * side[2],
+      back[0] * side[1] - back[1] * side[0]
+    ];
+    const norm = Math.hypot(...cross) || 1;
+    const barb = (s: number) =>
+      to.map(
+        (x, i) => x + back[i] * Math.cos(0.5) + (s * cross[i] * Math.hypot(...back) * Math.sin(0.5)) / norm
+      ) as Vec3;
+    return [
+      [from, to],
+      [barb(1), to, barb(-1)]
+    ];
+  });
+  return { strokes, opacity: arrows ? pinchOpacity(progress(t)) : 0 };
 }
