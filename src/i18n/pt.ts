@@ -61,7 +61,8 @@ export const pt: Dictionary = {
     'shippo-hanabishi': 'Shippō hanabishi',
     hanabishi: 'Treliça hanabishi',
     ajiro: 'Trama ajiro',
-    'wavy-cords': 'Cordões ondulados'
+    'wavy-cords': 'Cordões ondulados',
+    kusari: 'Riscas kusari'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
