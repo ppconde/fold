@@ -131,8 +131,8 @@ describe('pinchArrows', () => {
 });
 
 describe('pinchOpacity', () => {
-  it('shows from the first frame and fades out over the second half of the flip', () => {
-    expect([0, REVERSE_FLIP / 2, 0.75 * REVERSE_FLIP, REVERSE_FLIP, 1].map(pinchOpacity)).toEqual([
+  it('shows from the first frame and is gone by the time the flap stands on edge', () => {
+    expect([0, REVERSE_FLIP / 4, (3 * REVERSE_FLIP) / 8, REVERSE_FLIP / 2, 1].map(pinchOpacity)).toEqual([
       1,
       1,
       expect.closeTo(0.5, 9),

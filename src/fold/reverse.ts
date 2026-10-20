@@ -101,5 +101,6 @@ export function pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 
   });
 }
 
-/** The pinch arrows' strength at eased progress `s`: full from the first frame, fading over the flip's second half. */
-export const pinchOpacity = (s: number): number => Math.max(0, Math.min(1, (REVERSE_FLIP - s) / (REVERSE_FLIP / 2)));
+/** The pinch arrows' strength at eased progress `s`: full from the first frame, gone by the time the flap is edge-on. */
+export const pinchOpacity = (s: number): number =>
+  Math.max(0, Math.min(1, (REVERSE_FLIP / 2 - s) / (REVERSE_FLIP / 4)));
