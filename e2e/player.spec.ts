@@ -370,7 +370,8 @@ test.describe('a reverse fold step', () => {
     test.skip(info.project.name !== 'phone', 'one sketch at a time is the phone sheet');
     await page.goto(`/fold/crane?step=${NECK}`);
     const sheet = page.locator('#instructions');
-    if (!(await sheet.isVisible())) await page.getByRole('button', { name: 'Show steps' }).click();
+    // open on a first visit; isVisible() doesn't wait, so on a slow runner it raced the render
+    await expect(sheet).toBeVisible();
     const slider = page.getByRole('slider');
     const frames = sheet.locator('ol');
     const dots = sheet.locator('[aria-hidden="true"] > i');
@@ -395,7 +396,7 @@ test.describe('a reverse fold step', () => {
     test('the how sheet fits without scrolling', async ({ page }) => {
       await page.goto(`/fold/crane?step=${NECK}`);
       const sheet = page.locator('#instructions');
-      if (!(await sheet.isVisible())) await page.getByRole('button', { name: 'mostrar passos' }).click();
+      await expect(sheet).toBeVisible();
       await expect(sheet).toContainText(/dobra invertida/i);
       // every sketch, its caption the longest at the second: the sheet neither scrolls nor changes height
       await page.getByRole('slider').waitFor();
