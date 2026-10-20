@@ -1,4 +1,14 @@
-import { foldedPositions, isReverseFold, landingAt, movingFaces, progress, tuckBow } from './fold';
+import { Vector3 } from 'three';
+import {
+  foldedPositions,
+  isReverseFold,
+  landingAt,
+  movingFaces,
+  progress,
+  REVERSE_FLIP,
+  swapTurn,
+  tuckBow
+} from './fold';
 import type { Model, Vec3 } from './types';
 
 export { isReverseFold };
@@ -53,3 +63,43 @@ export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [V
 /** The tuck arrow's strength at eased progress `s`: full while the flap swings, gone as it lands. */
 export const arrowOpacity = (s: number, landing: number): number =>
   Math.max(0, Math.min(1, (landing - s) / (landing / 4)));
+
+/**
+ * Two arrows for a reverse fold, one each side of the body, pointing at each other along its normal: at the
+ * flap's spine, a quarter of the way from its pivot to its tip, where you pinch it to turn it inside out.
+ * Null outside a reverse fold.
+ */
+export function pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 }[] | null {
+  if (!swapTurn(model, step)) return null;
+  const [start, end] = [foldedPositions(model, step - 1, 1), foldedPositions(model, step, 1)];
+  const corners = [...movingFaces(model, step)].flatMap((f) =>
+    start[f].map((p, i) => [new Vector3(...p), new Vector3(...end[f][i])])
+  );
+  // the pivot is the flap's corner that stays put; the tip, its corner farthest from there
+  const pivot = corners.reduce((a, b) => (b[0].distanceTo(b[1]) < a[0].distanceTo(a[1]) ? b : a))[0];
+  const tip = corners.reduce((a, b) => (b[0].distanceTo(pivot) > a[0].distanceTo(pivot) ? b : a))[0];
+  const spine = pivot.clone().lerp(tip, 0.25);
+  const length = tip.distanceTo(pivot);
+  const [p, q, r] = start[model.steps[step].fixedFace].map((x) => new Vector3(...x));
+  const n = q.sub(p).cross(r.sub(p)).normalize();
+  // from just outside the paper on either side, as thick as it is around there
+  const depths = start.flat().flatMap((x) => {
+    const d = new Vector3(...x).sub(spine);
+    const along = d.dot(n);
+    return d.addScaledVector(n, -along).length() < 0.5 * length ? [along] : [];
+  });
+  return ([Math.max(...depths), Math.min(...depths)] as const).map((d) => {
+    const side = Math.sign(d) || 1;
+    const to = spine.clone().addScaledVector(n, d + side * 0.04 * length);
+    return {
+      from: to
+        .clone()
+        .addScaledVector(n, side * 0.3 * length)
+        .toArray() as Vec3,
+      to: to.toArray() as Vec3
+    };
+  });
+}
+
+/** The pinch arrows' strength at eased progress `s`: full from the first frame, fading over the flip's second half. */
+export const pinchOpacity = (s: number): number => Math.max(0, Math.min(1, (REVERSE_FLIP - s) / (REVERSE_FLIP / 2)));

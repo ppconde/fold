@@ -71,3 +71,15 @@ Kept: `isReverseFold`, the tuck arrow (#475), the "How" sketches and the step la
 - How the best-fit `R⁻¹` is computed: a 2D Procrustes fit of the moving vertices, or the fold line and spine directions directly.
 - Keeping the flap's own layers apart through the pivot. They are rigid together, so their heights from the final stack should already hold.
 - Whether the head step, which reverse-folds a flap that is itself already tucked, also needs the neck's layers to open.
+
+## Revision 2026-10-18: flip in place, pinch arrows
+
+The user found the crossfade glitchy: two see-through necks overlapping read as a rendering fault. They liked the pivot and the landing. They chose, from a preview (`/tmp/claude-preview/reverse-fold-start.html`), to replace the swap with a flip, and asked for two arrows in 3D that point inwards.
+
+**The flip replaces the swap (first third of the step).** The tucked flap is exactly the start flap mirrored across a line through the pivot, in the body's plane. Measured on the crane, the residual is 0.00 mm for neck, tail and head. So a rigid 180° turn around that line (out of the plane, like a page) carries the flap from the previous step's end to the tucked pose. Nothing is see-through, and the step starts exactly where the last one ended. The pivot then runs over the remaining two thirds, unchanged. The body's open/close spans the whole step as before. The flip must pass the 40-sample crossings test; the axis is fixed, so the only choice is the turn's sense (±180°). If neither sense is crossing-free, stop and ask the user.
+
+**Pinch arrows.** There are two ink arrows in the model's 3D space, like the tuck arrow: one in front of the paper and one behind. They point at each other, along the body's normal, at a spot on the flap's spine a quarter of the way from the pivot to the tip. They show at full strength from the first frame, then fade out over the second half of the flip, gone when the pivot starts. The tuck arrow stays as it is.
+
+**Removed:** the crossfade (the outgoing copy, `swapLayers`, the transparent material, `swapFade`), and `checkModel`'s continuity exemption for reverse-fold steps.
+
+**Changed copy:** `player.shortcut` becomes "The flap turns inside out and goes in between the body's layers." (en). In pt: "A aba vira do avesso e entra entre as camadas do corpo."

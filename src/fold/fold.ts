@@ -8,8 +8,8 @@ const EPSILON = 1e-6;
 export const LAYER_GAP = 0.002;
 /** Layers each side of a reverse fold's flap shift apart at the peak of the open. */
 export const REVERSE_OPEN = 2;
-/** Share of a reverse fold (eased) in which its tucked flap holds still, fading in over the flap as it was. */
-export const REVERSE_SWAP = 0.15;
+/** Share of a reverse fold (eased) in which its flap turns over in place, onto its tucked pose. */
+export const REVERSE_FLIP = 1 / 3;
 /** Share of a step at each end in which a travelling flap rises off, and settles back onto, the stack. */
 const LIFT_SPAN = 0.15;
 
@@ -315,14 +315,22 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   const rise = progress(t / LIFT_SPAN) * progress((1 - t) / LIFT_SPAN);
 
   const C = treeChange(model, step);
-  // a reverse fold's flap starts tucked: its end pose, turned in the body's plane, pivoting home as the step runs
+  // a reverse fold's flap first turns over in place, a page turned about the mirror line through its pivot, onto
+  // its tucked pose: its end pose, turned in the body's plane, which then pivots home as the step runs
   const swap = swapTurn(model, step);
   const swapped = swap ? movingFaces(model, step) : new Set<number>();
+  const flipped = swap && s < REVERSE_FLIP ? progress(s / REVERSE_FLIP) : 1;
+  const flip =
+    flipped < 1 &&
+    swap &&
+    turnAbout(new Vector3(...swap.pivot), new Vector3(...swap.flip.axis), swap.flip.sense * Math.PI * flipped);
+  const begin = flip ? startPose(model, step) : [];
   const T1 = swap ? rootTransforms(model, anglesAt(model, step, 1), step) : T;
-  const pivoted = Math.max(0, (s - REVERSE_SWAP) / (1 - REVERSE_SWAP));
+  const pivoted = Math.max(0, (s - REVERSE_FLIP) / (1 - REVERSE_FLIP));
   const turnBack =
     swap && turnAbout(new Vector3(...swap.pivot), new Vector3(...swap.axis), -swap.angle * (1 - pivoted));
   const poses = model.faces.map((_, f) => {
+    if (flip && swapped.has(f)) return flip.clone().multiply(begin[f]);
     if (turnBack && swapped.has(f))
       return turnBack
         .clone()
@@ -337,9 +345,16 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   const mid = cur.landedOrders && !swap ? stackAt(model, step, true) : to;
   const [a0, a1, u] = s <= landing ? [from, mid, s / landing] : [mid, to, (s - landing) / (1 - landing)];
   const lifts = model.faces.map((_, f) => {
+    // a turning flap's own normal swings through the plane: it rises straight up instead, below
+    if (flip && swapped.has(f)) return 0;
     const a = a0.heights[f] * a0.up[f];
     return LAYER_GAP * (a + (a1.heights[f] * a1.up[f] - a) * (swapped.has(f) ? 1 : u));
   });
+  // ...rising to its tucked layers as it stands up, so it lies down at them
+  const flipRise = (f: number) =>
+    flip && swapped.has(f)
+      ? LAYER_GAP * (from.heights[f] + (to.heights[f] - from.heights[f]) * progress(2 * flipped))
+      : 0;
   // only in a step that ends open (a flap standing out of the stack); flat steps blend their heights alone
   const open = endsOpen(model, step);
   const roots = open ? flapRoots(model, poses, lifts, cur.fixedFace) : lifts.map(() => 0);
@@ -359,7 +374,7 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
       facing.set(0, 0, 1).transformDirection(m);
       normal.addScaledVector(up.clone().addScaledVector(facing, -up.dot(facing)), Math.abs(lift));
     }
-    const shift = LAYER_GAP * clearance[f] * rise;
+    const shift = LAYER_GAP * clearance[f] * rise + flipRise(f);
     return face.map((v) => {
       point.set(model.vertices[v][0], model.vertices[v][1], lift).applyMatrix4(m).add(normal);
       point.z += shift;
@@ -458,15 +473,17 @@ function opening(model: Model, step: number): number[] {
   return side.map((ss) => (ss.length && ss.every((x) => x === ss[0]) ? ss[0] * REVERSE_OPEN : 0));
 }
 
-const swaps = new WeakMap<Model, ({ pivot: Vec3; axis: Vec3; angle: number } | null)[]>();
+type SwapTurn = { pivot: Vec3; axis: Vec3; angle: number; flip: { axis: Vec3; sense: 1 | -1 } };
+const swaps = new WeakMap<Model, (SwapTurn | null)[]>();
 
 /**
  * A reverse fold's pivot: the rotation (radians, about `axis`, the fixed face's normal, through `pivot`) that
- * carries its flap, swapped in at s = 0, to its end pose at s = 1. The pivot is where the new crease meets the
- * flipped spine, the reflection's fixed point; the angle best fits the moving faces' corners at the end back onto
- * where they start. Null unless `isReverseFold`.
+ * carries its flap, tucked at s = REVERSE_FLIP, to its end pose at s = 1. The pivot is where the new crease meets
+ * the flipped spine, the reflection's fixed point; the angle best fits the moving faces' corners at the end back onto
+ * where they start. Before it, the flap turns over by `flip.sense`·π about `flip.axis` through `pivot`: the line in
+ * the plane that mirrors the flap as it starts onto it tucked. Null unless `isReverseFold`.
  */
-export function swapTurn(model: Model, step: number): { pivot: Vec3; axis: Vec3; angle: number } | null {
+export function swapTurn(model: Model, step: number): SwapTurn | null {
   const list = swaps.get(model) ?? [];
   swaps.set(model, list);
   if (list[step] !== undefined) return list[step];
@@ -527,13 +544,37 @@ export function swapTurn(model: Model, step: number): { pivot: Vec3; axis: Vec3;
       .dot(bow.out);
   const long = short - 2 * Math.PI * Math.sign(short);
   const angle = out(long) > out(short) ? long : short;
-  list[step] = { pivot: pivot.toArray() as Vec3, axis: axis.toArray() as Vec3, angle };
+  // the line through the pivot, in the plane, that mirrors the flap as it starts onto it tucked (by vertex)
+  const tucked = turnAbout(pivot, axis, -angle).multiply(base);
+  let [cos2, sin2] = [0, 0];
+  for (const f of moving) {
+    const end = tucked.clone().multiply(T[f]);
+    for (const v of model.faces[f]) {
+      const [[vx, vy], [gx, gy]] = [flat(...model.vertices[v], start[f]), flat(...model.vertices[v], end)];
+      cos2 += vx * gx - vy * gy;
+      sin2 += vx * gy + vy * gx;
+    }
+  }
+  const half = Math.atan2(sin2, cos2) / 2;
+  const line = u.clone().multiplyScalar(Math.cos(half)).addScaledVector(w, Math.sin(half));
+  // it turns over toward the side of the stack its layers move to: it stands up out of the stack on its way, so it
+  // never cuts through the layers it ends among
+  const { heights: h0 } = stackAt(model, step - 1);
+  const { heights: h1 } = stackAt(model, step);
+  const rises = moving.reduce((sum, f) => sum + h1[f] - h0[f], 0);
+  const centre = moving
+    .flatMap((f) => model.faces[f].map((v) => new Vector3(...model.vertices[v], 0).applyMatrix4(start[f])))
+    .reduce((c, p, _, all) => c.addScaledVector(p, 1 / all.length), new Vector3());
+  const lifted = centre.clone().applyMatrix4(turnAbout(pivot, line, Math.PI / 2)).z - centre.z;
+  const sense = Math.sign(lifted) === Math.sign(rises) ? 1 : -1;
+  list[step] = {
+    pivot: pivot.toArray() as Vec3,
+    axis: axis.toArray() as Vec3,
+    angle,
+    flip: { axis: line.toArray() as Vec3, sense }
+  };
   return list[step];
 }
-
-/** How opaque a reverse fold's tucked flap is at `t`: 0 to 1 over the swap, then 1. 1 for every other step. */
-export const swapFade = (model: Model, step: number, t: number): number =>
-  isReverseFold(model, step) ? Math.min(1, progress(t) / REVERSE_SWAP) : 1;
 
 /**
  * A reverse fold's tuck, from the corners of every face as the flap was (`from`) and as it lands (`to`): the tip,
