@@ -56,7 +56,8 @@ export const pt: Dictionary = {
     shippo: 'Shippō',
     asanoha: 'Asanoha',
     stripes: 'Riscas à mão',
-    'mame-shibori': 'Mame shibori'
+    'mame-shibori': 'Mame shibori',
+    'same-komon': 'Same komon'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
