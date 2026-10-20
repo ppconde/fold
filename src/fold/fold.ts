@@ -566,7 +566,9 @@ export function swapTurn(model: Model, step: number): SwapTurn | null {
     .flatMap((f) => model.faces[f].map((v) => new Vector3(...model.vertices[v], 0).applyMatrix4(start[f])))
     .reduce((c, p, _, all) => c.addScaledVector(p, 1 / all.length), new Vector3());
   const lifted = centre.clone().applyMatrix4(turnAbout(pivot, line, Math.PI / 2)).z - centre.z;
-  const sense = Math.sign(lifted) === Math.sign(rises) ? 1 : -1;
+  // layers that keep their places on the whole (rises = 0) turn up, toward +z; a wrong pick passes the flap through
+  // the body, which checkModel's crossings check catches
+  const sense = rises < 0 === lifted < 0 ? 1 : -1;
   list[step] = {
     pivot: pivot.toArray() as Vec3,
     axis: axis.toArray() as Vec3,
