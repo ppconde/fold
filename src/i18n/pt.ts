@@ -65,7 +65,8 @@ export const pt: Dictionary = {
     kusari: 'Riscas kusari',
     'sakura-komon': 'Sakura komon',
     ume: 'Ume (flor de ameixeira)',
-    cho: 'Chō (borboletas)'
+    cho: 'Chō (borboletas)',
+    ine: 'Ine (arroz)'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
