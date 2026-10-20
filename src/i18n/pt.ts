@@ -63,7 +63,8 @@ export const pt: Dictionary = {
     ajiro: 'Trama ajiro',
     'wavy-cords': 'Cordões ondulados',
     kusari: 'Riscas kusari',
-    'sakura-komon': 'Sakura komon'
+    'sakura-komon': 'Sakura komon',
+    ume: 'Ume (flor de ameixeira)'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
