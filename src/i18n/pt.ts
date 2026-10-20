@@ -69,7 +69,8 @@ export const pt: Dictionary = {
     ine: 'Ine (arroz)',
     'tatewaku-kumo': 'Tatewaku kumo',
     ryusui: 'Ryūsui (água corrente)',
-    seigaiha: 'Seigaiha'
+    seigaiha: 'Seigaiha',
+    sayagata: 'Sayagata'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',

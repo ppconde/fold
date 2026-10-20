@@ -9,6 +9,7 @@ import { mameShibori } from './mame-shibori';
 import { ryusui } from './ryusui';
 import { sakuraKomon } from './sakura-komon';
 import { sameKomon } from './same-komon';
+import { sayagata } from './sayagata';
 import { seigaiha } from './seigaiha';
 import { shippo } from './shippo';
 import { shippoHanabishi } from './shippo-hanabishi';
@@ -45,7 +46,8 @@ export const PAPERS: PaperPattern[] = [
   ine,
   tatewakuKumo,
   ryusui,
-  seigaiha
+  seigaiha,
+  sayagata
 ];
 
 export const paperById = (id: string) => PAPERS.find((p) => p.id === id);
