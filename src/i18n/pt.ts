@@ -60,7 +60,8 @@ export const pt: Dictionary = {
     'same-komon': 'Same komon',
     'shippo-hanabishi': 'Shippō hanabishi',
     hanabishi: 'Treliça hanabishi',
-    ajiro: 'Trama ajiro'
+    ajiro: 'Trama ajiro',
+    'wavy-cords': 'Cordões ondulados'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',

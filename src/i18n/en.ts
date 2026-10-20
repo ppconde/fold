@@ -56,7 +56,8 @@ export const en = {
     'same-komon': 'Same komon',
     'shippo-hanabishi': 'Shippō hanabishi',
     hanabishi: 'Hanabishi lattice',
-    ajiro: 'Ajiro weave'
+    ajiro: 'Ajiro weave',
+    'wavy-cords': 'Wavy cords'
   } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',

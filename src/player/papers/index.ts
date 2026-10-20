@@ -7,6 +7,7 @@ import { sameKomon } from './same-komon';
 import { shippo } from './shippo';
 import { shippoHanabishi } from './shippo-hanabishi';
 import { stripes } from './stripes';
+import { wavyCords } from './wavy-cords';
 
 /**
  * A booklet paper drawn by a shader. `ground`/`ink` are sRGB hex. `glsl` defines `vec3 paperColor(vec2 uv)` in sheet
@@ -27,7 +28,8 @@ export const PAPERS: PaperPattern[] = [
   sameKomon,
   shippoHanabishi,
   hanabishi,
-  ajiro
+  ajiro,
+  wavyCords
 ];
 
 export const paperById = (id: string) => PAPERS.find((p) => p.id === id);
