@@ -46,7 +46,13 @@ export const en = {
     creditFonts: 'Shippori Mincho, Instrument Sans and Zen Kurenaido, under the SIL Open Font License.',
     licence: 'The code is free software under the GPLv3. Models are shared under CC BY-NC-SA unless stated otherwise.'
   },
-  papers: { plain: 'Plain', ichimatsu: 'Ichimatsu', shippo: 'Shippō', asanoha: 'Asanoha' } as Record<string, string>,
+  papers: {
+    plain: 'Plain',
+    ichimatsu: 'Ichimatsu',
+    shippo: 'Shippō',
+    asanoha: 'Asanoha',
+    stripes: 'Hand-drawn stripes'
+  } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
     stepOf: (n: number, total: number) => `Step ${n} · ${total}`,
