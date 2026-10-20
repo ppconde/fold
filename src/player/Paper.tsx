@@ -2,18 +2,10 @@ import { Line } from '@react-three/drei';
 import { useThree } from '@react-three/fiber';
 import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
-import { foldedPositions, landingAt, progress } from '../fold/fold';
-import { arrowOpacity, ghostFaces, tuckArrow } from '../fold/reverse';
+import { foldedPositions, progress } from '../fold/fold';
+import { arrowOpacity, tuckArrow } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
-import {
-  depthBelowTable,
-  faceGroups,
-  fillTriangles,
-  fillUVs,
-  lineGroups,
-  paperExtent,
-  triangleCount
-} from './paper-geometry';
+import { depthBelowTable, fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
 import { patternHooks } from './paper-material';
 import { PLAIN, paperById } from './papers';
 import { setSegments } from './segments';
@@ -24,8 +16,6 @@ type LineRef = ComponentRef<typeof Line>;
 const INK = '#33302C';
 const HIGHLIGHT = '#A5633F';
 const BACK = '#F3EDE2';
-/** A reverse fold's flap, while it takes its shortcut through the body. */
-const GHOST_OPACITY = 0.3;
 const PLACEHOLDER: Vec3[] = [
   [0, 0, 0],
   [0, 0, 0]
@@ -81,7 +71,7 @@ export function Paper({
   const pattern = paperById(paper);
   // which flap a reverse fold moves and where it tucks in, an ink stroke like the dock's chevrons
   const tuck = useMemo(() => tuckArrow(model, step), [model, step]);
-  const tuckStrength = tuck ? arrowOpacity(progress(t), landingAt(model, step)) : 0;
+  const tuckStrength = tuck ? arrowOpacity(progress(t)) : 0;
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
@@ -90,8 +80,6 @@ export function Paper({
     const position = geometry.getAttribute('position') as BufferAttribute;
     fillTriangles(faces, position.array as Float32Array);
     position.needsUpdate = true;
-    geometry.clearGroups();
-    for (const g of faceGroups(model, ghostFaces(model, step, t))) geometry.addGroup(g.start, g.count, g.materialIndex);
     geometry.computeVertexNormals();
     geometry.computeBoundingSphere();
     const groups = lineGroups(model, faces, step, t, highlight);
@@ -134,27 +122,21 @@ export function Paper({
           { color: BACK, side: BackSide, hooks: undefined }
         ].map(({ color, side, hooks }) => (
           <mesh key={side} geometry={geometry}>
-            {[1, GHOST_OPACITY].map((opacity, i) => (
-              <meshStandardMaterial
-                // a new material per paper; ponytail: the first switch to a paper compiles its program (about a
-                // frame), one shared program with a pattern-index uniform if that hitch ever shows
-                key={`${opacity}:${hooks?.id ?? 'plain'}`}
-                {...(hooks && patternHooks(hooks))}
-                attach={`material-${i}`}
-                color={color}
-                roughness={0.92}
-                metalness={0}
-                map={washi}
-                side={side}
-                transparent={opacity < 1}
-                opacity={opacity}
-                depthWrite={opacity === 1}
-                // pushes the paper back far enough that crease lines (flat-depth screen quads) don't sink into sloped faces
-                polygonOffset
-                polygonOffsetFactor={4}
-                polygonOffsetUnits={4}
-              />
-            ))}
+            <meshStandardMaterial
+              // a new material per paper; ponytail: the first switch to a paper compiles its program (about a
+              // frame), one shared program with a pattern-index uniform if that hitch ever shows
+              key={hooks?.id ?? 'plain'}
+              {...(hooks && patternHooks(hooks))}
+              color={color}
+              roughness={0.92}
+              metalness={0}
+              map={washi}
+              side={side}
+              // pushes the paper back far enough that crease lines (flat-depth screen quads) don't sink into sloped faces
+              polygonOffset
+              polygonOffsetFactor={4}
+              polygonOffsetUnits={4}
+            />
           </mesh>
         ))}
         {/* after the paper and without depth, so the ink lines (drawn next) always sit on top of the halo */}

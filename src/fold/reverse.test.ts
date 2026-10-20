@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
-import { foldedPositions, landingAt, movingFaces } from './fold';
+import { foldedPositions, movingFaces } from './fold';
 import { loadModel } from './load-model';
-import { arrowOpacity, ghostFaces, isReverseFold, pinchArrows, pinchOpacity, pinchSides, tuckArrow } from './reverse';
+import { arrowOpacity, isReverseFold, pinchArrows, pinchOpacity, pinchSides, tuckArrow } from './reverse';
 
 const committed = (id: string) =>
   loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
@@ -24,32 +24,12 @@ describe('isReverseFold', () => {
   });
 });
 
-describe('ghostFaces', () => {
-  it('ghosts the neck flap, not the body it passes between', () => {
-    const g = ghostFaces(crane, neck, 0.5);
-    // the leg's layers, and the body's inner layers it lands between (2026-10-13-reverse-fold-spike.md)
-    for (const f of [2, 5, 34, 35]) expect(g.has(f)).toBe(true);
-    for (const f of [25, 27]) expect(g.has(f)).toBe(false);
-  });
-
-  it('ghosts again when scrubbed back before the landing', () => {
-    expect(landingAt(crane, neck)).toBeLessThan(1);
-    expect(ghostFaces(crane, neck, 0.99).size).toBe(0);
-    expect(ghostFaces(crane, neck, 1).size).toBe(0);
-    expect(ghostFaces(crane, neck, 0.5).size).toBeGreaterThan(0);
-  });
-
-  it('ghosts nothing outside a reverse fold', () => {
-    expect(ghostFaces(crane, neck - 1, 0.5).size).toBe(0);
-  });
-});
-
 describe('tuckArrow', () => {
   const dist = (p: number[], q: number[]) => Math.hypot(...p.map((x, i) => x - q[i]));
   // the leg's tip: the corner of the swinging faces that travels farthest
   const tip = (t: number) => {
     const [from, to] = [foldedPositions(crane, neck, 0), foldedPositions(crane, neck, 1)];
-    const moved = [...ghostFaces(crane, neck, 0.5)].flatMap((f) => from[f].map((p, i) => [p, to[f][i]]));
+    const moved = [...movingFaces(crane, neck)].flatMap((f) => from[f].map((p, i) => [p, to[f][i]]));
     const far = moved.reduce((best, m) => (dist(m[0], m[1]) > dist(best[0], best[1]) ? m : best));
     return far[t];
   };
@@ -78,13 +58,11 @@ describe('tuckArrow', () => {
 });
 
 describe('arrowOpacity', () => {
-  it('shows through the swing and fades as the flap lands', () => {
-    expect(arrowOpacity(0, 0.9)).toBe(1);
-    expect(arrowOpacity(0.5, 0.9)).toBe(1);
-    expect(arrowOpacity(0.8, 0.9)).toBeGreaterThan(0);
-    expect(arrowOpacity(0.8, 0.9)).toBeLessThan(1);
-    expect(arrowOpacity(0.9, 0.9)).toBe(0);
-    expect(arrowOpacity(1, 0.9)).toBe(0);
+  it('shows until three quarters through, then fades out by the end', () => {
+    expect(arrowOpacity(0)).toBe(1);
+    expect(arrowOpacity(0.75)).toBe(1);
+    expect(arrowOpacity(0.875)).toBeCloseTo(0.5);
+    expect(arrowOpacity(1)).toBe(0);
   });
 });
 

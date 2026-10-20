@@ -1,16 +1,8 @@
 import { Vector3 } from 'three';
-import { foldedPositions, isReverseFold, landingAt, movingFaces, progress, tuckBow } from './fold';
+import { foldedPositions, isReverseFold, movingFaces, tuckBow } from './fold';
 import type { Model, Vec3 } from './types';
 
 export { isReverseFold };
-
-const NONE: ReadonlySet<number> = new Set();
-
-/** Faces to draw faint at progress `t`: a reverse fold's flap while it swings through the body, until it lands. */
-export function ghostFaces(model: Model, step: number, t: number): ReadonlySet<number> {
-  if (!isReverseFold(model, step) || progress(t) >= landingAt(model, step)) return NONE;
-  return movingFaces(model, step);
-}
 
 /**
  * A tuck arrow for a reverse fold, like a diagram's: from the flap's tip where it is to where that tip ends up
@@ -51,9 +43,8 @@ export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [V
   return { shaft: shaft.map((p) => p.toArray() as Vec3), head: [barb(1), barb(-1)] };
 }
 
-/** The tuck arrow's strength at eased progress `s`: full while the flap swings, gone as it lands. */
-export const arrowOpacity = (s: number, landing: number): number =>
-  Math.max(0, Math.min(1, (landing - s) / (landing / 4)));
+/** The tuck arrow's strength at eased progress `s`: full until three quarters through, gone as the step ends. */
+export const arrowOpacity = (s: number): number => Math.max(0, Math.min(1, (1 - s) * 4));
 
 /**
  * Two arrows for a reverse fold, one each side of the body, pointing at each other along its normal: at the
