@@ -1,4 +1,5 @@
 import { asanoha } from './asanoha';
+import { hanabishi } from './hanabishi';
 import { ichimatsu } from './ichimatsu';
 import { mameShibori } from './mame-shibori';
 import { sameKomon } from './same-komon';
@@ -16,7 +17,16 @@ export type PaperPattern = { id: string; ground: string; ink: string; glsl: stri
 export const PLAIN = 'plain';
 
 /** Picker order; Plain comes first, ahead of these. */
-export const PAPERS: PaperPattern[] = [ichimatsu, shippo, asanoha, stripes, mameShibori, sameKomon, shippoHanabishi];
+export const PAPERS: PaperPattern[] = [
+  ichimatsu,
+  shippo,
+  asanoha,
+  stripes,
+  mameShibori,
+  sameKomon,
+  shippoHanabishi,
+  hanabishi
+];
 
 export const paperById = (id: string) => PAPERS.find((p) => p.id === id);
 

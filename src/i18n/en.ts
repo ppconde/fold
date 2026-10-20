@@ -54,7 +54,8 @@ export const en = {
     stripes: 'Hand-drawn stripes',
     'mame-shibori': 'Mame shibori',
     'same-komon': 'Same komon',
-    'shippo-hanabishi': 'Shippō hanabishi'
+    'shippo-hanabishi': 'Shippō hanabishi',
+    hanabishi: 'Hanabishi lattice'
   } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
