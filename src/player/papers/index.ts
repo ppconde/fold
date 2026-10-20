@@ -1,3 +1,4 @@
+import { ajiro } from './ajiro';
 import { asanoha } from './asanoha';
 import { hanabishi } from './hanabishi';
 import { ichimatsu } from './ichimatsu';
@@ -25,7 +26,8 @@ export const PAPERS: PaperPattern[] = [
   mameShibori,
   sameKomon,
   shippoHanabishi,
-  hanabishi
+  hanabishi,
+  ajiro
 ];
 
 export const paperById = (id: string) => PAPERS.find((p) => p.id === id);
