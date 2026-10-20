@@ -39,19 +39,22 @@ const toPoints = (flat: number[]): Vec3[] =>
 /**
  * `ground`: the table's shadow, lowered while a flap swings below the table so the paper never passes through it.
  * `paper`: a booklet paper id printed on the front face, or Plain (the model's own colour).
+ * `highlight`: the step's creases in the highlight colour; false draws them in ink, as a finished model.
  */
 export function Paper({
   model,
   step,
   t,
   paper = PLAIN,
-  ground
+  ground,
+  highlight = true
 }: {
   model: Model;
   step: number;
   t: number;
   paper?: string;
   ground?: RefObject<Group | null>;
+  highlight?: boolean;
 }) {
   const invalidate = useThree((s) => s.invalidate);
   const geometry = useMemo(() => {
@@ -91,7 +94,7 @@ export function Paper({
     for (const g of faceGroups(model, ghostFaces(model, step, t))) geometry.addGroup(g.start, g.count, g.materialIndex);
     geometry.computeVertexNormals();
     geometry.computeBoundingSphere();
-    const groups = lineGroups(model, faces, step, t);
+    const groups = lineGroups(model, faces, step, t, highlight);
     setSegments(borders.current, groups.borders);
     setSegments(folded.current, groups.folded);
     setSegments(flat.current, groups.flat);
@@ -102,7 +105,7 @@ export function Paper({
     setSegments(activeHalo.current, pattern ? groups.active : []);
     setSegments(cutHalo.current, pattern ? groups.cut : []);
     invalidate();
-  }, [model, step, t, geometry, invalidate, ground, pattern]);
+  }, [model, step, t, geometry, invalidate, ground, pattern, highlight]);
 
   useEffect(() => () => washi.dispose(), [washi]);
 

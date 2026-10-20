@@ -122,8 +122,8 @@ function Folded({ model, at, settle, pointer, still }: Props) {
         rotation={[MathUtils.lerp(REST[0], END_PITCH, settle), MathUtils.lerp(REST[1], 0, settle), 0]}
       >
         <group ref={shift}>
-          {/* once flat, the lesson's first step: no creases drawn yet */}
-          <Paper model={model} step={at > 0 ? 1 : 0} t={at} paper={paper} />
+          {/* once flat, the lesson's first step: no creases drawn yet; in ink, as a lesson's finished model */}
+          <Paper model={model} step={at > 0 ? 1 : 0} t={at} paper={paper} highlight={false} />
         </group>
       </group>
     </group>

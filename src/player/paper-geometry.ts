@@ -129,13 +129,17 @@ function segment(model: Model, faces: Vec3[][], e: number, f = model.edgeFaces[e
   return [...a, ...b];
 }
 
+/** `highlight` false draws the step's creases as past ones, in ink, as a finished model shows them. */
 export function lineGroups(
   model: Model,
   faces: Vec3[][],
   step: number,
-  t: number
+  t: number,
+  highlight = true
 ): { borders: number[]; folded: number[]; flat: number[]; active: number[]; cut: number[] } {
-  const { active, past } = stepCreases(model, step);
+  const creases = stepCreases(model, step);
+  const active = highlight ? creases.active : [];
+  const past = highlight ? creases.past : [...creases.past, ...creases.active];
   const angles = anglesAt(model, step, t);
   const borders: number[] = [];
   const folded: number[] = [];
