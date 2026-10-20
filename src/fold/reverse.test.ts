@@ -116,9 +116,18 @@ describe('pinchArrows', () => {
       const [p, q, r] = start[crane.steps[k].fixedFace].map(v);
       const n = cross(sub(q, p), sub(r, p));
       const [d0, d1] = arrows.map((a) => sub(a.from, a.to));
-      expect(len(cross(d0, n)) / (len(d0) * len(n))).toBeLessThan(1e-6);
-      expect(len(cross(d1, n)) / (len(d1) * len(n))).toBeLessThan(1e-6);
-      expect(d0.reduce((acc, x, i) => acc + x * d1[i], 0)).toBeCloseTo(-len(d0) * len(d1), 9);
+      const dot = (x: number[], y: number[]) => x.reduce((acc, c, i) => acc + c * y[i], 0);
+      const spineDir = sub(tip, pivot);
+      // the flap's layers sit a hair off the plane: take the spine's in-plane part
+      const axis = spineDir.map((x, i) => x - (dot(spineDir, n) / dot(n, n)) * n[i]);
+      for (const d of [d0, d1]) {
+        // 45 degrees off the normal, and its in-plane part is perpendicular to the spine
+        expect(Math.abs(dot(d, n)) / (len(d) * len(n))).toBeCloseTo(Math.SQRT1_2, 9);
+        expect(dot(d, axis) / (len(d) * len(axis))).toBeCloseTo(0, 9);
+      }
+      // opposite normal parts and opposite in-plane parts: they lean in from either side of the spine
+      expect(dot(d0, n) * dot(d1, n)).toBeLessThan(0);
+      for (let i = 0; i < 3; i++) expect(d0[i]).toBeCloseTo(-d1[i], 9);
     }
   });
 

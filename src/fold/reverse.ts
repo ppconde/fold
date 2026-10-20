@@ -88,13 +88,16 @@ export function pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 
     const along = d.dot(n);
     return d.addScaledVector(n, -along).length() < 0.5 * length ? [along] : [];
   });
+  // in the paper's plane, across the spine: the arrows lean in from opposite sides of it, 45 degrees off the normal
+  const across = n.clone().cross(tip.clone().sub(pivot)).normalize(); // perpendicular to n and to the spine
+  const lean = n.clone().add(across).multiplyScalar(Math.SQRT1_2);
   return ([Math.max(...depths), Math.min(...depths)] as const).map((d) => {
     const side = Math.sign(d) || 1;
     const to = spine.clone().addScaledVector(n, d + side * 0.04 * length);
     return {
       from: to
         .clone()
-        .addScaledVector(n, side * 0.3 * length)
+        .addScaledVector(lean, side * 0.3 * length)
         .toArray() as Vec3,
       to: to.toArray() as Vec3
     };
