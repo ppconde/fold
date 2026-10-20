@@ -3,6 +3,7 @@ import { asanoha } from './asanoha';
 import { cho } from './cho';
 import { hanabishi } from './hanabishi';
 import { ichimatsu } from './ichimatsu';
+import { ine } from './ine';
 import { kusari } from './kusari';
 import { mameShibori } from './mame-shibori';
 import { sakuraKomon } from './sakura-komon';
@@ -37,7 +38,8 @@ export const PAPERS: PaperPattern[] = [
   kusari,
   sakuraKomon,
   ume,
-  cho
+  cho,
+  ine
 ];
 
 export const paperById = (id: string) => PAPERS.find((p) => p.id === id);
