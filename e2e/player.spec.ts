@@ -338,7 +338,7 @@ test.describe('a reverse fold step', () => {
   test('on a wide screen shows how and the creases together', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'the side panel has room for both');
     await page.goto(`/fold/crane?step=${NECK}`);
-    await expect(page.getByRole('img', { name: /takes a shortcut/ })).toBeVisible();
+    await expect(page.getByRole('img', { name: /turns inside out/ })).toBeVisible();
     await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Creases' })).toBeHidden();
   });
@@ -347,7 +347,7 @@ test.describe('a reverse fold step', () => {
     test.skip(info.project.name !== 'phone', 'the toggle is for the phone sheet');
     await page.goto(`/fold/crane?step=${NECK}`);
     await expect(page.locator('#instructions')).toContainText(/reverse fold/i);
-    await expect(page.getByRole('img', { name: /takes a shortcut/ })).toBeVisible();
+    await expect(page.getByRole('img', { name: /turns inside out/ })).toBeVisible();
     await page.getByRole('button', { name: 'Creases' }).click();
     await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
     const { violations } = await new AxeBuilder({ page }).include('#instructions').analyze();

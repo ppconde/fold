@@ -3,9 +3,17 @@ import { useThree } from '@react-three/fiber';
 import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
 import { foldedPositions, progress } from '../fold/fold';
-import { arrowOpacity, tuckArrow } from '../fold/reverse';
+import { arrowOpacity, pinchArrows, tuckArrow } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
-import { depthBelowTable, fillTriangles, fillUVs, lineGroups, paperExtent, triangleCount } from './paper-geometry';
+import {
+  depthBelowTable,
+  fillTriangles,
+  fillUVs,
+  lineGroups,
+  paperExtent,
+  pinchStrokes,
+  triangleCount
+} from './paper-geometry';
 import { patternHooks } from './paper-material';
 import { PLAIN, paperById } from './papers';
 import { setSegments } from './segments';
@@ -72,6 +80,8 @@ export function Paper({
   // which flap a reverse fold moves and where it tucks in, an ink stroke like the dock's chevrons
   const tuck = useMemo(() => tuckArrow(model, step), [model, step]);
   const tuckStrength = tuck ? arrowOpacity(progress(t)) : 0;
+  const pinch = useMemo(() => pinchArrows(model, step), [model, step]);
+  const pinched = pinchStrokes(pinch, t);
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
@@ -248,6 +258,19 @@ export function Paper({
               depthTest={false}
             />
           ])}
+        {pinched.opacity > 0 &&
+          pinched.strokes.map((points) => (
+            <Line
+              key={points.join()}
+              points={points}
+              color={INK}
+              lineWidth={1.4}
+              transparent
+              opacity={pinched.opacity}
+              renderOrder={3}
+              depthTest={false}
+            />
+          ))}
       </group>
     </group>
   );

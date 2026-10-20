@@ -81,7 +81,7 @@ export const en = {
     how: 'Moves',
     creases: 'Creases',
     howSteps: ['Open the two layers a little', 'Push the flap in between them, along your crease', 'Close and flatten'],
-    shortcut: 'The paper on screen takes a shortcut through the body. Yours goes inside, like this.',
+    shortcut: "The flap turns inside out and goes in between the body's layers.",
     stageLabel: '3D view of the paper. Drag to turn it, pinch or scroll to zoom.',
     noWebgl: "The 3D view isn't available on this device. Follow the crease pattern and instructions instead.",
     stageFailed: "The 3D view didn't load. Follow the crease pattern and instructions instead.",
