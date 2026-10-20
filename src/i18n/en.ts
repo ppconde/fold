@@ -63,7 +63,8 @@ export const en = {
     ume: 'Ume',
     cho: 'Chō (butterflies)',
     ine: 'Ine (rice)',
-    'tatewaku-kumo': 'Tatewaku kumo'
+    'tatewaku-kumo': 'Tatewaku kumo',
+    ryusui: 'Ryūsui'
   } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
