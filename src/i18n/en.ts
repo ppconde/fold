@@ -53,7 +53,8 @@ export const en = {
     asanoha: 'Asanoha',
     stripes: 'Hand-drawn stripes',
     'mame-shibori': 'Mame shibori',
-    'same-komon': 'Same komon'
+    'same-komon': 'Same komon',
+    'shippo-hanabishi': 'Shippō hanabishi'
   } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
