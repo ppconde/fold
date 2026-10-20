@@ -222,12 +222,8 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
     if (!c.ok) problems.push(`Step ${k} does not fold flat: edges ${c.edges.join(', ')} disagree.`);
     if (k + 1 < model.steps.length) {
       const end = foldedPositions(model, k, 1);
-      // a reverse fold swaps its flap in at the start: only the paper that stays must join
-      const swapped = isReverseFold(model, k + 1) ? movingFaces(model, k + 1) : new Set<number>();
       const jump = Math.max(
-        ...foldedPositions(model, k + 1, 0).flatMap((face, f) =>
-          swapped.has(f) ? [] : face.map((p, i) => Math.hypot(...sub(p, end[f][i])))
-        )
+        ...foldedPositions(model, k + 1, 0).flatMap((face, f) => face.map((p, i) => Math.hypot(...sub(p, end[f][i]))))
       );
       if (jump > 1e-9) problems.push(`Step ${k + 1} starts ${jump.toExponential(1)} away from where step ${k} ended.`);
     }

@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
-import { foldedPositions, landingAt } from './fold';
+import { foldedPositions, landingAt, movingFaces, REVERSE_FLIP } from './fold';
 import { loadModel } from './load-model';
-import { arrowOpacity, ghostFaces, isReverseFold, tuckArrow } from './reverse';
+import { arrowOpacity, ghostFaces, isReverseFold, pinchArrows, pinchOpacity, tuckArrow } from './reverse';
 
 const committed = (id: string) =>
   loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
@@ -85,5 +85,59 @@ describe('arrowOpacity', () => {
     expect(arrowOpacity(0.8, 0.9)).toBeLessThan(1);
     expect(arrowOpacity(0.9, 0.9)).toBe(0);
     expect(arrowOpacity(1, 0.9)).toBe(0);
+  });
+});
+
+describe('pinchArrows', () => {
+  const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
+  const v = (p: number[]) => p.map((x) => x);
+  const sub = (p: number[], q: number[]) => p.map((x, i) => x - q[i]);
+  const len = (p: number[]) => Math.hypot(...p);
+  const cross = (a: number[], b: number[]) => [
+    a[1] * b[2] - a[2] * b[1],
+    a[2] * b[0] - a[0] * b[2],
+    a[0] * b[1] - a[1] * b[0]
+  ];
+
+  it('pinches the flap at its spine from both sides of the body, for the neck, tail and head', () => {
+    expect(reverse).toHaveLength(3);
+    for (const k of reverse) {
+      const arrows = pinchArrows(crane, k);
+      if (!arrows) throw new Error(`no pinch arrows at step ${k}`);
+      expect(arrows).toHaveLength(2);
+      // the flap as it starts: its pivot stays put through the step, its tip is the corner farthest from there
+      const [start, end] = [foldedPositions(crane, k, 0), foldedPositions(crane, k, 1)];
+      const corners = [...movingFaces(crane, k)].flatMap((f) => start[f].map((p, i) => [p, end[f][i]]));
+      const pivot = corners.reduce((a, b) => (len(sub(b[0], b[1])) < len(sub(a[0], a[1])) ? b : a))[0];
+      const tip = corners.reduce((a, b) => (len(sub(b[0], pivot)) > len(sub(a[0], pivot)) ? b : a))[0];
+      const flap = len(sub(tip, pivot));
+      const spine = pivot.map((x, i) => x + 0.25 * (tip[i] - x));
+      for (const a of arrows) expect(len(sub(a.to, spine))).toBeLessThan(0.2 * flap);
+      const [p, q, r] = start[crane.steps[k].fixedFace].map(v);
+      const n = cross(sub(q, p), sub(r, p));
+      const [d0, d1] = arrows.map((a) => sub(a.from, a.to));
+      expect(len(cross(d0, n)) / (len(d0) * len(n))).toBeLessThan(1e-6);
+      expect(len(cross(d1, n)) / (len(d1) * len(n))).toBeLessThan(1e-6);
+      expect(d0.reduce((acc, x, i) => acc + x * d1[i], 0)).toBeCloseTo(-len(d0) * len(d1), 9);
+    }
+  });
+
+  it('is only for reverse folds', () => {
+    expect(pinchArrows(crane, 0)).toBeNull();
+    expect(pinchArrows(crane, neck - 1)).toBeNull();
+    const tulip = committed('tulip');
+    expect(tulip.steps.some((_, k) => pinchArrows(tulip, k))).toBe(false);
+  });
+});
+
+describe('pinchOpacity', () => {
+  it('shows from the first frame and fades out over the second half of the flip', () => {
+    expect([0, REVERSE_FLIP / 2, 0.75 * REVERSE_FLIP, REVERSE_FLIP, 1].map(pinchOpacity)).toEqual([
+      1,
+      1,
+      expect.closeTo(0.5, 9),
+      0,
+      0
+    ]);
   });
 });

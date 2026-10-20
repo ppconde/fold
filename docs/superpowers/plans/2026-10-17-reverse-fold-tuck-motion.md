@@ -184,3 +184,47 @@ Expected: all PASS. The tests that find steps by instruction text (`models.test.
 git add models/src/crane.ts public/models/crane.fold e2e/player.spec.ts
 git commit -m "Crane: no pre-crease steps, the reverse folds show the real move"
 ```
+
+
+---
+
+## Revision 2026-10-18: flip in place, pinch arrows
+
+Spec: the section "Revision 2026-10-18" at the end of the design doc. Tasks 1–3 are done (branches `reverse-tuck-motion` af89f33, `reverse-no-ghost` ec2bbb7, `crane-no-precrease` 5a639de, all local). Nothing is pushed, so history may be rewritten. Each PR still gets its own branch.
+
+### Task 4: The flip replaces the hold (engine, on `reverse-tuck-motion`)
+
+**Files:** `src/fold/fold.ts`, `src/fold/reverse.ts`, `models/check.ts`, tests in `src/fold/fold.test.ts`, `src/fold/reverse.test.ts`, `models/models.test.ts`.
+
+**Interfaces:**
+- Produces, in `fold.ts`: `REVERSE_FLIP = 1 / 3` (the share of eased progress the flip takes; replaces `REVERSE_SWAP`). `swapTurn` stays. It gains a `flip: { axis: Vec3; sense: 1 | -1 }`: the mirror line's in-plane direction through `pivot`, and the turn's sense.
+- Produces, in `reverse.ts`: `pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 }[] | null`. It returns two arrows, null outside a reverse fold that has a `swapTurn`. It also produces `pinchOpacity(s: number): number`, which is 1 until `s = REVERSE_FLIP / 2`, linear to 0 at `s = REVERSE_FLIP`, and 0 after.
+- Removed: `REVERSE_SWAP` and `swapFade`. Task 5 drops the player's use of them.
+
+- [ ] **Step 1: Tests first.**
+  - "the step starts where the last one ended": for every step k, all faces of k at t = 0 equal k − 1 at t = 1, with no reverse-fold exemption. Remove the exemption-based variants.
+  - "the flip lands on the tucked pose": at s = REVERSE_FLIP, the moving faces equal the pivot phase's start pose. Both sides are evaluated through `foldedPositions` at the t that gives that s, and just past it.
+  - "the flap stays rigid": edge lengths match the flat paper at t = 0, 0.1, 0.2, REVERSE_FLIP, 0.5 and 1.
+  - Keep "the crane's reverse folds pass no paper through paper", the pivot-stays-put and bow-side tests, and the snapshot of non-reverse steps.
+  - `pinchArrows` returns 2 arrows for the neck, tail and head, and null for step 0, non-reverse steps and other models. Each arrow's `to` lies within 0.2 × flap length of the spine point. The two `from − to` vectors are opposite and parallel to the fixed face's normal.
+  - `pinchOpacity` at 0, REVERSE_FLIP/2, 0.75·REVERSE_FLIP, REVERSE_FLIP and 1 → 1, 1, 0.5, 0, 0.
+- [ ] **Step 2:** Run them and see them fail (`pnpm vitest run src/fold models`).
+- [ ] **Step 3: Implement the flip** in `foldedPositions`'s reverse branch. For `s < REVERSE_FLIP`, the moving faces take the previous step's end pose, turned by `sense·π·ease(s / REVERSE_FLIP)` around the line (`pivot`, `flip.axis`). Their lifts go from the start stack's lift to the tucked lift as they pass through the plane. The flip reverses the flap's own layer order, which is what a reverse fold does. For `s ≥ REVERSE_FLIP`, use today's pivot with progress `(s − REVERSE_FLIP) / (1 − REVERSE_FLIP)`.
+  - Fit `flip.axis` as the best mirror line through the pivot, by vertex id, start → tucked. A closed form exists: twice the angle is `atan2(Σ(vx·gy + vy·gx), Σ(vx·gx − vy·gy))` over vectors from the pivot.
+  - **Sense:** pick the sense that keeps the flap clear of the body. If no rule derivable from fold.ts passes the crossings test for neck, tail and head, report BLOCKED with what you tried, which sense passes which step, and the crossing faces.
+- [ ] **Step 4: Remove the continuity exemption** from `checkModel` (`swapped`), and `swapFade`/`REVERSE_SWAP`. Keep the `spread` hinge exemption: the pivot still opens the crease's far end.
+- [ ] **Step 5:** Run `pnpm vitest run`, `pnpm check`, `pnpm build`. On this branch src/player still has the #469 ghost and no crossfade (that came in Task 2), so nothing in src/player uses `swapFade` and the build must pass.
+- [ ] **Step 6: Commit** on `reverse-tuck-motion`: "Engine: a reverse fold turns its flap over in place, then pivots it up". Then run `graphify update .`.
+
+### Task 5: Pinch arrows, no crossfade (player, on `reverse-no-ghost`), and restack
+
+**Files:** `src/player/Paper.tsx`, `src/player/paper-geometry.ts`/`.test.ts`, `src/i18n/en.ts`, `src/i18n/pt.ts`, `e2e/player.spec.ts` (on `crane-no-precrease`).
+
+**Interfaces:** consumes `pinchArrows`, `pinchOpacity` and `REVERSE_FLIP` from Task 4.
+
+- [ ] **Step 1: Restack.** From `crane-no-precrease`, run `git rebase --update-refs reverse-tuck-motion`. Resolve the conflict in ec2bbb7 ("Player: … crossfades its flap into the tuck, no ghost") so the commit only removes the ghost and changes `arrowOpacity`. The crossfade comes out entirely: the outgoing mesh, `swapLayers` and its tests, and the transparent material. Reword the commit to "Player: no ghost flap on reverse folds". Branch 3's e2e test "the neck crossfades in, and the flap changes" is renamed "the neck turns over, and the flap changes". It keeps its assertions.
+- [ ] **Step 2: Tests first, on `reverse-no-ghost`.** Write a pure helper test, for whatever Paper uses to draw the pinch arrows: points and opacity at t = 0, 0.5 and 1, and nothing on non-reverse steps. Update the en/pt `shortcut` expectations if a test pins them.
+- [ ] **Step 3: Implement.** Paper draws the two pinch arrows with drei `Line`, in the same ink, width and head style as the tuck arrow (shaft plus an open V head), at `pinchOpacity(progress(t))`. Set `player.shortcut` to the spec's en and pt strings.
+- [ ] **Step 4:** Commit on `reverse-no-ghost`: "Player: pinch arrows show where to push a reverse fold in". Then run `git rebase --update-refs reverse-no-ghost` from `crane-no-precrease` so branch 3 carries it.
+- [ ] **Step 5:** On `crane-no-precrease`, run `pnpm vitest run`, `pnpm check`, `pnpm build` and `pnpm test:e2e`. Port 4173 may be held by another worktree's preview; use another port with a temporary config. Run `graphify update .`.
+- [ ] **Step 6: Browser check.** Take screenshots of the neck at t = 0, 0.1, 0.2, 0.33 and 0.6, from the front, from above and from below, and of the tail and head at 0.15. Look for the flap cutting the body, the arrows hidden inside the paper, sorting artefacts, and whether the arrows read as pointing at each other.

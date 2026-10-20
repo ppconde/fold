@@ -12,8 +12,7 @@ import {
   layerHeights,
   movingFaces,
   progress,
-  REVERSE_SWAP,
-  swapFade
+  REVERSE_FLIP
 } from './fold';
 import { loadModel } from './load-model';
 import { tuckArrow } from './reverse';
@@ -633,30 +632,47 @@ describe('reverse folds', () => {
     return Math.hypot(crane.vertices[u][0] - crane.vertices[v][0], crane.vertices[u][1] - crane.vertices[v][1]);
   };
 
-  it('ends exactly on the final pose', () => {
-    // step k's own end is held by the snapshot below; the next step starts there, but for the faces a reverse fold
-    // swaps
-    for (const k of reverse) {
-      const end = foldedPositions(crane, k, 1);
-      const swapped = isReverseFold(crane, k + 1) ? movingFaces(crane, k + 1) : new Set();
-      foldedPositions(crane, k + 1, 0).forEach((face, f) => {
-        if (!swapped.has(f))
-          face.forEach((p, c) => {
-            expectClose(p, end[f][c], 9);
-          });
+  it('starts each step where the last one ended', () => {
+    for (let k = 1; k < crane.steps.length; k++) {
+      const end = foldedPositions(crane, k - 1, 1);
+      foldedPositions(crane, k, 0).forEach((face, f) => {
+        face.forEach((p, c) => {
+          expectClose(p, end[f][c], 9);
+        });
       });
+    }
+  });
+
+  it('flips the flap exactly onto its tucked pose', () => {
+    // the t whose eased progress is REVERSE_FLIP
+    let [lo, hi] = [0, 1];
+    for (let i = 0; i < 60; i++)
+      [lo, hi] = progress((lo + hi) / 2) < REVERSE_FLIP ? [(lo + hi) / 2, hi] : [lo, (lo + hi) / 2];
+    for (const k of reverse) {
+      const [before, after] = [foldedPositions(crane, k, lo - 1e-9), foldedPositions(crane, k, hi + 1e-9)];
+      for (const f of moving(k))
+        before[f].forEach((p, c) => {
+          expectClose(p, after[f][c], 6);
+        });
     }
   });
 
   it('keeps the flap at its pivot, on the body, all step', () => {
     for (const k of reverse) {
       const at = [0, 0.1, 0.5, 1].map((t) => foldedPositions(crane, k, t));
-      // some corner of the flap that a still face shares stays put
+      const [p, q, r] = at[0][crane.steps[k].fixedFace];
+      const n = sub(q, p).cross(sub(r, p)).normalize();
+      const depth = Math.max(...layerHeights(crane, k)) * LAYER_GAP;
+      // some corner of the flap that a still face shares stays put in the body's plane, only moving between the
+      // body's layers (from its place in the stack as it starts to its place tucked)
       const held = moving(k).some((f) =>
         crane.faces[f].some(
           (v, c) =>
             crane.faces.some((face, g) => !movingFaces(crane, k).has(g) && face.includes(v)) &&
-            at.every((faces) => sub(faces[f][c], at[0][f][c]).length() < 1e-9)
+            at.every((faces) => {
+              const d = sub(faces[f][c], at[0][f][c]);
+              return Math.abs(d.dot(n)) <= depth && d.addScaledVector(n, -d.dot(n)).length() < 1e-9;
+            })
         )
       );
       expect(held).toBe(true);
@@ -680,22 +696,10 @@ describe('reverse folds', () => {
     }
   });
 
-  it('fades the tucked flap in over the swap, then holds it', () => {
-    const [neck] = reverse;
-    expect(swapFade(crane, neck - 1, 0.05)).toBe(1);
-    expect(swapFade(crane, neck, 0)).toBe(0);
-    expect(swapFade(crane, neck, 1)).toBe(1);
-    const fades = Array.from({ length: 101 }, (_, i) => swapFade(crane, neck, i / 100));
-    expect(fades.every((x, i) => i === 0 || x >= fades[i - 1])).toBe(true);
-    const full = fades.indexOf(1) / 100;
-    expect(progress(full)).toBeGreaterThanOrEqual(REVERSE_SWAP);
-    expect(progress(full - 0.01)).toBeLessThan(REVERSE_SWAP);
-  });
-
   it('pivots the flap rigidly', () => {
     for (const k of reverse) {
       expect(moving(k).length).toBeGreaterThan(0);
-      for (const t of [0, 0.1, 0.5, 1]) {
+      for (const t of [0, 0.1, 0.2, REVERSE_FLIP, 0.5, 1]) {
         const faces = foldedPositions(crane, k, t);
         for (const f of moving(k))
           crane.faces[f].forEach((_, i) => {

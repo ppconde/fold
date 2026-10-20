@@ -110,14 +110,11 @@ describe('crane', () => {
       expect(spread(model, head, 0.7)).toBeGreaterThanOrEqual(gap);
     });
 
-    it('still faces of a reverse fold start where the last step ended', () => {
+    it('a reverse fold starts where the last step ended, its flap too', () => {
       for (const k of reverse) {
         const [was, now] = [foldedPositions(model, k - 1, 1), foldedPositions(model, k, 0)];
-        now.forEach((face, f) => {
-          // as exact as checkModel's continuity check
-          if (!movingFaces(model, k).has(f))
-            expect(face.flat()).toEqual(was[f].flat().map((x) => expect.closeTo(x, 9)));
-        });
+        // as exact as checkModel's continuity check
+        expect(now.flat(2)).toEqual(was.flat(2).map((x) => expect.closeTo(x, 9)));
       }
     });
   });
