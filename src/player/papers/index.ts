@@ -11,6 +11,7 @@ import { sameKomon } from './same-komon';
 import { shippo } from './shippo';
 import { shippoHanabishi } from './shippo-hanabishi';
 import { stripes } from './stripes';
+import { tatewakuKumo } from './tatewaku-kumo';
 import { ume } from './ume';
 import { wavyCords } from './wavy-cords';
 
@@ -39,7 +40,8 @@ export const PAPERS: PaperPattern[] = [
   sakuraKomon,
   ume,
   cho,
-  ine
+  ine,
+  tatewakuKumo
 ];
 
 export const paperById = (id: string) => PAPERS.find((p) => p.id === id);

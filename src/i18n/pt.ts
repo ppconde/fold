@@ -66,7 +66,8 @@ export const pt: Dictionary = {
     'sakura-komon': 'Sakura komon',
     ume: 'Ume (flor de ameixeira)',
     cho: 'Chō (borboletas)',
-    ine: 'Ine (arroz)'
+    ine: 'Ine (arroz)',
+    'tatewaku-kumo': 'Tatewaku kumo'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
