@@ -62,7 +62,8 @@ export const pt: Dictionary = {
     hanabishi: 'Treliça hanabishi',
     ajiro: 'Trama ajiro',
     'wavy-cords': 'Cordões ondulados',
-    kusari: 'Riscas kusari'
+    kusari: 'Riscas kusari',
+    'sakura-komon': 'Sakura komon'
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
