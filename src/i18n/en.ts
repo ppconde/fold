@@ -44,7 +44,8 @@ export const en = {
     credits: 'Credits',
     creditFold: 'Models use the FOLD file format by Erik Demaine and others.',
     creditFonts: 'Shippori Mincho, Instrument Sans and Zen Kurenaido, under the SIL Open Font License.',
-    licence: 'The code is free software under the GPLv3. Models are shared under CC BY-NC-SA unless stated otherwise.'
+    licence:
+      '© 2026 Pedro Conde. All rights reserved. The code, models and paper patterns may not be copied, redistributed or used to train AI systems without permission.'
   },
   papers: {
     plain: 'Plain',
