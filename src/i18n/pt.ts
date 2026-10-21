@@ -48,7 +48,7 @@ export const pt: Dictionary = {
     creditFold: 'Os modelos usam o formato de ficheiro FOLD, de Erik Demaine e outros.',
     creditFonts: 'Shippori Mincho, Instrument Sans e Zen Kurenaido, sob a SIL Open Font License.',
     licence:
-      'O código é software livre sob a GPLv3. Os modelos são partilhados sob CC BY-NC-SA, salvo indicação em contrário.'
+      '© 2026 Pedro Conde. Todos os direitos reservados. O código, os modelos e os padrões de papel não podem ser copiados, redistribuídos nem usados para treinar sistemas de IA sem autorização.'
   },
   papers: {
     plain: 'Liso',

@@ -20,4 +20,8 @@ Models are [FOLD](https://github.com/edemaine/fold) files in `public/models/`. T
 
 ## License
 
-Code: GPLv3 (see `LICENSE`). Models: CC BY-NC-SA 4.0 unless stated otherwise.
+Copyright © 2026 Pedro Conde. All rights reserved.
+
+The source is public so you can read it, but it is **not** open source. The code, models, step sequences and paper patterns may not be copied, modified, redistributed or used to train AI systems without written permission. Text and data mining rights are reserved under EU Directive 2019/790, Art. 4(3). See [`LICENSE`](LICENSE) for the full terms.
+
+Versions published before this change were released under the GPLv3, and copies of those versions remain under it. Third-party components (npm dependencies, the FOLD format, the fonts) keep their own licences.
