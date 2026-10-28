@@ -202,7 +202,6 @@ export function interleaved(model: Model, step: number): [number, number][] {
     const l = Math.hypot(...v);
     return [v[0] / l, v[1] / l, v[2] / l];
   };
-  const normalOf = ([p, q, r]: Vec3[]) => unit(cross(sub(q, p), sub(r, p)));
   const [a, b] = faces[model.steps[step].fixedFace];
   const normal = normalOf(faces[model.steps[step].fixedFace]);
   if (faces.some((face) => Math.abs(dot(normalOf(face), normal)) < 1 - 1e-6)) return [];
