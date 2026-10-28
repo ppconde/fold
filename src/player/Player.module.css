@@ -184,7 +184,7 @@
   color: var(--ivory);
 }
 
-.shortcut {
+.insideOut {
   margin: 0;
   color: var(--muted);
   font-size: 0.85rem;
@@ -384,7 +384,7 @@
     max-width: none;
   }
 
-  .shortcut,
+  .insideOut,
   .panel[data-slot="how"] .slot > svg,
   .panel[data-slot="creases"] .slot > [role="img"]:not(svg) {
     display: none;

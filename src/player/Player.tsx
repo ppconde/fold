@@ -195,7 +195,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
               </button>
             </div>
             <HowSketch frame={sketchFrame(progress(state.t), landingAt(model, state.step))} />
-            <p className={styles.shortcut}>{t.shortcut}</p>
+            <p className={styles.insideOut}>{t.insideOut}</p>
             <CreaseDiagram model={model} step={state.step} />
           </div>
         ) : (
