@@ -17,7 +17,7 @@ export function HowSketch({ frame }: { frame: 0 | 1 | 2 }) {
   // the dots follow what's on screen
   const [shown, setShown] = useState(0);
   return (
-    <div className={styles.how} role="img" aria-label={[t.shortcut, ...t.howSteps].join(' ')}>
+    <div className={styles.how} role="img" aria-label={[t.insideOut, ...t.howSteps].join(' ')}>
       <ol
         className={styles.frames}
         onScroll={(e) => setShown(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth) as 0 | 1 | 2)}
