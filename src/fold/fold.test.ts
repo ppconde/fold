@@ -702,6 +702,20 @@ describe('reverse folds', () => {
     );
   });
 
+  it('keeps the neck shut while the head tucks in: the body opens only when the flap tucks into all of it', () => {
+    const head = reverse[2];
+    const [start, mid, end] = [0, 0.5, 1].map((t) => foldedPositions(crane, head, t));
+    const still = crane.faces.flatMap((_, f) => (movingFaces(crane, head).has(f) ? [] : [f]));
+    // the stack's layers still settle where they end, but every still corner keeps between where it starts and ends
+    const opened = still.filter((f) =>
+      mid[f].some(
+        (p, c) =>
+          sub(p, start[f][c]).length() + sub(p, end[f][c]).length() > sub(start[f][c], end[f][c]).length() + 1e-9
+      )
+    );
+    expect(opened).toEqual([]);
+  });
+
   it('opens each side of the body 14 degrees at the peak, as one piece', () => {
     const normalOf = ([p, q, r]: Vec3[]) => sub(q, p).cross(sub(r, p)).normalize();
     for (const k of reverse) {
@@ -709,7 +723,8 @@ describe('reverse folds', () => {
       if (!fan) throw new Error(`no fan at step ${k}`);
       const [mid, end] = [foldedPositions(crane, k, 0.5), foldedPositions(crane, k, 1)];
       fan.group.forEach((g, f) => {
-        if (g !== 0) expect(normalOf(mid[f]).angleTo(normalOf(end[f]))).toBeCloseTo((14 * Math.PI) / 180, 6);
+        if (g === 1 || g === -1)
+          expect(normalOf(mid[f]).angleTo(normalOf(end[f]))).toBeCloseTo((14 * Math.PI) / 180, 6);
       });
     }
   });
@@ -732,7 +747,8 @@ describe('reverse folds', () => {
   });
 
   it('opens the body and closes it again', () => {
-    for (const k of reverse) {
+    // the head tucks into the neck alone, so its body stays shut
+    for (const k of reverse.slice(0, 2)) {
       const turning = movingFaces(crane, k);
       const next = crane.steps[k].faceOrders.flatMap(([f, g]) =>
         turning.has(f) === turning.has(g) ? [] : [turning.has(f) ? g : f]

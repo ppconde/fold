@@ -119,3 +119,7 @@ The fold line here is the line the start flap mirrors across onto the tucked pos
 - The pinch arrows stay. They show the inward push, which is what G now animates.
 - The body opening keeps A″'s 28° and its timing. C needed 60° only because the flap came down from above; G's flap stays between the layers.
 - The engine finds "the body's middle" as the centroid of the still faces' end poses, as the sketch does.
+
+## The head keeps the neck shut (user, 2026-10-28)
+
+On the head (crane step 18) the body opening swung the whole bird open about the neck's far edge. Opening only the neck isn't possible rigidly: the neck's base lies between two layers of the body, and the neck's layers cut into them. The user compared, in a demo, "neck stays shut", "neck opens, body eases" (still colliding) and "whole body opens", and chose **neck stays shut** for now. The rule: the body opens only when the layers the flap tucks between span the model on the flap's side (true for the neck and tail, not for the head). Otherwise every still face stays put and the flap fans in between its layers. The user wants the step's drawings ("How") to make the head's tuck clear later.

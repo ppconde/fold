@@ -450,8 +450,9 @@ export type ReverseFan = {
   fit: number;
   /** The body's far edge, which its two sides open about. */
   hinge: { point: Vec3; dir: Vec3 };
-  /** Per face: 0 for the flap, otherwise the side of the body it opens with (+1 above the flap, −1 below). */
-  group: (0 | 1 | -1)[];
+  /** Per face: 0 for the flap, the side of the body it opens with (+1 above the flap, −1 below), or null for paper
+   * that stays put: all of it when the flap tucks into only part of the model (the head into the neck). */
+  group: (0 | 1 | -1 | null)[];
   /** Per side, the turn about `hinge.dir` that opens it. */
   sense: Record<1 | -1, 1 | -1>;
   /** Every face's corners as the step starts and as it ends, without the fan. */
@@ -532,15 +533,25 @@ export function reverseFan(model: Model, step: number): ReverseFan | null {
   const dir = flat(tip).normalize();
   const perp = n.clone().cross(dir);
   const flapSide = flat(mean(corners(to, flap))).dot(perp) < 0 ? -1 : 1;
-  const offs = corners(to, still).map((x) => flat(x).dot(perp));
-  const hinge = pivot.clone().addScaledVector(perp, flapSide > 0 ? Math.min(...offs) : Math.max(...offs));
+  // across the spine, how far `pick`'s corners reach on the far side from the flap (or the flap's own side)
+  const edge = (pick: (f: number) => boolean, far: boolean) => {
+    const offs = corners(to, pick).map((x) => flat(x).dot(perp));
+    return flapSide > 0 === far ? Math.min(...offs) : Math.max(...offs);
+  };
+  const hinge = pivot.clone().addScaledVector(perp, edge(still, true));
+  // the body opens only when the layers the flap tucks between span the model on the flap's side: a flap tucking into
+  // part of it (the head into the neck) leaves it shut, or the whole bird would swing open about the neck
+  const between = new Set(
+    model.steps[step].faceOrders.flatMap(([f, g]) => (moving.has(f) === moving.has(g) ? [] : [moving.has(f) ? g : f]))
+  );
+  const opens = Math.abs(edge((f) => between.has(f), false) - edge(still, false)) < 1e-6;
   const height = (x: Vector3) => x.clone().sub(pivot).dot(n);
   const middle = height(mean(corners(to, flap)));
-  const group = model.faces.map((_, f): 0 | 1 | -1 =>
-    moving.has(f) ? 0 : height(mean(to[f].map(V))) > middle ? 1 : -1
+  const group = model.faces.map((_, f): 0 | 1 | -1 | null =>
+    moving.has(f) ? 0 : !opens ? null : height(mean(to[f].map(V))) > middle ? 1 : -1
   );
   // each side turns the way that takes it away from the flap
-  const opens = (g: 1 | -1): 1 | -1 => {
+  const away = (g: 1 | -1): 1 | -1 => {
     const ps = corners(to, (f) => group[f] === g);
     if (!ps.length) return 1;
     const c = mean(ps);
@@ -556,7 +567,7 @@ export function reverseFan(model: Model, step: number): ReverseFan | null {
     fit,
     hinge: { point: hinge.toArray() as Vec3, dir: dir.toArray() as Vec3 },
     group,
-    sense: { 1: opens(1), [-1]: opens(-1) } as Record<1 | -1, 1 | -1>,
+    sense: { 1: away(1), [-1]: away(-1) } as Record<1 | -1, 1 | -1>,
     from,
     to
   };
@@ -574,6 +585,7 @@ function fanned(fan: ReverseFan, plain: Vec3[][], s: number): Vec3[][] {
   const point = new Vector3();
   return plain.map((face, f) => {
     const g = fan.group[f];
+    if (g === null) return face;
     if (g)
       return face.map(
         (x) =>

@@ -104,6 +104,7 @@ describe('crane', () => {
     it("still measures each side's own seams while the body opens", () => {
       for (const k of reverse) {
         const group = reverseFan(model, k)?.group ?? [];
+        if (!group.some((g) => g === 1 || g === -1)) continue;
         const keys = cornerKeys(model, k);
         const faces = foldedPositions(model, k, 0.7);
         // the widest gap between two copies of a corner that must lie together, on still faces opening as one side
@@ -121,6 +122,13 @@ describe('crane', () => {
         expect(spread(model, k, 0.7)).toBeGreaterThanOrEqual(gap / 2 - 1e-12);
         expect(spread(model, k, 0.7)).toBeLessThanOrEqual(SEAM_BUDGET);
       }
+    });
+
+    it("keeps the neck's spine closed while the head tucks in", () => {
+      const head = reverse[2];
+      const faces = foldedPositions(model, head, 0.5);
+      const at = (f: number) => faces[f][model.faces[f].indexOf(17)];
+      expect(Math.hypot(...at(34).map((x, i) => x - at(35)[i]))).toBeLessThanOrEqual(SEAM_BUDGET);
     });
 
     it('a reverse fold starts where the last step ended, its flap too', () => {
