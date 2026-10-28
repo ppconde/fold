@@ -1,6 +1,6 @@
 # Reverse fold tuck motion
 
-> The "Revision 2026-10-18" section at the end supersedes the swap and crossfade text above it: the flap now turns over in place, and there is no crossfade.
+> Read the revisions at the end first. "Revision 2026-10-28" supersedes the motion in everything above it: the flap no longer flips or pivots, it fans across the fold line inside the opening body. "Revision 2026-10-18" still holds for the pinch arrows and the copy.
 
 2026-10-17. Replace the swing-and-tuck stand-in's motion with one that looks like the tuck a folder's hands make. The flap is swapped for its reversed (tucked) version at the start of the step. The body opens a little, the flap pivots rigidly up between its layers into place, and the body closes. The paper never passes through paper. The one break from rigid geometry is the swap.
 
@@ -85,3 +85,37 @@ The user found the crossfade glitchy: two see-through necks overlapping read as 
 **Removed:** the crossfade (the outgoing copy, `swapLayers`, the transparent material, `swapFade`), and `checkModel`'s continuity exemption for reverse-fold steps.
 
 **Changed copy:** `player.shortcut` becomes "The flap turns inside out and goes in between the body's layers." (en). In pt: "A aba vira do avesso e entra entre as camadas do corpo."
+
+## Revision 2026-10-28: fan the flap through the opening body
+
+The user compared, in the sketch `reverse-fold-body.html` (session scratchpad, `preview3/`), the built flip-and-pivot with seven alternatives: unfolding the flap like a book, swinging it round its base, folding it over like a page, sliding it straight across the fold line, and fanning it round either way. They chose **G**: no rigid turn at all. The flap fans across the fold line inside the body, and the body opens like a book to take it. Breaking the geometry is accepted; the flap stays between the body's layers.
+
+The fold line here is the line the start flap mirrors across onto the tucked pose: through the pivot, fitted as in the 2026-10-18 revision (residual 0.00 on the neck, tail and head).
+
+**The flap (whole step, eased with `progress`).** Take each moving vertex in polar coordinates about the pivot, with the angle measured from the fold line: radius r, angle φ. At the step's start it is at φ₀; at the end it is at −φ₀, which is exactly the final pose in the plane.
+- **Direction.** Every vertex swings round through the side of the pivot **away from the body's middle**, the side the tuck arrow bows toward. With the body's middle along +fold line, the angle goes φ₀ → π → −φ₀ (through −fold line); otherwise φ₀ → 0 → −φ₀. Every vertex takes the same way round, including those on the fold line itself. On the crane this gives the neck the "long way" and the tail and head the "short way". The user checked all three in the sketch.
+- **Length.** Halfway, every vertex lies along the fold line on the chosen side. Its radius shrinks by a factor k(u) = 1 − (1 − fit)·sin(πu), where fit = min(1, 0.9 · reach / longest). Here reach is how far the body extends from the pivot along that side, and longest is the flap's longest radius. On the crane fit is about 0.39 (neck), 0.39 (tail) and 0.36 (head). The flap never leaves the body's outline.
+- **Height.** Each vertex's height blends from its start to its end value, so the flap stays between the layers it ends up between.
+
+**The body.** The body's still faces split by height into front and back, against the flap's middle height at the end. Each group turns about the body's far edge, the line along the flap's starting spine through the still faces' furthest point across from the flap, by half the opening, in the direction that opens it. The opening is 28° · sin(πs), peaking mid-step and back to 0 at the end. It replaces the small `opening()` spread.
+
+**What breaks, on purpose:**
+- the flap's faces distort and lie on one line halfway, then come out mirrored (their normals flip);
+- the flap's hinge on the fold line comes apart mid-step (on the neck its fold-line edge swings round with the rest);
+- the body's own folds don't flex: each group turns as one piece.
+
+**Removed:** the flip (`REVERSE_FLIP`, the flip axis and sense, its crossings test with the pinned sense) and the pivot (`reverseTurn`'s pivot angle, `tuckBow`'s use for it).
+
+**Kept:** the pinch arrows and their copy (2026-10-18). They now fade out by the first sixth of the step, before the flap has narrowed much (builder's call on the exact timing). The tuck arrow is kept too.
+
+**Checks.**
+- The step still ends exactly in the final pose and starts exactly where the last one ended (continuity, no exemption at the ends).
+- `crossings` and `tradesPlaces` must stay clean at 40 samples. If the flap touches a body layer while the body opens, the builder may widen or retime the opening. If that fails, stop and ask.
+- `spread` (hinges) and face-shape checks need a reverse-fold exemption for the middle of the step, as before.
+- Orbit the crane at steps 16, 17 and 18 in the browser from all sides, scrubbing each step.
+
+## Decisions made without the user (2026-10-28, check these)
+
+- The pinch arrows stay. They show the inward push, which is what G now animates.
+- The body opening keeps A″'s 28° and its timing. C needed 60° only because the flap came down from above; G's flap stays between the layers.
+- The engine finds "the body's middle" as the centroid of the still faces' end poses, as the sketch does.
