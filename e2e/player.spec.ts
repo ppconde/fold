@@ -388,7 +388,7 @@ test.describe('a reverse fold step', () => {
     await expect(page.getByRole('button', { name: 'Creases' })).toHaveCount(0);
   });
 
-  test('the neck turns over, and the flap changes', async ({ page }) => {
+  test('the neck tucks in, and the flap changes', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
