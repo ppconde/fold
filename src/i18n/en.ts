@@ -80,7 +80,11 @@ export const en = {
     reverseFold: 'reverse fold',
     how: 'Moves',
     creases: 'Creases',
-    howSteps: ['Open the two layers a little', 'Push the flap in between them, along your crease', 'Close and flatten'],
+    howSteps: [
+      "Open the two layers a little. The folded edge in yellow is the one you'll turn inside out",
+      'Push the folded edge in at the line: it flips and goes in between the layers',
+      'Close and flatten. The folded edge now points the other way: the flap is inside out'
+    ],
     insideOut: "The flap turns inside out and goes in between the body's layers.",
     stageLabel: '3D view of the paper. Drag to turn it, pinch or scroll to zoom.',
     noWebgl: "The 3D view isn't available on this device. Follow the crease pattern and instructions instead.",

@@ -37,19 +37,88 @@
   outline-color: var(--charcoal);
 }
 
-.layers,
-.flap {
-  fill: none;
+.how {
+  /* the flap's flipping edge, our one addition to the book notation (docs/origami-diagram-conventions.md) */
+  --spine: #f2b630;
+}
+
+.front,
+.back {
+  stroke: none;
+}
+
+.back,
+.peek {
+  fill: var(--ivory);
+}
+
+.peek,
+.edge,
+.fold,
+.hidden,
+.landing,
+.push,
+.arrow,
+.head {
+  stroke: var(--charcoal);
   stroke-linecap: round;
-  stroke-width: 2.5;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
 }
 
-.layers {
-  stroke: var(--sand);
+.peek,
+.edge,
+.push,
+.arrow,
+.head {
+  stroke-width: 1.5;
 }
 
-.flap {
-  stroke: var(--clay);
+.edge,
+.landing,
+.arrow {
+  fill: none;
+}
+
+/* a mountain fold, as in the crease diagram */
+.fold {
+  stroke-width: 1.3;
+  stroke-dasharray: 8 3 2 3;
+}
+
+/* hidden behind paper, or where paper goes: dotted */
+.hidden,
+.landing {
+  stroke-width: 1.3;
+  stroke-dasharray: 1 4;
+}
+
+.landing {
+  stroke-opacity: 0.6;
+}
+
+.push {
+  fill: var(--ivory);
+}
+
+.head {
+  fill: var(--charcoal);
+}
+
+.spine,
+.ghost {
+  stroke: var(--spine);
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.spine {
+  stroke-width: 3;
+}
+
+.ghost {
+  stroke-width: 2;
+  stroke-dasharray: 1 5;
 }
 
 /* wide screens show all three; the dots are for the phone sheet, where one sketch shows at a time */
@@ -80,9 +149,9 @@
     scroll-snap-align: start;
   }
 
-  /* a little shorter than square, so the longest caption still fits a small phone's sheet */
+  /* shorter than square, so the longest caption still fits a small phone's sheet (the drawing is square inside) */
   .frames svg {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 3 / 2;
   }
 
   /* the phone's sketches don't follow the animation, so none is singled out */
