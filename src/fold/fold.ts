@@ -1,6 +1,7 @@
 import { Box3, Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
 import { assertStep } from './assert-step';
-import type { Model, Vec3 } from './types';
+import { overlap } from './polygon';
+import type { Model, Vec2, Vec3 } from './types';
 
 const DEG = MathUtils.DEG2RAD;
 const EPSILON = 1e-6;
@@ -374,7 +375,9 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
       facing.set(0, 0, 1).transformDirection(m);
       normal.addScaledVector(up.clone().addScaledVector(facing, -up.dot(facing)), Math.abs(lift));
     }
-    const shift = LAYER_GAP * clearance[f] * rise + flipRise(f);
+    // a reverse fold's body opens at once and closes as its layers blend to where they end: opened out through
+    // a whole side, its outer layers would otherwise pull the spine's seam past its gap at rest
+    const shift = LAYER_GAP * clearance[f] * rise * (swap ? 1 - s : 1) + flipRise(f);
     return face.map((v) => {
       point.set(model.vertices[v][0], model.vertices[v][1], lift).applyMatrix4(m).add(normal);
       point.z += shift;
@@ -459,7 +462,9 @@ export function isReverseFold(model: Model, step: number): boolean {
 
 /**
  * A reverse fold opens the body around its flap instead: REVERSE_OPEN layers up for each still face that ends
- * above every moving face it is ordered against, down for one below them all, 0 for the others.
+ * above every moving face it is ordered against, down for one below them all, 0 for the others. The layers
+ * beyond open with them, out through the whole side: a still face lying over (under) one that shifts up (down)
+ * shifts at least as far, so no two still layers change places on the way.
  */
 function opening(model: Model, step: number): number[] {
   const moving = movingFaces(model, step);
@@ -470,7 +475,31 @@ function opening(model: Model, step: number): number[] {
     const [still, flap] = moving.has(f) ? [g, f] : [f, g];
     side[still].push(Math.sign(heights[still] - heights[flap]));
   }
-  return side.map((ss) => (ss.length && ss.every((x) => x === ss[0]) ? ss[0] * REVERSE_OPEN : 0));
+  const shift = side.map((ss) => (ss.length && ss.every((x) => x === ss[0]) ? ss[0] * REVERSE_OPEN : 0));
+  // the stack's plane is z = const before the whole-model turn, as in stackAt
+  const start = startPose(model, step);
+  const flat = model.faces.map((face, f) =>
+    face.map((v): Vec2 => {
+      const p = new Vector3(...model.vertices[v], 0).applyMatrix4(start[f]);
+      return [p.x, p.y];
+    })
+  );
+  const still = model.faces.flatMap((_, f) => (moving.has(f) ? [] : [f]));
+  const touching = still.flatMap((f) =>
+    still.flatMap((g) => (f !== g && overlap(flat[f], flat[g]).area > 1e-9 ? [[f, g]] : []))
+  );
+  // ponytail: repeats until nothing changes, at most once per layer; fine for a few dozen faces
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const [f, g] of touching) {
+      const outward = Math.sign(heights[g] - heights[f]);
+      if (outward && Math.sign(shift[f]) === outward && Math.abs(shift[g]) < Math.abs(shift[f])) {
+        shift[g] = shift[f];
+        changed = true;
+      }
+    }
+  }
+  return shift;
 }
 
 type SwapTurn = { pivot: Vec3; axis: Vec3; angle: number; flip: { axis: Vec3; sense: 1 | -1 } };
