@@ -108,8 +108,8 @@ export function HowSketch({ model, step, frame }: { model: Model; step: number; 
                   viewBox="0 0 10 10"
                   refX="9"
                   refY="5"
-                  markerWidth={9 * k}
-                  markerHeight={9 * k}
+                  markerWidth={16 * k}
+                  markerHeight={16 * k}
                   markerUnits="userSpaceOnUse"
                   orient="auto"
                 >

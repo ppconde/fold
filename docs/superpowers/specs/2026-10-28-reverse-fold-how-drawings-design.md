@@ -101,7 +101,7 @@ Draw in 2D, in the body's plane:
 - **Paper colour:** the drawings always use the model's plain colour (`model.paperColor`) and the theme's white-side tone, whatever pattern is picked in the paper picker. A diagram reads by flat tone, as books do, and dark patterns would swallow the ink lines. `HowSketch` gets the model, not the chosen paper.
 - **The conventions doc** (`docs/origami-diagram-conventions.md`, untracked in the main checkout until now) is committed in this PR, with the yellow edge under "Our additions". This PR is the first to rely on it.
 
-- **Covered marks:** any part of the yellow edge or the fold line that a body layer covers is drawn dotted (book rule: hidden is dotted). In practice the yellow edge ends as the flap's outer edge, visible; at most a sliver at the fold line is covered. The user saw the toggle in the demo and saw no difference.
+- **Covered marks:** dropped after review (2026-10-28, ponytail). No crane mark is ever covered, so marks are drawn whole. Split them into solid and dotted runs when a model first shows a covered mark.
 
 ## Left to the builder
 
