@@ -118,4 +118,16 @@ describe('howDrawing', () => {
       expect(depths).toEqual([...depths].sort((a, b) => a - b));
     }
   });
+
+  it('picks out the flap in the first two drawings, and shows the whole paper at full tone in the last', () => {
+    for (const k of reverse) {
+      const d = draw(k);
+      const moving = movingFaces(crane, k).size;
+      for (const frame of d.frames.slice(0, 2)) {
+        expect(frame.faces.filter((f) => f.subject)).toHaveLength(moving);
+        expect(frame.faces.some((f) => !f.subject)).toBe(true);
+      }
+      expect(d.frames[2].faces.every((f) => f.subject)).toBe(true);
+    }
+  });
 });

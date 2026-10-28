@@ -80,6 +80,10 @@
   fill: none;
 }
 
+.muted {
+  stroke-opacity: 0.45;
+}
+
 /* a mountain fold, as in the crease diagram */
 .fold {
   stroke-width: 1.3;

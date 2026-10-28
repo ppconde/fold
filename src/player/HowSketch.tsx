@@ -35,10 +35,15 @@ function Frame({ frame, paperColor, k }: { frame: HowFrame; paperColor: string; 
         <g key={pts(f.points)}>
           <polygon
             className={f.side === 'front' ? styles.front : styles.back}
-            style={f.side === 'front' ? { fill: paperColor } : undefined}
+            // the paper the frame isn't about: lighter, still opaque, so lower layers don't show through
+            style={
+              f.side === 'front'
+                ? { fill: f.subject ? paperColor : `color-mix(in srgb, ${paperColor} 40%, var(--ivory))` }
+                : undefined
+            }
             points={pts(f.points)}
           />
-          <path className={styles.edge} d={path(f.edges)} />
+          <path className={f.subject ? styles.edge : `${styles.edge} ${styles.muted}`} d={path(f.edges)} />
         </g>
       ))}
       {frame.landing && <polygon className={styles.landing} points={pts(frame.landing)} />}
