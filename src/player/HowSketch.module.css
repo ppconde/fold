@@ -55,7 +55,6 @@
 .peek,
 .edge,
 .fold,
-.hidden,
 .landing,
 .push,
 .arrow,
@@ -90,8 +89,7 @@
   stroke-dasharray: 8 3 2 3;
 }
 
-/* hidden behind paper, or where paper goes: dotted */
-.hidden,
+/* where paper goes: dotted */
 .landing {
   stroke-width: 1.3;
   stroke-dasharray: 1 4;

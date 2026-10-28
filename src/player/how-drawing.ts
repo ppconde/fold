@@ -1,8 +1,8 @@
 import { Vector3 } from 'three';
-import { LAYER_GAP, movingFaces, reverseFan } from '../fold/fold';
+import { movingFaces, reverseFan } from '../fold/fold';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 
-export type Seg = { from: Vec2; to: Vec2; hidden: boolean };
+export type Seg = { from: Vec2; to: Vec2 };
 /** `subject`: the paper the frame is about, at full tone; the rest is drawn lighter, as books set the subject apart. */
 export type HowFace = {
   points: Vec2[];
@@ -39,17 +39,6 @@ export type HowDrawing = {
 };
 
 const drawings = new WeakMap<Model, (HowDrawing | null)[]>();
-const edgeIndexes = new WeakMap<Model, Map<string, number>>();
-const key = (a: number, b: number) => (a < b ? `${a}-${b}` : `${b}-${a}`);
-
-function edgeIndex(model: Model): Map<string, number> {
-  let index = edgeIndexes.get(model);
-  if (!index) {
-    index = new Map(model.edges.map(([a, b], e) => [key(a, b), e]));
-    edgeIndexes.set(model, index);
-  }
-  return index;
-}
 
 /** Convex hull (monotone chain), counter-clockwise. */
 function hull(points: Vec2[]): Vec2[] {
@@ -64,19 +53,6 @@ function hull(points: Vec2[]): Vec2[] {
     return out.slice(0, -1);
   };
   return [...half(ps), ...half([...ps].reverse())];
-}
-
-/** Strictly inside a convex polygon. */
-function inside(p: Vec2, poly: Vec2[]): boolean {
-  let sign = 0;
-  for (let i = 0; i < poly.length; i++) {
-    const [a, b] = [poly[i], poly[(i + 1) % poly.length]];
-    const c = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0]);
-    if (Math.abs(c) < 1e-9) return false;
-    if (sign && Math.sign(c) !== sign) return false;
-    sign = Math.sign(c);
-  }
-  return true;
 }
 
 const lerp = (a: Vec2, b: Vec2, t: number): Vec2 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
@@ -95,7 +71,6 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
   if (!fan) return null;
 
   const moving = movingFaces(model, step);
-  const index = edgeIndex(model);
   const before = model.steps[step - 1].angles;
   const after = model.steps[step].angles;
   const pivot3 = new Vector3(...fan.pivot);
@@ -111,9 +86,10 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
   };
   const depthOf = (p: Vec3) => new Vector3(...p).sub(pivot3).dot(view);
 
-  const drawFaces = (pose: Vec3[][], angles: number[]) =>
+  // `all`: every face is the frame's subject, not just the flap's
+  const drawFaces = (pose: Vec3[][], angles: number[], all: boolean) =>
     model.faces
-      .flatMap((face, f): (Omit<HowFace, 'subject'> & { face: number })[] => {
+      .flatMap((face, f): HowFace[] => {
         const ps = pose[f].map((p) => new Vector3(...p));
         const n = new Vector3();
         for (let i = 1; i + 1 < ps.length; i++)
@@ -127,48 +103,30 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
         // edge-on: a sliver, not worth drawing
         if (Math.abs(facing) < 0.2) return [];
         const points = pose[f].map(at);
-        const edges = face.flatMap((v, i): [Vec2, Vec2][] => {
-          const e = index.get(key(v, face[(i + 1) % face.length]));
-          if (e === undefined) return [];
+        const edges = model.faceEdges[f].flatMap((e, i): [Vec2, Vec2][] => {
           const drawn = model.assignments[e] === 'B' || model.assignments[e] === 'C' || Math.abs(angles[e]) === 180;
           return drawn ? [[points[i], points[(i + 1) % face.length]]] : [];
         });
         const depth = pose[f].reduce((s, p) => s + depthOf(p), 0) / pose[f].length;
-        return [{ points, side: facing > 0 ? 'front' : 'back', edges, depth, face: f }];
+        return [{ points, side: facing > 0 ? 'front' : 'back', edges, depth, subject: all || moving.has(f) }];
       })
       .sort((a, b) => a.depth - b.depth);
 
-  // a line on the topmost face that carries it; runs under a face above it are hidden
-  const marks = (pose: Vec3[][], faces: ReturnType<typeof drawFaces>, keep: (e: number) => boolean): Seg[] =>
+  // a line, from the topmost face that carries it
+  const marks = (pose: Vec3[][], keep: (e: number) => boolean): Seg[] =>
     model.edges.flatMap(([a, b], e) => {
-      if (!keep(e)) return [];
-      const owners = model.edgeFaces[e].filter((f) => moving.has(f));
+      const owners = keep(e) ? model.edgeFaces[e].filter((f) => moving.has(f)) : [];
       if (!owners.length) return [];
       const f = owners.reduce((x, y) => (depthOf(pose[y][0]) > depthOf(pose[x][0]) ? y : x));
-      const [from, to] = [at(pose[f][model.faces[f].indexOf(a)]), at(pose[f][model.faces[f].indexOf(b)])];
-      const own = model.faces[f].reduce((s, _, i) => s + depthOf(pose[f][i]), 0) / model.faces[f].length;
-      const covered = (p: Vec2) => faces.some((x) => x.depth > own + LAYER_GAP / 2 && inside(p, x.points));
-      const N = 32;
-      const segs: Seg[] = [];
-      let start = from;
-      let hidden = covered(lerp(from, to, 0.5 / N));
-      for (let i = 1; i <= N; i++) {
-        const next = i < N ? covered(lerp(from, to, (i + 0.5) / N)) : !hidden;
-        if (next !== hidden) {
-          const end = i < N ? lerp(from, to, i / N) : to;
-          segs.push({ from: start, to: end, hidden });
-          [start, hidden] = [end, next];
-        }
-      }
-      return segs;
+      return [{ from: at(pose[f][model.faces[f].indexOf(a)]), to: at(pose[f][model.faces[f].indexOf(b)]) }];
     });
 
   const isSpine = (e: number) =>
     Math.abs(before[e]) === 180 && after[e] === -before[e] && model.edgeFaces[e].every((f) => moving.has(f));
   const isFold = (e: number) => before[e] === 0 && after[e] !== 0;
 
-  const startFaces = drawFaces(fan.from, before);
-  const endFaces = drawFaces(fan.to, after);
+  const startFaces = drawFaces(fan.from, before, false);
+  const endFaces = drawFaces(fan.to, after, true);
   const corners = (pose: Vec3[][]) => [...moving].flatMap((f) => pose[f].map(at));
   const [flapStart, flapEnd] = [hull(corners(fan.from)), hull(corners(fan.to))];
   const pivot = at(fan.pivot);
@@ -183,7 +141,7 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
   const box: HowDrawing['box'] = [(x0 + x1) / 2 - size / 2, (y0 + y1) / 2 - size / 2, size, size];
 
   // in the plane, across the spine, pointing into the flap
-  const spineStart = marks(fan.from, startFaces, isSpine);
+  const spineStart = marks(fan.from, isSpine);
   const far = spineStart
     .flatMap((s) => [s.from, s.to])
     .reduce((a, b) =>
@@ -207,19 +165,10 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
   const mid = lerp(from, to, 0.5);
   const control: Vec2 = [mid[0] + bow[0] * 0.35 * span, mid[1] + bow[1] * 0.35 * span];
 
-  const fold = marks(fan.from, startFaces, isFold);
-  const spineEnd = marks(fan.to, endFaces, isSpine);
-  const ghost = (segs: Seg[]) => segs.map((s) => ({ ...s, hidden: true, ghost: true }));
+  const fold = marks(fan.from, isFold);
+  const spineEnd = marks(fan.to, isSpine);
+  const ghost = (segs: Seg[]) => segs.map((s) => ({ ...s, ghost: true }));
   const solid = (segs: Seg[]) => segs.map((s) => ({ ...s, ghost: false }));
-  // the first two frames are about the flap; the last shows the paper as it ends, all of it
-  const plain = (faces: ReturnType<typeof drawFaces>, all: boolean): HowFace[] =>
-    faces.map(({ points, side, edges, depth, face }) => ({
-      points,
-      side,
-      edges,
-      depth,
-      subject: all || moving.has(face)
-    }));
   const shift = 0.03 * size;
   const none = { peek: null, landing: null, push: null, arrow: null };
   list[step] = {
@@ -231,21 +180,21 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
     frames: [
       {
         ...none,
-        faces: plain(startFaces, false),
+        faces: startFaces,
         peek: flapStart.map((p): Vec2 => [p[0] + dir[0] * shift, p[1] + dir[1] * shift]),
         fold,
         spine: solid(spineStart)
       },
       {
         ...none,
-        faces: plain(startFaces, false),
+        faces: startFaces,
         fold,
         spine: [...solid(spineStart), ...ghost(spineEnd)],
         landing: flapEnd,
         push: { at: [pivot[0] - dir[0] * 0.04 * size, pivot[1] - dir[1] * 0.04 * size], dir },
         arrow: { from, to, control }
       },
-      { ...none, faces: plain(endFaces, true), fold: [], spine: [...solid(spineEnd), ...ghost(spineStart)] }
+      { ...none, faces: endFaces, fold: [], spine: [...solid(spineEnd), ...ghost(spineStart)] }
     ]
   };
   return list[step];

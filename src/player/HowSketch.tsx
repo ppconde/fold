@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import type { Model, Vec2 } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import styles from './HowSketch.module.css';
@@ -8,7 +8,7 @@ const pts = (ps: Vec2[]) => ps.map((p) => p.join(',')).join(' ');
 const path = (segs: [Vec2, Vec2][]) => segs.map(([a, b]) => `M${a}L${b}`).join('');
 
 /** One frame, as a book draws it: the paper, the fold line, the flipping edge in yellow, the push and the tip's path. */
-function Frame({ frame, paperColor, k }: { frame: HowFrame; paperColor: string; k: number }) {
+function Frame({ frame, paperColor, k, head }: { frame: HowFrame; paperColor: string; k: number; head: string }) {
   const { push, arrow } = frame;
   // the Yoshizawa–Randlett push: a broad arrow pointing at `at`
   const pushAt =
@@ -17,17 +17,6 @@ function Frame({ frame, paperColor, k }: { frame: HowFrame; paperColor: string; 
       push.at[0] - push.dir[0] * a * k - push.dir[1] * b * k,
       push.at[1] - push.dir[1] * a * k + push.dir[0] * b * k
     ]);
-  let head: Vec2[] | null = null;
-  if (arrow) {
-    const [dx, dy] = [arrow.to[0] - arrow.control[0], arrow.to[1] - arrow.control[1]];
-    const l = Math.hypot(dx, dy);
-    const s = 9 * k;
-    const back = (side: number): Vec2 => [
-      arrow.to[0] - (dx / l) * s - (dy / l) * side * 0.55 * s,
-      arrow.to[1] - (dy / l) * s + (dx / l) * side * 0.55 * s
-    ];
-    head = [arrow.to, back(1), back(-1)];
-  }
   return (
     <>
       {frame.peek && <polygon className={styles.peek} points={pts(frame.peek)} />}
@@ -50,7 +39,7 @@ function Frame({ frame, paperColor, k }: { frame: HowFrame; paperColor: string; 
       {frame.fold.map((s) => (
         <line
           key={`${s.from}${s.to}`}
-          className={s.hidden ? styles.hidden : styles.fold}
+          className={styles.fold}
           x1={s.from[0]}
           y1={s.from[1]}
           x2={s.to[0]}
@@ -61,7 +50,7 @@ function Frame({ frame, paperColor, k }: { frame: HowFrame; paperColor: string; 
         <line
           key={`${s.ghost}${s.from}${s.to}`}
           data-spine
-          className={s.ghost || s.hidden ? styles.ghost : styles.spine}
+          className={s.ghost ? styles.ghost : styles.spine}
           x1={s.from[0]}
           y1={s.from[1]}
           x2={s.to[0]}
@@ -84,11 +73,8 @@ function Frame({ frame, paperColor, k }: { frame: HowFrame; paperColor: string; 
           )}
         />
       )}
-      {arrow && head && (
-        <>
-          <path className={styles.arrow} d={`M${arrow.from}Q${arrow.control} ${arrow.to}`} />
-          <polygon className={styles.head} points={pts(head)} />
-        </>
+      {arrow && (
+        <path className={styles.arrow} d={`M${arrow.from}Q${arrow.control} ${arrow.to}`} markerEnd={`url(#${head})`} />
       )}
     </>
   );
@@ -102,6 +88,7 @@ export function HowSketch({ model, step, frame }: { model: Model; step: number; 
   // the dots follow what's on screen
   const [shown, setShown] = useState(0);
   const drawing = useMemo(() => howDrawing(model, step), [model, step]);
+  const head = useId();
   if (!drawing) return null;
   // the push mark and arrow head are sized for a frame 300 units wide
   const k = drawing.box[2] / 300;
@@ -114,7 +101,22 @@ export function HowSketch({ model, step, frame }: { model: Model; step: number; 
         {drawing.frames.map((f, i) => (
           <li key={t.howSteps[i]} data-current={i === frame}>
             <svg viewBox={drawing.box.join(' ')} aria-hidden="true">
-              <Frame frame={f} paperColor={model.paperColor} k={k} />
+              {i === 1 && (
+                // the arrow's filled head, sized in screen pixels like its stroke
+                <marker
+                  id={head}
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth={9 * k}
+                  markerHeight={9 * k}
+                  markerUnits="userSpaceOnUse"
+                  orient="auto"
+                >
+                  <path className={styles.head} d="M0 0L10 5L0 10Z" />
+                </marker>
+              )}
+              <Frame frame={f} paperColor={model.paperColor} k={k} head={head} />
             </svg>
             <span>{t.howSteps[i]}</span>
           </li>
