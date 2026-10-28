@@ -6,7 +6,7 @@ import {
   movingFaces,
   progress,
   REVERSE_FLIP,
-  swapTurn,
+  reverseTurn,
   tuckBow
 } from './fold';
 import type { Model, Vec3 } from './types';
@@ -70,7 +70,7 @@ export const arrowOpacity = (s: number, landing: number): number =>
  * Null outside a reverse fold.
  */
 export function pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 }[] | null {
-  if (!swapTurn(model, step)) return null;
+  if (!reverseTurn(model, step)) return null;
   const [start, end] = [foldedPositions(model, step - 1, 1), foldedPositions(model, step, 1)];
   const corners = [...movingFaces(model, step)].flatMap((f) =>
     start[f].map((p, i) => [new Vector3(...p), new Vector3(...end[f][i])])
