@@ -194,7 +194,11 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
                 {t.creases}
               </button>
             </div>
-            <HowSketch frame={sketchFrame(progress(state.t), landingAt(model, state.step))} />
+            <HowSketch
+              model={model}
+              step={state.step}
+              frame={sketchFrame(progress(state.t), landingAt(model, state.step))}
+            />
             <p className={styles.insideOut}>{t.insideOut}</p>
             <CreaseDiagram model={model} step={state.step} />
           </div>

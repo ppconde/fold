@@ -341,6 +341,8 @@ test.describe('a reverse fold step', () => {
     await expect(page.getByRole('img', { name: /turns inside out/ })).toBeVisible();
     await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Creases' })).toBeHidden();
+    // drawn from the model: the flap's flipping edge picked out in each sketch
+    expect(await page.locator('#instructions svg [data-spine]').count()).toBeGreaterThan(0);
   });
 
   test('shows how, with the creases one tap away', async ({ page }, info) => {

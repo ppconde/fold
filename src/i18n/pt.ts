@@ -84,9 +84,9 @@ export const pt: Dictionary = {
     how: 'Gestos',
     creases: 'Vincos',
     howSteps: [
-      'Abre um pouco as duas camadas',
-      'Empurra a aba para dentro, entre elas, pelo teu vinco',
-      'Fecha e alisa'
+      'Abre um pouco as camadas. A dobra a amarelo é a que vais virar do avesso',
+      'Empurra a dobra para dentro pela linha: vira e entra entre as camadas',
+      'Fecha e alisa. A dobra aponta agora ao contrário: a aba está do avesso'
     ],
     insideOut: 'A aba vira do avesso e entra entre as camadas do corpo.',
     stageLabel: 'Vista 3D do papel. Arrasta para o rodar; aperta ou desliza para aproximar.',
