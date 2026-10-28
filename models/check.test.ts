@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from '../src/fold/fixtures';
-import { LAYER_GAP } from '../src/fold/fold';
+import { foldedPositions, isReverseFold, LAYER_GAP, layerHeights } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
+import type { Vec3 } from '../src/fold/types';
 import { buildFold } from './build';
-import { checkModel, crossings, flapFlips, interleaved, spread, wrongSides } from './check';
+import { checkModel, crossings, flapFlips, interleaved, spread, tradesPlaces, wrongSides } from './check';
 import { diamond as d, diamondSequence, has, lacks } from './sequence';
 
 const quarters = () => loadModel(fixture('fold-in-quarters'));
@@ -85,6 +86,28 @@ describe('crossings', () => {
     // each 0.4-wide flap overhangs the 0.2-wide middle, so they cut through each other from edge to edge
     expect(crossings(strip, 1, 1)).toContainEqual([0, 2]);
     expect(crossings(strip, 1, 0.25)).toEqual([]);
+  });
+});
+
+describe('tradesPlaces', () => {
+  const ts = Array.from({ length: 30 }, (_, i) => (i + 1) / 30);
+
+  it('finds two layers lying in the stack that pass through each other and back', () => {
+    const model = quarters();
+    const h = layerHeights(model, 2);
+    const [f, g] = [h.indexOf(0), h.indexOf(1)].sort((a, b) => a - b);
+    // the end pose throughout (flat, in z), but half way f moves as far again as it is from g: through g
+    const end = foldedPositions(model, 2, 1);
+    const across = 2 * (end[g][0][2] - end[f][0][2]);
+    const at = (t: number) =>
+      end.map((face, i) => (i === f && t === 0.5 ? face.map(([x, y, z]): Vec3 => [x, y, z + across]) : face));
+    expect(tradesPlaces(model, 2, [0.25, 0.5, 0.75], at)).toEqual([{ t: 0.5, pair: [f, g] }]);
+  });
+
+  it("finds no layers changing places in the crane's reverse folds", () => {
+    const model = crane();
+    for (let k = 1; k < model.steps.length; k++)
+      if (isReverseFold(model, k)) expect(tradesPlaces(model, k, ts)).toEqual([]);
   });
 });
 

@@ -1,6 +1,15 @@
 import { cornerKeys } from '../src/fold/cuts';
-import { checkConsistency, foldedPositions, isReverseFold, layerHeights, movingFaces } from '../src/fold/fold';
-import type { Model, Vec3 } from '../src/fold/types';
+import {
+  checkConsistency,
+  foldedPositions,
+  isReverseFold,
+  layerHeights,
+  movingFaces,
+  progress,
+  REVERSE_FLIP
+} from '../src/fold/fold';
+import type { Model, Vec2, Vec3 } from '../src/fold/types';
+import { overlap } from './arrange';
 
 /** Largest allowed gap between copies of one vertex, as a fraction of the paper's side (spec §8). */
 const SEAM_BUDGET = 0.06;
@@ -78,6 +87,75 @@ export function crossings(model: Model, step: number, t: number): [number, numbe
       });
       if (hit) found.push([f, g]);
     });
+  });
+  return found;
+}
+
+/** Unit normal of a planar polygon (Newell's method: corners in a line don't matter). */
+function normalOf(face: Vec3[]): Vec3 {
+  const n = face.reduce(
+    (s, p, i): Vec3 => {
+      const q = face[(i + 1) % face.length];
+      return [
+        s[0] + (p[1] - q[1]) * (p[2] + q[2]),
+        s[1] + (p[2] - q[2]) * (p[0] + q[0]),
+        s[2] + (p[0] - q[0]) * (p[1] + q[1])
+      ];
+    },
+    [0, 0, 0]
+  );
+  const l = Math.hypot(...n);
+  return [n[0] / l, n[1] / l, n[2] / l];
+}
+
+/**
+ * Pairs [f, g] of layers lying in the stack that change places mid-step and change back: at some progress in `ts`
+ * they lie parallel and overlap, in an order along f's normal that is neither their order as the step starts nor as
+ * it ends. Faces that move and turn (a flap swinging over) are left to crossings(); two parallel layers trading places
+ * pass through each other with no edge piercing the other face, which crossings() can't see. First `t` per pair.
+ */
+export function tradesPlaces(
+  model: Model,
+  step: number,
+  ts: number[],
+  at = (t: number) => foldedPositions(model, step, t)
+): { t: number; pair: [number, number] }[] {
+  const frame = (t: number) => {
+    const faces = at(t);
+    return { faces, normals: faces.map(normalOf) };
+  };
+  const frames = [0, ...ts, 1].map(frame);
+  const [start, end] = [frames[0], frames.at(-1) as (typeof frames)[0]];
+  const fixed = model.steps[step].fixedFace;
+  const tilt = ({ normals }: (typeof frames)[0], f: number) => dot(normals[f], normals[fixed]);
+  const moving = movingFaces(model, step);
+  const turns = new Set([...moving].filter((f) => frames.some((fr) => Math.abs(tilt(fr, f) - tilt(start, f)) > 1e-6)));
+  /** Order of g along f's normal (±1, 0 level), or null unless parallel (and overlapping, if `within`). */
+  const order = ({ faces, normals }: (typeof frames)[0], f: number, g: number, within: boolean) => {
+    const n = normals[f];
+    if (Math.abs(dot(n, normals[g])) < 1 - 1e-6) return null;
+    if (within) {
+      const u = sub(faces[f][1], faces[f][0]);
+      const l = Math.hypot(...u);
+      const x: Vec3 = [u[0] / l, u[1] / l, u[2] / l];
+      const y = cross(n, x);
+      const flat = (face: Vec3[]) => face.map((p): Vec2 => [dot(p, x), dot(p, y)]);
+      if (overlap(flat(faces[f]), flat(faces[g])).area < 1e-6) return null;
+    }
+    const d = dot(n, sub(centre(faces[g]), centre(faces[f])));
+    return Math.abs(d) < 1e-9 ? 0 : Math.sign(d);
+  };
+  const found: { t: number; pair: [number, number] }[] = [];
+  model.faces.forEach((_, f) => {
+    for (let g = f + 1; g < model.faces.length; g++) {
+      if (turns.has(f) || turns.has(g)) continue;
+      const ends = [order(start, f, g, false), order(end, f, g, false)];
+      const i = ts.findIndex((_, i) => {
+        const o = order(frames[i + 1], f, g, true);
+        return o !== null && ends.every((e) => e !== null && e !== o);
+      });
+      if (i >= 0) found.push({ t: ts[i], pair: [f, g] });
+    }
   });
   return found;
 }
@@ -241,15 +319,27 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
           : `Step ${k}: the folds at edges ${a} and ${b} interleave in the stack (paper can only nest them).`
       );
     }
-    for (let i = 1; i <= 10; i++) {
-      const hits = crossings(model, k, i / 10);
+    // a reverse fold's flap turns over fast: sample its flip finely too
+    const flip = isReverseFold(model, k)
+      ? Array.from({ length: 30 }, (_, i) => i / 30).filter((t) => t > 0 && progress(t) <= REVERSE_FLIP)
+      : [];
+    const ts = [...flip, ...Array.from({ length: 10 }, (_, i) => (i + 1) / 10)].sort((a, b) => a - b);
+    const at = (t: number) => `Step ${k} at ${Math.round(t * 100)}%`;
+    for (const t of ts) {
+      const hits = crossings(model, k, t);
       if (hits.length) {
         const pairs = hits.filter(([f, g]) => f < g).map(([f, g]) => `${f}×${g}`);
         problems.push(
-          `Step ${k} at ${i * 10}%: faces ${(pairs.length ? pairs : hits.map((h) => h.join('×'))).join(', ')} pass through each other.`
+          `${at(t)}: faces ${(pairs.length ? pairs : hits.map((h) => h.join('×'))).join(', ')} pass through each other.`
         );
         break;
       }
+    }
+    const traded = tradesPlaces(model, k, ts);
+    if (traded.length) {
+      const t = Math.min(...traded.map((s) => s.t));
+      const pairs = traded.filter((s) => s.t === t).map((s) => s.pair.join('×'));
+      problems.push(`${at(t)}: faces ${pairs.join(', ')} change places mid-step.`);
     }
   }
   problems.push(...flapFlips(model));

@@ -88,7 +88,8 @@ describe('crane', () => {
     const model = loadModel(committed('crane.fold'));
     const head = model.steps.findIndex((s) => s.instruction.en.startsWith('Reverse-fold the tip of the neck'));
     const rest = spread(model, head, 1);
-    for (let i = 1; i < 10; i++) expect(spread(model, head, i / 10)).toBeLessThanOrEqual(rest);
+    // mid-step the spine's seam sits exactly at its rest gap; 1e-12 covers float rounding only (it overshoots by 4e-18)
+    for (let i = 1; i < 10; i++) expect(spread(model, head, i / 10)).toBeLessThanOrEqual(rest + 1e-12);
   });
 
   describe('reverse folds', () => {
