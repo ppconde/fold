@@ -67,15 +67,24 @@ describe('howDrawing', () => {
     }
   });
 
-  it('keeps the neck on the same side as the 3D view', () => {
-    // seen from the default camera, model +x reads right: the neck starts left of its pivot in both
-    const fan = reverseFan(crane, neck);
-    if (!fan) throw new Error('no fan');
-    const tipX = Math.min(...[...movingFaces(crane, neck)].flatMap((f) => fan.from[f].map((p) => p[0])));
-    const d = draw(neck);
-    const drawnX = Math.min(...d.flapStart.map((p) => p[0]));
-    expect(tipX < fan.pivot[0]).toBe(true);
-    expect(drawnX < d.pivot[0]).toBe(true);
+  it('draws each fold as the default 3D view sees it, not mirrored', () => {
+    // the camera looks at the paper's front (+z) with +x to the right and +y up; the drawing's y runs down
+    for (const k of reverse) {
+      const fan = reverseFan(crane, k);
+      if (!fan) throw new Error('no fan');
+      const d = draw(k);
+      const corners = [...movingFaces(crane, k)].flatMap((f) => fan.from[f]);
+      for (const axis of [0, 1]) {
+        const far = corners.reduce((a, b) =>
+          Math.abs(b[axis] - fan.pivot[axis]) > Math.abs(a[axis] - fan.pivot[axis]) ? b : a
+        );
+        const drawn = Math.max(...d.flapStart.map((p) => Math.abs(p[axis] - d.pivot[axis])));
+        const point = d.flapStart.find((p) => Math.abs(Math.abs(p[axis] - d.pivot[axis]) - drawn) < 1e-9);
+        if (!point) throw new Error('no far corner');
+        const sign = axis === 0 ? 1 : -1;
+        expect(Math.sign(point[axis] - d.pivot[axis])).toBe(sign * Math.sign(far[axis] - fan.pivot[axis]));
+      }
+    }
   });
 
   it('zooms onto the flap: the box holds it, and not much more', () => {
