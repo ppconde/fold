@@ -1,5 +1,7 @@
 # Reverse fold tuck motion
 
+> The "Revision 2026-10-18" section at the end supersedes the swap and crossfade text above it: the flap now turns over in place, and there is no crossfade.
+
 2026-10-17. Replace the swing-and-tuck stand-in's motion with one that looks like the tuck a folder's hands make. The flap is swapped for its reversed (tucked) version at the start of the step. The body opens a little, the flap pivots rigidly up between its layers into place, and the body closes. The paper never passes through paper. The one break from rigid geometry is the swap.
 
 ## Why

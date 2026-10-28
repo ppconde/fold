@@ -197,8 +197,8 @@ Spec: the section "Revision 2026-10-18" at the end of the design doc. Tasks 1–
 **Files:** `src/fold/fold.ts`, `src/fold/reverse.ts`, `models/check.ts`, tests in `src/fold/fold.test.ts`, `src/fold/reverse.test.ts`, `models/models.test.ts`.
 
 **Interfaces:**
-- Produces, in `fold.ts`: `REVERSE_FLIP = 1 / 3` (the share of eased progress the flip takes; replaces `REVERSE_SWAP`). `swapTurn` stays. It gains a `flip: { axis: Vec3; sense: 1 | -1 }`: the mirror line's in-plane direction through `pivot`, and the turn's sense.
-- Produces, in `reverse.ts`: `pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 }[] | null`. It returns two arrows, null outside a reverse fold that has a `swapTurn`. It also produces `pinchOpacity(s: number): number`, which is 1 until `s = REVERSE_FLIP / 2`, linear to 0 at `s = REVERSE_FLIP`, and 0 after.
+- Produces, in `fold.ts`: `REVERSE_FLIP = 1 / 3` (the share of eased progress the flip takes; replaces `REVERSE_SWAP`). `swapTurn` stays (later renamed `reverseTurn`). It gains a `flip: { axis: Vec3; sense: 1 | -1 }`: the mirror line's in-plane direction through `pivot`, and the turn's sense.
+- Produces, in `reverse.ts`: `pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 }[] | null`. It returns two arrows, null outside a reverse fold that has a `reverseTurn`. Each leans 45° off the body's normal, the two mirrored to opposite sides of the spine. It also produces `pinchOpacity(s: number): number`, which is 1 until `s = REVERSE_FLIP / 4`, linear to 0 at `s = REVERSE_FLIP / 2`, and 0 from there on.
 - Removed: `REVERSE_SWAP` and `swapFade`. Task 5 drops the player's use of them.
 
 - [ ] **Step 1: Tests first.**
@@ -207,7 +207,7 @@ Spec: the section "Revision 2026-10-18" at the end of the design doc. Tasks 1–
   - "the flap stays rigid": edge lengths match the flat paper at t = 0, 0.1, 0.2, REVERSE_FLIP, 0.5 and 1.
   - Keep "the crane's reverse folds pass no paper through paper", the pivot-stays-put and bow-side tests, and the snapshot of non-reverse steps.
   - `pinchArrows` returns 2 arrows for the neck, tail and head, and null for step 0, non-reverse steps and other models. Each arrow's `to` lies within 0.2 × flap length of the spine point. The two `from − to` vectors are opposite and parallel to the fixed face's normal.
-  - `pinchOpacity` at 0, REVERSE_FLIP/2, 0.75·REVERSE_FLIP, REVERSE_FLIP and 1 → 1, 1, 0.5, 0, 0.
+  - `pinchOpacity` at 0, REVERSE_FLIP/4, 0.375·REVERSE_FLIP, REVERSE_FLIP/2 and 1 → 1, 1, 0.5, 0, 0.
 - [ ] **Step 2:** Run them and see them fail (`pnpm vitest run src/fold models`).
 - [ ] **Step 3: Implement the flip** in `foldedPositions`'s reverse branch. For `s < REVERSE_FLIP`, the moving faces take the previous step's end pose, turned by `sense·π·ease(s / REVERSE_FLIP)` around the line (`pivot`, `flip.axis`). Their lifts go from the start stack's lift to the tucked lift as they pass through the plane. The flip reverses the flap's own layer order, which is what a reverse fold does. For `s ≥ REVERSE_FLIP`, use today's pivot with progress `(s − REVERSE_FLIP) / (1 − REVERSE_FLIP)`.
   - Fit `flip.axis` as the best mirror line through the pivot, by vertex id, start → tucked. A closed form exists: twice the angle is `atan2(Σ(vx·gy + vy·gx), Σ(vx·gx − vy·gy))` over vectors from the pivot.

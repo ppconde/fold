@@ -730,7 +730,7 @@ describe('reverse folds', () => {
   });
 
   it('leaves collapse tucks and ordinary steps alone', () => {
-    // hashes of foldedPositions from before reverse folds swapped their flap (rounded to 1e-9, -0 as 0); a reverse
+    // hashes of foldedPositions from before reverse folds turned their flap over (rounded to 1e-9, -0 as 0); a reverse
     // fold's own step only at its end
     const digest = (faces: Vec3[][]) =>
       createHash('sha256')

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { foldedPositions, isReverseFold, movingFaces, swapTurn } from '../src/fold/fold';
+import { foldedPositions, isReverseFold, movingFaces, reverseTurn } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { unfoldAll } from '../src/home/unfold';
 import { buildFold, entryOf } from './build';
@@ -102,8 +102,8 @@ describe('crane', () => {
 
     it('checks catch a reverse fold whose flap turns over the wrong way', () => {
       const wrong = loadModel(committed('crane.fold'));
-      const turn = swapTurn(wrong, reverse[0]);
-      if (!turn) throw new Error('no swap turn on the neck');
+      const turn = reverseTurn(wrong, reverse[0]);
+      if (!turn) throw new Error('no reverse turn on the neck');
       // the cached turn, flipped for this model only
       turn.flip.sense = turn.flip.sense === 1 ? -1 : 1;
       expect(checkModel(wrong).some((p) => p.startsWith(`Step ${reverse[0]} at`) && p.includes('pass through'))).toBe(
