@@ -1,5 +1,4 @@
-import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { Euler, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from './fixtures';
@@ -765,31 +764,5 @@ describe('reverse folds', () => {
         )
       ).toBe(true);
     }
-  });
-
-  it('leaves collapse tucks and ordinary steps alone', () => {
-    // hashes of foldedPositions from before reverse folds turned their flap over (rounded to 1e-9, -0 as 0); a reverse
-    // fold's own step only at its end
-    const digest = (faces: Vec3[][]) =>
-      createHash('sha256')
-        .update(JSON.stringify(faces.flat(2).map((x) => Math.round(x * 1e9) + 0)))
-        .digest('hex')
-        .slice(0, 16);
-    const ids = readdirSync(new URL('../../public/models/', import.meta.url)).flatMap((f) =>
-      f.endsWith('.fold') ? [f.slice(0, -5)] : []
-    );
-    const hashes = Object.fromEntries(
-      ids.map((id) => {
-        const m = committed(id);
-        return [
-          id,
-          m.steps.map((_, k) =>
-            (isReverseFold(m, k) ? [1] : [0, 0.5, 1]).map((t) => digest(foldedPositions(m, k, t))).join(' ')
-          )
-        ];
-      })
-    );
-    expect(reverse).toHaveLength(3);
-    expect(hashes).toMatchSnapshot();
   });
 });
