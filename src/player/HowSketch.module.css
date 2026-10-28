@@ -153,7 +153,7 @@
 
   /* shorter than square, so the longest caption still fits a small phone's sheet (the drawing is square inside) */
   .frames svg {
-    aspect-ratio: 3 / 2;
+    aspect-ratio: 8 / 5;
   }
 
   /* the phone's sketches don't follow the animation, so none is singled out */
