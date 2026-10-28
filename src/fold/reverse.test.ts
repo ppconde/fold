@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
 import { foldedPositions, landingAt, movingFaces, REVERSE_FLIP } from './fold';
 import { loadModel } from './load-model';
-import { arrowOpacity, ghostFaces, isReverseFold, pinchArrows, pinchOpacity, tuckArrow } from './reverse';
+import { arrowOpacity, ghostFaces, isReverseFold, pinchArrows, pinchOpacity, pinchSides, tuckArrow } from './reverse';
 
 const committed = (id: string) =>
   loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
@@ -90,7 +90,6 @@ describe('arrowOpacity', () => {
 
 describe('pinchArrows', () => {
   const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
-  const v = (p: number[]) => p.map((x) => x);
   const sub = (p: number[], q: number[]) => p.map((x, i) => x - q[i]);
   const len = (p: number[]) => Math.hypot(...p);
   const cross = (a: number[], b: number[]) => [
@@ -113,7 +112,7 @@ describe('pinchArrows', () => {
       const flap = len(sub(tip, pivot));
       const spine = pivot.map((x, i) => x + 0.25 * (tip[i] - x));
       for (const a of arrows) expect(len(sub(a.to, spine))).toBeLessThan(0.2 * flap);
-      const [p, q, r] = start[crane.steps[k].fixedFace].map(v);
+      const [p, q, r] = start[crane.steps[k].fixedFace];
       const n = cross(sub(q, p), sub(r, p));
       const [d0, d1] = arrows.map((a) => sub(a.from, a.to));
       const dot = (x: number[], y: number[]) => x.reduce((acc, c, i) => acc + c * y[i], 0);
@@ -136,6 +135,18 @@ describe('pinchArrows', () => {
     expect(pinchArrows(crane, neck - 1)).toBeNull();
     const tulip = committed('tulip');
     expect(tulip.steps.some((_, k) => pinchArrows(tulip, k))).toBe(false);
+  });
+});
+
+describe('pinchSides', () => {
+  it('puts one arrow each side even when the spine is the outermost layer', () => {
+    expect(pinchSides([-0.004, 0, 0.002])).toEqual([
+      [0.002, 1],
+      [-0.004, -1]
+    ]);
+    // the spine on top, or at the bottom, of every layer around it
+    expect(pinchSides([0, -0.002, -0.004]).map(([, side]) => side)).toEqual([1, -1]);
+    expect(pinchSides([0, 0.002, 0.004]).map(([, side]) => side)).toEqual([1, -1]);
   });
 });
 

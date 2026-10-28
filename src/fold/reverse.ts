@@ -91,8 +91,7 @@ export function pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 
   // in the paper's plane, across the spine: the arrows lean in from opposite sides of it, 45 degrees off the normal
   const across = n.clone().cross(tip.clone().sub(pivot)).normalize(); // perpendicular to n and to the spine
   const lean = n.clone().add(across).multiplyScalar(Math.SQRT1_2);
-  return ([Math.max(...depths), Math.min(...depths)] as const).map((d) => {
-    const side = Math.sign(d) || 1;
+  return pinchSides(depths).map(([d, side]) => {
     const to = spine.clone().addScaledVector(n, d + side * 0.04 * length);
     return {
       from: to
@@ -103,6 +102,13 @@ export function pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 
     };
   });
 }
+
+/** Along the normal, where each pinch arrow ends (just past the paper's front-most and back-most layer around the
+ * spine) and which side it comes from. */
+export const pinchSides = (depths: number[]): [number, 1 | -1][] => [
+  [Math.max(0, ...depths), 1],
+  [Math.min(0, ...depths), -1]
+];
 
 /** The pinch arrows' strength at eased progress `s`: full from the first frame, gone by the time the flap is edge-on. */
 export const pinchOpacity = (s: number): number =>

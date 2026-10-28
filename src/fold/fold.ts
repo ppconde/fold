@@ -352,7 +352,9 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
     const a = a0.heights[f] * a0.up[f];
     return LAYER_GAP * (a + (a1.heights[f] * a1.up[f] - a) * (turning.has(f) ? 1 : u));
   });
-  // ...rising to its tucked layers as it stands up, so it lies down at them
+  // ...rising to its tucked layers as it stands up, so it lies down at them: along the turn's axis, the body's
+  // normal, pointing the way the stack's heights count
+  const stackUp = reverse ? stackward(new Vector3(...reverse.axis)) : new Vector3();
   const flipRise = (f: number) =>
     flip && turning.has(f)
       ? LAYER_GAP * (from.heights[f] + (to.heights[f] - from.heights[f]) * progress(2 * flipped))
@@ -378,10 +380,12 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
     }
     // a reverse fold's body opens at once and closes as its layers blend to where they end: opened out through
     // a whole side, its outer layers would otherwise pull the spine's seam past its gap at rest
-    const shift = LAYER_GAP * clearance[f] * rise * (reverse ? 1 - s : 1) + flipRise(f);
+    const shift = LAYER_GAP * clearance[f] * rise * (reverse ? 1 - s : 1);
+    const risen = flipRise(f);
     return face.map((v) => {
       point.set(model.vertices[v][0], model.vertices[v][1], lift).applyMatrix4(m).add(normal);
       point.z += shift;
+      point.addScaledVector(stackUp, risen);
       return point.applyMatrix4(turn).toArray() as Vec3;
     });
   });
@@ -503,6 +507,9 @@ function opening(model: Model, step: number): number[] {
   return shift;
 }
 
+/** `normal` (a stack's, before the whole-model turn), pointing the way its heights count: toward +z, as in stackAt. */
+const stackward = (normal: Vector3) => normal.clone().multiplyScalar(normal.z < 0 ? -1 : 1);
+
 type ReverseTurn = { pivot: Vec3; axis: Vec3; angle: number; flip: { axis: Vec3; sense: 1 | -1 } };
 const reverseTurns = new WeakMap<Model, (ReverseTurn | null)[]>();
 
@@ -595,7 +602,11 @@ export function reverseTurn(model: Model, step: number): ReverseTurn | null {
   const centre = moving
     .flatMap((f) => model.faces[f].map((v) => new Vector3(...model.vertices[v], 0).applyMatrix4(start[f])))
     .reduce((c, p, _, all) => c.addScaledVector(p, 1 / all.length), new Vector3());
-  const lifted = centre.clone().applyMatrix4(turnAbout(pivot, line, Math.PI / 2)).z - centre.z;
+  const lifted = centre
+    .clone()
+    .applyMatrix4(turnAbout(pivot, line, Math.PI / 2))
+    .sub(centre)
+    .dot(stackward(axis));
   // layers that keep their places on the whole (rises = 0) turn up, toward +z; a wrong pick passes the flap through
   // the body, which checkModel's crossings check catches
   const sense = rises < 0 === lifted < 0 ? 1 : -1;
