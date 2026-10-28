@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { foldedPositions, isReverseFold, movingFaces, reverseTurn } from '../src/fold/fold';
+import { cornerKeys } from '../src/fold/cuts';
+import { foldedPositions, isReverseFold, reverseFan } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { unfoldAll } from '../src/home/unfold';
 import { buildFold, entryOf } from './build';
-import { checkModel, crossings, spread } from './check';
+import { checkModel, crossings, SEAM_BUDGET, spread } from './check';
 import { DEFAULT_MODEL, sources } from './src/index';
 import { thumbnail } from './thumbnail';
 
@@ -100,26 +101,26 @@ describe('crane', () => {
       for (const k of reverse) for (let i = 0; i <= 40; i++) expect(crossings(model, k, i / 40)).toEqual([]);
     });
 
-    it('checks catch a reverse fold whose flap turns over the wrong way', () => {
-      const wrong = loadModel(committed('crane.fold'));
-      const turn = reverseTurn(wrong, reverse[0]);
-      if (!turn) throw new Error('no reverse turn on the neck');
-      // the cached turn, flipped for this model only
-      turn.flip.sense = turn.flip.sense === 1 ? -1 : 1;
-      expect(checkModel(wrong).some((p) => p.startsWith(`Step ${reverse[0]} at`) && p.includes('pass through'))).toBe(
-        true
-      );
-    });
-
-    it("still measures the body's own seams while the flap pivots", () => {
-      // the neck's two layers, either side of the head, part at the neck's spine as the head tucks between them
-      const head = reverse[2];
-      const faces = foldedPositions(model, head, 0.7);
-      const at = (f: number) => faces[f][model.faces[f].indexOf(17)];
-      const gap = Math.hypot(...at(34).map((x, i) => x - at(35)[i]));
-      expect([34, 35].some((f) => movingFaces(model, head).has(f))).toBe(false);
-      expect(gap).toBeGreaterThan(0);
-      expect(spread(model, head, 0.7)).toBeGreaterThanOrEqual(gap);
+    it("still measures each side's own seams while the body opens", () => {
+      for (const k of reverse) {
+        const group = reverseFan(model, k)?.group ?? [];
+        const keys = cornerKeys(model, k);
+        const faces = foldedPositions(model, k, 0.7);
+        // the widest gap between two copies of a corner that must lie together, on still faces opening as one side
+        let gap = 0;
+        for (let f = 0; f < faces.length; f++)
+          for (let g = f + 1; g < faces.length; g++) {
+            if (!group[f] || group[f] !== group[g]) continue;
+            for (let i = 0; i < faces[f].length; i++)
+              for (let j = 0; j < faces[g].length; j++)
+                if (keys[f][i] === keys[g][j])
+                  gap = Math.max(gap, Math.hypot(...faces[f][i].map((x, n) => x - faces[g][j][n])));
+          }
+        // spread measures each copy from the first one it meets, so at least half the widest pair
+        expect(gap).toBeGreaterThan(0);
+        expect(spread(model, k, 0.7)).toBeGreaterThanOrEqual(gap / 2 - 1e-12);
+        expect(spread(model, k, 0.7)).toBeLessThanOrEqual(SEAM_BUDGET);
+      }
     });
 
     it('a reverse fold starts where the last step ended, its flap too', () => {

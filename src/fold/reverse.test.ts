@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
-import { foldedPositions, landingAt, movingFaces, REVERSE_FLIP } from './fold';
+import { foldedPositions, landingAt, movingFaces } from './fold';
 import { loadModel } from './load-model';
 import { arrowOpacity, ghostFaces, isReverseFold, pinchArrows, pinchOpacity, pinchSides, tuckArrow } from './reverse';
 
@@ -151,13 +151,7 @@ describe('pinchSides', () => {
 });
 
 describe('pinchOpacity', () => {
-  it('shows from the first frame and is gone by the time the flap stands on edge', () => {
-    expect([0, REVERSE_FLIP / 4, (3 * REVERSE_FLIP) / 8, REVERSE_FLIP / 2, 1].map(pinchOpacity)).toEqual([
-      1,
-      1,
-      expect.closeTo(0.5, 9),
-      0,
-      0
-    ]);
+  it('shows from the first frame and is gone by the first sixth of the step', () => {
+    expect([0, 1 / 12, 1 / 8, 1 / 6, 1].map(pinchOpacity)).toEqual([1, 1, expect.closeTo(0.5, 9), 0, 0]);
   });
 });

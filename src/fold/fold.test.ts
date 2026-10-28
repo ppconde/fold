@@ -11,8 +11,7 @@ import {
   LAYER_GAP,
   layerHeights,
   movingFaces,
-  progress,
-  REVERSE_FLIP
+  reverseFan
 } from './fold';
 import { loadModel } from './load-model';
 import { tuckArrow } from './reverse';
@@ -625,12 +624,6 @@ describe('reverse folds', () => {
 
   const sub = (a: Vec3, b: Vec3) => new Vector3(...a).sub(new Vector3(...b));
   const moving = (k: number) => [...movingFaces(crane, k)];
-  const length = (f: number, faces: Vec3[][], i: number) =>
-    sub(faces[f][i], faces[f][(i + 1) % faces[f].length]).length();
-  const flatLength = (f: number, i: number) => {
-    const [u, v] = [crane.faces[f][i], crane.faces[f][(i + 1) % crane.faces[f].length]];
-    return Math.hypot(crane.vertices[u][0] - crane.vertices[v][0], crane.vertices[u][1] - crane.vertices[v][1]);
-  };
 
   it('starts each step where the last one ended', () => {
     for (let k = 1; k < crane.steps.length; k++) {
@@ -640,20 +633,6 @@ describe('reverse folds', () => {
           expectClose(p, end[f][c], 9);
         });
       });
-    }
-  });
-
-  it('flips the flap exactly onto its tucked pose', () => {
-    // the t whose eased progress is REVERSE_FLIP
-    let [lo, hi] = [0, 1];
-    for (let i = 0; i < 60; i++)
-      [lo, hi] = progress((lo + hi) / 2) < REVERSE_FLIP ? [(lo + hi) / 2, hi] : [lo, (lo + hi) / 2];
-    for (const k of reverse) {
-      const [before, after] = [foldedPositions(crane, k, lo - 1e-9), foldedPositions(crane, k, hi + 1e-9)];
-      for (const f of moving(k))
-        before[f].forEach((p, c) => {
-          expectClose(p, after[f][c], 6);
-        });
     }
   });
 
@@ -680,6 +659,7 @@ describe('reverse folds', () => {
   });
 
   it('turns the flap the way its tuck arrow bows', () => {
+    // the head's arrow bows away from the whole bird's middle, not the neck's, so it says little about the head
     const [neck, tail] = reverse;
     for (const k of [neck, tail]) {
       const arrow = tuckArrow(crane, k);
@@ -696,17 +676,59 @@ describe('reverse folds', () => {
     }
   });
 
-  it('pivots the flap rigidly', () => {
+  it('fans the flap onto its fold line halfway, inside the body', () => {
     for (const k of reverse) {
-      expect(moving(k).length).toBeGreaterThan(0);
-      for (const t of [0, 0.1, 0.2, REVERSE_FLIP, 0.5, 1]) {
-        const faces = foldedPositions(crane, k, t);
-        for (const f of moving(k))
-          crane.faces[f].forEach((_, i) => {
-            expect(length(f, faces, i)).toBeCloseTo(flatLength(f, i), 9);
-          });
-      }
+      const fan = reverseFan(crane, k);
+      if (!fan) throw new Error(`no fan at step ${k}`);
+      const [n, L] = [new Vector3(...fan.normal), new Vector3(...fan.line)];
+      // progress(0.5) = 0.5: the fan's middle
+      const mid = foldedPositions(crane, k, 0.5);
+      for (const f of moving(k))
+        for (const p of mid[f]) {
+          const d = sub(p, fan.pivot);
+          const inPlane = d.addScaledVector(n, -d.dot(n));
+          expect(inPlane.clone().cross(L).length()).toBeLessThan(1e-9);
+          expect(inPlane.dot(L)).toBeGreaterThanOrEqual(-1e-9);
+          expect(inPlane.dot(L)).toBeLessThanOrEqual(0.9 * fan.reach + 1e-9);
+        }
     }
+  });
+
+  it('goes round the side the user chose, shortened only as much as the body needs', () => {
+    // the fit depends on the side the flap goes round: these are the sketch's (session scratchpad, preview3), where
+    // the user picked option G for the neck, tail and head
+    expect(reverse.map((k) => reverseFan(crane, k)?.fit)).toEqual(
+      [0.392, 0.392, 0.357].map((x) => expect.closeTo(x, 3))
+    );
+  });
+
+  it('opens each side of the body 14 degrees at the peak, as one piece', () => {
+    const normalOf = ([p, q, r]: Vec3[]) => sub(q, p).cross(sub(r, p)).normalize();
+    for (const k of reverse) {
+      const fan = reverseFan(crane, k);
+      if (!fan) throw new Error(`no fan at step ${k}`);
+      const [mid, end] = [foldedPositions(crane, k, 0.5), foldedPositions(crane, k, 1)];
+      fan.group.forEach((g, f) => {
+        if (g !== 0) expect(normalOf(mid[f]).angleTo(normalOf(end[f]))).toBeCloseTo((14 * Math.PI) / 180, 6);
+      });
+    }
+  });
+
+  it('gives the same pose for any t, whatever order it is asked in', () => {
+    const ts = [0, 0.25, 0.5, 0.75, 1];
+    for (const k of reverse) {
+      const fresh = committed('crane');
+      const a = ts.map((t) => foldedPositions(crane, k, t));
+      const b = [...ts]
+        .reverse()
+        .map((t) => foldedPositions(fresh, k, t))
+        .reverse();
+      expect(b).toEqual(a);
+    }
+  });
+
+  it("doesn't turn the whole model during a reverse fold", () => {
+    for (const k of reverse) expect(crane.steps[k].rotation).toEqual(crane.steps[k - 1].rotation);
   });
 
   it('opens the body and closes it again', () => {
