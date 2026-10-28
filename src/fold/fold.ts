@@ -327,7 +327,8 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
     turnAbout(new Vector3(...swap.pivot), new Vector3(...swap.flip.axis), swap.flip.sense * Math.PI * flipped);
   const begin = flip ? startPose(model, step) : [];
   const T1 = swap ? rootTransforms(model, anglesAt(model, step, 1), step) : T;
-  const pivoted = Math.max(0, (s - REVERSE_FLIP) / (1 - REVERSE_FLIP));
+  // eased too: the flip comes to a stop, so the pivot sets off from rest
+  const pivoted = progress((s - REVERSE_FLIP) / (1 - REVERSE_FLIP));
   const turnBack =
     swap && turnAbout(new Vector3(...swap.pivot), new Vector3(...swap.axis), -swap.angle * (1 - pivoted));
   const poses = model.faces.map((_, f) => {
