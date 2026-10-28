@@ -1,16 +1,13 @@
 import { Box3, Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
 import { assertStep } from './assert-step';
-import { overlap } from './polygon';
-import type { Model, Vec2, Vec3 } from './types';
+import type { Model, Vec3 } from './types';
 
 const DEG = MathUtils.DEG2RAD;
 const EPSILON = 1e-6;
 /** Rise per layer of a stack, as a fraction of the paper's side. */
 export const LAYER_GAP = 0.002;
-/** Layers each side of a reverse fold's flap shift apart at the peak of the open. */
-export const REVERSE_OPEN = 2;
-/** Share of a reverse fold (eased) in which its flap turns over in place, onto its tucked pose. */
-export const REVERSE_FLIP = 1 / 3;
+/** Degrees a reverse fold's body opens at its peak, mid-step: each side turns half of it about the far edge. */
+export const REVERSE_OPEN_DEG = 28;
 /** Share of a step at each end in which a travelling flap rises off, and settles back onto, the stack. */
 const LIFT_SPAN = 0.15;
 
@@ -298,6 +295,13 @@ export const landingAt = (model: Model, step: number): number =>
 /** Corners of every face (in `model.faces` order) at progress `t` through `step`. */
 export function foldedPositions(model: Model, step: number, t: number): Vec3[][] {
   assertStep(model, step);
+  const fan = reverseFan(model, step);
+  const s = progress(t);
+  return fan && s > 0 && s < 1 ? fanned(fan, plainPositions(model, step, t), s) : plainPositions(model, step, t);
+}
+
+/** foldedPositions without a reverse fold's fan: each face where its creases' angles put it. */
+function plainPositions(model: Model, step: number, t: number): Vec3[][] {
   if (step === 0) return model.faces.map((f) => f.map((v): Vec3 => [...model.vertices[v], 0]));
 
   const cur = model.steps[step];
@@ -316,29 +320,8 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   const rise = progress(t / LIFT_SPAN) * progress((1 - t) / LIFT_SPAN);
 
   const C = treeChange(model, step);
-  // a reverse fold's flap first turns over in place, a page turned about the mirror line through its pivot, onto
-  // its tucked pose: its end pose, turned in the body's plane, which then pivots home as the step runs
-  const reverse = reverseTurn(model, step);
-  const turning = reverse ? movingFaces(model, step) : new Set<number>();
-  const flipped = reverse && s < REVERSE_FLIP ? progress(s / REVERSE_FLIP) : 1;
-  const flip =
-    flipped < 1 &&
-    reverse &&
-    turnAbout(new Vector3(...reverse.pivot), new Vector3(...reverse.flip.axis), reverse.flip.sense * Math.PI * flipped);
-  const begin = flip ? startPose(model, step) : [];
-  const T1 = reverse ? rootTransforms(model, anglesAt(model, step, 1), step) : T;
-  // eased too: the flip comes to a stop, so the pivot sets off from rest
-  const pivoted = progress((s - REVERSE_FLIP) / (1 - REVERSE_FLIP));
-  const turnBack =
-    reverse && turnAbout(new Vector3(...reverse.pivot), new Vector3(...reverse.axis), -reverse.angle * (1 - pivoted));
+  const reverse = isReverseFold(model, step);
   const poses = model.faces.map((_, f) => {
-    if (flip && turning.has(f)) return flip.clone().multiply(begin[f]);
-    if (turnBack && turning.has(f))
-      return turnBack
-        .clone()
-        .multiply(anchorFor(model, step))
-        .multiply(T1[cur.fixedFace].clone().invert())
-        .multiply(T1[f]);
     const m = pose.clone().multiply(T[f]);
     return C ? m.multiply(fade(C[f], s)) : m;
   });
@@ -347,18 +330,9 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
   const mid = cur.landedOrders && !reverse ? stackAt(model, step, true) : to;
   const [a0, a1, u] = s <= landing ? [from, mid, s / landing] : [mid, to, (s - landing) / (1 - landing)];
   const lifts = model.faces.map((_, f) => {
-    // a turning flap's own normal swings through the plane: it rises straight up instead, below
-    if (flip && turning.has(f)) return 0;
     const a = a0.heights[f] * a0.up[f];
-    return LAYER_GAP * (a + (a1.heights[f] * a1.up[f] - a) * (turning.has(f) ? 1 : u));
+    return LAYER_GAP * (a + (a1.heights[f] * a1.up[f] - a) * u);
   });
-  // ...rising to its tucked layers as it stands up, so it lies down at them: along the turn's axis, the body's
-  // normal, pointing the way the stack's heights count
-  const stackUp = reverse ? stackward(new Vector3(...reverse.axis)) : new Vector3();
-  const flipRise = (f: number) =>
-    flip && turning.has(f)
-      ? LAYER_GAP * (from.heights[f] + (to.heights[f] - from.heights[f]) * progress(2 * flipped))
-      : 0;
   // only in a step that ends open (a flap standing out of the stack); flat steps blend their heights alone
   const open = endsOpen(model, step);
   const roots = open ? flapRoots(model, poses, lifts, cur.fixedFace) : lifts.map(() => 0);
@@ -378,14 +352,10 @@ export function foldedPositions(model: Model, step: number, t: number): Vec3[][]
       facing.set(0, 0, 1).transformDirection(m);
       normal.addScaledVector(up.clone().addScaledVector(facing, -up.dot(facing)), Math.abs(lift));
     }
-    // a reverse fold's body opens at once and closes as its layers blend to where they end: opened out through
-    // a whole side, its outer layers would otherwise pull the spine's seam past its gap at rest
-    const shift = LAYER_GAP * clearance[f] * rise * (reverse ? 1 - s : 1);
-    const risen = flipRise(f);
+    const shift = LAYER_GAP * clearance[f] * rise;
     return face.map((v) => {
       point.set(model.vertices[v][0], model.vertices[v][1], lift).applyMatrix4(m).add(normal);
       point.z += shift;
-      point.addScaledVector(stackUp, risen);
       return point.applyMatrix4(turn).toArray() as Vec3;
     });
   });
@@ -465,158 +435,170 @@ export function isReverseFold(model: Model, step: number): boolean {
   return flips && made.some((a) => a > 0) && made.some((a) => a < 0);
 }
 
-/**
- * A reverse fold opens the body around its flap instead: REVERSE_OPEN layers up for each still face that ends
- * above every moving face it is ordered against, down for one below them all, 0 for the others. The layers
- * beyond open with them, out through the whole side: a still face lying over (under) one that shifts up (down)
- * shifts at least as far, so no two still layers change places on the way.
- */
-function opening(model: Model, step: number): number[] {
-  const moving = movingFaces(model, step);
-  const { heights } = stackAt(model, step);
-  const side = model.faces.map((): number[] => []);
-  for (const [f, g] of model.steps[step].faceOrders) {
-    if (moving.has(f) === moving.has(g)) continue;
-    const [still, flap] = moving.has(f) ? [g, f] : [f, g];
-    side[still].push(Math.sign(heights[still] - heights[flap]));
-  }
-  const shift = side.map((ss) => (ss.length && ss.every((x) => x === ss[0]) ? ss[0] * REVERSE_OPEN : 0));
-  // the stack's plane is z = const before the whole-model turn, as in stackAt
-  const start = startPose(model, step);
-  const flat = model.faces.map((face, f) =>
-    face.map((v): Vec2 => {
-      const p = new Vector3(...model.vertices[v], 0).applyMatrix4(start[f]);
-      return [p.x, p.y];
-    })
-  );
-  const still = model.faces.flatMap((_, f) => (moving.has(f) ? [] : [f]));
-  const touching = still.flatMap((f) =>
-    still.flatMap((g) => (f !== g && overlap(flat[f], flat[g]).area > 1e-9 ? [[f, g]] : []))
-  );
-  // ponytail: repeats until nothing changes, at most once per layer; fine for a few dozen faces
-  for (let changed = true; changed; ) {
-    changed = false;
-    for (const [f, g] of touching) {
-      const outward = Math.sign(heights[g] - heights[f]);
-      if (outward && Math.sign(shift[f]) === outward && Math.abs(shift[g]) < Math.abs(shift[f])) {
-        shift[g] = shift[f];
-        changed = true;
-      }
-    }
-  }
-  return shift;
-}
-
-/** `normal` (a stack's, before the whole-model turn), pointing the way its heights count: toward +z, as in stackAt. */
-const stackward = (normal: Vector3) => normal.clone().multiplyScalar(normal.z < 0 ? -1 : 1);
-
-type ReverseTurn = { pivot: Vec3; axis: Vec3; angle: number; flip: { axis: Vec3; sense: 1 | -1 } };
-const reverseTurns = new WeakMap<Model, (ReverseTurn | null)[]>();
+export type ReverseFan = {
+  /** Where the new crease meets the flap's spine. */
+  pivot: Vec3;
+  /** The body's plane normal (unit). */
+  normal: Vec3;
+  /** The fold line through the pivot, in the plane, pointing away from the body's middle: the way the flap goes round. */
+  line: Vec3;
+  /** Which way round a corner lying on the fold line's other half goes: the side most of the flap starts on. */
+  side: 1 | -1;
+  /** How far the body reaches from the pivot along `line`. */
+  reach: number;
+  /** The flap's length halfway, as a share of its length: just short enough to stay inside the body. */
+  fit: number;
+  /** The body's far edge, which its two sides open about. */
+  hinge: { point: Vec3; dir: Vec3 };
+  /** Per face: 0 for the flap, otherwise the side of the body it opens with (+1 above the flap, −1 below). */
+  group: (0 | 1 | -1)[];
+  /** Per side, the turn about `hinge.dir` that opens it. */
+  sense: Record<1 | -1, 1 | -1>;
+  /** Every face's corners as the step starts and as it ends, without the fan. */
+  from: Vec3[][];
+  to: Vec3[][];
+};
+const fans = new WeakMap<Model, (ReverseFan | null)[]>();
 
 /**
- * A reverse fold's pivot: the rotation (radians, about `axis`, the fixed face's normal, through `pivot`) that
- * carries its flap, tucked at s = REVERSE_FLIP, to its end pose at s = 1. The pivot is where the new crease meets
- * the flipped spine, the reflection's fixed point; the angle best fits the moving faces' corners at the end back onto
- * where they start. Before it, the flap turns over by `flip.sense`·π about `flip.axis` through `pivot`: the line in
- * the plane that mirrors the flap as it starts onto it tucked. Null unless `isReverseFold`.
+ * A reverse fold's fan: its flap swings round the pivot, across the fold line that mirrors it onto where it ends,
+ * through the side away from the body's middle, shortened halfway just enough to stay inside the body; the body
+ * opens like a book to take it. Null unless `isReverseFold`.
  */
-export function reverseTurn(model: Model, step: number): ReverseTurn | null {
-  const list = reverseTurns.get(model) ?? [];
-  reverseTurns.set(model, list);
+export function reverseFan(model: Model, step: number): ReverseFan | null {
+  const list = fans.get(model) ?? [];
+  fans.set(model, list);
   if (list[step] !== undefined) return list[step];
   list[step] = null;
   if (!isReverseFold(model, step)) return null;
-  const moving = [...movingFaces(model, step)];
+  // ponytail: the fan works in world coordinates from the plain start and end, so it assumes the whole model doesn't
+  // turn during the step (the crane's reverse folds don't); blend the turn in here if a model ever needs that
+  const moving = movingFaces(model, step);
   const before = model.steps[step - 1].angles;
   const after = model.steps[step].angles;
   const ends = (keep: (e: number) => boolean) => new Set(model.edges.flatMap((ab, e) => (keep(e) ? ab : [])));
   const spine = ends(
-    (e) =>
-      Math.abs(before[e]) === 180 &&
-      after[e] === -before[e] &&
-      model.edgeFaces[e].every((f) => movingFaces(model, step).has(f))
+    (e) => Math.abs(before[e]) === 180 && after[e] === -before[e] && model.edgeFaces[e].every((f) => moving.has(f))
   );
   const crease = ends((e) => before[e] === 0 && after[e] !== 0);
   const at = [...spine].find((v) => crease.has(v));
   if (at === undefined) return null;
-  const T = rootTransforms(model, anglesAt(model, step, 1), step);
-  const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
-  const start = startPose(model, step);
-  const axis = new Vector3(0, 0, 1).transformDirection(anchorFor(model, step));
-  // the plane's coordinates, from the pivot
-  const u = new Vector3(1, 0, 0).cross(axis).lengthSq() > 1e-6 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0);
-  u.addScaledVector(axis, -u.dot(axis)).normalize();
-  const w = axis.clone().cross(u);
-  const pivotFace = moving.find((f) => model.faces[f].includes(at)) as number;
-  const pivot = new Vector3(...model.vertices[at], 0).applyMatrix4(base.clone().multiply(T[pivotFace]));
-  const flat = (x: number, y: number, m: Matrix4) => {
-    const p = new Vector3(x, y, 0).applyMatrix4(m).sub(pivot);
-    return [p.dot(u), p.dot(w)];
+  const from = plainPositions(model, step, 0);
+  const to = plainPositions(model, step, 1);
+  const V = (p: Vec3) => new Vector3(...p);
+  const corners = (faces: Vec3[][], pick: (f: number) => boolean) =>
+    faces.flatMap((face, f) => (pick(f) ? face.map(V) : []));
+  const mean = (ps: Vector3[]) => ps.reduce((c, p) => c.addScaledVector(p, 1 / ps.length), new Vector3());
+  const still = (f: number) => !moving.has(f);
+  const flap = (f: number) => moving.has(f);
+
+  const pivotFace = [...moving].find((f) => model.faces[f].includes(at)) as number;
+  const pivot = V(from[pivotFace][model.faces[pivotFace].indexOf(at)]);
+  const [p, q, r] = from[model.steps[step].fixedFace].map(V);
+  const n = q.sub(p).cross(r.sub(p)).normalize();
+  const flat = (x: Vector3) => {
+    const d = x.clone().sub(pivot);
+    return d.addScaledVector(n, -d.dot(n));
   };
-  // the turn about the pivot that best fits the corners, end onto start
-  let [dot, crs] = [0, 0];
-  for (const f of moving) {
-    const end = base.clone().multiply(T[f]);
-    for (const v of model.faces[f]) {
-      const [e, st] = [flat(...model.vertices[v], end), flat(...model.vertices[v], start[f])];
-      dot += e[0] * st[0] + e[1] * st[1];
-      crs += e[0] * st[1] - e[1] * st[0];
-    }
-  }
-  const short = -Math.atan2(crs, dot);
-  // the way round its tuck arrow bows: the arrow's tip, half way round, on the arrow's outward side
-  const corners = (poses: Matrix4[]) =>
-    model.faces.map((face, f) =>
-      face.map(
-        (v) => new Vector3(model.vertices[v][0], model.vertices[v][1], 0).applyMatrix4(poses[f]).toArray() as Vec3
-      )
-    );
-  const bow = tuckBow(model, step, corners(start), corners(T.map((m) => base.clone().multiply(m))));
-  const chord = bow.tip.clone().lerp(bow.landed, 0.5);
-  const out = (angle: number) =>
-    bow.landed
-      .clone()
-      .applyMatrix4(turnAbout(pivot, axis, -angle / 2))
-      .sub(chord)
-      .dot(bow.out);
-  const long = short - 2 * Math.PI * Math.sign(short);
-  const angle = out(long) > out(short) ? long : short;
-  // the line through the pivot, in the plane, that mirrors the flap as it starts onto it tucked (by vertex)
-  const tucked = turnAbout(pivot, axis, -angle).multiply(base);
+  // the line through the pivot, in the plane, that best mirrors the flap as it starts onto where it ends
+  const u = new Vector3(1, 0, 0).cross(n).lengthSq() > 1e-6 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0);
+  u.addScaledVector(n, -u.dot(n)).normalize();
+  const w = n.clone().cross(u);
   let [cos2, sin2] = [0, 0];
-  for (const f of moving) {
-    const end = tucked.clone().multiply(T[f]);
-    for (const v of model.faces[f]) {
-      const [[vx, vy], [gx, gy]] = [flat(...model.vertices[v], start[f]), flat(...model.vertices[v], end)];
+  for (const f of moving)
+    from[f].forEach((x, i) => {
+      const [a, b] = [flat(V(x)), flat(V(to[f][i]))];
+      const [vx, vy, gx, gy] = [a.dot(u), a.dot(w), b.dot(u), b.dot(w)];
       cos2 += vx * gx - vy * gy;
       sin2 += vx * gy + vy * gx;
-    }
-  }
+    });
   const half = Math.atan2(sin2, cos2) / 2;
   const line = u.clone().multiplyScalar(Math.cos(half)).addScaledVector(w, Math.sin(half));
-  // it turns over toward the side of the stack its layers move to: it stands up out of the stack on its way, so it
-  // never cuts through the layers it ends among
-  const { heights: h0 } = stackAt(model, step - 1);
-  const { heights: h1 } = stackAt(model, step);
-  const rises = moving.reduce((sum, f) => sum + h1[f] - h0[f], 0);
-  const centre = moving
-    .flatMap((f) => model.faces[f].map((v) => new Vector3(...model.vertices[v], 0).applyMatrix4(start[f])))
-    .reduce((c, p, _, all) => c.addScaledVector(p, 1 / all.length), new Vector3());
-  const lifted = centre
-    .clone()
-    .applyMatrix4(turnAbout(pivot, line, Math.PI / 2))
-    .sub(centre)
-    .dot(stackward(axis));
-  // layers that keep their places on the whole (rises = 0) turn up, toward +z; a wrong pick passes the flap through
-  // the body, which checkModel's crossings check catches
-  const sense = rises < 0 === lifted < 0 ? 1 : -1;
+  // it goes round through the side away from the body's middle, the way its tuck arrow bows
+  if (flat(mean(corners(to, still))).dot(line) > 0) line.negate();
+  const across = n.clone().cross(line);
+  const angles = corners(from, flap).map((x) => Math.atan2(flat(x).dot(across), flat(x).dot(line)));
+  const side = angles.reduce((sum, a) => sum + Math.sign(a), 0) < 0 ? -1 : 1;
+  const reach = Math.max(...corners(to, still).map((x) => flat(x).dot(line)));
+  const longest = Math.max(...corners(from, flap).map((x) => flat(x).length()));
+  const fit = Math.min(1, (0.9 * reach) / longest);
+
+  // the body's far edge: along the flap's spine as it starts, through the still corner farthest across from the flap
+  const tip = [...spine]
+    .flatMap((v) =>
+      [...moving].flatMap((f) => (model.faces[f].includes(v) ? [V(from[f][model.faces[f].indexOf(v)])] : []))
+    )
+    .reduce((a, b) => (flat(b).length() > flat(a).length() ? b : a));
+  const dir = flat(tip).normalize();
+  const perp = n.clone().cross(dir);
+  const flapSide = flat(mean(corners(to, flap))).dot(perp) < 0 ? -1 : 1;
+  const offs = corners(to, still).map((x) => flat(x).dot(perp));
+  const hinge = pivot.clone().addScaledVector(perp, flapSide > 0 ? Math.min(...offs) : Math.max(...offs));
+  const height = (x: Vector3) => x.clone().sub(pivot).dot(n);
+  const middle = height(mean(corners(to, flap)));
+  const group = model.faces.map((_, f): 0 | 1 | -1 =>
+    moving.has(f) ? 0 : height(mean(to[f].map(V))) > middle ? 1 : -1
+  );
+  // each side turns the way that takes it away from the flap
+  const opens = (g: 1 | -1): 1 | -1 => {
+    const ps = corners(to, (f) => group[f] === g);
+    if (!ps.length) return 1;
+    const c = mean(ps);
+    const turned = c.clone().applyMatrix4(turnAbout(hinge, dir, 0.2));
+    return (height(turned) - middle) * g > (height(c) - middle) * g ? 1 : -1;
+  };
   list[step] = {
     pivot: pivot.toArray() as Vec3,
-    axis: axis.toArray() as Vec3,
-    angle,
-    flip: { axis: line.toArray() as Vec3, sense }
+    normal: n.toArray() as Vec3,
+    line: line.toArray() as Vec3,
+    side,
+    reach,
+    fit,
+    hinge: { point: hinge.toArray() as Vec3, dir: dir.toArray() as Vec3 },
+    group,
+    sense: { 1: opens(1), [-1]: opens(-1) } as Record<1 | -1, 1 | -1>,
+    from,
+    to
   };
   return list[step];
+}
+
+/** `plain` (every face's corners at eased progress `s`, 0 < s < 1) with the flap fanned and the body opened. */
+function fanned(fan: ReverseFan, plain: Vec3[][], s: number): Vec3[][] {
+  const [pivot, n, line] = [new Vector3(...fan.pivot), new Vector3(...fan.normal), new Vector3(...fan.line)];
+  const across = n.clone().cross(line);
+  const k = 1 - (1 - fan.fit) * Math.sin(Math.PI * s);
+  const open = (REVERSE_OPEN_DEG / 2) * DEG * Math.sin(Math.PI * s);
+  const [hinge, dir] = [new Vector3(...fan.hinge.point), new Vector3(...fan.hinge.dir)];
+  const turns = { 1: turnAbout(hinge, dir, fan.sense[1] * open), [-1]: turnAbout(hinge, dir, fan.sense[-1] * open) };
+  const point = new Vector3();
+  return plain.map((face, f) => {
+    const g = fan.group[f];
+    if (g)
+      return face.map(
+        (x) =>
+          point
+            .set(...x)
+            .applyMatrix4(turns[g])
+            .toArray() as Vec3
+      );
+    return face.map((_, i) => {
+      const start = new Vector3(...fan.from[f][i]).sub(pivot);
+      const end = new Vector3(...fan.to[f][i]).sub(pivot);
+      const [a, b] = [start.dot(line), start.dot(across)];
+      const at = Math.atan2(b, a);
+      // a corner on the fold line's other half goes round with the rest of the flap
+      const phi = (Math.PI - Math.abs(at) < 1e-9 ? fan.side * Math.PI : at) * (1 - 2 * s);
+      const r = k * Math.hypot(a, b);
+      const h = start.dot(n) + (end.dot(n) - start.dot(n)) * s;
+      return point
+        .copy(pivot)
+        .addScaledVector(line, r * Math.cos(phi))
+        .addScaledVector(across, r * Math.sin(phi))
+        .addScaledVector(n, h)
+        .toArray() as Vec3;
+    });
+  });
 }
 
 /**
@@ -652,8 +634,9 @@ function travel(model: Model, step: number): number[] {
   const list = travels.get(model) ?? [];
   travels.set(model, list);
   if (list[step]) return list[step];
+  // a reverse fold's body opens about its far edge instead (see fanned)
   if (isReverseFold(model, step)) {
-    list[step] = opening(model, step);
+    list[step] = model.faces.map(() => 0);
     return list[step];
   }
   const start = startPose(model, step);

@@ -1,14 +1,5 @@
 import { Vector3 } from 'three';
-import {
-  foldedPositions,
-  isReverseFold,
-  landingAt,
-  movingFaces,
-  progress,
-  REVERSE_FLIP,
-  reverseTurn,
-  tuckBow
-} from './fold';
+import { foldedPositions, isReverseFold, landingAt, movingFaces, progress, tuckBow } from './fold';
 import type { Model, Vec3 } from './types';
 
 export { isReverseFold };
@@ -70,7 +61,7 @@ export const arrowOpacity = (s: number, landing: number): number =>
  * Null outside a reverse fold.
  */
 export function pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 }[] | null {
-  if (!reverseTurn(model, step)) return null;
+  if (!isReverseFold(model, step)) return null;
   const [start, end] = [foldedPositions(model, step - 1, 1), foldedPositions(model, step, 1)];
   const corners = [...movingFaces(model, step)].flatMap((f) =>
     start[f].map((p, i) => [new Vector3(...p), new Vector3(...end[f][i])])
@@ -110,6 +101,6 @@ export const pinchSides = (depths: number[]): [number, 1 | -1][] => [
   [Math.min(0, ...depths), -1]
 ];
 
-/** The pinch arrows' strength at eased progress `s`: full from the first frame, gone by the time the flap is edge-on. */
-export const pinchOpacity = (s: number): number =>
-  Math.max(0, Math.min(1, (REVERSE_FLIP / 2 - s) / (REVERSE_FLIP / 4)));
+/** The pinch arrows' strength at eased progress `s`: full from the first frame, gone by the first sixth of the step,
+ * before the flap has narrowed much. */
+export const pinchOpacity = (s: number): number => Math.max(0, Math.min(1, (1 / 6 - s) * 12));

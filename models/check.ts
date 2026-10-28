@@ -5,14 +5,13 @@ import {
   isReverseFold,
   layerHeights,
   movingFaces,
-  progress,
-  REVERSE_FLIP
+  reverseFan
 } from '../src/fold/fold';
 import type { Model, Vec2, Vec3 } from '../src/fold/types';
 import { overlap } from './arrange';
 
 /** Largest allowed gap between copies of one vertex, as a fraction of the paper's side (spec §8). */
-const SEAM_BUDGET = 0.06;
+export const SEAM_BUDGET = 0.06;
 
 const sub = (a: Vec3, b: Vec3): Vec3 => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
 const cross = (a: Vec3, b: Vec3): Vec3 => [
@@ -31,15 +30,15 @@ const centre = (face: Vec3[]) =>
 export function spread(model: Model, step: number, t: number): number {
   const faces = foldedPositions(model, step, t);
   const keys = cornerKeys(model, step);
-  // a reverse fold's flap pivots rigidly in the body's plane, and a rigid turn can't keep the crease it shares with
-  // the body closed: only the flap's seams among themselves, and the body's, are held
-  const moving = isReverseFold(model, step) ? movingFaces(model, step) : new Set<number>();
+  // a reverse fold breaks into three pieces mid-step, the fanned flap and the body's two opening sides: only each
+  // piece's own seams are held
+  const group = reverseFan(model, step)?.group;
   const first = new Map<string, Vec3>();
   let worst = 0;
   model.faces.forEach((face, f) => {
     face.forEach((_, c) => {
       const p = faces[f][c];
-      const key = `${keys[f][c]} ${moving.has(f)}`;
+      const key = `${keys[f][c]} ${group ? group[f] : 0}`;
       const q = first.get(key);
       if (q) worst = Math.max(worst, Math.hypot(...sub(p, q)));
       else first.set(key, p);
@@ -319,11 +318,9 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
           : `Step ${k}: the folds at edges ${a} and ${b} interleave in the stack (paper can only nest them).`
       );
     }
-    // a reverse fold's flap turns over fast: sample its flip finely too
-    const flip = isReverseFold(model, k)
-      ? Array.from({ length: 30 }, (_, i) => i / 30).filter((t) => t > 0 && progress(t) <= REVERSE_FLIP)
-      : [];
-    const ts = [...flip, ...Array.from({ length: 10 }, (_, i) => (i + 1) / 10)].sort((a, b) => a - b);
+    // a reverse fold's flap fans through the body: sample it finely
+    const n = isReverseFold(model, k) ? 40 : 10;
+    const ts = Array.from({ length: n }, (_, i) => (i + 1) / n);
     const at = (t: number) => `Step ${k} at ${Math.round(t * 100)}%`;
     for (const t of ts) {
       const hits = crossings(model, k, t);
