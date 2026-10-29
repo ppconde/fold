@@ -177,15 +177,12 @@
 
 .slotToggle svg {
   padding-bottom: 3px;
-  border-bottom: 1.5px solid transparent;
+  border-bottom: 1.5px solid var(--picked, transparent);
 }
 
 .slotToggle button[aria-pressed="true"] {
+  --picked: var(--clay);
   color: var(--charcoal);
-}
-
-.slotToggle button[aria-pressed="true"] svg {
-  border-bottom-color: var(--clay);
 }
 
 .insideOut {
