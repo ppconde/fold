@@ -1,17 +1,17 @@
 import { Line } from '@react-three/drei';
-import { useThree } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { BackSide, BufferAttribute, BufferGeometry, FrontSide, type Group } from 'three';
+import { BackSide, BufferAttribute, BufferGeometry, DoubleSide, FrontSide, type Group, Vector3 } from 'three';
 import { foldedPositions, progress } from '../fold/fold';
-import { arrowOpacity, pinchArrows, tuckArrow } from '../fold/reverse';
+import { arrowOpacity, isReverseFold, pushArrows, pushOpacity, tuckArrow } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
 import {
+  dashDot,
   depthBelowTable,
   fillTriangles,
   fillUVs,
   lineGroups,
   paperExtent,
-  pinchStrokes,
   triangleCount
 } from './paper-geometry';
 import { patternHooks } from './paper-material';
@@ -77,11 +77,33 @@ export function Paper({
   const activeHalo = useRef<LineRef>(null);
   const cutHalo = useRef<LineRef>(null);
   const pattern = paperById(paper);
-  // which flap a reverse fold moves and where it tucks in, an ink stroke like the dock's chevrons
+  // which flap a reverse fold moves and where it tucks in, an ink arrow with a filled head, as a diagram's
   const tuck = useMemo(() => tuckArrow(model, step), [model, step]);
   const tuckStrength = tuck ? arrowOpacity(progress(t)) : 0;
-  const pinch = useMemo(() => pinchArrows(model, step), [model, step]);
-  const pinched = pinchStrokes(pinch, t);
+  const head = useMemo(
+    () => tuck && new Float32Array([...tuck.head[0], ...tuck.shaft[tuck.shaft.length - 1], ...tuck.head[1]]),
+    [tuck]
+  );
+  const pushes = useMemo(() => pushArrows(model, step) ?? [], [model, step]);
+  const pushStrength = pushes.length ? pushOpacity(progress(t)) : 0;
+  // only the push mark on the camera's side of the paper, as a diagram draws one
+  const pushMarks = useRef<(Group | null)[]>([]);
+  useFrame(({ camera }) => {
+    pushes.forEach(({ outline, facing }, i) => {
+      const mark = pushMarks.current[i];
+      if (!mark) return;
+      const at = mark.localToWorld(new Vector3(...outline[0]));
+      const out = mark.localToWorld(new Vector3(...outline[0]).add(new Vector3(...facing))).sub(at);
+      mark.visible = camera.position.clone().sub(at).dot(out) > 0;
+    });
+  });
+  // filled with the paper's back, as a book leaves a hollow arrow white, so the lines under it don't show through
+  const pushFills = useMemo(
+    () => pushes.map(({ outline }) => new Float32Array([0, 1, 6, 2, 3, 4, 2, 4, 5].flatMap((k) => outline[k]))),
+    [pushes]
+  );
+  // a reverse fold's line is a mountain fold: dash-dot, as the crease diagram draws it
+  const dashUnit = useMemo(() => (isReverseFold(model, step) ? 0.0025 * paperExtent(model).size : 0), [model, step]);
   const { center } = paperExtent(model);
 
   useLayoutEffect(() => {
@@ -96,14 +118,15 @@ export function Paper({
     setSegments(borders.current, groups.borders);
     setSegments(folded.current, groups.folded);
     setSegments(flat.current, groups.flat);
-    setSegments(active.current, groups.active);
+    const activeLines = dashUnit ? dashDot(groups.active, dashUnit) : groups.active;
+    setSegments(active.current, activeLines);
     setSegments(cut.current, groups.cut);
     setSegments(bordersHalo.current, pattern ? groups.borders : []);
     setSegments(foldedHalo.current, pattern ? groups.folded : []);
-    setSegments(activeHalo.current, pattern ? groups.active : []);
+    setSegments(activeHalo.current, activeLines);
     setSegments(cutHalo.current, pattern ? groups.cut : []);
     invalidate();
-  }, [model, step, t, geometry, invalidate, ground, pattern, highlight]);
+  }, [model, step, t, geometry, invalidate, ground, pattern, highlight, dashUnit]);
 
   useEffect(() => () => washi.dispose(), [washi]);
 
@@ -233,12 +256,11 @@ export function Paper({
           visible={false}
         />
         {tuck &&
-          tuckStrength > 0 &&
-          [tuck.shaft, [tuck.head[0], tuck.shaft[tuck.shaft.length - 1], tuck.head[1]]].flatMap((points) => [
+          tuckStrength > 0 && [
             pattern && (
               <Line
-                key={`halo${points.length}`}
-                points={points}
+                key="halo"
+                points={tuck.shaft}
                 color={BACK}
                 lineWidth={3}
                 transparent
@@ -248,28 +270,54 @@ export function Paper({
               />
             ),
             <Line
-              key={points.length}
-              points={points}
+              key="shaft"
+              points={tuck.shaft}
               color={INK}
               lineWidth={1.4}
               transparent
               opacity={tuckStrength}
               renderOrder={3}
               depthTest={false}
-            />
-          ])}
-        {pinched.opacity > 0 &&
-          pinched.strokes.map((points) => (
-            <Line
-              key={points.join()}
-              points={points}
-              color={INK}
-              lineWidth={1.4}
-              transparent
-              opacity={pinched.opacity}
-              renderOrder={3}
-              depthTest={false}
-            />
+            />,
+            head && (
+              <mesh key="head" renderOrder={3}>
+                <bufferGeometry>
+                  <bufferAttribute attach="attributes-position" args={[head, 3]} />
+                </bufferGeometry>
+                <meshBasicMaterial color={INK} side={DoubleSide} transparent opacity={tuckStrength} depthTest={false} />
+              </mesh>
+            )
+          ]}
+        {pushStrength > 0 &&
+          pushes.map(({ outline }, i) => (
+            <group
+              key={outline.join()}
+              ref={(mark) => {
+                pushMarks.current[i] = mark;
+              }}
+            >
+              <mesh renderOrder={2.95}>
+                <bufferGeometry>
+                  <bufferAttribute attach="attributes-position" args={[pushFills[i], 3]} />
+                </bufferGeometry>
+                <meshBasicMaterial
+                  color={BACK}
+                  side={DoubleSide}
+                  transparent
+                  opacity={pushStrength}
+                  depthTest={false}
+                />
+              </mesh>
+              <Line
+                points={outline}
+                color={INK}
+                lineWidth={1.4}
+                transparent
+                opacity={pushStrength}
+                renderOrder={3}
+                depthTest={false}
+              />
+            </group>
           ))}
       </group>
     </group>
