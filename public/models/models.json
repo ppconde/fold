@@ -101,7 +101,7 @@
       "thumbnail": "/models/kite-base.svg"
     },
     {
-      "id": "kannon-fold",
+      "id": "kannon-base",
       "name": {
         "en": "Kannon base",
         "pt": "Base Kannon"
@@ -114,7 +114,7 @@
         "cupboard",
         "base"
       ],
-      "thumbnail": "/models/kannon-fold.svg"
+      "thumbnail": "/models/kannon-base.svg"
     },
     {
       "id": "blintz-base",

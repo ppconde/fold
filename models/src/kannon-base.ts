@@ -1,9 +1,9 @@
-import { kannonFold } from './bases';
+import { kannonBase } from './bases';
 
-const s = kannonFold();
+const s = kannonBase();
 
 export default s.source({
-  id: 'kannon-fold',
+  id: 'kannon-base',
   name: { en: 'Kannon base', pt: 'Base Kannon' },
   japaneseName: 'Kannon-ori',
   category: 'bases',

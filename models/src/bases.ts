@@ -84,7 +84,7 @@ export function kiteBase() {
  * A new sheet folded into the kannon (cupboard) base (book p.16), white side up: the left and right edges folded
  * to the upright middle line, their coloured side showing. Creases: `middle`, `left`, `right`.
  */
-export function kannonFold() {
+export function kannonBase() {
   const s = foldSequence([0, 180, 0]);
   s.turn([0, 180, 0], { en: 'Turn the paper over, white side up.', pt: 'Vira o papel com o lado branco para cima.' });
   s.crease('middle', [0.5, 0], [0.5, 1], {
