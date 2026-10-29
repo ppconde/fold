@@ -424,7 +424,8 @@ export function movingFaces(model: Model, step: number): ReadonlySet<number> {
 
 /**
  * A reverse fold turns a flap's spine inside out: a crease already folded flat flips sign (+180 to −180 or
- * back), while new creases appear along one line, valley on some layers and mountain on others.
+ * back), while new creases appear along one line. On a flap of two layers they share a sign (the spine's two
+ * halves are already one valley and one mountain); a thicker flap has both.
  */
 export function isReverseFold(model: Model, step: number): boolean {
   if (step === 0) return false;
@@ -432,7 +433,7 @@ export function isReverseFold(model: Model, step: number): boolean {
   const after = model.steps[step].angles;
   const flips = after.some((a, e) => Math.abs(before[e]) === 180 && a === -before[e]);
   const made = after.filter((a, e) => before[e] === 0 && a !== 0);
-  return flips && made.some((a) => a > 0) && made.some((a) => a < 0);
+  return flips && made.length > 0;
 }
 
 export type ReverseFan = {
