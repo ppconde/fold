@@ -8,8 +8,10 @@ import type { ModelEntry } from '../models/catalog';
 import {
   hasWebGL,
   markHintSeen,
+  markMarksKeySeen,
   readPanelOpen,
   readPaper,
+  shouldOpenMarksKey,
   shouldShowHint,
   writePanelOpen,
   writePaper
@@ -200,6 +202,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
               frame={sketchFrame(progress(state.t), landingAt(model, state.step))}
             />
             <p className={styles.insideOut}>{t.insideOut}</p>
+            <MarksKey />
             <CreaseDiagram model={model} step={state.step} />
           </div>
         ) : (
@@ -310,5 +313,39 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         {status === 'done' ? t.isComplete(localized(entry.name, lang)) : ''}
       </p>
     </main>
+  );
+}
+
+/** The marks a reverse fold draws on the paper, as a book's key to its symbols: the fold line, the push and the tip's
+ * path, each drawn as on stage. */
+function MarksKey() {
+  const t = useT().player.marks;
+  const [open] = useState(shouldOpenMarksKey);
+  useEffect(markMarksKeySeen, []);
+  return (
+    <details className={styles.marks} open={open}>
+      <summary>{t.title}</summary>
+      <ul>
+        <li>
+          <svg viewBox="0 0 40 16" aria-hidden="true">
+            <line className={styles.markFold} x1="2" y1="8" x2="38" y2="8" />
+          </svg>
+          {t.foldLine}
+        </li>
+        <li>
+          <svg viewBox="0 0 40 16" aria-hidden="true">
+            <polygon className={styles.markPush} points="4,8 15,1 15,5 36,5 36,11 15,11 15,15" />
+          </svg>
+          {t.push}
+        </li>
+        <li>
+          <svg viewBox="0 0 40 16" aria-hidden="true">
+            <path className={styles.markTip} d="M4 14Q16 0 31 7" />
+            <path className={styles.markHead} d="M37 10L28 11L32 3Z" />
+          </svg>
+          {t.tip}
+        </li>
+      </ul>
+    </details>
   );
 }

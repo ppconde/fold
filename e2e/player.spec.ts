@@ -384,6 +384,22 @@ test.describe('a reverse fold step', () => {
     expect(await frames.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(2);
   });
 
+  test('the key to the marks is open on the first reverse fold, and starts closed on the next', async ({
+    page
+  }, info) => {
+    test.skip(info.project.name !== 'desktop', 'the phone sheet has no room for it');
+    await page.goto(`/fold/crane?step=${NECK}`);
+    const key = page.locator('#instructions details');
+    await expect(key).toHaveAttribute('open', '');
+    await expect(key).toContainText('Push the folded edge in here');
+    await next(page);
+    await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 1));
+    await page.reload();
+    await expect(key).not.toHaveAttribute('open');
+    await key.locator('summary').click();
+    await expect(key.getByText('Where the tip goes')).toBeVisible();
+  });
+
   test('a normal step has no toggle', async ({ page }) => {
     await page.goto(`/fold/crane?step=${NORMAL}`);
     await expect(page.locator('#instructions')).toBeVisible();
