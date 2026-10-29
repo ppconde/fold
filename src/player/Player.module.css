@@ -11,7 +11,7 @@
 .title {
   grid-area: title;
   min-height: 4.75rem;
-  padding: 1.1rem 1rem 0 6rem;
+  padding: 1.1rem 3.5rem 0 6rem;
 }
 
 .title h1 {
@@ -167,21 +167,33 @@
   gap: 0.2rem;
 }
 
-/* ink icons, the picked one underlined in clay like the menu's EN · PT */
+/* named in words, the picked one underlined in clay like the menu's EN · PT */
 .slotToggle button {
-  display: grid;
-  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 0.3rem;
   color: var(--muted);
-}
-
-.slotToggle svg {
-  padding-bottom: 3px;
-  border-bottom: 1.5px solid var(--picked, transparent);
+  font: 0.8rem var(--font-sans);
+  text-decoration: none;
 }
 
 .slotToggle button[aria-pressed="true"] {
-  --picked: var(--clay);
   color: var(--charcoal);
+  text-decoration: underline;
+  text-decoration-color: var(--clay);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.3em;
+}
+
+.chip {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--clay);
+  border-radius: 99px;
+  color: var(--clay);
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
 }
 
 .insideOut {
@@ -191,37 +203,93 @@
   line-height: 1.45;
 }
 
-/* the key to the marks on the paper, drawn as on stage (Paper.tsx) */
-.marks {
+/* the "?" opposite the menu, and its sheet: the key to the marks, drawn as on stage (Paper.tsx), and the dock by name */
+.helpButton {
+  position: fixed;
+  top: 1rem;
+  right: 1.25rem;
+  z-index: 10;
+  font-family: var(--font-sans);
+}
+
+.help {
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: 85dvh;
+  border: 0;
+  padding: 1.5rem;
+  color: var(--charcoal);
+  font: 0.85rem / 1.4 var(--font-sans);
+}
+
+.help::backdrop {
+  background: rgb(51 48 44 / 0.25);
+}
+
+.help h2 {
+  margin: 0;
+  font: 500 1.3rem var(--font-serif);
+}
+
+.help h3 {
+  margin: 1.25rem 0 0.5rem;
   color: var(--muted);
-  font: 0.8rem / 1.4 var(--font-sans);
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-.marks summary {
-  cursor: pointer;
-}
-
-.marks ul {
-  display: grid;
-  gap: 0.35rem;
-  margin: 0.45rem 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-.marks li {
+.help dl {
   display: grid;
   grid-template-columns: 2.5rem 1fr;
-  gap: 0.6rem;
+  gap: 0.4rem 0.75rem;
   align-items: center;
+  margin: 0;
 }
 
-.marks svg {
+.help dt {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.help dd,
+.help p {
+  margin: 0;
+}
+
+.help p {
+  margin-top: 0.5rem;
+  color: var(--muted);
+}
+
+.help > button {
+  margin-top: 1.25rem;
+  font-family: var(--font-sans);
+}
+
+.help svg {
   width: 2.5rem;
   overflow: visible;
 }
 
+.help dt svg[width] {
+  width: 22px;
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--muted);
+  border-radius: 3px;
+  background: var(--ivory);
+}
+
 .markFold,
+.markValley,
+.markEdge,
 .markPush,
 .markTip,
 .markHead {
@@ -235,6 +303,18 @@
   stroke-width: 1.8;
   /* dash-dot, as the stage's mountain line and the crease diagram's */
   stroke-dasharray: 8 3 2 3;
+}
+
+.markValley {
+  stroke: var(--clay);
+  stroke-width: 1.8;
+  /* dashed, as the crease diagram's valley */
+  stroke-dasharray: 6 4;
+}
+
+.markEdge {
+  stroke: var(--spine);
+  stroke-width: 4;
 }
 
 .markPush {
@@ -377,31 +457,6 @@
   color: var(--charcoal);
 }
 
-.hint {
-  margin: 0;
-  color: var(--muted);
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  text-align: center;
-  animation: hint-in 600ms var(--ease) both;
-}
-
-.hintOut {
-  animation: hint-out 600ms var(--ease) forwards;
-}
-
-@keyframes hint-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes hint-out {
-  to {
-    opacity: 0;
-  }
-}
-
 /* phones and tablets: text beside a smaller diagram, so a step fits the sheet without scrolling */
 @media (max-width: 899px) and (orientation: portrait), (max-width: 899px) and (min-height: 501px) {
   .panel {
@@ -413,6 +468,11 @@
     align-items: start;
     max-height: 38dvh;
     padding: 1.1rem 1rem 1rem;
+  }
+
+  /* the wide sheet's fold line doesn't fall between these columns */
+  .panel::before {
+    display: none;
   }
 
   .stepLabel {
@@ -431,11 +491,10 @@
     max-width: none;
   }
 
-  /* a reverse fold: the toggle on its own row, so each button keeps a 44px tap area; under it the sketch or the crease
-     pattern in the diagram's place, or the key across the sheet in the text's place */
+  /* a reverse fold: the label across the sheet, the toggle centred over the sketch or the crease pattern it picks */
   .panel[data-slot] {
     grid-template-rows: auto auto 1fr;
-    grid-template-areas: "label label" "toggle toggle" "text diagram";
+    grid-template-areas: "label label" "text toggle" "text diagram";
   }
 
   .slot {
@@ -450,36 +509,20 @@
   .slotToggle {
     display: flex;
     grid-area: toggle;
-    justify-self: end;
+    justify-self: center;
     /* the 44px buttons' empty edges overlap the gaps around the row, so the How sheet still fits a 360px phone */
     margin: -0.5rem 0 -0.4rem;
-  }
-
-  .panel[data-slot="marks"] .instruction {
-    display: none;
-  }
-
-  .marks {
-    grid-column: 1 / -1;
-    grid-row: 3;
   }
 
   .slot > svg {
     max-width: none;
   }
 
-  /* one at a time on the sheet: the sketches, the crease pattern or the key, which the toggle names */
+  /* one at a time on the sheet: the sketches or the crease pattern, which the toggle names */
   .insideOut,
-  .panel:not([data-slot="marks"]) .marks,
-  .marks summary,
   .panel:not([data-slot="creases"]) .slot > svg,
   .panel:not([data-slot="how"]) .slot > [role="img"]:not(svg) {
     display: none;
-  }
-
-  .marks ul {
-    gap: 0.2rem;
-    margin: 0;
   }
 }
 
@@ -550,10 +593,6 @@
 
   .dock {
     padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
-  }
-
-  .hint {
-    display: none;
   }
 }
 

@@ -1,26 +1,16 @@
 import { Link } from '@tanstack/react-router';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Fragment, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { landingAt, progress } from '../fold/fold';
 import { isReverseFold } from '../fold/reverse';
 import type { Model } from '../fold/types';
 import { useLang, useT } from '../i18n/LanguageProvider';
 import { localized } from '../i18n/lang';
 import type { ModelEntry } from '../models/catalog';
-import {
-  hasWebGL,
-  markHintSeen,
-  markMarksKeySeen,
-  readPanelOpen,
-  readPaper,
-  shouldOpenMarksKey,
-  shouldShowHint,
-  writePanelOpen,
-  writePaper
-} from './browser';
+import { hasWebGL, readPanelOpen, readPaper, writePanelOpen, writePaper } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
 import { HowSketch } from './HowSketch';
 import { sketchFrame } from './how';
-import { AgainIcon, BackIcon, CreasesIcon, MarksIcon, MovesIcon, NextIcon, StartIcon, ViewIcon } from './icons';
+import { AgainIcon, BackIcon, NextIcon, StartIcon, ViewIcon } from './icons';
 import { loadStage } from './load-stage';
 import { PaperPicker } from './PaperPicker';
 import styles from './Player.module.css';
@@ -50,12 +40,11 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
   const [frameStep, setFrameStep] = useState(state.step);
   const [webgl] = useState(hasWebGL);
   const [stageFailed, setStageFailed] = useState(false);
-  const [hint, setHint] = useState<'show' | 'fading' | 'gone'>(() => (shouldShowHint() ? 'show' : 'gone'));
   const showPanel = panelOpen || !webgl || stageFailed;
-  // the step whose slot was flipped to the crease pattern or the key to the marks; any other reverse fold opens on "how"
-  const [picked, setPicked] = useState<{ step: number; slot: 'creases' | 'marks' } | null>(null);
+  // the step whose slot was flipped to the crease pattern; any other reverse fold opens on "how"
+  const [picked, setPicked] = useState<number | null>(null);
   const reverse = isReverseFold(model, state.step);
-  const slot = picked?.step === state.step ? picked.slot : 'how';
+  const slot = picked === state.step ? 'creases' : 'how';
   const instruction = state.step === 0 ? t.firstInstruction : localized(model.steps[state.step].instruction, lang);
 
   const choosePaper = (id: string) => {
@@ -78,21 +67,6 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
     settleRef.current(state.step);
     setFrameStep(state.step);
   }, [state.playing, state.step]);
-
-  const prevStatus = useRef(status);
-  useEffect(() => {
-    if (prevStatus.current === 'playing' && status !== 'playing' && state.step >= 1) {
-      markHintSeen();
-      setHint((h) => (h === 'show' ? 'fading' : h));
-    }
-    prevStatus.current = status;
-  }, [status, state.step]);
-
-  useEffect(() => {
-    if (hint !== 'fading') return;
-    const id = setTimeout(() => setHint('gone'), 600);
-    return () => clearTimeout(id);
-  }, [hint]);
 
   // follow an external ?step change; while playing, state.step differs from the URL by design
   // biome-ignore lint/correctness/useExhaustiveDependencies: only react to the URL step changing
@@ -147,6 +121,7 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
           </p>
         )}
       </div>
+      <HelpSheet />
 
       <div className={styles.stage}>
         {webgl ? (
@@ -196,7 +171,7 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
       >
         <p className={styles.stepLabel}>
           {t.stepOf(state.step, state.last)}
-          {reverse && ` · ${t.reverseFold}`}
+          {reverse && <span className={styles.chip}>{t.reverseFold}</span>}
         </p>
         <p className={styles.instruction} aria-live="polite">
           {instruction}
@@ -206,20 +181,17 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
             <div className={styles.slotToggle}>
               {(
                 [
-                  ['how', t.how, MovesIcon],
-                  ['creases', t.creases, CreasesIcon],
-                  ['marks', t.marks.tab, MarksIcon]
+                  ['how', t.how],
+                  ['creases', t.creases]
                 ] as const
-              ).map(([s, name, Icon]) => (
+              ).map(([s, name]) => (
                 <button
                   key={s}
                   type="button"
-                  aria-label={name}
-                  title={name}
                   aria-pressed={slot === s}
-                  onClick={() => setPicked(s === 'how' ? null : { step: state.step, slot: s })}
+                  onClick={() => setPicked(s === 'how' ? null : state.step)}
                 >
-                  <Icon />
+                  {name}
                 </button>
               ))}
             </div>
@@ -229,7 +201,6 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
               frame={sketchFrame(progress(state.t), landingAt(model, state.step))}
             />
             <p className={styles.insideOut}>{t.insideOut}</p>
-            <MarksKey shown={slot === 'marks'} />
             <CreaseDiagram model={model} step={state.step} />
           </div>
         ) : (
@@ -330,11 +301,6 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
             <span aria-hidden="true" />
           )}
         </div>
-        {hint !== 'gone' && (
-          <p className={`${styles.hint} ${hint === 'fading' ? styles.hintOut : ''}`} aria-hidden="true">
-            {t.hint}
-          </p>
-        )}
       </div>
       <p className="sr-only" role="status">
         {status === 'done' ? t.isComplete(localized(entry.name, lang)) : ''}
@@ -343,36 +309,85 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
   );
 }
 
-/** The marks a reverse fold draws on the paper, as a book's key to its symbols: the fold line, the push and the tip's
- * path, each drawn as on stage. `shown`: picked on the phone sheet's toggle, so open. */
-function MarksKey({ shown }: { shown: boolean }) {
-  const t = useT().player.marks;
-  const [open] = useState(shouldOpenMarksKey);
-  useEffect(markMarksKeySeen, []);
+/** The app's "?" in the corner opposite the menu: a key to the marks on the paper, drawn as on stage, the dock's
+ * buttons by name (a phone can't hover for their titles) and how to turn the 3D view. */
+function HelpSheet() {
+  const t = useT();
+  const h = t.player.help;
+  const sheet = useRef<HTMLDialogElement>(null);
+  const buttons = [
+    [<StartIcon key="s" />, t.player.startOver],
+    [<BackIcon key="b" />, t.player.previous],
+    [<AgainIcon key="a" />, t.player.replay],
+    [<NextIcon key="n" />, t.player.next],
+    ['1×', h.speed],
+    [<ViewIcon key="v" />, t.player.resetView],
+    ['1/9', t.player.goToStep],
+    [<span key="p" className={styles.swatch} />, t.player.paper]
+  ] as const;
   return (
-    <details className={styles.marks} open={open || shown}>
-      <summary>{t.title}</summary>
-      <ul>
-        <li>
-          <svg viewBox="0 0 40 16" aria-hidden="true">
-            <line className={styles.markFold} x1="2" y1="8" x2="38" y2="8" />
-          </svg>
-          {t.foldLine}
-        </li>
-        <li>
-          <svg viewBox="0 0 40 16" aria-hidden="true">
-            <polygon className={styles.markPush} points="4,8 15,1 15,5 36,5 36,11 15,11 15,15" />
-          </svg>
-          {t.push}
-        </li>
-        <li>
-          <svg viewBox="0 0 40 16" aria-hidden="true">
-            <path className={styles.markTip} d="M4 14Q16 0 31 7" />
-            <path className={styles.markHead} d="M37 10L28 11L32 3Z" />
-          </svg>
-          {t.tip}
-        </li>
-      </ul>
-    </details>
+    <>
+      <button
+        type="button"
+        className={`ink-link ${styles.helpButton}`}
+        aria-label={h.open}
+        title={h.open}
+        onClick={() => sheet.current?.showModal()}
+      >
+        ?
+      </button>
+      <dialog ref={sheet} className={`paper ${styles.help}`} aria-label={h.open} closedby="any">
+        <h2>{h.open}</h2>
+        <h3>{h.marks}</h3>
+        <dl>
+          <dt>
+            <svg viewBox="0 0 40 16" aria-hidden="true">
+              <line className={styles.markFold} x1="2" y1="8" x2="38" y2="8" />
+            </svg>
+          </dt>
+          <dd>{h.mountain}</dd>
+          <dt>
+            <svg viewBox="0 0 40 16" aria-hidden="true">
+              <line className={styles.markValley} x1="2" y1="8" x2="38" y2="8" />
+            </svg>
+          </dt>
+          <dd>{h.valley}</dd>
+          <dt>
+            <svg viewBox="0 0 40 16" aria-hidden="true">
+              <polygon className={styles.markPush} points="4,8 15,1 15,5 36,5 36,11 15,11 15,15" />
+            </svg>
+          </dt>
+          <dd>{h.push}</dd>
+          <dt>
+            <svg viewBox="0 0 40 16" aria-hidden="true">
+              <path className={styles.markTip} d="M4 14Q16 0 31 7" />
+              <path className={styles.markHead} d="M37 10L28 11L32 3Z" />
+            </svg>
+          </dt>
+          <dd>{h.tip}</dd>
+          <dt>
+            <svg viewBox="0 0 40 16" aria-hidden="true">
+              <line className={styles.markEdge} x1="2" y1="8" x2="38" y2="8" />
+            </svg>
+          </dt>
+          <dd>{h.edge}</dd>
+        </dl>
+        <h3>{h.buttons}</h3>
+        <dl>
+          {buttons.map(([icon, name]) => (
+            <Fragment key={name}>
+              <dt aria-hidden="true">{icon}</dt>
+              <dd>{name}</dd>
+            </Fragment>
+          ))}
+        </dl>
+        <p>{h.keys}</p>
+        <h3>{h.view}</h3>
+        <p>{t.player.stageLabel}</p>
+        <button type="button" className="ink-link" onClick={() => sheet.current?.close()}>
+          {t.shell.close}
+        </button>
+      </dialog>
+    </>
   );
 }

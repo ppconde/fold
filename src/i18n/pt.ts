@@ -97,12 +97,18 @@ export const pt: Dictionary = {
       'Fecha e alisa. A dobra aponta agora ao contrário: a aba está do avesso'
     ],
     insideOut: 'A aba vira do avesso e entra entre as camadas do corpo.',
-    marks: {
-      tab: 'Marcas',
-      title: 'O que querem dizer as marcas',
-      foldLine: 'A linha da dobra, uma dobra em montanha: o papel dobra para longe de ti ao longo dela',
+    help: {
+      open: 'Como usar',
+      marks: 'As marcas',
+      mountain: 'Dobra em montanha: o papel dobra para longe de ti ao longo da linha',
+      valley: 'Dobra em vale: o papel dobra na tua direção',
       push: 'Empurra a dobra para dentro aqui',
-      tip: 'Para onde vai a ponta'
+      tip: 'Para onde vai a ponta',
+      edge: 'A dobra que vais virar do avesso numa dobra invertida',
+      buttons: 'Os botões',
+      speed: 'Velocidade',
+      view: 'A vista 3D',
+      keys: 'Teclas: ← e → recuam e avançam um passo, espaço repete o passo, R volta a enquadrar o papel.'
     },
     stageLabel: 'Vista 3D do papel. Arrasta para o rodar; aperta ou desliza para aproximar.',
     noWebgl: 'A vista 3D não está disponível neste dispositivo. Segue o padrão de vincos e as instruções.',
@@ -116,7 +122,6 @@ export const pt: Dictionary = {
     resetView: 'Repor vista',
     foldProgress: 'Progresso da dobra',
     percentFolded: (n) => `${n}% dobrado`,
-    hint: '← anterior · seguinte → · passa o rato para ver os nomes',
     paper: 'Papel',
     paperIs: (name: string) => `Papel: ${name}`,
     done: 'Feito',

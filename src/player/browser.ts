@@ -1,10 +1,8 @@
 import { resolvePaperId } from './papers';
 
 const PANEL_KEY = 'fold:panelOpen';
-const HINT_KEY = 'fold:dockHint';
 const LAST_KEY = 'fold:lastModel';
 const PAPER_KEY = 'fold:paper';
-const MARKS_KEY = 'fold:marksKey';
 
 export function hasWebGL(): boolean {
   try {
@@ -38,13 +36,6 @@ export function writeStored(key: string, value: string): void {
 
 export const readPanelOpen = () => readStored(PANEL_KEY) !== 'false';
 export const writePanelOpen = (open: boolean) => writeStored(PANEL_KEY, String(open));
-
-export const shouldShowHint = () => readStored(HINT_KEY) !== 'seen';
-export const markHintSeen = () => writeStored(HINT_KEY, 'seen');
-
-/** The key to a reverse fold's marks opens the first time one shows, and starts closed after that. */
-export const shouldOpenMarksKey = () => readStored(MARKS_KEY) !== 'seen';
-export const markMarksKeySeen = () => writeStored(MARKS_KEY, 'seen');
 
 /** The lesson opened last: the homepage shows it. */
 export const readLastModel = () => readStored(LAST_KEY);

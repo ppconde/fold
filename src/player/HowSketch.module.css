@@ -37,11 +37,6 @@
   outline-color: var(--charcoal);
 }
 
-.how {
-  /* the flap's flipping edge, our one addition to the book notation (docs/origami-diagram-conventions.md) */
-  --spine: #f2b630;
-}
-
 .front,
 .back {
   stroke: none;
