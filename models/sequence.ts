@@ -344,7 +344,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
             )
         );
         if (!still) throw new Error(`Fold ${name} holds a point that is not on a piece that stays still.`);
-        hold = centroid(still.outline);
+        hold = apply(still.toView.clone().invert(), opts.hold);
       }
       // swung over: the flaps travel as one stack (done at 90%), then the creases take their reverse-fold
       // angles, the same pose with the layers tucked in

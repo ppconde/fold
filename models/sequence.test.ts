@@ -25,6 +25,12 @@ describe('foldSequence', () => {
     expect(src.steps).toEqual([{ fold: { middle1: 180 }, hold: [0.75, 0.5], ...text, stack: expect.any(Array) }]);
   });
 
+  it('holds the point it was given, not the middle of the piece under it (which a later crease may cross)', () => {
+    const s = foldSequence();
+    s.fold('middle', [0.5, 0], [0.5, 1], { valley: true, hold: [0.9, 0.2], ...text });
+    expect(s.source({ ...entry, tags: [] }).steps[0].hold).toEqual([0.9, 0.2]);
+  });
+
   it('creases both layers of a two-layer fold, valley on one and mountain on the flipped one', () => {
     const s = foldSequence();
     s.fold('half', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
