@@ -350,6 +350,10 @@ test.describe('a reverse fold step', () => {
     await page.goto(`/fold/crane?step=${NECK}`);
     await expect(page.locator('#instructions')).toContainText(/reverse fold/i);
     await expect(page.getByRole('img', { name: /turns inside out/ })).toBeVisible();
+    for (const name of ['Moves', 'Creases', 'Marks']) {
+      const box = await page.getByRole('button', { name }).boundingBox();
+      expect(Math.min(box?.width ?? 0, box?.height ?? 0)).toBeGreaterThanOrEqual(44);
+    }
     await page.getByRole('button', { name: 'Creases' }).click();
     await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
     const { violations } = await new AxeBuilder({ page }).include('#instructions').analyze();

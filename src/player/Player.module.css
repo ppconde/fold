@@ -168,21 +168,24 @@
   gap: 0.2rem;
 }
 
+/* ink icons, the picked one underlined in clay like the menu's EN · PT */
 .slotToggle button {
   display: grid;
-  padding: 0.2rem 0.45rem;
-  border: 1px solid var(--sand);
-  border-radius: 999px;
-  background: transparent;
+  place-items: center;
   color: var(--muted);
-  font: 0.75rem var(--font-sans);
-  cursor: pointer;
+}
+
+.slotToggle svg {
+  padding-bottom: 3px;
+  border-bottom: 1.5px solid transparent;
 }
 
 .slotToggle button[aria-pressed="true"] {
-  border-color: var(--charcoal);
-  background: var(--charcoal);
-  color: var(--ivory);
+  color: var(--charcoal);
+}
+
+.slotToggle button[aria-pressed="true"] svg {
+  border-bottom-color: var(--clay);
 }
 
 .insideOut {
@@ -432,10 +435,11 @@
     max-width: none;
   }
 
-  /* a reverse fold: the toggle above the diagram's place, the sketch or the crease pattern in it, or the key across the
-     sheet in the text's place */
+  /* a reverse fold: the toggle on its own row, so each button keeps a 44px tap area; under it the sketch or the crease
+     pattern in the diagram's place, or the key across the sheet in the text's place */
   .panel[data-slot] {
-    grid-template-areas: "label toggle" "text diagram";
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "label label" "toggle toggle" "text diagram";
   }
 
   .slot {
@@ -450,14 +454,9 @@
   .slotToggle {
     display: flex;
     grid-area: toggle;
-    gap: 0.15rem;
-    margin-bottom: 0.4rem;
-  }
-
-  /* 36px, so three fit the diagram's column on a 360px phone */
-  .slotToggle button {
-    min-width: 36px;
-    min-height: 36px;
+    justify-self: end;
+    /* the 44px buttons' empty edges overlap the gaps around the row, so the How sheet still fits a 360px phone */
+    margin: -0.5rem 0 -0.4rem;
   }
 
   .panel[data-slot="marks"] .instruction {
@@ -466,7 +465,7 @@
 
   .marks {
     grid-column: 1 / -1;
-    grid-row: 2;
+    grid-row: 3;
   }
 
   .slot > svg {
