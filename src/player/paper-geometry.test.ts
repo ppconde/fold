@@ -1,10 +1,9 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from '../fold/fixtures';
 import { foldedPositions, LAYER_GAP } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
-import { pinchArrows } from '../fold/reverse';
 import {
+  dashDot,
   depthBelowTable,
   endCentre,
   fillTriangles,
@@ -12,7 +11,6 @@ import {
   frameReach,
   lineGroups,
   paperExtent,
-  pinchStrokes,
   triangleCount
 } from './paper-geometry';
 
@@ -176,25 +174,16 @@ describe('slits', () => {
   });
 });
 
-describe('pinchStrokes', () => {
-  const crane = loadModel(JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8')));
-  const neck = crane.steps.findIndex((s) => s.instruction.en.startsWith('Reverse-fold the left flap'));
-  const arrows = pinchArrows(crane, neck);
-  if (!arrows) throw new Error('no pinch arrows');
-
-  it('draws a shaft and an open V per arrow, strong at the start and gone by the middle', () => {
-    const at0 = pinchStrokes(arrows, 0);
-    expect(at0.opacity).toBe(1);
-    expect(at0.strokes).toHaveLength(4);
-    arrows.forEach((a, i) => {
-      expect(at0.strokes[2 * i]).toEqual([a.from, a.to]);
-      expect(at0.strokes[2 * i + 1][1]).toEqual(a.to);
-    });
-    expect(pinchStrokes(arrows, 0.5).opacity).toBe(0);
-    expect(pinchStrokes(arrows, 1).opacity).toBe(0);
+describe('dashDot', () => {
+  it('cuts a segment into dash 8, gap 3, dot 2, gap 3', () => {
+    const pieces = dashDot([0, 0, 0, 32, 0, 0], 1);
+    expect(pieces.filter((_, i) => i % 3 === 0)).toEqual([0, 8, 11, 13, 16, 24, 27, 29]);
   });
 
-  it('draws nothing on a step without pinch arrows', () => {
-    expect(pinchStrokes(null, 0)).toEqual({ strokes: [], opacity: 0 });
+  it('dashes the same crease on stacked layers in step, whichever way it runs', () => {
+    const near = dashDot([0, 0, 0, 30, 0, 0], 1);
+    const far = dashDot([30, 0, -0.01, 0, 0, -0.01], 1);
+    const xs = (flat: number[]) => flat.filter((_, i) => i % 3 === 0);
+    expect(xs(far)).toEqual(xs(near));
   });
 });

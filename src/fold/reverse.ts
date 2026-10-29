@@ -6,8 +6,8 @@ export { isReverseFold };
 
 /**
  * A tuck arrow for a reverse fold, like a diagram's: from the flap's tip where it is to where that tip ends up
- * inside the body, bowed out around the body. `shaft` is a polyline, `head` the two strokes of an
- * open V at its end. Null outside a reverse fold.
+ * inside the body, bowed a little out from the body. `shaft` is a polyline, `head` the two back corners of the filled
+ * head at its end. Null outside a reverse fold.
  */
 export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [Vec3, Vec3] } | null {
   if (!isReverseFold(model, step)) return null;
@@ -21,7 +21,7 @@ export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [V
   const span = tip.distanceTo(landed);
   const [start, end] = [tip.clone().lerp(landed, 0.08), landed.clone().lerp(tip, 0.08)];
   const mid = start.clone().lerp(end, 0.5);
-  const bow = mid.clone().addScaledVector(out, 0.35 * span);
+  const bow = mid.clone().addScaledVector(out, 0.15 * span);
   const at = (k: number) =>
     start
       .clone()
@@ -31,9 +31,7 @@ export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [V
   const shaft = Array.from({ length: 17 }, (_, i) => at(i / 16));
   const back = at(0.9).sub(end).normalize();
   const side = out.clone().addScaledVector(back, -out.dot(back)).normalize();
-  const xs = model.vertices.map((p) => p[0]);
-  const ys = model.vertices.map((p) => p[1]);
-  const wing = 0.035 * Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+  const wing = 0.035 * sheetSize(model);
   const barb = (s: 1 | -1) =>
     end
       .clone()
@@ -47,51 +45,75 @@ export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [V
 export const arrowOpacity = (s: number): number => Math.max(0, Math.min(1, (1 - s) * 4));
 
 /**
- * Two arrows for a reverse fold, one each side of the body, pointing at each other along its normal: at the
- * flap's spine, a quarter of the way from its pivot to its tip, where you pinch it to turn it inside out.
- * Null outside a reverse fold.
+ * Push marks for a reverse fold, as a diagram's: a broad hollow arrow each side of the body, flat in the paper's plane
+ * and pointing in at the flap's folded edge (its spine) from outside the flap, just past where the fold line meets it.
+ * Each is a closed `outline`, and `facing` the way it faces, out from the paper: show the one facing you. Null outside
+ * a reverse fold.
  */
-export function pinchArrows(model: Model, step: number): { from: Vec3; to: Vec3 }[] | null {
+export function pushArrows(model: Model, step: number): { outline: Vec3[]; facing: Vec3 }[] | null {
   if (!isReverseFold(model, step)) return null;
   const [start, end] = [foldedPositions(model, step - 1, 1), foldedPositions(model, step, 1)];
-  const corners = [...movingFaces(model, step)].flatMap((f) =>
-    start[f].map((p, i) => [new Vector3(...p), new Vector3(...end[f][i])])
-  );
-  // the pivot is the flap's corner that stays put; the tip, its corner farthest from there
+  const flap = [...movingFaces(model, step)];
+  const corners = flap.flatMap((f) => start[f].map((p, i) => [new Vector3(...p), new Vector3(...end[f][i])]));
+  // the pivot is the flap's corner that stays put, where the fold line meets the spine; the tip, its corner farthest
+  // from there
   const pivot = corners.reduce((a, b) => (b[0].distanceTo(b[1]) < a[0].distanceTo(a[1]) ? b : a))[0];
   const tip = corners.reduce((a, b) => (b[0].distanceTo(pivot) > a[0].distanceTo(pivot) ? b : a))[0];
-  const spine = pivot.clone().lerp(tip, 0.25);
+  const spine = pivot.clone().lerp(tip, 0.1);
   const length = tip.distanceTo(pivot);
   const [p, q, r] = start[model.steps[step].fixedFace].map((x) => new Vector3(...x));
   const n = q.sub(p).cross(r.sub(p)).normalize();
+  // the flap's layers sit a hair off the plane: the spine's in-plane direction
+  const along = tip.clone().sub(pivot);
+  along.addScaledVector(n, -along.dot(n)).normalize();
   // from just outside the paper on either side, as thick as it is around there
   const depths = start.flat().flatMap((x) => {
     const d = new Vector3(...x).sub(spine);
-    const along = d.dot(n);
-    return d.addScaledVector(n, -along).length() < 0.5 * length ? [along] : [];
+    const off = d.dot(n);
+    return d.addScaledVector(n, -off).length() < 0.5 * length ? [off] : [];
   });
-  // in the paper's plane, across the spine: the arrows lean in from opposite sides of it, 45 degrees off the normal
-  const across = n.clone().cross(tip.clone().sub(pivot)).normalize(); // perpendicular to n and to the spine
-  const lean = n.clone().add(across).multiplyScalar(Math.SQRT1_2);
-  return pinchSides(depths).map(([d, side]) => {
-    const to = spine.clone().addScaledVector(n, d + side * 0.04 * length);
-    return {
-      from: to
+  // in the paper's plane, across the spine, away from the flap's middle
+  const out = n.clone().cross(along);
+  const middle = corners.reduce((sum, [c]) => sum.add(c), new Vector3()).divideScalar(corners.length);
+  if (middle.sub(spine).dot(out) > 0) out.negate();
+  // sized by the sheet, as the tuck arrow's head is, so a short flap's mark still reads
+  const [reach, half] = [0.1 * sheetSize(model), 0.017 * sheetSize(model)];
+  return pushSides(depths).map(([d, side]) => {
+    const at = spine.clone().addScaledVector(n, d + side * 0.04 * length);
+    const point = (u: number, v: number) =>
+      at
         .clone()
-        .addScaledVector(lean, side * 0.3 * length)
-        .toArray() as Vec3,
-      to: to.toArray() as Vec3
-    };
+        .addScaledVector(out, u * reach)
+        .addScaledVector(along, v * half)
+        .toArray() as Vec3;
+    const outline = [
+      [0, 0],
+      [0.45, 1.6],
+      [0.45, 0.7],
+      [1, 0.7],
+      [1, -0.7],
+      [0.45, -0.7],
+      [0.45, -1.6],
+      [0, 0]
+    ].map(([u, v]) => point(u, v));
+    return { outline, facing: n.clone().multiplyScalar(side).toArray() as Vec3 };
   });
 }
 
-/** Along the normal, where each pinch arrow ends (just past the paper's front-most and back-most layer around the
- * spine) and which side it comes from. */
-export const pinchSides = (depths: number[]): [number, 1 | -1][] => [
+/** Along the normal, where each push mark lies (just past the paper's front-most and back-most layer around the
+ * spine) and which side it is on. */
+export const pushSides = (depths: number[]): [number, 1 | -1][] => [
   [Math.max(0, ...depths), 1],
   [Math.min(0, ...depths), -1]
 ];
 
-/** The pinch arrows' strength at eased progress `s`: full from the first frame, gone by the first sixth of the step,
+/** The push marks' strength at eased progress `s`: full from the first frame, gone by the first sixth of the step,
  * before the flap has narrowed much. */
-export const pinchOpacity = (s: number): number => Math.max(0, Math.min(1, (1 / 6 - s) * 12));
+export const pushOpacity = (s: number): number => Math.max(0, Math.min(1, (1 / 6 - s) * 12));
+
+/** The flat sheet's longer side. */
+function sheetSize(model: Model): number {
+  const xs = model.vertices.map((p) => p[0]);
+  const ys = model.vertices.map((p) => p[1]);
+  return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
+}

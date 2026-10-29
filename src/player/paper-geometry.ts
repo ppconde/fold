@@ -1,7 +1,6 @@
 import { MathUtils, Vector3 } from 'three';
 import { stepCreases } from '../fold/creases';
-import { anglesAt, foldedPositions, progress } from '../fold/fold';
-import { pinchOpacity } from '../fold/reverse';
+import { anglesAt, foldedPositions } from '../fold/fold';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 
 type Extent = {
@@ -156,23 +155,25 @@ export function lineGroups(
   return { borders, folded, flat, active: highlighted, cut };
 }
 
-/** The pinch arrows as ink strokes at `t`: per arrow a shaft and an open V at its tip, and their shared opacity. */
-export function pinchStrokes(arrows: { from: Vec3; to: Vec3 }[] | null, t: number) {
-  const strokes = (arrows ?? []).flatMap(({ from, to }) => {
-    const tip = new Vector3(...to);
-    const back = new Vector3(...from).sub(tip).divideScalar(4); // the wing runs a quarter of the shaft, back along it
-    // a perpendicular to the shaft: across the world axis it is least aligned with
-    const axis = back.toArray().map(Math.abs);
-    const wing = new Vector3()
-      .setComponent(axis.indexOf(Math.min(...axis)), 1)
-      .cross(back)
-      .setLength(back.length() * Math.sin(0.5));
-    const barb = (s: number) =>
-      tip.clone().addScaledVector(back, Math.cos(0.5)).addScaledVector(wing, s).toArray() as Vec3;
-    return [
-      [from, to],
-      [barb(1), to, barb(-1)]
-    ];
-  });
-  return { strokes, opacity: arrows ? pinchOpacity(progress(t)) : 0 };
+/** Flat segments cut into a mountain line's dash-dot (dash 8, gap 3, dot 2, gap 3, as the crease diagram's), `unit`
+ * long per step of it. Its phase is taken along the line, so a crease repeated on stacked layers dashes as one. */
+export function dashDot(flat: number[], unit: number): number[] {
+  const steps = [8, 3, 2, 3].map((x) => x * unit);
+  const period = 16 * unit;
+  const out: number[] = [];
+  for (let i = 0; i < flat.length; i += 6) {
+    let [a, b] = [new Vector3(...flat.slice(i, i + 3)), new Vector3(...flat.slice(i + 3, i + 6))];
+    const d = b.clone().sub(a);
+    const major = d.toArray().map(Math.abs);
+    if (d.getComponent(major.indexOf(Math.max(...major))) < 0) [a, b] = [b, a];
+    const length = d.length();
+    const dir = b.clone().sub(a).normalize();
+    const at = (s: number) => a.clone().addScaledVector(dir, s).toArray();
+    for (let s = -(((a.dot(dir) % period) + period) % period), k = 0; s < length; k++) {
+      const e = s + steps[k % 4];
+      if (k % 2 === 0 && e > 0) out.push(...at(Math.max(s, 0)), ...at(Math.min(e, length)));
+      s = e;
+    }
+  }
+  return out;
 }

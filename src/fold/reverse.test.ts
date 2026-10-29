@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
 import { foldedPositions, movingFaces } from './fold';
 import { loadModel } from './load-model';
-import { arrowOpacity, isReverseFold, pinchArrows, pinchOpacity, pinchSides, tuckArrow } from './reverse';
+import { arrowOpacity, isReverseFold, pushArrows, pushOpacity, pushSides, tuckArrow } from './reverse';
 
 const committed = (id: string) =>
   loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
@@ -48,7 +48,7 @@ describe('tuckArrow', () => {
     const shaft = tuckArrow(crane, neck)?.shaft ?? [];
     const [start, mid, end] = [shaft[0], shaft[Math.floor(shaft.length / 2)], shaft[shaft.length - 1]];
     const chord = [0, 1, 2].map((i) => (start[i] + end[i]) / 2);
-    expect(dist(mid, chord)).toBeGreaterThan(0.1 * dist(start, end));
+    expect(dist(mid, chord)).toBeGreaterThan(0.05 * dist(start, end));
   });
 
   it('is only for reverse folds', () => {
@@ -66,70 +66,77 @@ describe('arrowOpacity', () => {
   });
 });
 
-describe('pinchArrows', () => {
+describe('pushArrows', () => {
   const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
   const sub = (p: number[], q: number[]) => p.map((x, i) => x - q[i]);
   const len = (p: number[]) => Math.hypot(...p);
+  const dot = (x: number[], y: number[]) => x.reduce((acc, c, i) => acc + c * y[i], 0);
   const cross = (a: number[], b: number[]) => [
     a[1] * b[2] - a[2] * b[1],
     a[2] * b[0] - a[0] * b[2],
     a[0] * b[1] - a[1] * b[0]
   ];
 
-  it('pinches the flap at its spine from both sides of the body, for the neck, tail and head', () => {
+  it('pushes the flap in at its spine, by the fold line, from outside the flap on both sides, for the neck, tail and head', () => {
     expect(reverse).toHaveLength(3);
     for (const k of reverse) {
-      const arrows = pinchArrows(crane, k);
-      if (!arrows) throw new Error(`no pinch arrows at step ${k}`);
-      expect(arrows).toHaveLength(2);
+      const marks = pushArrows(crane, k);
+      if (!marks) throw new Error(`no push marks at step ${k}`);
+      expect(marks).toHaveLength(2);
       // the flap as it starts: its pivot stays put through the step, its tip is the corner farthest from there
       const [start, end] = [foldedPositions(crane, k, 0), foldedPositions(crane, k, 1)];
       const corners = [...movingFaces(crane, k)].flatMap((f) => start[f].map((p, i) => [p, end[f][i]]));
       const pivot = corners.reduce((a, b) => (len(sub(b[0], b[1])) < len(sub(a[0], a[1])) ? b : a))[0];
       const tip = corners.reduce((a, b) => (len(sub(b[0], pivot)) > len(sub(a[0], pivot)) ? b : a))[0];
       const flap = len(sub(tip, pivot));
-      const spine = pivot.map((x, i) => x + 0.25 * (tip[i] - x));
-      for (const a of arrows) expect(len(sub(a.to, spine))).toBeLessThan(0.2 * flap);
+      const spine = pivot.map((x, i) => x + 0.1 * (tip[i] - x));
       const [p, q, r] = start[crane.steps[k].fixedFace];
       const n = cross(sub(q, p), sub(r, p));
-      const [d0, d1] = arrows.map((a) => sub(a.from, a.to));
-      const dot = (x: number[], y: number[]) => x.reduce((acc, c, i) => acc + c * y[i], 0);
-      const spineDir = sub(tip, pivot);
-      // the flap's layers sit a hair off the plane: take the spine's in-plane part
-      const axis = spineDir.map((x, i) => x - (dot(spineDir, n) / dot(n, n)) * n[i]);
-      for (const d of [d0, d1]) {
-        // 45 degrees off the normal, and its in-plane part is perpendicular to the spine
-        expect(Math.abs(dot(d, n)) / (len(d) * len(n))).toBeCloseTo(Math.SQRT1_2, 9);
-        expect(dot(d, axis) / (len(d) * len(axis))).toBeCloseTo(0, 9);
+      const middle = [0, 1, 2].map((i) => corners.reduce((acc, [c]) => acc + c[i], 0) / corners.length);
+      const tails: number[][] = [];
+      for (const { outline, facing } of marks) {
+        expect(dot(facing, n)).not.toBe(0);
+        // a closed outline, its point at the spine (seen from the front: just off the paper)
+        expect(outline[0]).toEqual(outline[outline.length - 1]);
+        const off = sub(outline[0], spine);
+        const inPlane = off.map((x, i) => x - (dot(off, n) / dot(n, n)) * n[i]);
+        expect(len(inPlane)).toBeLessThan(0.02 * flap);
+        // flat in the paper's plane, so it faces you
+        for (const x of outline) expect(Math.abs(dot(sub(x, outline[0]), n)) / len(n)).toBeLessThan(1e-9);
+        const tail = sub(outline[3], outline[0]);
+        tails.push(tail);
+        // its tail sits on the side of the spine away from the flap
+        expect(dot(tail, sub(middle, spine))).toBeLessThan(0);
       }
-      // opposite normal parts and opposite in-plane parts: they lean in from either side of the spine
-      expect(dot(d0, n) * dot(d1, n)).toBeLessThan(0);
-      for (let i = 0; i < 3; i++) expect(d0[i]).toBeCloseTo(-d1[i], 9);
+      // the two point the same way, one each side of the body
+      expect(dot(tails[0], tails[1])).toBeGreaterThan(0);
+      expect(dot(sub(marks[0].outline[0], marks[1].outline[0]), n)).toBeGreaterThan(0);
+      expect(dot(marks[0].facing, marks[1].facing)).toBeLessThan(0);
     }
   });
 
   it('is only for reverse folds', () => {
-    expect(pinchArrows(crane, 0)).toBeNull();
-    expect(pinchArrows(crane, neck - 1)).toBeNull();
+    expect(pushArrows(crane, 0)).toBeNull();
+    expect(pushArrows(crane, neck - 1)).toBeNull();
     const tulip = committed('tulip');
-    expect(tulip.steps.some((_, k) => pinchArrows(tulip, k))).toBe(false);
+    expect(tulip.steps.some((_, k) => pushArrows(tulip, k))).toBe(false);
   });
 });
 
-describe('pinchSides', () => {
-  it('puts one arrow each side even when the spine is the outermost layer', () => {
-    expect(pinchSides([-0.004, 0, 0.002])).toEqual([
+describe('pushSides', () => {
+  it('puts one mark each side even when the spine is the outermost layer', () => {
+    expect(pushSides([-0.004, 0, 0.002])).toEqual([
       [0.002, 1],
       [-0.004, -1]
     ]);
     // the spine on top, or at the bottom, of every layer around it
-    expect(pinchSides([0, -0.002, -0.004]).map(([, side]) => side)).toEqual([1, -1]);
-    expect(pinchSides([0, 0.002, 0.004]).map(([, side]) => side)).toEqual([1, -1]);
+    expect(pushSides([0, -0.002, -0.004]).map(([, side]) => side)).toEqual([1, -1]);
+    expect(pushSides([0, 0.002, 0.004]).map(([, side]) => side)).toEqual([1, -1]);
   });
 });
 
-describe('pinchOpacity', () => {
+describe('pushOpacity', () => {
   it('shows from the first frame and is gone by the first sixth of the step', () => {
-    expect([0, 1 / 12, 1 / 8, 1 / 6, 1].map(pinchOpacity)).toEqual([1, 1, expect.closeTo(0.5, 9), 0, 0]);
+    expect([0, 1 / 12, 1 / 8, 1 / 6, 1].map(pushOpacity)).toEqual([1, 1, expect.closeTo(0.5, 9), 0, 0]);
   });
 });
