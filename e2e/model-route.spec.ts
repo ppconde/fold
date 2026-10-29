@@ -44,3 +44,11 @@ test('a model names the base it starts from and links to it', async ({ page }) =
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Square base');
   await expect(page.getByText('Starts from:')).toHaveCount(0);
 });
+
+test('a model that builds on a base opens at the end of the base, and steps back into it', async ({ page }) => {
+  await page.goto('/fold/crane');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '7');
+  await expect(page).toHaveURL(/step=7/);
+  await page.getByRole('button', { name: 'Previous step' }).click();
+  await expect(page.locator('main')).toHaveAttribute('data-step', '6');
+});

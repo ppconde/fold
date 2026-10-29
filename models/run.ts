@@ -26,7 +26,7 @@ export function main() {
     // per-step drawings for the maintainer's review; models/out is gitignored
     for (let k = 0; k < model.steps.length; k++) write(`models/out/${src.id}-${k}.svg`, thumbnail(model, k));
   }
-  const index = { defaultModel: DEFAULT_MODEL, models: sources.map(entryOf) };
+  const index = { defaultModel: DEFAULT_MODEL, models: sources.map((s) => entryOf(s, sources)) };
   write('public/models/models.json', `${JSON.stringify(index, null, 2)}\n`);
   if (failed) {
     console.log(`${failed} model(s) failed. Fix them before committing.`);

@@ -50,7 +50,7 @@ function Home() {
   const frame = useRef(0);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
   // the flat sheet hands over to the lesson's stage (view-transition-name: paper)
-  const go = () => navigate({ to: '/fold/$id', params: { id }, search: {}, viewTransition: true });
+  const go = () => navigate({ to: '/fold/$id', params: { id }, search: { step: 0 }, viewTransition: true });
 
   // unfold to the flat sheet, faster than a lesson plays, then open the lesson at its start
   const enter = () => {
@@ -93,7 +93,7 @@ function Home() {
         <Link
           to="/fold/$id"
           params={{ id }}
-          search={{}}
+          search={{ step: 0 }}
           className="ink-link"
           onClick={(e) => {
             if (still || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;

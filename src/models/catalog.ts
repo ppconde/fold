@@ -9,6 +9,8 @@ export type ModelEntry = {
   difficulty: 'easy' | 'medium' | 'hard';
   /** The id of the base this model starts from. */
   buildsOn?: string;
+  /** The step the lesson opens at when the link names none: the end of the base's steps. */
+  startStep?: number;
   tags: string[];
   thumbnail?: string;
 };
