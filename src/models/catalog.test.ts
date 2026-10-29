@@ -32,7 +32,8 @@ describe('fetchIndex', () => {
       'cicada',
       'square-base',
       'kite-base',
-      'kannon-fold'
+      'kannon-fold',
+      'blintz-base'
     ]);
     expect(index.defaultModel).toBe('crane');
   });

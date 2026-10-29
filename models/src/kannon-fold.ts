@@ -4,7 +4,7 @@ const s = kannonFold();
 
 export default s.source({
   id: 'kannon-fold',
-  name: { en: 'Kannon fold', pt: 'Dobra Kannon' },
+  name: { en: 'Kannon base', pt: 'Base Kannon' },
   japaneseName: 'Kannon-ori',
   category: 'bases',
   difficulty: 'easy',

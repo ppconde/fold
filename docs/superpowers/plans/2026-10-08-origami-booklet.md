@@ -12,7 +12,7 @@ Rules: one PR per model; engine work and bases land in their own PRs before the 
    - add `figures` (Yakko-san, Sumo, Obake) and `bases`; drop `geometric` (no models). Fox mask goes in objects with a `fox` tag.
    - add a `buildsOn` field on catalog entries; the model page shows "Starts from: …" with a link.
    - remove Fold in half and Fold in quarters from the library (`models/src/index.ts`, `public/models/models.json`). Keep them as test-only fixtures for the engine unit tests (`src/fold/fixtures.ts`), and point the e2e specs (player, library, language) at a real model such as the tulip.
-4. **Bases, one PR each**, shared from `models/src/bases.ts`: square base, kite base, kannon fold, double kannon fold, blintz base, Basic Shape 1, Basic Shape 2 (bird base). The crane moves onto the shared square base and Basic Shape 2.
+4. **Bases, one PR each**, shared from `models/src/bases.ts`: square base, kite base, kannon base, double kannon base, blintz base, Basic Shape 1, Basic Shape 2 (bird base). The crane moves onto the shared square base and Basic Shape 2.
 5. **Models with no further engine work**, one PR each, easiest first: Cicada, Dove, Whale, Yakko-san, Hakama, Pig, Chochin, Hawk.
 6. **Remaining slit models:** Obake, Kiji (step 2 needs checking against the book first).
 7. **Engine: locks and tucks** (one flap slides under another, layer order with a cycle; `src/fold/fold.ts` currently throws on cycles). Then Camellia, Hana-tato, Iwai-zutsumi, Swallow (tail threaded through a slit).

@@ -103,8 +103,8 @@
     {
       "id": "kannon-fold",
       "name": {
-        "en": "Kannon fold",
-        "pt": "Dobra Kannon"
+        "en": "Kannon base",
+        "pt": "Base Kannon"
       },
       "japaneseName": "Kannon-ori",
       "category": "bases",
@@ -115,6 +115,22 @@
         "base"
       ],
       "thumbnail": "/models/kannon-fold.svg"
+    },
+    {
+      "id": "blintz-base",
+      "name": {
+        "en": "Blintz base",
+        "pt": "Base blintz"
+      },
+      "japaneseName": "Zabuton-ori",
+      "category": "bases",
+      "difficulty": "easy",
+      "tags": [
+        "blintz",
+        "cushion",
+        "base"
+      ],
+      "thumbnail": "/models/blintz-base.svg"
     }
   ]
 }
