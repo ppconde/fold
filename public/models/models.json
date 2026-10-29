@@ -70,6 +70,23 @@
       "thumbnail": "/models/cicada.svg"
     },
     {
+      "id": "dove",
+      "name": {
+        "en": "Dove",
+        "pt": "Pomba"
+      },
+      "japaneseName": "Hato",
+      "category": "animals",
+      "difficulty": "easy",
+      "tags": [
+        "dove",
+        "bird",
+        "animal",
+        "peace"
+      ],
+      "thumbnail": "/models/dove.svg"
+    },
+    {
       "id": "square-base",
       "name": {
         "en": "Square base",
