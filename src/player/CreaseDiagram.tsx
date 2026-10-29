@@ -3,14 +3,16 @@ import type { Model } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import styles from './CreaseDiagram.module.css';
 import { diagramLines } from './diagram';
-import { paperExtent } from './paper-geometry';
 
 export function CreaseDiagram({ model, step }: { model: Model; step: number }) {
   const t = useT();
   const titleId = useId();
   const lines = useMemo(() => diagramLines(model, step), [model, step]);
-  const { minX, maxY, width, height, size } = paperExtent(model);
-  const pad = size * 0.06;
+  const xs = lines.flatMap((l) => [l.from[0], l.to[0]]);
+  const ys = lines.flatMap((l) => [l.from[1], l.to[1]]);
+  const [minX, maxY] = [Math.min(...xs), Math.max(...ys)];
+  const [width, height] = [Math.max(...xs) - minX, maxY - Math.min(...ys)];
+  const pad = Math.max(width, height) * 0.06;
   const active = lines.filter((l) => l.state === 'active').length;
   // SVG y grows downwards, paper y grows upwards: draw at −y so the diagram matches the 3D view.
   const viewBox = `${minX - pad} ${-maxY - pad} ${width + pad * 2} ${height + pad * 2}`;

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from '../fold/fixtures';
 import { loadModel } from '../fold/load-model';
@@ -5,6 +6,9 @@ import { diagramLines } from './diagram';
 
 const half = () => loadModel(fixture('fold-in-half'));
 const quarters = () => loadModel(fixture('fold-in-quarters'));
+const committed = (id: string) =>
+  loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
+const close = (a: number, b: number) => Math.abs(a - b) < 1e-9;
 
 describe('diagramLines', () => {
   it('shows only the outline on the flat sheet', () => {
@@ -48,5 +52,21 @@ describe('diagramLines', () => {
       [7, 'outline'],
       [8, 'outline']
     ]);
+  });
+
+  it('draws the sheet as it lies in the view, from the side facing you', () => {
+    // the tulip lies white side up, a corner towards you; step 2 folds the bottom corner up to the top one
+    const [fold] = diagramLines(committed('tulip'), 2).filter((l) => l.state === 'active');
+    expect(close(fold.from[1], fold.to[1])).toBe(true); // across the view, not along the sheet's diagonal
+    expect(fold.kind).toBe('valley');
+  });
+
+  it('keeps the last flat view while the model stands on edge', () => {
+    const crane = committed('crane');
+    const last = crane.steps.length - 1;
+    const ys = diagramLines(crane, last).flatMap((l) => [l.from[1], l.to[1]]);
+    const xs = diagramLines(crane, last).flatMap((l) => [l.from[0], l.to[0]]);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(0.5);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeGreaterThan(0.5);
   });
 });
