@@ -315,6 +315,20 @@ function HelpSheet() {
   const t = useT();
   const h = t.player.help;
   const sheet = useRef<HTMLDialogElement>(null);
+  const line = (className: string) => <line className={className} x1="2" y1="8" x2="38" y2="8" />;
+  const marks = [
+    [line(styles.markFold), h.mountain],
+    [line(styles.markValley), h.valley],
+    [<polygon key="p" className={styles.markPush} points="4,8 15,1 15,5 36,5 36,11 15,11 15,15" />, h.push],
+    [
+      [
+        <path key="t" className={styles.markTip} d="M4 14Q16 0 31 7" />,
+        <path key="h" className={styles.markHead} d="M37 10L28 11L32 3Z" />
+      ],
+      h.tip
+    ],
+    [line(styles.markEdge), h.edge]
+  ] as const;
   const buttons = [
     [<StartIcon key="s" />, t.player.startOver],
     [<BackIcon key="b" />, t.player.previous],
@@ -340,37 +354,16 @@ function HelpSheet() {
         <h2>{h.open}</h2>
         <h3>{h.marks}</h3>
         <dl>
-          <dt>
-            <svg viewBox="0 0 40 16" aria-hidden="true">
-              <line className={styles.markFold} x1="2" y1="8" x2="38" y2="8" />
-            </svg>
-          </dt>
-          <dd>{h.mountain}</dd>
-          <dt>
-            <svg viewBox="0 0 40 16" aria-hidden="true">
-              <line className={styles.markValley} x1="2" y1="8" x2="38" y2="8" />
-            </svg>
-          </dt>
-          <dd>{h.valley}</dd>
-          <dt>
-            <svg viewBox="0 0 40 16" aria-hidden="true">
-              <polygon className={styles.markPush} points="4,8 15,1 15,5 36,5 36,11 15,11 15,15" />
-            </svg>
-          </dt>
-          <dd>{h.push}</dd>
-          <dt>
-            <svg viewBox="0 0 40 16" aria-hidden="true">
-              <path className={styles.markTip} d="M4 14Q16 0 31 7" />
-              <path className={styles.markHead} d="M37 10L28 11L32 3Z" />
-            </svg>
-          </dt>
-          <dd>{h.tip}</dd>
-          <dt>
-            <svg viewBox="0 0 40 16" aria-hidden="true">
-              <line className={styles.markEdge} x1="2" y1="8" x2="38" y2="8" />
-            </svg>
-          </dt>
-          <dd>{h.edge}</dd>
+          {marks.map(([mark, name]) => (
+            <Fragment key={name}>
+              <dt>
+                <svg viewBox="0 0 40 16" aria-hidden="true">
+                  {mark}
+                </svg>
+              </dt>
+              <dd>{name}</dd>
+            </Fragment>
+          ))}
         </dl>
         <h3>{h.buttons}</h3>
         <dl>
