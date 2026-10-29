@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { landingAt, progress } from '../fold/fold';
 import { isReverseFold } from '../fold/reverse';
@@ -28,11 +29,17 @@ import { StageBoundary } from './StageBoundary';
 import { usePlayer } from './use-player';
 import { softenTowardIvory } from './washi';
 
-type Props = { entry: ModelEntry; model: Model; initialStep: number; onSettle: (step: number) => void };
+type Props = {
+  entry: ModelEntry;
+  base?: ModelEntry;
+  model: Model;
+  initialStep: number;
+  onSettle: (step: number) => void;
+};
 
 const LazyStage = lazy(loadStage);
 
-export function Player({ entry, model, initialStep, onSettle }: Props) {
+export function Player({ entry, base, model, initialStep, onSettle }: Props) {
   const t = useT().player;
   const [lang] = useLang();
   const [state, dispatch] = usePlayer(model, initialStep);
@@ -131,6 +138,14 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
       <div className={styles.title}>
         <h1>{localized(entry.name, lang)}</h1>
         {entry.japaneseName && <p className={styles.japanese}>{entry.japaneseName}</p>}
+        {base && (
+          <p className={styles.startsFrom}>
+            {t.startsFrom}{' '}
+            <Link className="ink-link" to="/fold/$id" params={{ id: base.id }} search={{}}>
+              {localized(base.name, lang)}
+            </Link>
+          </p>
+        )}
       </div>
 
       <div className={styles.stage}>

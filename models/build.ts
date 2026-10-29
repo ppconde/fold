@@ -207,12 +207,13 @@ export function buildFold(src: ModelSource) {
 }
 
 /** The library entry for `src`. */
-export function entryOf({ id, name, japaneseName, category, difficulty, tags }: ModelSource): ModelEntry {
+export function entryOf({ id, name, japaneseName, category, buildsOn, difficulty, tags }: ModelSource): ModelEntry {
   return {
     id,
     name,
     ...(japaneseName ? { japaneseName } : {}),
     category,
+    ...(buildsOn ? { buildsOn } : {}),
     difficulty,
     tags,
     thumbnail: `/models/${id}.svg`

@@ -67,6 +67,10 @@ function Library() {
                 key={cat ?? 'all'}
                 type="button"
                 aria-pressed={search.cat === cat}
+                // the row scrolls sideways on phones: keep the chosen one in sight
+                ref={
+                  search.cat === cat ? (el) => el?.scrollIntoView({ block: 'nearest', inline: 'nearest' }) : undefined
+                }
                 onClick={() => update({ cat })}
               >
                 {t.categories[cat ?? 'all']}
