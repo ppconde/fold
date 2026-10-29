@@ -164,24 +164,24 @@
 
 .slotToggle {
   display: none;
-  justify-self: center;
   gap: 0.2rem;
 }
 
+/* ink icons, the picked one underlined in clay like the menu's EN · PT */
 .slotToggle button {
-  padding: 0.15rem 0.55rem;
-  border: 1px solid var(--sand);
-  border-radius: 999px;
-  background: transparent;
+  display: grid;
+  place-items: center;
   color: var(--muted);
-  font: 0.75rem var(--font-sans);
-  cursor: pointer;
+}
+
+.slotToggle svg {
+  padding-bottom: 3px;
+  border-bottom: 1.5px solid var(--picked, transparent);
 }
 
 .slotToggle button[aria-pressed="true"] {
-  border-color: var(--charcoal);
-  background: var(--charcoal);
-  color: var(--ivory);
+  --picked: var(--clay);
+  color: var(--charcoal);
 }
 
 .insideOut {
@@ -431,26 +431,55 @@
     max-width: none;
   }
 
-  /* a reverse fold: the sketch or the crease pattern in the diagram's place, the toggle above it */
+  /* a reverse fold: the toggle on its own row, so each button keeps a 44px tap area; under it the sketch or the crease
+     pattern in the diagram's place, or the key across the sheet in the text's place */
+  .panel[data-slot] {
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "label label" "toggle toggle" "text diagram";
+  }
+
   .slot {
+    display: contents;
+  }
+
+  .slot > svg,
+  .slot > [role="img"] {
     grid-area: diagram;
-    gap: 0.4rem;
   }
 
   .slotToggle {
     display: flex;
+    grid-area: toggle;
+    justify-self: end;
+    /* the 44px buttons' empty edges overlap the gaps around the row, so the How sheet still fits a 360px phone */
+    margin: -0.5rem 0 -0.4rem;
+  }
+
+  .panel[data-slot="marks"] .instruction {
+    display: none;
+  }
+
+  .marks {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 
   .slot > svg {
     max-width: none;
   }
 
-  /* no room on the sheet: the sketches carry the move, and the key waits for the side panel */
+  /* one at a time on the sheet: the sketches, the crease pattern or the key, which the toggle names */
   .insideOut,
-  .marks,
-  .panel[data-slot="how"] .slot > svg,
-  .panel[data-slot="creases"] .slot > [role="img"]:not(svg) {
+  .panel:not([data-slot="marks"]) .marks,
+  .marks summary,
+  .panel:not([data-slot="creases"]) .slot > svg,
+  .panel:not([data-slot="how"]) .slot > [role="img"]:not(svg) {
     display: none;
+  }
+
+  .marks ul {
+    gap: 0.2rem;
+    margin: 0;
   }
 }
 

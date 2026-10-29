@@ -70,7 +70,7 @@ Books show the two sides of the paper by tone: the coloured side shaded or colou
   - the fold line is dash-dot, a mountain fold;
   - a hollow push arrow lies flat on the paper, filled with the paper's back colour, pointing at the folded edge where the fold line meets it. Only the one on the camera's side of the paper shows;
   - a curved arrow with a filled head runs from the tip to where it lands, bowed a little out from the body.
-- **Key to the marks** (`MarksKey` in `src/player/Player.tsx`): under the How drawings on a reverse fold, each stage mark drawn small with a line on what it means. It is open the first time one shows and starts closed after that. The phone sheet has no room for it.
+- **Key to the marks** (`MarksKey` in `src/player/Player.tsx`): under the How drawings on a reverse fold, each stage mark drawn small with a line on what it means. It is open the first time one shows and starts closed after that. On the phone sheet it is the third button of the slot toggle (Moves, Creases, Marks: ink icons on their own row, each a 44px tap area), shown across the sheet in the step text's place.
 
 ## Our additions
 
