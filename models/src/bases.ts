@@ -236,3 +236,105 @@ export function basicShape2() {
 
   return s;
 }
+
+/** Where a squash's crease meets the sheet edge: this far from the edge's middle (half of tan 22.5°). */
+const r = (Math.SQRT2 - 1) / 2;
+
+/**
+ * A new sheet folded into Basic shape 1, the squashed square base (book p.65): the square base turned open end up
+ * and its four flaps squashed, a squashed flap showing in front and behind. It ends open end up, the middle at the
+ * bottom. Creases: the square base's, and a `squash` line through each flap's two layers, from the middle to the
+ * edge, 22.5° off the midline.
+ */
+export function basicShape1() {
+  const s = squareBase();
+  const C: At = [0.5, 0.5];
+  // on the flat sheet: the halves of the creases the squashes move. The axis halves join each quarter's two
+  // halves (front B, back T); a spine is the folded edge of one flap
+  const frontAxis = s.split('upright1', C);
+  const backAxis = 'upright1';
+  const spine1 = 'other1';
+  const spine3 = s.split('other1', C);
+  const spine4 = 'edge1';
+  const spine2 = s.split('edge1', C);
+  s.turn([0, 180, 225], {
+    en: 'Turn the square base around so its open end points up.',
+    pt: 'Roda a base quadrada para a ponta aberta ficar virada para cima.'
+  });
+  // a squash's lines: from the middle to the flap's open edge, in the view (`side` +1 the right flap, −1 the left),
+  // through the flap's two layers (picked on the flat sheet): `squash1`, `squash2`, … Each layer's half by the
+  // spine folds back onto the half by the axis, a mountain.
+  let n = 0;
+  const squashLines = (side: number, flap: (at: At) => boolean) => {
+    s.mark('squash', C, [0.5 + side * r, 1], {
+      valley: (_, [x, y]) => (x - 0.5) * (y - 0.5) < 0,
+      only: (_, at) => flap(at),
+      en: '',
+      pt: ''
+    });
+    return { [`squash${++n}`]: -180, [`squash${++n}`]: -180 };
+  };
+  const [left, right]: At[] = [
+    [0.2, 0.85],
+    [0.8, 0.85]
+  ];
+  s.collapse(
+    { [frontAxis]: 180, [spine1]: 0, ...squashLines(1, ([x, y]) => (y > 0.5 && x > y) || (y < 0.5 && x + y > 1)) },
+    {
+      hold: left,
+      en: 'Lift the right flap up, open it and squash it flat, its folded edge on the middle line.',
+      pt: 'Levanta a aba da direita, abre-a e espalma-a, com a aresta dobrada sobre a linha do meio.'
+    }
+  );
+  s.collapse(
+    { [frontAxis]: 0, [spine1]: 180 },
+    {
+      hold: left,
+      en: 'Fold the left half of the squashed flap over to the right.',
+      pt: 'Dobra a metade esquerda da aba espalmada para a direita.'
+    }
+  );
+  s.collapse(
+    { [frontAxis]: 180, [spine2]: 0, ...squashLines(-1, ([x, y]) => (x > 0.5 && y > x) || (x < 0.5 && x + y > 1)) },
+    {
+      hold: right,
+      en: 'Squash the left flap the same way.',
+      pt: 'Espalma a aba da esquerda da mesma forma.'
+    }
+  );
+  s.turn([0, 0, 225], { en: 'Turn the paper over.', pt: 'Vira o papel.' });
+  s.collapse(
+    {
+      [backAxis]: 180,
+      [spine3]: 0,
+      ...squashLines(1, ([x, y]) => (y < 0.5 && y > x) || (x < 0.5 && y > 0.5 && x + y < 1))
+    },
+    {
+      hold: left,
+      en: 'Squash the right flap on this side too.',
+      pt: 'Espalma também a aba da direita deste lado.'
+    }
+  );
+  s.collapse(
+    { [backAxis]: 0, [spine3]: 180 },
+    {
+      hold: left,
+      en: 'Fold the left half over to the right again.',
+      pt: 'Dobra outra vez a metade esquerda para a direita.'
+    }
+  );
+  s.collapse(
+    {
+      [backAxis]: 180,
+      [spine4]: 0,
+      ...squashLines(-1, ([x, y]) => (x < 0.5 && x > y) || (y < 0.5 && x > 0.5 && x + y < 1))
+    },
+    {
+      // on the squashed flaps: nothing else is left on this side
+      hold: [0.56, 0.85],
+      en: 'Squash the last flap the same way.',
+      pt: 'Espalma a última aba da mesma forma.'
+    }
+  );
+  return s;
+}

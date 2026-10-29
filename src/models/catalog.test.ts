@@ -34,6 +34,7 @@ describe('fetchIndex', () => {
       'kite-base',
       'kannon-base',
       'blintz-base',
+      'basic-shape-1',
       'basic-shape-2'
     ]);
     expect(index.defaultModel).toBe('crane');

@@ -133,6 +133,22 @@
       "thumbnail": "/models/blintz-base.svg"
     },
     {
+      "id": "basic-shape-1",
+      "name": {
+        "en": "Basic shape 1",
+        "pt": "Forma básica 1"
+      },
+      "category": "bases",
+      "buildsOn": "square-base",
+      "startStep": 7,
+      "difficulty": "medium",
+      "tags": [
+        "squashed square base",
+        "base"
+      ],
+      "thumbnail": "/models/basic-shape-1.svg"
+    },
+    {
       "id": "basic-shape-2",
       "name": {
         "en": "Basic shape 2",
