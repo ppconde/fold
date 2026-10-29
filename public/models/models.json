@@ -9,6 +9,7 @@
       },
       "japaneseName": "Orizuru",
       "category": "animals",
+      "buildsOn": "square-base",
       "difficulty": "medium",
       "tags": [
         "crane",
@@ -66,6 +67,22 @@
         "summer"
       ],
       "thumbnail": "/models/cicada.svg"
+    },
+    {
+      "id": "square-base",
+      "name": {
+        "en": "Square base",
+        "pt": "Base quadrada"
+      },
+      "japaneseName": "Seihō kihonkei",
+      "category": "bases",
+      "difficulty": "easy",
+      "tags": [
+        "square",
+        "preliminary",
+        "base"
+      ],
+      "thumbnail": "/models/square-base.svg"
     }
   ]
 }

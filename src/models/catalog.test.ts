@@ -25,7 +25,7 @@ describe('fetchIndex', () => {
   it('returns the entries in models.json', async () => {
     serve({ '/models/models.json': { body: file('models.json') } });
     const index = await fetchIndex();
-    expect(index.models.map((e) => e.id)).toEqual(['crane', 'dog-face', 'tulip', 'cicada']);
+    expect(index.models.map((e) => e.id)).toEqual(['crane', 'dog-face', 'tulip', 'cicada', 'square-base']);
     expect(index.defaultModel).toBe('crane');
   });
 
@@ -49,6 +49,16 @@ describe('fetchModel', () => {
     const result = await fetchModel('tulip');
     expect(result?.entry.name.en).toBe('Tulip');
     expect(result?.model.steps).toHaveLength(5);
+  });
+
+  it('brings the entry of the base a model starts from', async () => {
+    serve({
+      '/models/models.json': { body: file('models.json') },
+      '/models/crane.fold': { body: file('crane.fold') },
+      '/models/tulip.fold': { body: file('tulip.fold') }
+    });
+    expect((await fetchModel('crane'))?.base?.name.en).toBe('Square base');
+    expect((await fetchModel('tulip'))?.base).toBeUndefined();
   });
 
   it('returns null for an id that is not in the index, even if the SPA fallback answers 200', async () => {
