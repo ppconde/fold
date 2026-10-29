@@ -138,6 +138,7 @@
         "en": "Basic shape 1",
         "pt": "Forma básica 1"
       },
+      "japaneseName": "Kihonkei 1",
       "category": "bases",
       "buildsOn": "square-base",
       "startStep": 7,
