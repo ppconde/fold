@@ -6,7 +6,7 @@ import { buildFold, entryOf, type ModelSource } from './build';
 const half: ModelSource = {
   id: 'half',
   name: { en: 'Half', pt: 'Metade' },
-  category: 'geometric',
+  category: 'bases',
   difficulty: 'easy',
   tags: ['basic'],
   paperColor: '#2E3A59',
@@ -55,7 +55,7 @@ describe('entryOf', () => {
     expect(entryOf(half)).toEqual({
       id: 'half',
       name: { en: 'Half', pt: 'Metade' },
-      category: 'geometric',
+      category: 'bases',
       difficulty: 'easy',
       tags: ['basic'],
       thumbnail: '/models/half.svg'
