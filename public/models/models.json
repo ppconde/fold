@@ -83,6 +83,21 @@
         "base"
       ],
       "thumbnail": "/models/square-base.svg"
+    },
+    {
+      "id": "kite-base",
+      "name": {
+        "en": "Kite base",
+        "pt": "Base papagaio"
+      },
+      "japaneseName": "Tako no kihonkei",
+      "category": "bases",
+      "difficulty": "easy",
+      "tags": [
+        "kite",
+        "base"
+      ],
+      "thumbnail": "/models/kite-base.svg"
     }
   ]
 }
