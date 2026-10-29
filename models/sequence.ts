@@ -254,10 +254,13 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
     set(fold: Record<string, number>, text: Text, rotation?: Vec3) {
       steps.push({ fold, ...text, ...(rotation ? { rotation } : {}), stack: pieces });
     },
-    /** The creases the fold called `name` made, one per layer it cut (name1, name2, …), with their angles. */
+    /**
+     * The creases the fold called `name` made, one per layer it cut (name1, name2, …, and name1.2 for a part a later
+     * fold split off one), with their angles.
+     */
     angles(name: string): Record<string, number> {
       return Object.fromEntries(
-        steps.flatMap((st) => Object.entries(st.fold ?? {})).filter(([k]) => k.replace(/\d+$/, '') === name)
+        steps.flatMap((st) => Object.entries(st.fold ?? {})).filter(([k]) => k.replace(/[\d.]+$/, '') === name)
       );
     },
     fold(name: string, p: Vec2, q: Vec2, opts: FoldOptions) {
