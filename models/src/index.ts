@@ -1,4 +1,5 @@
 import type { ModelSource } from '../build';
+import basicShape1 from './basic-shape-1';
 import basicShape2 from './basic-shape-2';
 import blintzBase from './blintz-base';
 import cicada from './cicada';
@@ -19,6 +20,7 @@ export const sources: ModelSource[] = [
   kiteBase,
   kannonBase,
   blintzBase,
+  basicShape1,
   basicShape2
 ];
 
