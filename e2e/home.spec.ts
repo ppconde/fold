@@ -4,6 +4,8 @@ test('the start folding link opens the default lesson', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: /start folding/ }).click();
   await expect(page).toHaveURL(/\/fold\/crane/);
+  // the homepage unfolds the crane to a flat sheet, so its lesson opens there, not at the end of its base
+  await expect(page.locator('main')).toHaveAttribute('data-step', '0');
 });
 
 test('tapping the page background opens the default lesson', async ({ page }) => {

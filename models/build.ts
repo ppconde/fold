@@ -206,14 +206,20 @@ export function buildFold(src: ModelSource) {
   return unfold.length ? { ...fold, 'foldapp:unfold': unfold } : fold;
 }
 
-/** The library entry for `src`. */
-export function entryOf({ id, name, japaneseName, category, buildsOn, difficulty, tags }: ModelSource): ModelEntry {
+/** The library entry for `src`, given every authored model (to find the base it builds on). */
+export function entryOf(src: ModelSource, all: ModelSource[]): ModelEntry {
+  const { id, name, japaneseName, category, buildsOn, difficulty, tags } = src;
+  const base = all.find((m) => m.id === buildsOn);
+  if (buildsOn && !base) throw new Error(`${id} builds on ${buildsOn}, which is not a model.`);
+  if (base?.steps.some((step, k) => step.en !== src.steps[k]?.en)) {
+    throw new Error(`${id} builds on ${base.id} but does not start with its steps.`);
+  }
   return {
     id,
     name,
     ...(japaneseName ? { japaneseName } : {}),
     category,
-    ...(buildsOn ? { buildsOn } : {}),
+    ...(base ? { buildsOn, startStep: base.steps.length } : {}),
     difficulty,
     tags,
     thumbnail: `/models/${id}.svg`
