@@ -400,6 +400,17 @@ test.describe('a reverse fold step', () => {
     await expect(key.getByText('Where the tip goes')).toBeVisible();
   });
 
+  test("Marks shows the key to the marks in the sketches' place", async ({ page }, info) => {
+    test.skip(info.project.name !== 'phone', 'the toggle is for the phone sheet');
+    await page.goto(`/fold/crane?step=${NECK}`);
+    const key = page.locator('#instructions details');
+    await expect(key).toBeHidden();
+    await page.getByRole('button', { name: 'Marks' }).click();
+    await expect(key.getByText('Push the folded edge in here')).toBeVisible();
+    await expect(page.getByRole('img', { name: /turns inside out/ })).toBeHidden();
+    await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeHidden();
+  });
+
   test('a normal step has no toggle', async ({ page }) => {
     await page.goto(`/fold/crane?step=${NORMAL}`);
     await expect(page.locator('#instructions')).toBeVisible();
@@ -440,6 +451,15 @@ test.describe('a reverse fold step', () => {
         heights.push(client);
       }
       expect(new Set(heights).size).toBe(1);
+    });
+
+    test('the key to the marks fits without scrolling', async ({ page }) => {
+      await page.goto(`/fold/crane?step=${NECK}`);
+      const sheet = page.locator('#instructions');
+      await page.getByRole('button', { name: 'Marcas' }).click();
+      await expect(sheet.getByText('Para onde vai a ponta')).toBeVisible();
+      const { scroll, client } = await sheet.evaluate((el) => ({ scroll: el.scrollHeight, client: el.clientHeight }));
+      expect(scroll).toBeLessThanOrEqual(client);
     });
   });
 });

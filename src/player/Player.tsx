@@ -19,7 +19,7 @@ import {
 import { CreaseDiagram } from './CreaseDiagram';
 import { HowSketch } from './HowSketch';
 import { sketchFrame } from './how';
-import { AgainIcon, BackIcon, NextIcon, StartIcon, ViewIcon } from './icons';
+import { AgainIcon, BackIcon, CreasesIcon, MarksIcon, MovesIcon, NextIcon, StartIcon, ViewIcon } from './icons';
 import { loadStage } from './load-stage';
 import { PaperPicker } from './PaperPicker';
 import styles from './Player.module.css';
@@ -45,10 +45,10 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const [stageFailed, setStageFailed] = useState(false);
   const [hint, setHint] = useState<'show' | 'fading' | 'gone'>(() => (shouldShowHint() ? 'show' : 'gone'));
   const showPanel = panelOpen || !webgl || stageFailed;
-  // the step whose slot was flipped to the crease pattern; any other reverse fold opens on "how"
-  const [creasesAt, setCreasesAt] = useState<number | null>(null);
+  // the step whose slot was flipped to the crease pattern or the key to the marks; any other reverse fold opens on "how"
+  const [picked, setPicked] = useState<{ step: number; slot: 'creases' | 'marks' } | null>(null);
   const reverse = isReverseFold(model, state.step);
-  const slot = creasesAt === state.step ? 'creases' : 'how';
+  const slot = picked?.step === state.step ? picked.slot : 'how';
   const instruction = state.step === 0 ? t.firstInstruction : localized(model.steps[state.step].instruction, lang);
 
   const choosePaper = (id: string) => {
@@ -189,11 +189,32 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         {reverse ? (
           <div className={styles.slot}>
             <div className={styles.slotToggle}>
-              <button type="button" aria-pressed={slot === 'how'} onClick={() => setCreasesAt(null)}>
-                {t.how}
+              <button
+                type="button"
+                aria-label={t.how}
+                title={t.how}
+                aria-pressed={slot === 'how'}
+                onClick={() => setPicked(null)}
+              >
+                <MovesIcon />
               </button>
-              <button type="button" aria-pressed={slot === 'creases'} onClick={() => setCreasesAt(state.step)}>
-                {t.creases}
+              <button
+                type="button"
+                aria-label={t.creases}
+                title={t.creases}
+                aria-pressed={slot === 'creases'}
+                onClick={() => setPicked({ step: state.step, slot: 'creases' })}
+              >
+                <CreasesIcon />
+              </button>
+              <button
+                type="button"
+                aria-label={t.marks.tab}
+                title={t.marks.tab}
+                aria-pressed={slot === 'marks'}
+                onClick={() => setPicked({ step: state.step, slot: 'marks' })}
+              >
+                <MarksIcon />
               </button>
             </div>
             <HowSketch
@@ -202,7 +223,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
               frame={sketchFrame(progress(state.t), landingAt(model, state.step))}
             />
             <p className={styles.insideOut}>{t.insideOut}</p>
-            <MarksKey />
+            <MarksKey shown={slot === 'marks'} />
             <CreaseDiagram model={model} step={state.step} />
           </div>
         ) : (
@@ -317,13 +338,13 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 }
 
 /** The marks a reverse fold draws on the paper, as a book's key to its symbols: the fold line, the push and the tip's
- * path, each drawn as on stage. */
-function MarksKey() {
+ * path, each drawn as on stage. `shown`: picked on the phone sheet's toggle, so open. */
+function MarksKey({ shown }: { shown: boolean }) {
   const t = useT().player.marks;
   const [open] = useState(shouldOpenMarksKey);
   useEffect(markMarksKeySeen, []);
   return (
-    <details className={styles.marks} open={open}>
+    <details className={styles.marks} open={open || shown}>
       <summary>{t.title}</summary>
       <ul>
         <li>

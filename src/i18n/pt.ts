@@ -90,6 +90,7 @@ export const pt: Dictionary = {
     ],
     insideOut: 'A aba vira do avesso e entra entre as camadas do corpo.',
     marks: {
+      tab: 'Marcas',
       title: 'O que querem dizer as marcas',
       foldLine: 'A linha da dobra, uma dobra em montanha: o papel dobra para longe de ti ao longo dela',
       push: 'Empurra a dobra para dentro aqui',

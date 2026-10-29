@@ -35,3 +35,20 @@ export const ViewIcon = () => (
     <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
   </svg>
 );
+/** The phone sheet's slot toggle: the How sketches (a row of frames), the crease pattern, the key to the marks (the
+ * push arrow it explains). */
+export const MovesIcon = () => (
+  <svg {...base} width={16} height={16} strokeWidth={1.5}>
+    <path d="M3 7h5v10H3zM9.5 7h5v10h-5zM16 7h5v10h-5z" />
+  </svg>
+);
+export const CreasesIcon = () => (
+  <svg {...base} width={16} height={16} strokeWidth={1.5}>
+    <path d="M5 5h14v14H5zM5 5l14 14M19 5 5 19" />
+  </svg>
+);
+export const MarksIcon = () => (
+  <svg {...base} width={16} height={16} strokeWidth={1.5}>
+    <path d="M4 12l7-6v3.5h9v5h-9V18z" />
+  </svg>
+);

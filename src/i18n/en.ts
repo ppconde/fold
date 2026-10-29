@@ -87,6 +87,7 @@ export const en = {
     ],
     insideOut: "The flap turns inside out and goes in between the body's layers.",
     marks: {
+      tab: 'Marks',
       title: 'What the marks mean',
       foldLine: 'The fold line, a mountain fold: the paper folds away from you along it',
       push: 'Push the folded edge in here',

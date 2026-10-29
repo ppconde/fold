@@ -169,7 +169,8 @@
 }
 
 .slotToggle button {
-  padding: 0.15rem 0.55rem;
+  display: grid;
+  padding: 0.2rem 0.45rem;
   border: 1px solid var(--sand);
   border-radius: 999px;
   background: transparent;
@@ -431,26 +432,59 @@
     max-width: none;
   }
 
-  /* a reverse fold: the sketch or the crease pattern in the diagram's place, the toggle above it */
+  /* a reverse fold: the toggle above the diagram's place, the sketch or the crease pattern in it, or the key across the
+     sheet in the text's place */
+  .panel[data-slot] {
+    grid-template-areas: "label toggle" "text diagram";
+  }
+
   .slot {
+    display: contents;
+  }
+
+  .slot > svg,
+  .slot > [role="img"] {
     grid-area: diagram;
-    gap: 0.4rem;
   }
 
   .slotToggle {
     display: flex;
+    grid-area: toggle;
+    gap: 0.15rem;
+    margin-bottom: 0.4rem;
+  }
+
+  /* 36px, so three fit the diagram's column on a 360px phone */
+  .slotToggle button {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .panel[data-slot="marks"] .instruction {
+    display: none;
+  }
+
+  .marks {
+    grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .slot > svg {
     max-width: none;
   }
 
-  /* no room on the sheet: the sketches carry the move, and the key waits for the side panel */
+  /* one at a time on the sheet: the sketches, the crease pattern or the key, which the toggle names */
   .insideOut,
-  .marks,
-  .panel[data-slot="how"] .slot > svg,
-  .panel[data-slot="creases"] .slot > [role="img"]:not(svg) {
+  .panel:not([data-slot="marks"]) .marks,
+  .marks summary,
+  .panel:not([data-slot="creases"]) .slot > svg,
+  .panel:not([data-slot="how"]) .slot > [role="img"]:not(svg) {
     display: none;
+  }
+
+  .marks ul {
+    gap: 0.2rem;
+    margin: 0;
   }
 }
 
