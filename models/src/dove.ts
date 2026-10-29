@@ -44,9 +44,21 @@ s.fold('bar', d(0, 0), d(2, 0), {
   en: 'Fold the top half down onto the bottom half.',
   pt: 'Dobra a metade de cima para baixo, sobre a metade de baixo.'
 });
+const spine = s.angles('bar');
+// inside reverse fold: the front layer's flap goes back, the back layer's comes forward, both between them. Before the
+// wings, so it tucks into the point alone and the body stays shut
+s.fold('head', d(HEAD + Math.cos(lean), Math.sin(lean)), d(HEAD, 0), {
+  valley: (tags) => !tags.includes('top'),
+  tag: 'head',
+  over: true,
+  tuck: true,
+  hold: d(1.2, -0.05),
+  en: 'Reverse-fold the left point down inside the body to make the head.',
+  pt: 'Faz uma dobra invertida na ponta da esquerda, para baixo e por dentro do corpo, para fazer a cabeça.'
+});
 s.fold('wingF', WING_R, WING_L, {
   valley: true,
-  only: has('top'),
+  only: (tags) => has('top')(tags) && lacks('head')(tags),
   tag: 'wing',
   hold: d(1.2, -0.05),
   en: 'Fold the front layers up along a slightly slanted line just below the top edge, to make a wing.',
@@ -54,25 +66,12 @@ s.fold('wingF', WING_R, WING_L, {
 });
 s.fold('wingB', WING_R, WING_L, {
   valley: false,
-  only: lacks('top'),
+  only: (tags) => lacks('top')(tags) && lacks('head')(tags),
   tag: 'wing',
   hold: d(1.2, -0.05),
   en: 'Fold the back wing up behind the same way.',
   pt: 'Dobra a asa de trás para cima, por trás, da mesma forma.'
 });
-const spine = s.angles('bar');
-// inside reverse fold: the front layer's flap goes back, the back layer's comes forward, both between them
-s.fold('head', d(HEAD + Math.cos(lean), Math.sin(lean)), d(HEAD, 0), {
-  valley: (tags) => !tags.includes('top'),
-  // the raised wings reach past the head's line
-  only: lacks('wing'),
-  over: true,
-  tuck: true,
-  hold: d(1.2, -0.05),
-  en: 'Reverse-fold the left point down inside the body to make the head.',
-  pt: 'Faz uma dobra invertida na ponta da esquerda, para baixo e por dentro do corpo, para fazer a cabeça.'
-});
-
 // stood on its wing lines, each half of the body leaning OPEN out from upright. Where the head's line meets the top
 // edge, the head's two creases and its turned-in top edge open with it, worked out on one half: the body's top edge
 // along x, the half reaching `down` from it, the head's crease in it at SIDE from x. The head's top edge stays in the
