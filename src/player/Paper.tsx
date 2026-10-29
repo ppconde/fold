@@ -80,14 +80,10 @@ export function Paper({
   // which flap a reverse fold moves and where it tucks in, an ink arrow with a filled head, as a diagram's
   const tuck = useMemo(() => tuckArrow(model, step), [model, step]);
   const tuckStrength = tuck ? arrowOpacity(progress(t)) : 0;
-  const head = useMemo(() => {
-    if (!tuck) return null;
-    const g = new BufferGeometry();
-    const end = tuck.shaft[tuck.shaft.length - 1];
-    g.setAttribute('position', new BufferAttribute(new Float32Array([...tuck.head[0], ...end, ...tuck.head[1]]), 3));
-    return g;
-  }, [tuck]);
-  useEffect(() => () => head?.dispose(), [head]);
+  const head = useMemo(
+    () => tuck && new Float32Array([...tuck.head[0], ...tuck.shaft[tuck.shaft.length - 1], ...tuck.head[1]]),
+    [tuck]
+  );
   const pushes = useMemo(() => pushArrows(model, step) ?? [], [model, step]);
   const pushStrength = pushes.length ? pushOpacity(progress(t)) : 0;
   // only the push mark on the camera's side of the paper, as a diagram draws one
@@ -103,22 +99,8 @@ export function Paper({
   });
   // filled with the paper's back, as a book leaves a hollow arrow white, so the lines under it don't show through
   const pushFills = useMemo(
-    () =>
-      pushes.map(({ outline }) => {
-        const g = new BufferGeometry();
-        g.setAttribute(
-          'position',
-          new BufferAttribute(new Float32Array([0, 1, 6, 2, 3, 4, 2, 4, 5].flatMap((k) => outline[k])), 3)
-        );
-        return g;
-      }),
+    () => pushes.map(({ outline }) => new Float32Array([0, 1, 6, 2, 3, 4, 2, 4, 5].flatMap((k) => outline[k]))),
     [pushes]
-  );
-  useEffect(
-    () => () => {
-      for (const g of pushFills) g.dispose();
-    },
-    [pushFills]
   );
   // a reverse fold's line is a mountain fold: dash-dot, as the crease diagram draws it
   const dashUnit = useMemo(() => (isReverseFold(model, step) ? 0.0025 * paperExtent(model).size : 0), [model, step]);
@@ -298,7 +280,10 @@ export function Paper({
               depthTest={false}
             />,
             head && (
-              <mesh key="head" geometry={head} renderOrder={3}>
+              <mesh key="head" renderOrder={3}>
+                <bufferGeometry>
+                  <bufferAttribute attach="attributes-position" args={[head, 3]} />
+                </bufferGeometry>
                 <meshBasicMaterial color={INK} side={DoubleSide} transparent opacity={tuckStrength} depthTest={false} />
               </mesh>
             )
@@ -311,7 +296,10 @@ export function Paper({
                 pushMarks.current[i] = mark;
               }}
             >
-              <mesh geometry={pushFills[i]} renderOrder={2.95}>
+              <mesh renderOrder={2.95}>
+                <bufferGeometry>
+                  <bufferAttribute attach="attributes-position" args={[pushFills[i], 3]} />
+                </bufferGeometry>
                 <meshBasicMaterial
                   color={BACK}
                   side={DoubleSide}

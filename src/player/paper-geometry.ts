@@ -165,9 +165,12 @@ export function dashDot(flat: number[], unit: number): number[] {
     let [a, b] = [new Vector3(...flat.slice(i, i + 3)), new Vector3(...flat.slice(i + 3, i + 6))];
     const d = b.clone().sub(a);
     const major = d.toArray().map(Math.abs);
-    if (d.getComponent(major.indexOf(Math.max(...major))) < 0) [a, b] = [b, a];
+    if (d.getComponent(major.indexOf(Math.max(...major))) < 0) {
+      [a, b] = [b, a];
+      d.negate();
+    }
     const length = d.length();
-    const dir = b.clone().sub(a).normalize();
+    const dir = d.normalize();
     const at = (s: number) => a.clone().addScaledVector(dir, s).toArray();
     for (let s = -(((a.dot(dir) % period) + period) % period), k = 0; s < length; k++) {
       const e = s + steps[k % 4];

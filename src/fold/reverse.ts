@@ -53,8 +53,9 @@ export const arrowOpacity = (s: number): number => Math.max(0, Math.min(1, (1 - 
 export function pushArrows(model: Model, step: number): { outline: Vec3[]; facing: Vec3 }[] | null {
   if (!isReverseFold(model, step)) return null;
   const [start, end] = [foldedPositions(model, step - 1, 1), foldedPositions(model, step, 1)];
-  const flap = [...movingFaces(model, step)];
-  const corners = flap.flatMap((f) => start[f].map((p, i) => [new Vector3(...p), new Vector3(...end[f][i])]));
+  const corners = [...movingFaces(model, step)].flatMap((f) =>
+    start[f].map((p, i) => [new Vector3(...p), new Vector3(...end[f][i])])
+  );
   // the pivot is the flap's corner that stays put, where the fold line meets the spine; the tip, its corner farthest
   // from there
   const pivot = corners.reduce((a, b) => (b[0].distanceTo(b[1]) < a[0].distanceTo(a[1]) ? b : a))[0];
