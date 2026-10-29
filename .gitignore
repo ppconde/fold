@@ -47,3 +47,4 @@ graphify-out/
 
 # pnpm models review drawings
 models/out/
+tsconfig.tsbuildinfo
