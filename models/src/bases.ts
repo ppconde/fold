@@ -81,10 +81,10 @@ export function kiteBase() {
 }
 
 /**
- * A new sheet folded into the kannon (cupboard) fold (book p.16), white side up: the left and right edges folded
+ * A new sheet folded into the kannon (cupboard) base (book p.16), white side up: the left and right edges folded
  * to the upright middle line, their coloured side showing. Creases: `middle`, `left`, `right`.
  */
-export function kannonFold() {
+export function kannonBase() {
   const s = foldSequence([0, 180, 0]);
   s.turn([0, 180, 0], { en: 'Turn the paper over, white side up.', pt: 'Vira o papel com o lado branco para cima.' });
   s.crease('middle', [0.5, 0], [0.5, 1], {
@@ -103,6 +103,53 @@ export function kannonFold() {
     valley: true,
     en: 'Fold the right edge to the middle line.',
     pt: 'Dobra a aresta da direita até à linha do meio.'
+  });
+  return s;
+}
+
+/**
+ * A new sheet folded into the blintz base (book p.16), white side up: the four corners folded to the middle, their
+ * coloured side showing. The book pinches the middle; the diagonals, folded and unfolded, find it the whole way
+ * across. Creases: `upright`, `across`, `cornerBL`, `cornerBR`, `cornerTR`, `cornerTL`.
+ */
+export function blintzBase() {
+  const s = foldSequence([0, 180, 0]);
+  s.turn([0, 180, 0], { en: 'Turn the paper over, white side up.', pt: 'Vira o papel com o lado branco para cima.' });
+  s.crease('upright', [0, 0], [1, 1], {
+    valley: true,
+    hold: [0.75, 0.25],
+    en: 'Fold in half from corner to corner, then unfold.',
+    pt: 'Dobra ao meio de canto a canto e desdobra.'
+  });
+  s.crease('across', [1, 0], [0, 1], {
+    valley: true,
+    hold: [0.8, 0.6],
+    en: 'Fold in half the other way, then unfold. The creases cross at the middle.',
+    pt: 'Dobra ao meio no outro sentido e desdobra. Os vincos cruzam-se no meio.'
+  });
+  s.fold('cornerBL', [0.5, 0], [0, 0.5], {
+    valley: true,
+    hold: [0.5, 0.6],
+    en: 'Fold the bottom left corner to the middle.',
+    pt: 'Dobra o canto de baixo à esquerda até ao meio.'
+  });
+  s.fold('cornerBR', [1, 0.5], [0.5, 0], {
+    valley: true,
+    hold: [0.5, 0.6],
+    en: 'Fold the bottom right corner to the middle.',
+    pt: 'Dobra o canto de baixo à direita até ao meio.'
+  });
+  s.fold('cornerTR', [0.5, 1], [1, 0.5], {
+    valley: true,
+    hold: [0.5, 0.6],
+    en: 'Fold the top right corner to the middle.',
+    pt: 'Dobra o canto de cima à direita até ao meio.'
+  });
+  s.fold('cornerTL', [0, 0.5], [0.5, 1], {
+    valley: true,
+    hold: [0.5, 0.6],
+    en: 'Fold the top left corner to the middle.',
+    pt: 'Dobra o canto de cima à esquerda até ao meio.'
   });
   return s;
 }

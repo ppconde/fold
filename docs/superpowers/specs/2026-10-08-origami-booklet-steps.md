@@ -26,8 +26,8 @@ library entry, and models that start from one say so ("Builds on: …").
 |---|---|---|---|
 | Square base | p15 | Valley diagonals, mountain midlines, collapse ★ to ★ and ☆ to ☆ | Sanbo (after a blintz), Basic Shape 1, Basic Shape 2; Snail makes one by another route |
 | Kite base | p16 | Crease a diagonal, fold the two edges at one corner to it | Kiji, Whale |
-| Kannon fold (cupboard) | p16 | Crease in half, fold two opposite edges to the centre | Chochin |
-| Double kannon fold | p16 | Kannon fold in both directions (top/bottom edges to centre) | Pig |
+| Kannon base (cupboard) | p16 | Crease in half, fold two opposite edges to the centre | Chochin |
+| Double kannon base | p16 | Kannon base in both directions (top/bottom edges to centre) | Pig |
 | Blintz base | p16 | Pinch the centre, fold all four corners to it | Sanbo, Yakko-san, Sumo, Ferryboat |
 | Basic Shape 1 (squashed square base) | p65 | Square base, open end up, squash all four flaps | Ayame, Hana-tato, Obake (→ Hawk) |
 | Basic Shape 2 (bird base) | p65 | Square base, open end down, petal-fold front and back | Okago, Swallow (and our existing Crane) |
@@ -543,11 +543,11 @@ Photos: IMG_0089 (p88, steps 1–7), IMG_0090 (p89, steps 8–14). Cross-referen
 
 ## 19. Paper Lantern (Chochin)
 
-**Builds on:** Kannon fold
+**Builds on:** Kannon base
 Photo: IMG_0091 (p90, steps 1–7). Cross-reference p53.
 
 - **Paper:** 1 square.
-- **Base:** kannon fold (p16). Start with the white side up, fold the left and right edges to the vertical centre, and leave the flaps showing their colored side. The slit runs down the middle.
+- **Base:** kannon base (p16). Start with the white side up, fold the left and right edges to the vertical centre, and leave the flaps showing their colored side. The slit runs down the middle.
 
 **Steps**
 1. Fold the four outer corners (top and bottom of the left and right outer edges) inward at 45°, as small triangles.
@@ -620,11 +620,11 @@ Photo: IMG_0093 (p92, steps 1–8). Cross-reference p57.
 
 ## 22. Pig (Buta)
 
-**Builds on:** Double kannon fold
+**Builds on:** Double kannon base
 Photo: IMG_0094 (p93, page number not visible; steps 1–8). Cross-reference p59.
 
 - **Paper:** 1 square.
-- **Base:** double kannon fold (p16). Start colored side up and fold the top and bottom edges to the horizontal centre. This gives a long horizontal rectangle with a slit along its middle.
+- **Base:** double kannon base (p16). Start colored side up and fold the top and bottom edges to the horizontal centre. This gives a long horizontal rectangle with a slit along its middle.
 
 **Steps**
 1. Valley fold in half along the vertical centre (left to right) and unfold.

@@ -101,10 +101,10 @@
       "thumbnail": "/models/kite-base.svg"
     },
     {
-      "id": "kannon-fold",
+      "id": "kannon-base",
       "name": {
-        "en": "Kannon fold",
-        "pt": "Dobra Kannon"
+        "en": "Kannon base",
+        "pt": "Base Kannon"
       },
       "japaneseName": "Kannon-ori",
       "category": "bases",
@@ -114,7 +114,23 @@
         "cupboard",
         "base"
       ],
-      "thumbnail": "/models/kannon-fold.svg"
+      "thumbnail": "/models/kannon-base.svg"
+    },
+    {
+      "id": "blintz-base",
+      "name": {
+        "en": "Blintz base",
+        "pt": "Base blintz"
+      },
+      "japaneseName": "Zabuton-ori",
+      "category": "bases",
+      "difficulty": "easy",
+      "tags": [
+        "blintz",
+        "cushion",
+        "base"
+      ],
+      "thumbnail": "/models/blintz-base.svg"
     }
   ]
 }
