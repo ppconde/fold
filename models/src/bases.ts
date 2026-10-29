@@ -153,3 +153,86 @@ export function blintzBase() {
   });
   return s;
 }
+
+/** Where the petal creases meet the sheet's edges, as a fraction along them from the nearer corner. */
+export const petal = 1.5 - Math.SQRT1_2;
+// the square base, open end down: the front layer's lower edges fold to the middle along the bisectors from B; they
+// meet the sides at KL, KR
+const [KL, KR] = [d(0.5 + k / 2, -0.5 + k / 2), d(1.5 - k / 2, -0.5 + k / 2)];
+type At = [number, number];
+/** The front flap's two layers on each side: the front quarter of the sheet and the half quarter joined to it. */
+const front = ([x, y]: At) => x > 0.5 && y > 0.5;
+const frontLeft = (_: string[], at: At) => front(at) || (at[0] > 0.5 && at[1] < 0.5 && at[0] + at[1] > 1);
+const frontRight = (_: string[], at: At) => front(at) || (at[0] < 0.5 && at[1] > 0.5 && at[0] + at[1] > 1);
+const back = ([x, y]: At) => x < 0.5 && y < 0.5;
+const backLayers = (_: string[], at: At) =>
+  back(at) || (at[0] + at[1] < 1 && ((at[0] > 0.5 && at[1] < 0.5) || (at[0] < 0.5 && at[1] > 0.5)));
+
+/**
+ * The square base petal-folded front and back into Basic shape 2, the bird base (book p.65), open end down: two
+ * long petals, the split points at the bottom. Creases, besides the square base's: `kiteL`, `kiteR`, `backL`,
+ * `backR` (the petals' sides), `top` (their hinges); `other1` and `edge1` are split where the petal sides meet them.
+ */
+export function basicShape2() {
+  const s = squareBase();
+  s.together(
+    {
+      en: 'Fold the lower edges of the front layer to the middle line.',
+      pt: 'Dobra as arestas de baixo da camada da frente até à linha do meio.'
+    },
+    () => {
+      s.fold('kiteL', B, KL, { valley: true, only: frontLeft, hold: d(1, -0.1), en: '', pt: '' });
+      s.fold('kiteR', KR, B, { valley: true, only: frontRight, en: '', pt: '' });
+    }
+  );
+  s.crease('top', KL, KR, {
+    valley: true,
+    hold: d(1, -0.5),
+    en: 'Fold the top triangle down over them, then unfold it.',
+    pt: 'Dobra o triângulo de cima para baixo, por cima delas, e desdobra-o.'
+  });
+  s.collapse(
+    { kiteL1: 0, kiteL2: 0, kiteR1: 0, kiteR2: 0 },
+    { hold: d(1, -0.5), en: 'Unfold the two flaps.', pt: 'Desdobra as duas abas.' }
+  );
+  // petal fold: the front layer's middle swings up; the edges between its sides and the layers behind open flat.
+  // the edge from KL, KR (on the flat sheet) to the side corner is the part split off
+  s.split('other1', [petal, 0.5]);
+  const sideR = s.split('edge1', [0.5, petal]);
+  s.collapse(
+    { kiteL1: -180, kiteL2: -180, kiteR1: -180, kiteR2: -180, top4: 180, top5: 180, other1: 0, [sideR]: 0 },
+    {
+      hold: d(1, -0.1),
+      en: 'Lift the bottom corner of the front layer up along the crease, pressing its sides in to the middle.',
+      pt: 'Levanta o canto de baixo da camada da frente pelo vinco, apertando os lados para o meio.'
+    }
+  );
+
+  s.turn([0, 0, 45], { en: 'Turn the paper over.', pt: 'Vira o papel.' });
+  s.together(
+    {
+      en: 'Fold the lower edges to the middle line again.',
+      pt: 'Dobra outra vez as arestas de baixo até à linha do meio.'
+    },
+    () => {
+      s.fold('backL', B, KL, { valley: true, only: backLayers, hold: d(1, -0.1), en: '', pt: '' });
+      s.fold('backR', KR, B, { valley: true, only: backLayers, en: '', pt: '' });
+    }
+  );
+  s.collapse(
+    { backL1: 0, backL2: 0, backR1: 0, backR2: 0 },
+    { hold: d(1, -0.5), en: 'Unfold the two flaps.', pt: 'Desdobra as duas abas.' }
+  );
+  s.split('edge1', [0.5, 1 - petal]);
+  const backSide = s.split('other1.2', [1 - petal, 0.5]);
+  s.collapse(
+    { backL1: -180, backL2: -180, backR1: -180, backR2: -180, top1: 180, top8: 180, edge1: 0, [backSide]: 0 },
+    {
+      hold: d(1, -0.1),
+      en: 'Petal-fold this side too: lift the bottom corner up and press the sides in.',
+      pt: 'Faz o mesmo deste lado: levanta o canto de baixo e aperta os lados para dentro.'
+    }
+  );
+
+  return s;
+}
