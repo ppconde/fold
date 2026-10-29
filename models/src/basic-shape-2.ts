@@ -5,7 +5,7 @@ const s = basicShape2();
 export default s.source({
   id: 'basic-shape-2',
   name: { en: 'Basic shape 2', pt: 'Forma básica 2' },
-  japaneseName: 'Tsuru no kihonkei',
+  japaneseName: 'Kihonkei 2',
   category: 'bases',
   buildsOn: 'square-base',
   difficulty: 'medium',

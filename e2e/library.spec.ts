@@ -14,7 +14,7 @@ test('home leads through the library to a model', async ({ page }) => {
     /Cicada/,
     /Square base/,
     /Kite base/,
-    /Kannon base/,
+    /Kannon fold/,
     /Blintz base/,
     /Basic shape 1/,
     /Basic shape 2/

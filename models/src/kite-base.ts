@@ -5,7 +5,7 @@ const s = kiteBase();
 export default s.source({
   id: 'kite-base',
   name: { en: 'Kite base', pt: 'Base papagaio' },
-  japaneseName: 'Tako no kihonkei',
+  japaneseName: 'Tako-ori',
   category: 'bases',
   difficulty: 'easy',
   tags: ['kite', 'base'],
