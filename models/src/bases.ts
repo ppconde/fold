@@ -79,3 +79,30 @@ export function kiteBase() {
   });
   return s;
 }
+
+/**
+ * A new sheet folded into the kannon (cupboard) fold (book p.16), white side up: the left and right edges folded
+ * to the upright middle line, their coloured side showing. Creases: `middle`, `left`, `right`.
+ */
+export function kannonFold() {
+  const s = foldSequence([0, 180, 0]);
+  s.turn([0, 180, 0], { en: 'Turn the paper over, white side up.', pt: 'Vira o papel com o lado branco para cima.' });
+  s.crease('middle', [0.5, 0], [0.5, 1], {
+    valley: true,
+    hold: [0.75, 0.5],
+    en: 'Fold in half from side to side, then unfold.',
+    pt: 'Dobra ao meio de lado a lado e desdobra.'
+  });
+  s.fold('left', [0.25, 0], [0.25, 1], {
+    valley: true,
+    hold: [0.5, 0.5],
+    en: 'Fold the left edge to the middle line.',
+    pt: 'Dobra a aresta da esquerda até à linha do meio.'
+  });
+  s.fold('right', [0.75, 1], [0.75, 0], {
+    valley: true,
+    en: 'Fold the right edge to the middle line.',
+    pt: 'Dobra a aresta da direita até à linha do meio.'
+  });
+  return s;
+}
