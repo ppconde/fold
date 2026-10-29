@@ -1,13 +1,16 @@
-import { diamond as d, type foldSequence } from '../sequence';
+import { diamond as d, foldSequence } from '../sequence';
 
-const [L, T, R, B] = [d(0, 0), d(1, 1), d(2, 0), d(1, -1)];
+const [L, T, R] = [d(0, 0), d(1, 1), d(2, 0)];
+/** The corner pointing at you. */
+export const B = d(1, -1);
 
 /**
- * The square base (book p.15), from a flat sheet turned a corner towards you (`foldSequence([0, 0, 45])`).
- * It ends open end down: the middle on top, the paper's corners at the bottom. Creases: `upright` and `across`
- * (the diagonals), `edge` and `other` (the midlines).
+ * A new sheet folded into the square base (book p.15), a corner towards you. It ends open end down: the middle
+ * on top, the paper's corners at the bottom. Creases: `upright` and `across` (the diagonals), `edge` and `other`
+ * (the midlines).
  */
-export function squareBase(s: ReturnType<typeof foldSequence>) {
+export function squareBase() {
+  const s = foldSequence([0, 0, 45]);
   s.turn([0, 0, 45], {
     en: 'Start with the coloured side up and a corner pointing at you.',
     pt: 'Começa com o lado colorido para cima e um canto virado para ti.'
@@ -45,4 +48,5 @@ export function squareBase(s: ReturnType<typeof foldSequence>) {
       pt: 'Leva os cantos da esquerda, da direita e de cima até ao de baixo, dobrando o papel num pequeno quadrado.'
     }
   );
+  return s;
 }

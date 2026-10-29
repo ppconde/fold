@@ -1,8 +1,6 @@
-import { foldSequence } from '../sequence';
 import { squareBase } from './bases';
 
-const s = foldSequence([0, 0, 45]);
-squareBase(s);
+const s = squareBase();
 
 export default s.source({
   id: 'square-base',

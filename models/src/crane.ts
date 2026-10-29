@@ -1,11 +1,8 @@
 import { Euler, MathUtils, Quaternion, Vector3 } from 'three';
-import { diamond as d, foldSequence, has } from '../sequence';
-import { squareBase } from './bases';
+import { diamond as d, has } from '../sequence';
+import { B, squareBase } from './bases';
 
-const B = d(1, -1);
-
-const s = foldSequence([0, 0, 45]);
-squareBase(s);
+const s = squareBase();
 
 // the square base, open end down: the middle on top, the paper's corners at B
 // the front layer's lower edges fold to the middle along the bisectors from B; they meet the sides at KL, KR
