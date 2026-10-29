@@ -141,7 +141,7 @@ export function Paper({
     setSegments(cut.current, groups.cut);
     setSegments(bordersHalo.current, pattern ? groups.borders : []);
     setSegments(foldedHalo.current, pattern ? groups.folded : []);
-    setSegments(activeHalo.current, pattern ? activeLines : []);
+    setSegments(activeHalo.current, activeLines);
     setSegments(cutHalo.current, pattern ? groups.cut : []);
     invalidate();
   }, [model, step, t, geometry, invalidate, ground, pattern, highlight, dashUnit]);
