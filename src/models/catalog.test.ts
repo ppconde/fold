@@ -30,6 +30,7 @@ describe('fetchIndex', () => {
       'dog-face',
       'tulip',
       'cicada',
+      'dove',
       'square-base',
       'kite-base',
       'kannon-base',

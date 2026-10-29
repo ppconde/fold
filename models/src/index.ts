@@ -5,6 +5,7 @@ import blintzBase from './blintz-base';
 import cicada from './cicada';
 import crane from './crane';
 import dogFace from './dog-face';
+import dove from './dove';
 import kannonBase from './kannon-base';
 import kiteBase from './kite-base';
 import squareBase from './square-base';
@@ -16,6 +17,7 @@ export const sources: ModelSource[] = [
   dogFace,
   tulip,
   cicada,
+  dove,
   squareBase,
   kiteBase,
   kannonBase,
