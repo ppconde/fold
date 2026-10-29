@@ -33,7 +33,8 @@ describe('fetchIndex', () => {
       'square-base',
       'kite-base',
       'kannon-base',
-      'blintz-base'
+      'blintz-base',
+      'basic-shape-2'
     ]);
     expect(index.defaultModel).toBe('crane');
   });
@@ -66,7 +67,7 @@ describe('fetchModel', () => {
       '/models/crane.fold': { body: file('crane.fold') },
       '/models/tulip.fold': { body: file('tulip.fold') }
     });
-    expect((await fetchModel('crane'))?.base?.name.en).toBe('Square base');
+    expect((await fetchModel('crane'))?.base?.name.en).toBe('Basic shape 2');
     expect((await fetchModel('tulip'))?.base).toBeUndefined();
   });
 

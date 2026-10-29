@@ -149,9 +149,13 @@ test('the paper glides to the middle of the screen as it starts to unfold', asyn
   await page.locator('canvas').waitFor();
   const viewport = page.viewportSize() ?? { width: 0, height: 0 };
   await page.mouse.click(viewport.width * 0.75, viewport.height * 0.55);
-  await expect(async () => {
-    const box = await page.locator('canvas').boundingBox();
-    expect(Math.abs((box?.x ?? 0) + (box?.width ?? 0) / 2 - viewport.width / 2)).toBeLessThan(2);
-    expect(Math.abs((box?.y ?? 0) + (box?.height ?? 0) / 2 - viewport.height / 2)).toBeLessThan(2);
-  }).toPass({ timeout: 1500 });
+  // where the glide ends, not how far it has got: a slow runner animates late
+  const crane = page.locator('main > div', { has: page.locator('canvas') });
+  await expect(crane).toHaveAttribute('style', /translate/);
+  const centre = await crane.evaluate((el: HTMLElement) => {
+    const [x, y] = el.style.translate.split(' ').map(Number.parseFloat);
+    return [el.offsetLeft + el.offsetWidth / 2 + x, el.offsetTop + el.offsetHeight / 2 + (y || 0)];
+  });
+  expect(Math.abs(centre[0] - viewport.width / 2)).toBeLessThan(2);
+  expect(Math.abs(centre[1] - viewport.height / 2)).toBeLessThan(2);
 });

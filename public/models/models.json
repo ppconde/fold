@@ -9,8 +9,8 @@
       },
       "japaneseName": "Orizuru",
       "category": "animals",
-      "buildsOn": "square-base",
-      "startStep": 7,
+      "buildsOn": "basic-shape-2",
+      "startStep": 15,
       "difficulty": "medium",
       "tags": [
         "crane",
@@ -131,6 +131,23 @@
         "base"
       ],
       "thumbnail": "/models/blintz-base.svg"
+    },
+    {
+      "id": "basic-shape-2",
+      "name": {
+        "en": "Basic shape 2",
+        "pt": "Forma básica 2"
+      },
+      "japaneseName": "Tsuru no kihonkei",
+      "category": "bases",
+      "buildsOn": "square-base",
+      "startStep": 7,
+      "difficulty": "medium",
+      "tags": [
+        "bird base",
+        "base"
+      ],
+      "thumbnail": "/models/basic-shape-2.svg"
     }
   ]
 }
