@@ -38,6 +38,7 @@
   view-transition-name: paper;
   position: relative;
   min-height: 0;
+  transition: translate 700ms var(--ease);
 }
 
 .crane canvas {

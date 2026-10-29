@@ -143,3 +143,15 @@ test('the sheet lands in the lesson without zooming in first', async ({ page }) 
   });
   expect(await growth.jsonValue()).toBeLessThan(1.5);
 });
+
+test('the paper glides to the middle of the screen as it starts to unfold', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('canvas').waitFor();
+  const viewport = page.viewportSize() ?? { width: 0, height: 0 };
+  await page.mouse.click(viewport.width * 0.75, viewport.height * 0.55);
+  await expect(async () => {
+    const box = await page.locator('canvas').boundingBox();
+    expect(Math.abs((box?.x ?? 0) + (box?.width ?? 0) / 2 - viewport.width / 2)).toBeLessThan(2);
+    expect(Math.abs((box?.y ?? 0) + (box?.height ?? 0) / 2 - viewport.height / 2)).toBeLessThan(2);
+  }).toPass({ timeout: 1500 });
+});

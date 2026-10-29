@@ -48,6 +48,7 @@ function Home() {
   const [settle, setSettle] = useState(0);
   const [entering, setEntering] = useState(false);
   const frame = useRef(0);
+  const crane = useRef<HTMLDivElement>(null);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
   // the flat sheet hands over to the lesson's stage (view-transition-name: paper)
   const go = () => navigate({ to: '/fold/$id', params: { id }, search: { step: 0 }, viewTransition: true });
@@ -57,6 +58,10 @@ function Home() {
     if (still || !pace) return void go();
     if (entering) return;
     setEntering(true);
+    // the paper glides to the middle of the screen as it starts to open, so it hands over from there
+    const box = crane.current?.getBoundingClientRect();
+    if (box && crane.current)
+      crane.current.style.translate = `${innerWidth / 2 - box.x - box.width / 2}px ${innerHeight / 2 - box.y - box.height / 2}px`;
     const start = performance.now();
     const tick = (now: number) => {
       // a frame's timestamp can come just before the click's performance.now()
@@ -104,7 +109,7 @@ function Home() {
           {t.home.start} →
         </Link>
       </div>
-      <div className={styles.crane}>
+      <div ref={crane} className={styles.crane}>
         <span className={styles.mark} aria-hidden="true">
           折
         </span>
