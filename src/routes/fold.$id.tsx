@@ -39,16 +39,8 @@ function FoldPage() {
     },
     [navigate, step]
   );
-  return (
-    <Player
-      key={entry.id}
-      entry={entry}
-      base={base}
-      model={model}
-      initialStep={step ?? entry.startStep ?? 0}
-      onSettle={onSettle}
-    />
-  );
+  const start = step ?? entry.startStep ?? 0;
+  return <Player key={entry.id} entry={entry} base={base} model={model} initialStep={start} onSettle={onSettle} />;
 }
 
 function ModelNotFound() {
