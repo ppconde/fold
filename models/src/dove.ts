@@ -98,10 +98,10 @@ const [body, edges] = [false, true].map((flipped) =>
   )
 );
 // stood up off the table on its wing lines (levelled along them, then rolled about them until the other one meets the
-// table too: 10.36°, measured on the finished pose), then turned a little toward you, head to the left as the crane
+// table too: 10.36°, measured on the finished pose), then turned to face as the crane does: head to the left, toward you
 const standing = new Euler().setFromQuaternion(
   new Quaternion()
-    .setFromAxisAngle(new Vector3(0, 0, 1), -10 * D)
+    .setFromAxisAngle(new Vector3(0, 0, 1), 30 * D)
     .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), (90 + 10.36) * D))
     .multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -Math.atan(RISE)))
     .multiply(new Quaternion().setFromEuler(new Euler(0, 180 * D, 45 * D)))
