@@ -9,6 +9,6 @@ export default s.source({
   buildsOn: 'square-base',
   difficulty: 'medium',
   tags: ['squashed square base', 'base'],
-  paperColor: '#A8577A',
+  paperColor: '#C8763A',
   solve: true
 });
