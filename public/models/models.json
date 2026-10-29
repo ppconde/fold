@@ -98,6 +98,22 @@
         "base"
       ],
       "thumbnail": "/models/kite-base.svg"
+    },
+    {
+      "id": "kannon-fold",
+      "name": {
+        "en": "Kannon fold",
+        "pt": "Dobra Kannon"
+      },
+      "japaneseName": "Kannon-ori",
+      "category": "bases",
+      "difficulty": "easy",
+      "tags": [
+        "kannon",
+        "cupboard",
+        "base"
+      ],
+      "thumbnail": "/models/kannon-fold.svg"
     }
   ]
 }
