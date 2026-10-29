@@ -22,15 +22,21 @@ own. Cutting a piece off (with the smaller piece dissolving) is deferred until a
 The book defines these shapes once (pp.15–16, 65) and later models start from them. Each becomes its own
 library entry, and models that start from one say so ("Builds on: …").
 
-| Base | Book page | How it's made | Used by |
-|---|---|---|---|
-| Square base | p15 | Valley diagonals, mountain midlines, collapse ★ to ★ and ☆ to ☆ | Sanbo (after a blintz), Basic Shape 1, Basic Shape 2; Snail makes one by another route |
-| Kite base | p16 | Crease a diagonal, fold the two edges at one corner to it | Kiji, Whale |
-| Kannon base (cupboard) | p16 | Crease in half, fold two opposite edges to the centre | Chochin |
-| Double kannon base | p16 | Kannon base in both directions (top/bottom edges to centre) | Pig |
-| Blintz base | p16 | Pinch the centre, fold all four corners to it | Sanbo, Yakko-san, Sumo, Ferryboat |
-| Basic Shape 1 (squashed square base) | p65 | Square base, open end up, squash all four flaps | Ayame, Hana-tato, Obake (→ Hawk) |
-| Basic Shape 2 (bird base) | p65 | Square base, open end down, petal-fold front and back | Okago, Swallow (and our existing Crane) |
+The library uses the book's own names (checked against IMG_0229, IMG_0230, IMG_0066 on 2026-10-29): the English
+heading as the name, the Japanese one, romanised, as the subtitle.
+
+| Base (book's English) | Book's Japanese | Book page | How it's made | Used by |
+|---|---|---|---|---|
+| Square base | 四角折り Shikaku-ori | p15 | Valley diagonals, mountain midlines, collapse ★ to ★ and ☆ to ☆ | Sanbo (after a blintz), Basic Shape 1, Basic Shape 2; Snail makes one by another route |
+| Kite base | 凧折り Tako-ori | p16 | Crease a diagonal, fold the two edges at one corner to it | Kiji, Whale |
+| Kannon fold (cupboard) | かんのん折り Kannon-ori | p16 | Crease in half, fold two opposite edges to the centre | Chochin |
+| Blintz base | ざぶとん折り Zabuton-ori | p16 | Pinch the centre, fold all four corners to it | Sanbo, Yakko-san, Sumo, Ferryboat |
+| Basic Shape 1 | 基本形1 Kihonkei 1 | p65 | Square base, open corners up, squash all four flaps | Ayame, Hana-tato, Obake (→ Hawk) |
+| Basic Shape 2 | 基本形2 Kihonkei 2 | p65 | Square base, open corners down, petal-fold front and back | Okago, Swallow (and our existing Crane) |
+
+The book has no "double kannon" shape: pp.15–16 show only the four above (plus the inside and outside reverse
+folds). The Pig's start (top and bottom edges to the centre) is a kannon fold turned sideways, made in the Pig's own
+steps — check the Pig's page before giving it a base.
 
 Models that continue from another model's step (a "builds on" link to a model, not a base):
 - Hakama ← Yakko-san step 5 (triple blintz)
@@ -543,7 +549,7 @@ Photos: IMG_0089 (p88, steps 1–7), IMG_0090 (p89, steps 8–14). Cross-referen
 
 ## 19. Paper Lantern (Chochin)
 
-**Builds on:** Kannon base
+**Builds on:** Kannon fold
 Photo: IMG_0091 (p90, steps 1–7). Cross-reference p53.
 
 - **Paper:** 1 square.
@@ -620,11 +626,11 @@ Photo: IMG_0093 (p92, steps 1–8). Cross-reference p57.
 
 ## 22. Pig (Buta)
 
-**Builds on:** Double kannon base
+**Builds on:** none in the book (see the note under Bases: there is no double kannon)
 Photo: IMG_0094 (p93, page number not visible; steps 1–8). Cross-reference p59.
 
 - **Paper:** 1 square.
-- **Base:** double kannon base (p16). Start colored side up and fold the top and bottom edges to the horizontal centre. This gives a long horizontal rectangle with a slit along its middle.
+- **Base:** a kannon fold turned sideways (not a book base; recheck the Pig's page). Start colored side up and fold the top and bottom edges to the horizontal centre. This gives a long horizontal rectangle with a slit along its middle.
 
 **Steps**
 1. Valley fold in half along the vertical centre (left to right) and unfold.

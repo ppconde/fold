@@ -5,7 +5,7 @@ const s = squareBase();
 export default s.source({
   id: 'square-base',
   name: { en: 'Square base', pt: 'Base quadrada' },
-  japaneseName: 'Seihō kihonkei',
+  japaneseName: 'Shikaku-ori',
   category: 'bases',
   difficulty: 'easy',
   tags: ['square', 'preliminary', 'base'],

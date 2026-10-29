@@ -75,7 +75,7 @@
         "en": "Square base",
         "pt": "Base quadrada"
       },
-      "japaneseName": "Seihō kihonkei",
+      "japaneseName": "Shikaku-ori",
       "category": "bases",
       "difficulty": "easy",
       "tags": [
@@ -91,7 +91,7 @@
         "en": "Kite base",
         "pt": "Base papagaio"
       },
-      "japaneseName": "Tako no kihonkei",
+      "japaneseName": "Tako-ori",
       "category": "bases",
       "difficulty": "easy",
       "tags": [
@@ -103,8 +103,8 @@
     {
       "id": "kannon-base",
       "name": {
-        "en": "Kannon base",
-        "pt": "Base Kannon"
+        "en": "Kannon fold",
+        "pt": "Dobra Kannon"
       },
       "japaneseName": "Kannon-ori",
       "category": "bases",
@@ -138,7 +138,7 @@
         "en": "Basic shape 2",
         "pt": "Forma básica 2"
       },
-      "japaneseName": "Tsuru no kihonkei",
+      "japaneseName": "Kihonkei 2",
       "category": "bases",
       "buildsOn": "square-base",
       "startStep": 7,
