@@ -94,12 +94,18 @@ export const en = {
       'Close and flatten. The folded edge now points the other way: the flap is inside out'
     ],
     insideOut: "The flap turns inside out and goes in between the body's layers.",
-    marks: {
-      tab: 'Marks',
-      title: 'What the marks mean',
-      foldLine: 'The fold line, a mountain fold: the paper folds away from you along it',
+    help: {
+      open: 'How to use',
+      marks: 'The marks',
+      mountain: 'Mountain fold: the paper folds away from you along the line',
+      valley: 'Valley fold: the paper folds towards you',
       push: 'Push the folded edge in here',
-      tip: 'Where the tip goes'
+      tip: 'Where the tip goes',
+      edge: "The folded edge you'll turn inside out in a reverse fold",
+      buttons: 'The buttons',
+      speed: 'Playback speed',
+      view: 'The 3D view',
+      keys: 'Keys: ← and → step back and on, space plays the step again, R fits the paper back in view.'
     },
     stageLabel: '3D view of the paper. Drag to turn it, pinch or scroll to zoom.',
     noWebgl: "The 3D view isn't available on this device. Follow the crease pattern and instructions instead.",
@@ -113,7 +119,6 @@ export const en = {
     resetView: 'Reset view',
     foldProgress: 'Fold progress',
     percentFolded: (n: number) => `${n}% folded`,
-    hint: '← back · next → · hover for names',
     paper: 'Paper',
     paperIs: (name: string) => `Paper: ${name}`,
     done: 'Done',

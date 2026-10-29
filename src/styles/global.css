@@ -7,6 +7,8 @@
   --indigo: #4f6177;
   --charcoal: #33302c;
   --muted: #5e5649;
+  /* the flap's flipping edge, our one addition to the book notation (docs/origami-diagram-conventions.md) */
+  --spine: #f2b630;
   --font-serif: "Shippori Mincho", Georgia, serif;
   --font-sans: "Instrument Sans", system-ui, sans-serif;
   --font-brush: "Zen Kurenaido", var(--font-serif);

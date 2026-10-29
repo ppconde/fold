@@ -285,15 +285,25 @@ test('if the 3D view fails to load, the 2D path keeps working and Try again reco
   await expect(page.locator('main')).toHaveAttribute('data-step', '1');
 });
 
-test('the dock hint shows on the first visit and is gone once a step has played', async ({ page }) => {
-  await page.goto('/fold/tulip');
-  const hint = page.getByText('← back · next → · hover for names');
-  await expect(hint).toBeVisible();
-  await next(page);
-  await expect(hint).toHaveCount(0);
-  await page.reload();
-  await expect(page.locator('main')).toHaveAttribute('data-step', '1');
-  await expect(hint).toHaveCount(0);
+test('the ? in the corner explains the marks and names every dock button', async ({ page }) => {
+  await page.goto('/fold/tulip?step=1');
+  await page.getByRole('button', { name: 'How to use' }).click();
+  const sheet = page.getByRole('dialog', { name: 'How to use' });
+  await expect(sheet.getByText('Where the tip goes')).toBeVisible();
+  for (const name of [
+    'Start over',
+    'Previous step',
+    'Replay step',
+    'Next step',
+    'Playback speed',
+    'Reset view',
+    'Paper'
+  ])
+    await expect(sheet.getByText(name, { exact: true })).toBeVisible();
+  const { violations } = await new AxeBuilder({ page }).include('dialog').analyze();
+  expect(violations.filter((v) => v.impact === 'serious' || v.impact === 'critical').map((v) => v.id)).toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(sheet).toBeHidden();
 });
 
 test('every dock button has a non-empty title', async ({ page }) => {
@@ -350,9 +360,12 @@ test.describe('a reverse fold step', () => {
     await page.goto(`/fold/crane?step=${NECK}`);
     await expect(page.locator('#instructions')).toContainText(/reverse fold/i);
     await expect(page.getByRole('img', { name: /turns inside out/ })).toBeVisible();
-    for (const name of ['Moves', 'Creases', 'Marks']) {
+    const sketch = await page.getByRole('img', { name: /turns inside out/ }).boundingBox();
+    for (const name of ['Moves', 'Creases']) {
       const box = await page.getByRole('button', { name }).boundingBox();
       expect(Math.min(box?.width ?? 0, box?.height ?? 0)).toBeGreaterThanOrEqual(44);
+      // the toggle sits over the sketch it picks, not across the instruction
+      expect(box?.x ?? 0).toBeGreaterThanOrEqual((sketch?.x ?? 0) - 1);
     }
     await page.getByRole('button', { name: 'Creases' }).click();
     await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
@@ -368,6 +381,12 @@ test.describe('a reverse fold step', () => {
     await next(page);
     await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 1));
     await expect(page.getByRole('button', { name: 'Moves' })).toHaveAttribute('aria-pressed', 'true');
+    // and the next reverse fold's sketches (the head) start again at the first
+    const frames = page.locator('#instructions ol');
+    await frames.evaluate((el) => el.scrollTo({ left: 2 * el.clientWidth }));
+    await next(page);
+    await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 2));
+    expect(await frames.evaluate((el) => el.scrollLeft)).toBe(0);
   });
 
   test('a swipe moves through the sketches, and the animation leaves them be', async ({ page }, info) => {
@@ -386,33 +405,6 @@ test.describe('a reverse fold step', () => {
     await slider.fill('10');
     await expect(dots.nth(2)).toHaveAttribute('data-current', 'true');
     expect(await frames.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(2);
-  });
-
-  test('the key to the marks is open on the first reverse fold, and starts closed on the next', async ({
-    page
-  }, info) => {
-    test.skip(info.project.name !== 'desktop', 'the phone sheet has no room for it');
-    await page.goto(`/fold/crane?step=${NECK}`);
-    const key = page.locator('#instructions details');
-    await expect(key).toHaveAttribute('open', '');
-    await expect(key).toContainText('Push the folded edge in here');
-    await next(page);
-    await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 1));
-    await page.reload();
-    await expect(key).not.toHaveAttribute('open');
-    await key.locator('summary').click();
-    await expect(key.getByText('Where the tip goes')).toBeVisible();
-  });
-
-  test("Marks shows the key to the marks in the sketches' place", async ({ page }, info) => {
-    test.skip(info.project.name !== 'phone', 'the toggle is for the phone sheet');
-    await page.goto(`/fold/crane?step=${NECK}`);
-    const key = page.locator('#instructions details');
-    await expect(key).toBeHidden();
-    await page.getByRole('button', { name: 'Marks' }).click();
-    await expect(key.getByText('Push the folded edge in here')).toBeVisible();
-    await expect(page.getByRole('img', { name: /turns inside out/ })).toBeHidden();
-    await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeHidden();
   });
 
   test('a normal step has no toggle', async ({ page }) => {
@@ -455,15 +447,6 @@ test.describe('a reverse fold step', () => {
         heights.push(client);
       }
       expect(new Set(heights).size).toBe(1);
-    });
-
-    test('the key to the marks fits without scrolling', async ({ page }) => {
-      await page.goto(`/fold/crane?step=${NECK}`);
-      const sheet = page.locator('#instructions');
-      await page.getByRole('button', { name: 'Marcas' }).click();
-      await expect(sheet.getByText('Para onde vai a ponta')).toBeVisible();
-      const { scroll, client } = await sheet.evaluate((el) => ({ scroll: el.scrollHeight, client: el.clientHeight }));
-      expect(scroll).toBeLessThanOrEqual(client);
     });
   });
 });
