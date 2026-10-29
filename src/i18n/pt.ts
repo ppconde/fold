@@ -89,6 +89,12 @@ export const pt: Dictionary = {
       'Fecha e alisa. A dobra aponta agora ao contrário: a aba está do avesso'
     ],
     insideOut: 'A aba vira do avesso e entra entre as camadas do corpo.',
+    marks: {
+      title: 'O que querem dizer as marcas',
+      foldLine: 'A linha da dobra, uma dobra em montanha: o papel dobra para longe de ti ao longo dela',
+      push: 'Empurra a dobra para dentro aqui',
+      tip: 'Para onde vai a ponta'
+    },
     stageLabel: 'Vista 3D do papel. Arrasta para o rodar; aperta ou desliza para aproximar.',
     noWebgl: 'A vista 3D não está disponível neste dispositivo. Segue o padrão de vincos e as instruções.',
     stageFailed: 'A vista 3D não carregou. Segue o padrão de vincos e as instruções.',

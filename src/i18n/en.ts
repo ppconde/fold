@@ -86,6 +86,12 @@ export const en = {
       'Close and flatten. The folded edge now points the other way: the flap is inside out'
     ],
     insideOut: "The flap turns inside out and goes in between the body's layers.",
+    marks: {
+      title: 'What the marks mean',
+      foldLine: 'The fold line, a mountain fold: the paper folds away from you along it',
+      push: 'Push the folded edge in here',
+      tip: 'Where the tip goes'
+    },
     stageLabel: '3D view of the paper. Drag to turn it, pinch or scroll to zoom.',
     noWebgl: "The 3D view isn't available on this device. Follow the crease pattern and instructions instead.",
     stageFailed: "The 3D view didn't load. Follow the crease pattern and instructions instead.",

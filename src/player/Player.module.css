@@ -191,6 +191,67 @@
   line-height: 1.45;
 }
 
+/* the key to the marks on the paper, drawn as on stage (Paper.tsx) */
+.marks {
+  color: var(--muted);
+  font: 0.8rem / 1.4 var(--font-sans);
+}
+
+.marks summary {
+  cursor: pointer;
+}
+
+.marks ul {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0.45rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.marks li {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.marks svg {
+  width: 2.5rem;
+  overflow: visible;
+}
+
+.markFold,
+.markPush,
+.markTip,
+.markHead {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.4;
+}
+
+.markFold {
+  stroke: var(--clay);
+  stroke-width: 1.8;
+  /* dash-dot, as the stage's mountain line and the crease diagram's */
+  stroke-dasharray: 8 3 2 3;
+}
+
+.markPush {
+  fill: var(--ivory);
+  stroke: var(--charcoal);
+}
+
+.markTip {
+  fill: none;
+  stroke: var(--charcoal);
+}
+
+.markHead {
+  fill: var(--charcoal);
+  stroke: var(--charcoal);
+}
+
 .dock {
   grid-area: dock;
   display: flex;
@@ -384,7 +445,9 @@
     max-width: none;
   }
 
+  /* no room on the sheet: the sketches carry the move, and the key waits for the side panel */
   .insideOut,
+  .marks,
   .panel[data-slot="how"] .slot > svg,
   .panel[data-slot="creases"] .slot > [role="img"]:not(svg) {
     display: none;
