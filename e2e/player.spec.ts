@@ -381,6 +381,12 @@ test.describe('a reverse fold step', () => {
     await next(page);
     await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 1));
     await expect(page.getByRole('button', { name: 'Moves' })).toHaveAttribute('aria-pressed', 'true');
+    // and the next reverse fold's sketches (the head) start again at the first
+    const frames = page.locator('#instructions ol');
+    await frames.evaluate((el) => el.scrollTo({ left: 2 * el.clientWidth }));
+    await next(page);
+    await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 2));
+    expect(await frames.evaluate((el) => el.scrollLeft)).toBe(0);
   });
 
   test('a swipe moves through the sketches, and the animation leaves them be', async ({ page }, info) => {
