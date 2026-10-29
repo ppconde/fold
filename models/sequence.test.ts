@@ -60,6 +60,13 @@ describe('foldSequence', () => {
     expect(Object.keys(s.angles('corner'))).toHaveLength(1);
   });
 
+  it("names a fold's creases with the parts a later fold split off them", () => {
+    const s = foldSequence();
+    s.fold('half', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
+    s.split('half1', [0.5, 0.5]);
+    expect(s.angles('half')).toEqual({ half1: 180, 'half1.2': 180 });
+  });
+
   it('turns a flap over a crease it already has, like a page, and back the other way', () => {
     const s = foldSequence();
     s.fold('half', [0.5, 0], [0.5, 1], { valley: true, tag: 'flap', hold: [0.75, 0.5], ...text });
