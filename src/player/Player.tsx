@@ -189,33 +189,24 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         {reverse ? (
           <div className={styles.slot}>
             <div className={styles.slotToggle}>
-              <button
-                type="button"
-                aria-label={t.how}
-                title={t.how}
-                aria-pressed={slot === 'how'}
-                onClick={() => setPicked(null)}
-              >
-                <MovesIcon />
-              </button>
-              <button
-                type="button"
-                aria-label={t.creases}
-                title={t.creases}
-                aria-pressed={slot === 'creases'}
-                onClick={() => setPicked({ step: state.step, slot: 'creases' })}
-              >
-                <CreasesIcon />
-              </button>
-              <button
-                type="button"
-                aria-label={t.marks.tab}
-                title={t.marks.tab}
-                aria-pressed={slot === 'marks'}
-                onClick={() => setPicked({ step: state.step, slot: 'marks' })}
-              >
-                <MarksIcon />
-              </button>
+              {(
+                [
+                  ['how', t.how, MovesIcon],
+                  ['creases', t.creases, CreasesIcon],
+                  ['marks', t.marks.tab, MarksIcon]
+                ] as const
+              ).map(([s, name, Icon]) => (
+                <button
+                  key={s}
+                  type="button"
+                  aria-label={name}
+                  title={name}
+                  aria-pressed={slot === s}
+                  onClick={() => setPicked(s === 'how' ? null : { step: state.step, slot: s })}
+                >
+                  <Icon />
+                </button>
+              ))}
             </div>
             <HowSketch
               model={model}
