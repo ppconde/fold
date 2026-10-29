@@ -9,7 +9,7 @@ import { diamond, diamondSequence, foldSequence } from './sequence';
 const entry = {
   id: 'test',
   name: { en: 'Test', pt: 'Teste' },
-  category: 'geometric',
+  category: 'bases',
   difficulty: 'easy',
   tags: [],
   paperColor: '#2E3A59'

@@ -34,7 +34,14 @@ export const pt: Dictionary = {
     difficulty: { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' },
     search: 'Pesquisar dobras',
     category: 'Categoria',
-    categories: { all: 'Todas', animals: 'Animais', flowers: 'Flores', objects: 'Objetos', geometric: 'Geometria' },
+    categories: {
+      all: 'Todas',
+      animals: 'Animais',
+      flowers: 'Flores',
+      objects: 'Objetos',
+      figures: 'Figuras',
+      bases: 'Bases'
+    },
     level: 'Dificuldade',
     noMatch: 'Nenhuma dobra corresponde.',
     clear: 'Limpar filtros'

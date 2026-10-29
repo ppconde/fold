@@ -4,7 +4,7 @@ export type Category = ModelEntry['category'];
 export type Difficulty = ModelEntry['difficulty'];
 export type LibrarySearch = { q?: string; cat?: Category; diff?: Difficulty };
 
-export const CATEGORIES: Category[] = ['animals', 'flowers', 'objects', 'geometric'];
+export const CATEGORIES: Category[] = ['animals', 'flowers', 'objects', 'figures', 'bases'];
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
 
 /**

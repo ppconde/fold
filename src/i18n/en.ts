@@ -31,7 +31,14 @@ export const en = {
     difficulty: { easy: 'Easy', medium: 'Medium', hard: 'Hard' },
     search: 'Search folds',
     category: 'Category',
-    categories: { all: 'All', animals: 'Animals', flowers: 'Flowers', objects: 'Objects', geometric: 'Geometric' },
+    categories: {
+      all: 'All',
+      animals: 'Animals',
+      flowers: 'Flowers',
+      objects: 'Objects',
+      figures: 'Figures',
+      bases: 'Bases'
+    },
     level: 'Difficulty',
     noMatch: 'No folds match.',
     clear: 'Clear filters'

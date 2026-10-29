@@ -5,7 +5,7 @@ export type ModelEntry = {
   id: string;
   name: { en: string; pt?: string };
   japaneseName?: string;
-  category: 'animals' | 'flowers' | 'objects' | 'geometric';
+  category: 'animals' | 'flowers' | 'objects' | 'figures' | 'bases';
   difficulty: 'easy' | 'medium' | 'hard';
   tags: string[];
   thumbnail?: string;
