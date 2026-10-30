@@ -101,6 +101,22 @@
       "thumbnail": "/models/whale.svg"
     },
     {
+      "id": "paper-plane",
+      "name": {
+        "en": "Paper plane",
+        "pt": "Avião de papel"
+      },
+      "japaneseName": "Kami hikōki",
+      "category": "objects",
+      "difficulty": "easy",
+      "tags": [
+        "plane",
+        "dart",
+        "classic"
+      ],
+      "thumbnail": "/models/paper-plane.svg"
+    },
+    {
       "id": "square-base",
       "name": {
         "en": "Square base",
