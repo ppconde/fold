@@ -69,8 +69,8 @@ const centroid = (poly: Vec2[]): Vec2 => [
   poly.reduce((s, v) => s + v[1], 0) / poly.length
 ];
 
-/** Picks pieces by their tags and a point inside them on the flat sheet. */
-type PieceTest = (tags: string[], at: Vec2) => boolean;
+/** Picks pieces by their tags, a point inside them on the flat sheet, and their outline there. */
+type PieceTest = (tags: string[], at: Vec2, outline: Vec2[]) => boolean;
 
 type FoldOptions = Text & {
   /**
@@ -279,7 +279,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
           p,
           q
         );
-        if ((opts.only && !opts.only(piece.tags, centroid(piece.outline))) || area(left) < 1e-9) {
+        if ((opts.only && !opts.only(piece.tags, centroid(piece.outline), piece.outline)) || area(left) < 1e-9) {
           next.push(piece);
           continue;
         }
@@ -471,7 +471,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       const held = apply(still.toView.clone().invert(), opts.hold);
       pieces = relayer(held, still);
       const outlines = (pick: PieceTest) =>
-        pieces.filter((pc) => pick(pc.tags, centroid(pc.outline))).map((pc) => pc.outline);
+        pieces.filter((pc) => pick(pc.tags, centroid(pc.outline), pc.outline)).map((pc) => pc.outline);
       const tuck: Tuck | undefined = opts.tuck && {
         layers: [outlines(opts.tuck.layers[0]), outlines(opts.tuck.layers[1])],
         flaps: [outlines(opts.tuck.flaps[0]), outlines(opts.tuck.flaps[1])]
