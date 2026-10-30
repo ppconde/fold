@@ -111,7 +111,6 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         <h1>{localized(entry.name, lang)}</h1>
         {entry.japaneseName && <p className={styles.japanese}>{entry.japaneseName}</p>}
       </div>
-      <HelpSheet />
 
       <div className={styles.stage}>
         {webgl ? (
@@ -131,17 +130,20 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
         ) : (
           <p className={styles.noWebgl}>{t.noWebgl}</p>
         )}
-        {webgl && !stageFailed && (
-          <button
-            type="button"
-            className={`${styles.panelToggle} ink-link`}
-            aria-expanded={showPanel}
-            aria-controls="instructions"
-            onClick={() => togglePanel(!panelOpen)}
-          >
-            {panelOpen ? t.hideSteps : t.showSteps}
-          </button>
-        )}
+        <div className={styles.stageLinks}>
+          <HelpSheet />
+          {webgl && !stageFailed && (
+            <button
+              type="button"
+              className="ink-link"
+              aria-expanded={showPanel}
+              aria-controls="instructions"
+              onClick={() => togglePanel(!panelOpen)}
+            >
+              {panelOpen ? t.hideSteps : t.showSteps}
+            </button>
+          )}
+        </div>
         {status === 'done' && (
           <p className={styles.done} aria-hidden="true">
             <span className={styles.seal}>完</span>
@@ -301,7 +303,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   );
 }
 
-/** The app's "?" in the corner opposite the menu: a key to the marks on the paper, drawn as on stage, the dock's
+/** "help" beside "hide steps": a key to the marks on the paper, drawn as on stage, the dock's
  * buttons by name (a phone can't hover for their titles) and how to turn the 3D view. */
 function HelpSheet() {
   const t = useT();
@@ -333,14 +335,8 @@ function HelpSheet() {
   ] as const;
   return (
     <>
-      <button
-        type="button"
-        className={`ink-link ${styles.helpButton}`}
-        aria-label={h.open}
-        title={h.open}
-        onClick={() => sheet.current?.showModal()}
-      >
-        ?
+      <button type="button" className="ink-link" onClick={() => sheet.current?.showModal()}>
+        {h.link}
       </button>
       <dialog ref={sheet} className={`paper ${styles.help}`} aria-label={h.open} closedby="any">
         <div

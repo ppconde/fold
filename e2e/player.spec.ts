@@ -292,9 +292,9 @@ test('a lesson opened again picks up at the step it was left at', async ({ page 
   await expect(page.locator('main')).toHaveAttribute('data-step', '2');
 });
 
-test('the ? in the corner explains the marks and names every dock button', async ({ page }) => {
+test('help beside hide steps explains the marks and names every dock button', async ({ page }) => {
   await page.goto('/fold/tulip?step=1');
-  await page.getByRole('button', { name: 'How to use' }).click();
+  await page.getByRole('button', { name: 'help', exact: true }).click();
   const sheet = page.getByRole('dialog', { name: 'How to use' });
   await expect(sheet.getByText('Where the tip goes')).toBeVisible();
   for (const name of [
