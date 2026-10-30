@@ -144,6 +144,8 @@ test('Reset view undoes a trackpad pinch as well as an orbit', async ({ page }) 
 });
 
 test('the view tumbles over the top, and Reset view sets it upright again', async ({ page }) => {
+  // CI renders in software, where every frame of a drag is slow
+  test.setTimeout(90_000);
   await page.goto('/fold/tulip?step=3');
   const canvas = page.locator('canvas');
   await expect(canvas).toBeVisible();
@@ -156,14 +158,15 @@ test('the view tumbles over the top, and Reset view sets it upright again', asyn
   const turn = async () => {
     await page.mouse.move(x, box.y + box.height * 0.3);
     await page.mouse.down();
-    await page.mouse.move(x, box.y + box.height * 0.55, { steps: 10 });
+    await page.mouse.move(x, box.y + box.height * 0.55, { steps: 3 });
     await page.mouse.up();
     await page.waitForTimeout(800);
-    return canvas.screenshot();
   };
   await turn();
-  const overTop = await turn();
-  expect(await difference(page, overTop, await turn())).toBeGreaterThan(0.01);
+  await turn();
+  const overTop = await canvas.screenshot();
+  await turn();
+  expect(await difference(page, overTop, await canvas.screenshot())).toBeGreaterThan(0.01);
 
   await page.getByRole('button', { name: 'Reset view' }).click();
   await page.waitForTimeout(1500);
