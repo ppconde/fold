@@ -142,3 +142,30 @@ test('Reset view undoes a trackpad pinch as well as an orbit', async ({ page }) 
   await page.waitForTimeout(1200);
   expect(await difference(page, framed, await canvas.screenshot())).toBeLessThan(0.01);
 });
+
+test('the view tumbles over the top, and Reset view sets it upright again', async ({ page }) => {
+  await page.goto('/fold/tulip?step=3');
+  const canvas = page.locator('canvas');
+  await expect(canvas).toBeVisible();
+  await page.waitForTimeout(600); // the camera eases into place
+  const framed = await canvas.screenshot();
+
+  // drags of a quarter turn each: an orbit clamped at the pole stops changing after the second
+  const box = (await canvas.boundingBox()) as { x: number; y: number; width: number; height: number };
+  const x = box.x + box.width / 2;
+  const turn = async () => {
+    await page.mouse.move(x, box.y + box.height * 0.3);
+    await page.mouse.down();
+    await page.mouse.move(x, box.y + box.height * 0.55, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(800);
+    return canvas.screenshot();
+  };
+  await turn();
+  const overTop = await turn();
+  expect(await difference(page, overTop, await turn())).toBeGreaterThan(0.01);
+
+  await page.getByRole('button', { name: 'Reset view' }).click();
+  await page.waitForTimeout(1500);
+  expect(await difference(page, framed, await canvas.screenshot())).toBeLessThan(0.01);
+});
