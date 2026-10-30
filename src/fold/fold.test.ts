@@ -615,6 +615,21 @@ describe('slits', () => {
   });
 });
 
+describe('sheets', () => {
+  it('lifts faces joined by a flat crease as one sheet, so the crane has no steps along a layer', () => {
+    const crane = loadModel(
+      JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8'))
+    );
+    // step 18's wing creases stay seams: step 19 folds the wings down on them (see stackAt)
+    for (const k of [16, 17, 19, 20, 21]) {
+      const h = layerHeights(crane, k);
+      crane.edgeFaces.forEach(([f, g], e) => {
+        if (g !== undefined && crane.steps[k].angles[e] === 0) expect([k, e, h[f]]).toEqual([k, e, h[g]]);
+      });
+    }
+  });
+});
+
 describe('reverse folds', () => {
   const committed = (id: string) =>
     loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
