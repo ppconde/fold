@@ -5,7 +5,7 @@ import type { Model, Vec3 } from './types';
 const DEG = MathUtils.DEG2RAD;
 const EPSILON = 1e-6;
 /** Rise per layer of a stack, as a fraction of the paper's side. */
-export const LAYER_GAP = 0.002;
+export const LAYER_GAP = 0.001;
 /** Degrees a reverse fold's body opens at its peak, mid-step: each side turns half of it about the far edge. */
 export const REVERSE_OPEN_DEG = 28;
 /** Share of a step at each end in which a travelling flap rises off, and settles back onto, the stack. */
