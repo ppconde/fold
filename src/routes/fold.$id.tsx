@@ -40,7 +40,9 @@ function FoldPage() {
     },
     [navigate, step, entry.id]
   );
-  return <Player key={entry.id} entry={entry} model={model} initialStep={step ?? readStep(entry.id)} onSettle={onSettle} />;
+  return (
+    <Player key={entry.id} entry={entry} model={model} initialStep={step ?? readStep(entry.id)} onSettle={onSettle} />
+  );
 }
 
 function ModelNotFound() {
