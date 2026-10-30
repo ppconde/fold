@@ -16,8 +16,8 @@ const [XL, XR, C, T] = [d(1 - k, 0), d(1 + k, 0), d(1, 0), d(1, 1)];
 // the long point folds behind about a fifth of the way up the kite; the fish base's side corners fold behind CORNER
 // in from the middle; each fin turns about a line from where the ear meets the back, FIN from the back's tail end:
 // nearly upright across the body, leaning toward the head enough that the ear, pointing at the head, swings down past
-// the belly toward the tail (at least 23° from upright); the tail reverse-folds up outside the body about a line from
-// TAIL on the back, leaning LEAN back from upright
+// the belly toward the tail (at least 23° from upright); the tail folds up about a line from TAIL on the back, leaning
+// LEAN back from upright
 const [TIP, CORNER, FIN] = [-0.6, 0.3, (115 * Math.PI) / 180];
 const [TAIL, LEAN] = [0.85, (40 * Math.PI) / 180];
 
@@ -130,15 +130,14 @@ s.fold('finB', fin, C, {
   en: 'Fold the ear behind the same way, for the other fin.',
   pt: 'Dobra a orelha de trás da mesma forma, para a outra barbatana.'
 });
-// outside reverse fold: the front layers' tip comes forward, the back layers' goes back, both wrapping up around the
-// body; the crease between them opens through flat on the way
+// the tail's layers fold up together to the front
 s.fold('tail', d(1, TAIL), d(1 + Math.sin(LEAN), TAIL - Math.cos(LEAN)), {
-  valley: lacks('back'),
+  valley: true,
   // the tail's layers only: past the belly the line would catch the fins
   only: (_, __, outline) => outline.some((v) => diamondOf(v)[1] > TAIL),
   hold: d(1.2, -0.3),
-  en: 'Reverse-fold the tail up around the outside of the body. Your whale is done.',
-  pt: 'Faz uma dobra invertida na cauda, para cima e por fora do corpo. A tua baleia está pronta.'
+  en: 'Fold the tail up in front. Your whale is done.',
+  pt: 'Dobra a cauda para cima, para a frente. A tua baleia está pronta.'
 });
 
 export default s.source({
