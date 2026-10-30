@@ -85,6 +85,22 @@
       "thumbnail": "/models/dove.svg"
     },
     {
+      "id": "whale",
+      "name": {
+        "en": "Whale",
+        "pt": "Baleia"
+      },
+      "japaneseName": "Kujira",
+      "category": "animals",
+      "difficulty": "easy",
+      "tags": [
+        "whale",
+        "animal",
+        "sea"
+      ],
+      "thumbnail": "/models/whale.svg"
+    },
+    {
       "id": "square-base",
       "name": {
         "en": "Square base",
