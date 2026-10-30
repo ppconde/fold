@@ -518,6 +518,16 @@ export function isReverseFold(model: Model, step: number): boolean {
   return flips && made.length > 0;
 }
 
+/** A reverse fold's spine: the flap's folded edges that turn inside out. None unless `isReverseFold`. */
+export function spineEdges(model: Model, step: number): number[] {
+  if (!isReverseFold(model, step)) return [];
+  const moving = movingFaces(model, step);
+  const before = model.steps[step - 1].angles;
+  return model.steps[step].angles.flatMap((a, e) =>
+    Math.abs(before[e]) === 180 && a === -before[e] && model.edgeFaces[e].every((f) => moving.has(f)) ? [e] : []
+  );
+}
+
 export type ReverseFan = {
   /** Where the new crease meets the flap's spine. */
   pivot: Vec3;
@@ -561,9 +571,7 @@ export function reverseFan(model: Model, step: number): ReverseFan | null {
   const before = model.steps[step - 1].angles;
   const after = model.steps[step].angles;
   const ends = (keep: (e: number) => boolean) => new Set(model.edges.flatMap((ab, e) => (keep(e) ? ab : [])));
-  const spine = ends(
-    (e) => Math.abs(before[e]) === 180 && after[e] === -before[e] && model.edgeFaces[e].every((f) => moving.has(f))
-  );
+  const spine = new Set(spineEdges(model, step).flatMap((e) => model.edges[e]));
   const crease = ends((e) => before[e] === 0 && after[e] !== 0);
   const at = [...spine].find((v) => crease.has(v));
   if (at === undefined) return null;

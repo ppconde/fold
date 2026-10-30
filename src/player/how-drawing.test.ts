@@ -1,9 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { isReverseFold, movingFaces, reverseFan } from '../fold/fold';
+import { foldedPositions, isReverseFold, movingFaces, reverseFan } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import type { Vec2 } from '../fold/types';
 import { howDrawing } from './how-drawing';
+import { lineGroups } from './paper-geometry';
 
 const crane = loadModel(JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8')));
 const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
@@ -129,5 +130,16 @@ describe('howDrawing', () => {
       }
       expect(d.frames[2].faces.every((f) => f.subject)).toBe(true);
     }
+  });
+});
+
+describe('the 3D spine', () => {
+  it('draws the How drawings’ yellow edge on the paper, on reverse folds only', () => {
+    const g = (k: number, highlight = true) =>
+      lineGroups(crane, foldedPositions(crane, k, 0.5), k, 0.5, highlight).spine;
+    // two points of three numbers per face that owns the edge, as many as the drawing has spine segments
+    for (const k of reverse) expect(g(k).length).toBeGreaterThanOrEqual(draw(k).frames[0].spine.length * 6);
+    expect(g(neck - 1)).toEqual([]);
+    expect(g(neck, false)).toEqual([]);
   });
 });

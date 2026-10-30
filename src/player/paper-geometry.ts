@@ -1,6 +1,6 @@
 import { MathUtils, Vector3 } from 'three';
 import { stepCreases } from '../fold/creases';
-import { anglesAt, foldedPositions } from '../fold/fold';
+import { anglesAt, foldedPositions, spineEdges } from '../fold/fold';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 
 type Extent = {
@@ -114,14 +114,15 @@ function segment(model: Model, faces: Vec3[][], e: number, f = model.edgeFaces[e
 type Group = 'borders' | 'folded' | 'flat' | 'active' | 'cut';
 
 /** `highlight` false draws the step's creases as past ones, in ink, as a finished model shows them. `edges` holds each
- * segment's crease (or border), in the same order as its group's segments. */
+ * segment's crease (or border), in the same order as its group's segments. `spine`: a reverse fold's flipping edge on
+ * every face, as the How drawings pick it out (none when `highlight` is false). */
 export function lineGroups(
   model: Model,
   faces: Vec3[][],
   step: number,
   t: number,
   highlight = true
-): Record<Group, number[]> & { edges: Record<Group, number[]> } {
+): Record<Group, number[]> & { edges: Record<Group, number[]>; spine: number[] } {
   const creases = stepCreases(model, step);
   const active = highlight ? creases.active : [];
   const past = highlight ? creases.past : [...creases.past, ...creases.active];
@@ -156,7 +157,10 @@ export function lineGroups(
       add('cut', edge, [...p, ...p.map((x, i) => x + (q[i] - x) * share)]);
     }
   }
-  return { ...lines, edges };
+  const spine = highlight
+    ? spineEdges(model, step).flatMap((e) => model.edgeFaces[e].flatMap((f) => segment(model, faces, e, f)))
+    : [];
+  return { ...lines, edges, spine };
 }
 
 /** Flat segments cut into a mountain line's dash-dot (dash 8, gap 3, dot 2, gap 3, as the crease diagram's), `unit`

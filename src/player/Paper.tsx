@@ -34,6 +34,8 @@ type LineRef = ComponentRef<typeof Line>;
 
 const INK = '#33302C';
 const HIGHLIGHT = '#A5633F';
+// the How drawings' --spine
+const SPINE = '#F2B630';
 const BACK = '#F3EDE2';
 const PLACEHOLDER: Vec3[] = [
   [0, 0, 0],
@@ -82,6 +84,7 @@ export function Paper({
   const flat = useRef<LineRef>(null);
   const active = useRef<LineRef>(null);
   const cut = useRef<LineRef>(null);
+  const spine = useRef<LineRef>(null);
   // an ivory edge under the creases, so they still read on dark patterns and on the ivory back
   const bordersHalo = useRef<LineRef>(null);
   const foldedHalo = useRef<LineRef>(null);
@@ -154,6 +157,8 @@ export function Paper({
       setSegments(foldedHalo.current, pattern ? foldedSeen : []);
       setSegments(activeHalo.current, activeLines);
       setSegments(cutHalo.current, pattern ? cutSeen : []);
+      // all of it, hidden or not, as the How drawings show it through the layers it goes between
+      setSegments(spine.current, g.spine);
     },
     [model, geometry, faceOf, dashUnit, pattern]
   );
@@ -193,7 +198,7 @@ export function Paper({
   // setSegments swaps in geometries drei didn't make, so it won't dispose them
   useEffect(
     () => () => {
-      for (const line of [borders, folded, flat, active, cut]) line.current?.geometry.dispose();
+      for (const line of [borders, folded, flat, active, cut, spine]) line.current?.geometry.dispose();
     },
     []
   );
@@ -295,6 +300,17 @@ export function Paper({
           renderOrder={1}
           lineWidth={1.8}
           frustumCulled={false}
+        />
+        <Line
+          ref={spine}
+          points={PLACEHOLDER}
+          segments
+          color={SPINE}
+          lineWidth={3}
+          renderOrder={1.5}
+          depthTest={false}
+          frustumCulled={false}
+          visible={false}
         />
         <Line
           ref={cutHalo}
