@@ -306,6 +306,8 @@ export function Paper({
           points={PLACEHOLDER}
           segments
           color={SPINE}
+          // the canvas's tone mapping would dull it to mustard; the drawings' yellow exactly
+          toneMapped={false}
           lineWidth={3}
           renderOrder={1.5}
           depthTest={false}
