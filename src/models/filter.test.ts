@@ -63,8 +63,14 @@ describe('parseLibrarySearch', () => {
   });
 
   it('turns unknown, empty and non-string values into undefined keys instead of failing', () => {
-    const parsed = parseLibrarySearch({ q: '  ', cat: 'cars', diff: 3 });
-    expect(parsed).toStrictEqual({ q: undefined, cat: undefined, diff: undefined });
+    const parsed = parseLibrarySearch({ q: '  ', cat: 'cars', diff: 3, page: 'two' });
+    expect(parsed).toStrictEqual({ q: undefined, cat: undefined, diff: undefined, page: undefined });
     expect(parseLibrarySearch({ q: ['a'] }).q).toBeUndefined();
+  });
+
+  it('keeps a page past the first and drops 1, zero, negatives and fractions', () => {
+    expect(parseLibrarySearch({ page: 3 }).page).toBe(3);
+    expect(parseLibrarySearch({ page: '2' }).page).toBe(2);
+    for (const page of [1, 0, -2, 1.5]) expect(parseLibrarySearch({ page }).page).toBeUndefined();
   });
 });

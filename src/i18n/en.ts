@@ -41,7 +41,9 @@ export const en = {
     },
     level: 'Difficulty',
     noMatch: 'No folds match.',
-    clear: 'Clear filters'
+    clear: 'Clear filters',
+    pages: 'Pages',
+    page: (n: number) => `Page ${n}`
   },
   about: {
     title: 'About',
