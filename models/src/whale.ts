@@ -16,9 +16,9 @@ const [XL, XR, C, T] = [d(1 - k, 0), d(1 + k, 0), d(1, 0), d(1, 1)];
 // the long point folds behind about a fifth of the way up the kite; the fish base's side corners fold behind CORNER
 // in from the middle; each fin turns about a line from where the ear meets the back, FIN from the back's tail end:
 // nearly upright across the body, leaning toward the head enough that the ear, pointing at the head, swings down past
-// the belly toward the tail (at least 23° from upright); the tail folds up about a line from TAIL on the back, leaning
-// LEAN back from upright
-const [TIP, CORNER, FIN] = [-0.6, 0.3, (115 * Math.PI) / 180];
+// the belly toward the tail (at least 23° from upright), the fin then pointing 2 FIN − 180° down from the back; the
+// tail folds up about a line from TAIL on the back, leaning LEAN back from upright
+const [TIP, CORNER, FIN] = [-0.6, 0.3, (122 * Math.PI) / 180];
 const [TAIL, LEAN] = [0.85, (40 * Math.PI) / 180];
 
 /** Diamond coordinates of a flat-sheet point (the sheet is turned over, a corner toward you). */
