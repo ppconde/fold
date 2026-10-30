@@ -56,14 +56,7 @@
   cursor: pointer;
 }
 
-.chips button[aria-pressed="true"] {
-  color: var(--charcoal);
-  text-decoration: underline;
-  text-decoration-color: var(--clay);
-  text-decoration-thickness: 1.5px;
-  text-underline-offset: 0.3em;
-}
-
+.chips button[aria-pressed="true"],
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr));
@@ -178,4 +171,21 @@
   .ja {
     display: none;
   }
+}
+
+.pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 2.5rem;
+  font-family: var(--font-sans);
+}
+
+.pages a {
+  display: inline-grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--muted);
+  text-decoration: none;
 }

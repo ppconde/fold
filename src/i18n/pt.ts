@@ -44,7 +44,9 @@ export const pt: Dictionary = {
     },
     level: 'Dificuldade',
     noMatch: 'Nenhuma dobra corresponde.',
-    clear: 'Limpar filtros'
+    clear: 'Limpar filtros',
+    pages: 'Páginas',
+    page: (n) => `Página ${n}`
   },
   about: {
     title: 'Sobre',

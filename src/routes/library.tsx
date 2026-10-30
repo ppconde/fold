@@ -3,7 +3,14 @@ import { useEffect, useRef, useState } from 'react';
 import { useLang, useT } from '../i18n/LanguageProvider';
 import { localized, titles } from '../i18n/lang';
 import { fetchIndex } from '../models/catalog';
-import { CATEGORIES, DIFFICULTIES, filterModels, type LibrarySearch, parseLibrarySearch } from '../models/filter';
+import {
+  CATEGORIES,
+  DIFFICULTIES,
+  filterModels,
+  type LibrarySearch,
+  PAGE_SIZE,
+  parseLibrarySearch
+} from '../models/filter';
 import pages from '../styles/pages.module.css';
 import styles from './Library.module.css';
 
@@ -32,7 +39,8 @@ function Library() {
     setQuery(search.q ?? '');
   }, [search.q]);
   const update = (next: LibrarySearch) => {
-    const parsed = parseLibrarySearch({ ...search, ...next });
+    // a new search or filter starts again from the first page
+    const parsed = parseLibrarySearch({ ...search, page: undefined, ...next });
     ours.current = parsed.q;
     void navigate({ search: parsed, replace: true });
   };
@@ -41,7 +49,11 @@ function Library() {
     setQuery('');
     void navigate({ search: {}, replace: true });
   };
-  const shown = filterModels(models, search);
+  const found = filterModels(models, search);
+  const pageCount = Math.ceil(found.length / PAGE_SIZE);
+  // a page past the end (an old link, a shorter catalog) shows the last one
+  const page = Math.max(1, Math.min(search.page ?? 1, pageCount));
+  const shown = found.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <main className={`page ${pages.page}`}>
@@ -127,6 +139,22 @@ function Library() {
         </ul>
       ) : (
         <p className={styles.empty}>{t.noMatch}</p>
+      )}
+      {pageCount > 1 && (
+        // ponytail: one link per page, add prev/next and ellipses once the catalog runs past a dozen pages
+        <nav className={styles.pages} aria-label={t.pages}>
+          {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
+            <Link
+              key={n}
+              from={Route.fullPath}
+              search={(prev) => ({ ...prev, page: n > 1 ? n : undefined })}
+              aria-current={n === page ? 'page' : undefined}
+              aria-label={t.page(n)}
+            >
+              {n}
+            </Link>
+          ))}
+        </nav>
       )}
     </main>
   );

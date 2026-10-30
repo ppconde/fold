@@ -2,10 +2,11 @@ import type { ModelEntry } from './catalog';
 
 export type Category = ModelEntry['category'];
 export type Difficulty = ModelEntry['difficulty'];
-export type LibrarySearch = { q?: string; cat?: Category; diff?: Difficulty };
+export type LibrarySearch = { q?: string; cat?: Category; diff?: Difficulty; page?: number };
 
 export const CATEGORIES: Category[] = ['animals', 'flowers', 'objects', 'figures', 'bases'];
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
+export const PAGE_SIZE = 12;
 
 /**
  * Search params from the URL; anything unknown or empty becomes undefined, never an error.
@@ -14,10 +15,13 @@ export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
  */
 export function parseLibrarySearch(search: Record<string, unknown>): LibrarySearch {
   const q = typeof search.q === 'string' ? search.q.trim() : '';
+  const page = Number(search.page);
   return {
     q: q || undefined,
     cat: CATEGORIES.find((c) => c === search.cat),
-    diff: DIFFICULTIES.find((d) => d === search.diff)
+    diff: DIFFICULTIES.find((d) => d === search.diff),
+    // page 1 stays out of the URL
+    page: Number.isInteger(page) && page > 1 ? page : undefined
   };
 }
 
