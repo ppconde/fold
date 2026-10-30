@@ -360,7 +360,7 @@ test.describe('a reverse fold step', () => {
     await page.goto(`/fold/crane?step=${NECK}`);
     await expect(page.locator('#instructions')).toContainText(/reverse fold/i);
     await expect(page.getByRole('list', { name: /turns inside out/ })).toBeVisible();
-    const sketch = await page.getByRole('list', { name: /turns inside out/ }).boundingBox();
+    const sketch = await page.locator('#instructions figure > svg').boundingBox();
     for (const name of ['Moves', 'Creases']) {
       const box = await page.getByRole('button', { name }).boundingBox();
       expect(Math.min(box?.width ?? 0, box?.height ?? 0)).toBeGreaterThanOrEqual(44);
@@ -381,30 +381,20 @@ test.describe('a reverse fold step', () => {
     await next(page);
     await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 1));
     await expect(page.getByRole('button', { name: 'Moves' })).toHaveAttribute('aria-pressed', 'true');
-    // and the next reverse fold's sketches (the head) start again at the first
-    const frames = page.locator('#instructions ol');
-    await frames.evaluate((el) => el.scrollTo({ left: 2 * el.clientWidth }));
-    await next(page);
-    await expect(page.locator('main')).toHaveAttribute('data-step', String(NECK + 2));
-    expect(await frames.evaluate((el) => el.scrollLeft)).toBe(0);
   });
 
-  test('a swipe moves through the sketches, and the animation leaves them be', async ({ page }, info) => {
-    test.skip(info.project.name !== 'phone', 'one sketch at a time is the phone sheet');
+  test('the big drawing follows the fold, and picking a drawing puts the fold at its moment', async ({ page }) => {
     await page.goto(`/fold/crane?step=${NECK}`);
     const sheet = page.locator('#instructions');
-    // open on a first visit; isVisible() doesn't wait, so on a slow runner it raced the render
     await expect(sheet).toBeVisible();
-    const slider = page.getByRole('slider');
-    const frames = sheet.locator('ol');
-    const dots = sheet.locator('[aria-hidden="true"] > i');
-    await slider.fill('100');
-    await expect(dots.nth(0)).toHaveAttribute('data-current', 'true');
-    await frames.evaluate((el) => el.scrollTo({ left: 2 * el.clientWidth }));
-    await expect(dots.nth(2)).toHaveAttribute('data-current', 'true');
-    await slider.fill('10');
-    await expect(dots.nth(2)).toHaveAttribute('data-current', 'true');
-    expect(await frames.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth))).toBe(2);
+    const picks = sheet.getByRole('list', { name: /turns inside out/ }).getByRole('button');
+    await page.getByRole('slider').fill('100');
+    await expect(picks.nth(2)).toHaveAttribute('aria-current', 'step');
+    await page.getByRole('slider').fill('5');
+    await expect(picks.nth(0)).toHaveAttribute('aria-current', 'step');
+    await picks.nth(1).click();
+    await expect(picks.nth(1)).toHaveAttribute('aria-current', 'step');
+    await expect(page.locator('main')).not.toHaveAttribute('data-progress', '5');
   });
 
   test('a normal step has no toggle', async ({ page }) => {

@@ -65,7 +65,7 @@ Books show the two sides of the paper by tone: the coloured side shaded or colou
 ## How the app uses it
 
 - **Crease diagram** (`src/player/CreaseDiagram.module.css`): valley `stroke-dasharray: 6 4` (dashed), mountain `8 3 2 3` (dash-dot). It already follows the system.
-- **"How" drawings for reverse folds** (`src/player/how-drawing.ts`, drawn from the model): they use the marks above. The fold line is a mountain line, there is a push mark at the spine, a curved arrow shows the tip's path, a dotted outline shows where the flap lands, the white inside shows wherever the layers part, and the flipping edge is yellow (below).
+- **"How" drawings for reverse folds** (`src/player/how-drawing.ts`, drawn from the model): each frame is the stage's own pose at the moment it stands for, and the tip's arrow follows the path the stage takes, so drawing and animation agree. They use the marks above. The fold line is a mountain line, there is a push mark at the spine, a curved arrow shows the tip's path, a dotted outline shows where the flap lands, the white inside shows wherever the layers part, and the flipping edge is yellow (below).
 - **On-stage 3D marks on reverse folds** (`src/fold/reverse.ts`, drawn by `src/player/Paper.tsx`) use the system's own marks, as a book draws the step:
   - the fold line is dash-dot, a mountain fold;
   - a hollow push arrow lies flat on the paper, filled with the paper's back colour, pointing at the folded edge where the fold line meets it. Only the one on the camera's side of the paper shows;
