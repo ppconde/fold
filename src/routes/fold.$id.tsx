@@ -4,7 +4,7 @@ import { FoldError } from '../fold/load-model';
 import { useT } from '../i18n/LanguageProvider';
 import { currentLang, localized, titles } from '../i18n/lang';
 import { fetchModel } from '../models/catalog';
-import { writeLastModel } from '../player/browser';
+import { readStep, writeLastModel, writeStep } from '../player/browser';
 import { loadStage } from '../player/load-stage';
 import { Player } from '../player/Player';
 import pages from '../styles/pages.module.css';
@@ -35,11 +35,12 @@ function FoldPage() {
   useEffect(() => writeLastModel(entry.id), [entry.id]);
   const onSettle = useCallback(
     (settled: number) => {
+      writeStep(entry.id, settled);
       if (settled !== step) void navigate({ search: { step: settled }, replace: true });
     },
-    [navigate, step]
+    [navigate, step, entry.id]
   );
-  return <Player key={entry.id} entry={entry} model={model} initialStep={step ?? 0} onSettle={onSettle} />;
+  return <Player key={entry.id} entry={entry} model={model} initialStep={step ?? readStep(entry.id)} onSettle={onSettle} />;
 }
 
 function ModelNotFound() {
