@@ -212,6 +212,13 @@
   font-family: var(--font-sans);
 }
 
+/* a bigger mark on a wide screen, where the small one gets lost */
+@media (min-width: 900px) {
+  .helpButton {
+    font-size: 1.35rem;
+  }
+}
+
 .help {
   width: min(24rem, calc(100vw - 2rem));
   max-height: 85dvh;
