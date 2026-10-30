@@ -164,6 +164,7 @@ export function loadModel(json: unknown): Model {
       rotation: [...rotation] as Vec3,
       faceOrders,
       ...(landedOrders ? { landedOrders } : {}),
+      ...(frame['foldapp:pivot'] === true ? { pivot: true } : {}),
       path,
       cuts
     });

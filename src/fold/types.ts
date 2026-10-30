@@ -25,6 +25,9 @@ export type Step = {
   orderedAt?: number[];
   /** Angles of every edge partway through the step, evenly spaced (k of n at (k + 1) / (n + 1)). Empty: straight. */
   path: number[][];
+  /** Flaps that turn over turn about the edges they wrap, not lifted clear of the paper they pass (set by the
+   * model build where no paper then passes through paper). */
+  pivot?: boolean;
   /** Slit edges cut in this step (a step that cuts moves no crease). */
   cuts: Cut[];
 };
