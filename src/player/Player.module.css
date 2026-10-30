@@ -627,9 +627,3 @@
   background: var(--ivory);
   box-shadow: 0 8px 24px rgb(43 42 40 / 0.08);
 }
-
-.startsFrom {
-  margin: 0.15rem 0 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-}

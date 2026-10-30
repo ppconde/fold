@@ -7,7 +7,6 @@ export default s.source({
   name: { en: 'Basic shape 1', pt: 'Forma básica 1' },
   japaneseName: 'Kihonkei 1',
   category: 'bases',
-  buildsOn: 'square-base',
   difficulty: 'medium',
   tags: ['squashed square base', 'base'],
   paperColor: '#C8763A',

@@ -7,10 +7,6 @@ export type ModelEntry = {
   japaneseName?: string;
   category: 'animals' | 'flowers' | 'objects' | 'figures' | 'bases';
   difficulty: 'easy' | 'medium' | 'hard';
-  /** The id of the base this model starts from. */
-  buildsOn?: string;
-  /** The step the lesson opens at when the link names none: the end of the base's steps. */
-  startStep?: number;
   tags: string[];
   thumbnail?: string;
 };
@@ -36,11 +32,11 @@ export async function fetchIndex(): Promise<{ defaultModel: string; models: Mode
   return index as { defaultModel: string; models: ModelEntry[] };
 }
 
-/** The model with this id and the entry of the base it starts from, or null when the library does not list it. */
-export async function fetchModel(id: string): Promise<{ entry: ModelEntry; model: Model; base?: ModelEntry } | null> {
+/** The model with this id, or null when the library does not list it. */
+export async function fetchModel(id: string): Promise<{ entry: ModelEntry; model: Model } | null> {
   const { models } = await fetchIndex();
   const entry = models.find((e) => e.id === id);
   if (!entry) return null;
   const json = await readJson(`/models/${id}.fold`, 'model file');
-  return { entry, model: loadModel(json), base: models.find((e) => e.id === entry.buildsOn) };
+  return { entry, model: loadModel(json) };
 }
