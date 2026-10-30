@@ -10,6 +10,7 @@ import kannonBase from './kannon-base';
 import kiteBase from './kite-base';
 import squareBase from './square-base';
 import tulip from './tulip';
+import whale from './whale';
 
 /** Models authored as code, in library order. */
 export const sources: ModelSource[] = [
@@ -18,6 +19,7 @@ export const sources: ModelSource[] = [
   tulip,
   cicada,
   dove,
+  whale,
   squareBase,
   kiteBase,
   kannonBase,

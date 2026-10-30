@@ -13,6 +13,7 @@ test('home leads through the library to a model', async ({ page }) => {
     /Tulip/,
     /Cicada/,
     /Dove/,
+    /Whale/,
     /Square base/,
     /Kite base/,
     /Kannon fold/,
@@ -49,7 +50,7 @@ test('filters update the URL and the cards, and survive a reload', async ({ page
   await expect(models).toHaveText([/Tulip/]);
 
   await page.getByRole('button', { name: 'All' }).click();
-  await expect(models).toHaveCount(11);
+  await expect(models).toHaveCount(12);
 });
 
 test('an empty result offers to clear the filters', async ({ page }) => {
@@ -57,12 +58,12 @@ test('an empty result offers to clear the filters', async ({ page }) => {
   await expect(page.getByText('No folds match.')).toBeVisible();
   await page.getByRole('button', { name: 'Clear filters' }).click();
   await expect(page).toHaveURL(/\/library$/);
-  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveCount(11);
+  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveCount(12);
 });
 
 test('a bad search param falls back to the full library', async ({ page }) => {
   await page.goto('/library?cat=cars&diff=7');
-  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveCount(11);
+  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveCount(12);
   await expect(page.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
 });
 
@@ -111,7 +112,7 @@ test('the menu Library link clears a typed search', async ({ page }) => {
   await page.getByRole('link', { name: 'Library' }).click();
   await expect(page).toHaveURL(/\/library$/);
   await expect(box).toHaveValue('');
-  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveCount(11);
+  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveCount(12);
 });
 
 test('difficulty sits on its own row under the categories', async ({ page }) => {
