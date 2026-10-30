@@ -150,7 +150,7 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
   const [spineStart, spineEnd] = [marks(fan.from, isSpine), spines[2]];
   const folds = poses.map((pose) => marks(pose, isFold));
 
-  // one size for every frame, holding each frame's flap and marks around the flap's centre, with a margin
+  // one size for every frame
   const ends = (segs: Seg[]) => segs.flatMap((g) => [g.from, g.to]);
   const marksOf = [
     [...ends(folds[0]), ...ends(spines[0])],
@@ -161,20 +161,17 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
     const [xs, ys] = [flap.map((p) => p[0]), flap.map((p) => p[1])];
     return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
   });
-  const reach = Math.max(
-    ...centres.flatMap((c, i) =>
-      [...flaps[i], ...marksOf[i]].flatMap((p) => [Math.abs(p[0] - c[0]), Math.abs(p[1] - c[1])])
-    )
-  );
-  const size = 2 * reach * 1.15;
+  const spread = (ps: Vec2[], a: 0 | 1) => Math.max(...ps.map((p) => p[a])) - Math.min(...ps.map((p) => p[a]));
+  const helds = flaps.map((flap, i) => [...flap, ...marksOf[i]]);
+  // close in: just room for the widest frame's flap and marks, and a little for the arrow head and strokes
+  const size = Math.max(...helds.flatMap((ps) => [spread(ps, 0), spread(ps, 1)])) * 1.12;
   const square = (c: Vec2): HowFrame['box'] => [c[0] - size / 2, c[1] - size / 2, size, size];
   // then centred on the paper it shows when all of it fits, as far as the flap and marks still do; a close-up of a
   // bigger model, which can't fit, stays centred on the flap
   const boxes = centres.map((c, i) => {
     const ink = frameFaces[i].flatMap((f) => f.points);
-    const span = (a: 0 | 1) => Math.max(...ink.map((p) => p[a])) - Math.min(...ink.map((p) => p[a]));
-    const cut = span(0) > size || span(1) > size;
-    const held = [...flaps[i], ...marksOf[i]];
+    const cut = spread(ink, 0) > size || spread(ink, 1) > size;
+    const held = helds[i];
     const centreOn = (axis: 0 | 1) => {
       const [lo, hi] = [Math.min(...held.map((p) => p[axis])), Math.max(...held.map((p) => p[axis]))];
       const inkMid = (Math.min(...ink.map((p) => p[axis])) + Math.max(...ink.map((p) => p[axis]))) / 2;
