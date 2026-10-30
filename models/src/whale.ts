@@ -1,3 +1,4 @@
+import { Euler, MathUtils, Quaternion, Vector3 } from 'three';
 import type { Vec2 } from '../../src/fold/types';
 import { overlap } from '../arrange';
 import { diamond, has, lacks } from '../sequence';
@@ -136,8 +137,20 @@ s.fold('tail', d(1, TAIL), d(1 + Math.sin(LEAN), TAIL - Math.cos(LEAN)), {
   // the tail's layers only: past the belly the line would catch the fins
   only: (_, __, outline) => outline.some((v) => diamondOf(v)[1] > TAIL),
   hold: d(1.2, -0.3),
-  en: 'Fold the tail up in front. Your whale is done.',
-  pt: 'Dobra a cauda para cima, para a frente. A tua baleia está pronta.'
+  en: 'Fold the tail up in front.',
+  pt: 'Dobra a cauda para cima, para a frente.'
+});
+// stood up off the table on its belly, then turned to face as the dove does: head to the left, toward you
+const D = MathUtils.DEG2RAD;
+const standing = new Euler().setFromQuaternion(
+  new Quaternion()
+    .setFromAxisAngle(new Vector3(0, 0, 1), 30 * D)
+    .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), 90 * D))
+    .multiply(new Quaternion().setFromEuler(new Euler(0, 180 * D, 135 * D)))
+);
+s.turn([standing.x / D, standing.y / D, standing.z / D], {
+  en: 'Stand the whale up on its belly. Your whale is done.',
+  pt: 'Põe a baleia de pé, assente na barriga. A tua baleia está pronta.'
 });
 
 export default s.source({
