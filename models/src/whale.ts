@@ -140,12 +140,13 @@ s.fold('tail', d(1, TAIL), d(1 + Math.sin(LEAN), TAIL - Math.cos(LEAN)), {
   en: 'Fold the tail up in front.',
   pt: 'Dobra a cauda para cima, para a frente.'
 });
-// stood up off the table on its belly, then turned to face as the dove does: head to the left, toward you
+// stood up off the table on its belly, leaning 25° toward you so its side shows past the camera's height, then turned
+// to face as the dove does: head to the left, toward you
 const D = MathUtils.DEG2RAD;
 const standing = new Euler().setFromQuaternion(
   new Quaternion()
     .setFromAxisAngle(new Vector3(0, 0, 1), 30 * D)
-    .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), 90 * D))
+    .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), (90 - 25) * D))
     .multiply(new Quaternion().setFromEuler(new Euler(0, 180 * D, 135 * D)))
 );
 s.turn([standing.x / D, standing.y / D, standing.z / D], {
