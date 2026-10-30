@@ -121,3 +121,54 @@ test('replaying a step leaves a camera the reader has moved where it is', async 
   await page.waitForTimeout(800);
   expect(await difference(page, moved, await canvas.screenshot())).toBeLessThan(0.03);
 });
+
+test('Reset view undoes a trackpad pinch as well as an orbit', async ({ page }) => {
+  await page.goto('/fold/tulip?step=3');
+  const canvas = page.locator('canvas');
+  await expect(canvas).toBeVisible();
+  await page.waitForTimeout(600); // the camera eases into place
+  const framed = await canvas.screenshot();
+
+  // a macOS trackpad pinch arrives as a wheel with ctrl held
+  const box = (await canvas.boundingBox()) as { x: number; y: number; width: number; height: number };
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.keyboard.down('Control');
+  for (let i = 0; i < 5; i++) await page.mouse.wheel(0, -60);
+  await page.keyboard.up('Control');
+  await page.waitForTimeout(800);
+  expect(await difference(page, framed, await canvas.screenshot())).toBeGreaterThan(0.05);
+
+  await page.getByRole('button', { name: 'Reset view' }).click();
+  await page.waitForTimeout(1200);
+  expect(await difference(page, framed, await canvas.screenshot())).toBeLessThan(0.01);
+});
+
+test('the view tumbles over the top, and Reset view sets it upright again', async ({ page }) => {
+  // CI renders in software, where every frame of a drag is slow
+  test.setTimeout(90_000);
+  await page.goto('/fold/tulip?step=3');
+  const canvas = page.locator('canvas');
+  await expect(canvas).toBeVisible();
+  await page.waitForTimeout(600); // the camera eases into place
+  const framed = await canvas.screenshot();
+
+  // drags of a quarter turn each: an orbit clamped at the pole stops changing after the second
+  const box = (await canvas.boundingBox()) as { x: number; y: number; width: number; height: number };
+  const x = box.x + box.width / 2;
+  const turn = async () => {
+    await page.mouse.move(x, box.y + box.height * 0.3);
+    await page.mouse.down();
+    await page.mouse.move(x, box.y + box.height * 0.55, { steps: 3 });
+    await page.mouse.up();
+    await page.waitForTimeout(800);
+  };
+  await turn();
+  await turn();
+  const overTop = await canvas.screenshot();
+  await turn();
+  expect(await difference(page, overTop, await canvas.screenshot())).toBeGreaterThan(0.01);
+
+  await page.getByRole('button', { name: 'Reset view' }).click();
+  await page.waitForTimeout(1500);
+  expect(await difference(page, framed, await canvas.screenshot())).toBeLessThan(0.01);
+});

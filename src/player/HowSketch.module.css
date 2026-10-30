@@ -13,14 +13,20 @@
 }
 
 .frames li {
-  display: grid;
-  gap: 0.3rem;
-  align-content: start;
   color: var(--muted);
   font-family: var(--font-sans);
   font-size: 0.75rem;
   line-height: 1.35;
   text-align: center;
+}
+
+/* each sketch shows its moment on the model */
+.frames button {
+  display: grid;
+  gap: 0.3rem;
+  align-content: start;
+  width: 100%;
+  padding: 0;
 }
 
 .frames svg {
@@ -33,7 +39,8 @@
   outline-offset: -1px;
 }
 
-.frames li[data-current="true"] svg {
+.frames li[data-current="true"] svg,
+.frames button:hover svg {
   outline-color: var(--charcoal);
 }
 

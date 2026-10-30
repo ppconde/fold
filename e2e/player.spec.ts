@@ -348,7 +348,7 @@ test.describe('a reverse fold step', () => {
   test('on a wide screen shows how and the creases together', async ({ page }, info) => {
     test.skip(info.project.name !== 'desktop', 'the side panel has room for both');
     await page.goto(`/fold/crane?step=${NECK}`);
-    await expect(page.getByRole('img', { name: /turns inside out/ })).toBeVisible();
+    await expect(page.getByRole('list', { name: /turns inside out/ })).toBeVisible();
     await expect(page.getByRole('img', { name: /Crease pattern/ })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Creases' })).toBeHidden();
     // drawn from the model: the flap's flipping edge picked out in each sketch
@@ -359,8 +359,8 @@ test.describe('a reverse fold step', () => {
     test.skip(info.project.name !== 'phone', 'the toggle is for the phone sheet');
     await page.goto(`/fold/crane?step=${NECK}`);
     await expect(page.locator('#instructions')).toContainText(/reverse fold/i);
-    await expect(page.getByRole('img', { name: /turns inside out/ })).toBeVisible();
-    const sketch = await page.getByRole('img', { name: /turns inside out/ }).boundingBox();
+    await expect(page.getByRole('list', { name: /turns inside out/ })).toBeVisible();
+    const sketch = await page.getByRole('list', { name: /turns inside out/ }).boundingBox();
     for (const name of ['Moves', 'Creases']) {
       const box = await page.getByRole('button', { name }).boundingBox();
       expect(Math.min(box?.width ?? 0, box?.height ?? 0)).toBeGreaterThanOrEqual(44);

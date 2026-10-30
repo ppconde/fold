@@ -9,7 +9,7 @@ import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, readPanelOpen, readPaper, writePanelOpen, writePaper } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
 import { HowSketch } from './HowSketch';
-import { sketchFrame } from './how';
+import { sketchFrame, sketchT } from './how';
 import { AgainIcon, BackIcon, NextIcon, StartIcon, ViewIcon } from './icons';
 import { loadStage } from './load-stage';
 import { PaperPicker } from './PaperPicker';
@@ -201,6 +201,7 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
               model={model}
               step={state.step}
               frame={sketchFrame(progress(state.t), landingAt(model, state.step))}
+              onPick={(i) => dispatch({ type: 'scrub', t: sketchT(i, landingAt(model, state.step)) })}
             />
             <p className={styles.insideOut}>{t.insideOut}</p>
             <CreaseDiagram model={model} step={state.step} />

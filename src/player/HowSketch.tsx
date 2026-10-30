@@ -81,8 +81,18 @@ function Frame({ frame, paperColor, k, head }: { frame: HowFrame; paperColor: st
 }
 
 /** How your hands make this reverse fold, in three drawings made from the model; on wide screens `frame`, the one
- * that goes with the fold on screen, is outlined. */
-export function HowSketch({ model, step, frame }: { model: Model; step: number; frame: 0 | 1 | 2 }) {
+ * that goes with the fold on screen, is outlined. Clicking a drawing calls `onPick` with it. */
+export function HowSketch({
+  model,
+  step,
+  frame,
+  onPick
+}: {
+  model: Model;
+  step: number;
+  frame: 0 | 1 | 2;
+  onPick: (frame: 0 | 1 | 2) => void;
+}) {
   const t = useT().player;
   // on the phone sheet the sketches are a row you swipe through at your own pace, apart from the animation;
   // the dots follow what's on screen
@@ -93,32 +103,35 @@ export function HowSketch({ model, step, frame }: { model: Model; step: number; 
   // the push mark and arrow head are sized for a frame 300 units wide
   const k = drawing.box[2] / 300;
   return (
-    <div className={styles.how} role="img" aria-label={[t.insideOut, ...t.howSteps].join(' ')}>
+    <div className={styles.how}>
       <ol
         className={styles.frames}
+        aria-label={t.insideOut}
         onScroll={(e) => setShown(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth) as 0 | 1 | 2)}
       >
         {drawing.frames.map((f, i) => (
           <li key={t.howSteps[i]} data-current={i === frame}>
-            <svg viewBox={drawing.box.join(' ')} aria-hidden="true">
-              {i === 1 && (
-                // the arrow's filled head, sized in screen pixels like its stroke
-                <marker
-                  id={head}
-                  viewBox="0 0 10 10"
-                  refX="9"
-                  refY="5"
-                  markerWidth={16 * k}
-                  markerHeight={16 * k}
-                  markerUnits="userSpaceOnUse"
-                  orient="auto"
-                >
-                  <path className={styles.head} d="M0 0L10 5L0 10Z" />
-                </marker>
-              )}
-              <Frame frame={f} paperColor={model.paperColor} k={k} head={head} />
-            </svg>
-            <span>{t.howSteps[i]}</span>
+            <button type="button" onClick={() => onPick(i as 0 | 1 | 2)}>
+              <svg viewBox={drawing.box.join(' ')} aria-hidden="true">
+                {i === 1 && (
+                  // the arrow's filled head, sized in screen pixels like its stroke
+                  <marker
+                    id={head}
+                    viewBox="0 0 10 10"
+                    refX="9"
+                    refY="5"
+                    markerWidth={16 * k}
+                    markerHeight={16 * k}
+                    markerUnits="userSpaceOnUse"
+                    orient="auto"
+                  >
+                    <path className={styles.head} d="M0 0L10 5L0 10Z" />
+                  </marker>
+                )}
+                <Frame frame={f} paperColor={model.paperColor} k={k} head={head} />
+              </svg>
+              <span>{t.howSteps[i]}</span>
+            </button>
           </li>
         ))}
       </ol>
