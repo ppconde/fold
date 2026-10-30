@@ -408,6 +408,8 @@ test.describe('a reverse fold step', () => {
     await page.getByRole('slider').fill('5');
     await expect(dots.nth(0)).toHaveAttribute('data-current', 'true');
     await expect.poll(shown).toBe(0);
+    // a swipe, as a hand gives it (the row's own scrolls, following the fold, don't pick)
+    await row.dispatchEvent('pointerdown');
     await row.evaluate((el) => el.scrollTo({ left: 2 * el.clientWidth }));
     await expect(dots.nth(2)).toHaveAttribute('data-current', 'true');
     await expect(page.locator('main')).not.toHaveAttribute('data-progress', '5');

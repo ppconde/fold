@@ -123,30 +123,27 @@ export function HowSketch({
   const drawing = useMemo(() => howDrawing(model, step), [model, step]);
   const row = useRef<HTMLOListElement>(null);
   const settle = useRef(0);
-  // the row is scrolling itself to the fold's drawing, not being swiped
-  const own = useRef(false);
+  // a hand on the row since it last came to rest: only then is a scroll a swipe, not the row following the fold
+  const swiped = useRef(false);
   const latest = useRef({ frame, onPick });
   latest.current = { frame, onPick };
-  const follow = (el: HTMLOListElement) => {
-    if (Math.round(el.scrollLeft / el.clientWidth) === latest.current.frame) return;
-    own.current = true;
-    el.scrollTo({ left: latest.current.frame * el.clientWidth, behavior: 'smooth' });
-  };
   // a no-op on wide screens, where the row doesn't scroll
-  // biome-ignore lint/correctness/useExhaustiveDependencies: frame changing is the trigger; follow reads it from latest
   useEffect(() => {
-    if (row.current) follow(row.current);
+    const el = row.current;
+    el?.scrollTo({ left: frame * el.clientWidth, behavior: 'smooth' });
   }, [frame]);
   useEffect(() => () => clearTimeout(settle.current), []);
-  // once a swipe comes to rest on another drawing, the stage goes to its moment; the row's own scrolls never pick
   const onScroll = (el: HTMLOListElement) => {
-    // the row's own scroll is over once it reaches the fold's drawing
-    if (own.current && Math.round(el.scrollLeft / el.clientWidth) === latest.current.frame) own.current = false;
     clearTimeout(settle.current);
     settle.current = window.setTimeout(() => {
+      if (!swiped.current) return;
+      swiped.current = false;
       const shown = Math.round(el.scrollLeft / el.clientWidth) as 0 | 1 | 2;
-      if (!own.current && shown !== latest.current.frame) latest.current.onPick(shown);
+      if (shown !== latest.current.frame) latest.current.onPick(shown);
     }, 150);
+  };
+  const hand = () => {
+    swiped.current = true;
   };
   if (!drawing) return null;
   return (
@@ -160,7 +157,15 @@ export function HowSketch({
           </span>
         ))}
       </figcaption>
-      <ol ref={row} className={styles.frames} aria-label={t.insideOut} onScroll={(e) => onScroll(e.currentTarget)}>
+      <ol
+        ref={row}
+        className={styles.frames}
+        aria-label={t.insideOut}
+        onScroll={(e) => onScroll(e.currentTarget)}
+        onPointerDown={hand}
+        onWheel={hand}
+        onKeyDown={hand}
+      >
         {drawing.frames.map((f, i) => (
           <li key={t.howSteps[i]}>
             <button
