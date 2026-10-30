@@ -54,13 +54,13 @@ function onSegment(v: Vec2, a: Vec2, b: Vec2, interior = false): boolean {
 const onOutline = (v: Vec2, poly: Vec2[]) => poly.some((a, i) => onSegment(v, a, poly[(i + 1) % poly.length]));
 const D = MathUtils.DEG2RAD;
 const rotationOf = (e: Vec3) => new Matrix4().makeRotationFromEuler(new Euler(e[0] * D, e[1] * D, e[2] * D)).elements;
-/** Paper → view on the table plane for a whole-model rotation: R (p − c) + c, c the sheet's middle. */
-function viewOf(e: Vec3): Matrix3 {
+/** Paper → view on the table plane for a whole-model rotation: R (p − c) + c, c the middle of a `size` sheet. */
+function viewOf(e: Vec3, [w, h]: Vec2): Matrix3 {
   const r = rotationOf(e);
   return new Matrix3()
-    .makeTranslation(0.5, 0.5)
+    .makeTranslation(w / 2, h / 2)
     .multiply(new Matrix3().set(r[0], r[4], 0, r[1], r[5], 0, 0, 0, 1))
-    .multiply(new Matrix3().makeTranslation(-0.5, -0.5));
+    .multiply(new Matrix3().makeTranslation(-w / 2, -h / 2));
 }
 /** How far toward flat a fold-and-unfold goes before it opens again. */
 const PEAK = 0.97;
@@ -95,23 +95,18 @@ type FoldOptions = Text & {
 
 /**
  * Write a model as the folds a person makes. The sheet starts turned by `start` about its centre (as the
- * player shows it after a step with that rotation); every point is in that view, x right, y up, the unit
- * square's centre at (0.5, 0.5). Each `fold` is a simple fold: everything left of the line p→q (or the pieces
- * `only` picks) turns over that line. The result is the spec §8 format: crease segments in flat-paper
+ * player shows it after a step with that rotation); every point is in that view, x right, y up, the sheet
+ * running from (0, 0) to `size` (the unit square unless given). Each `fold` is a simple fold: everything left
+ * of the line p→q (or the pieces `only` picks) turns over that line. The result is the spec §8 format: crease segments in flat-paper
  * coordinates, and steps as changed angles.
  */
-export function foldSequence(start: Vec3 = [0, 0, 0]) {
+export function foldSequence(start: Vec3 = [0, 0, 0], size: Vec2 = [1, 1]) {
   const r = rotationOf(start);
-  const toView = viewOf(start);
+  const toView = viewOf(start, size);
   let turned: Vec3 | null = null;
   let pieces: Piece[] = [
     {
-      outline: [
-        [0, 0],
-        [1, 0],
-        [1, 1],
-        [0, 1]
-      ],
+      outline: [[0, 0], [size[0], 0], size, [0, size[1]]],
       toView,
       frontUp: r[10] > 0,
       tags: []
@@ -196,7 +191,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
   };
   /** The pieces of the flat-folded crease pattern, laid out from the face at `held` (paper coordinates). */
   const relayer = (held: Vec2, still: Piece): Piece[] => {
-    const { vertices, edges, edgeCrease, faces } = arrange(creases);
+    const { vertices, edges, edgeCrease, faces } = arrange(creases, size);
     const polys = faces.map((f) => f.map((v) => vertices[v]));
     const root = polys.findIndex((poly) => inside(held, poly));
     const out: (Piece | undefined)[] = [];
@@ -239,7 +234,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
      */
     turn(rotation: Vec3, text: Text) {
       if (turned) {
-        const delta = viewOf(rotation).multiply(viewOf(turned).invert());
+        const delta = viewOf(rotation, size).multiply(viewOf(turned, size).invert());
         const flipped = rotationOf(rotation)[10] * rotationOf(turned)[10] < 0;
         pieces = pieces.map((pc) => ({
           ...pc,
@@ -493,7 +488,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
       steps.push(step);
     },
     source(entry: Omit<ModelSource, 'creases' | 'steps'>): ModelSource {
-      return { ...entry, creases, steps };
+      return { ...entry, size, creases, steps };
     }
   };
   return api;

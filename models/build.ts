@@ -44,6 +44,8 @@ export type ModelSource = Omit<ModelEntry, 'thumbnail'> & {
   paperColor: string;
   /** Collapses: solve each tearing step's path, and read the layer order off the motion (models/solve.ts). */
   solve?: boolean;
+  /** The sheet's width and height when it isn't the unit square. */
+  size?: Vec2;
   creases: Record<string, Crease>;
   steps: SourceStep[];
 };
@@ -92,7 +94,7 @@ function faceOrdersOf(stack: StackPiece[], vertices: Vec2[], faces: number[][]):
 
 /** The FOLD file for `src`, in the shape `loadModel` reads. */
 export function buildFold(src: ModelSource) {
-  const { vertices, edges, assignments, edgeCrease, faces } = arrange(src.creases);
+  const { vertices, edges, assignments, edgeCrease, faces } = arrange(src.creases, src.size);
   const angles: Record<string, number> = {};
   let orders = '[]';
   const frames = src.steps.map((step, i) => {

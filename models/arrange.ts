@@ -3,24 +3,6 @@ import type { Assignment, Edge, Vec2 } from '../src/fold/types';
 export type Crease = { from: Vec2; to: Vec2; assignment: 'M' | 'V' | 'F' | 'C' };
 
 const EPS = 1e-6;
-const BORDER: [Vec2, Vec2][] = [
-  [
-    [0, 0],
-    [1, 0]
-  ],
-  [
-    [1, 0],
-    [1, 1]
-  ],
-  [
-    [1, 1],
-    [0, 1]
-  ],
-  [
-    [0, 1],
-    [0, 0]
-  ]
-];
 const cross = (a: Vec2, b: Vec2) => a[0] * b[1] - a[1] * b[0];
 const sub = (a: Vec2, b: Vec2): Vec2 => [a[0] - b[0], a[1] - b[1]];
 /** Signed area, positive when the polygon runs counter-clockwise. */
@@ -57,13 +39,20 @@ export function overlap(a: Vec2[], b: Vec2[]): { area: number; centre: Vec2 } {
 }
 
 /**
- * Planar graph of the unit square cut by `creases`: every segment is split where another one meets it,
- * points closer than 1e-6 merge, and faces run counter-clockwise. `edgeCrease[e]` names the crease edge e
+ * Planar graph of the sheet from (0, 0) to `size` cut by `creases`: every segment is split where another one
+ * meets it, points closer than 1e-6 merge, and faces run counter-clockwise. `edgeCrease[e]` names the crease edge e
  * lies on (null for the border). Crease ends must be exact: compute them, don't round them.
  */
-export function arrange(creases: Record<string, Crease>) {
+export function arrange(creases: Record<string, Crease>, [w, h]: Vec2 = [1, 1]) {
+  const corners: Vec2[] = [
+    [0, 0],
+    [w, 0],
+    [w, h],
+    [0, h]
+  ];
+  const border = corners.map((a, i): [Vec2, Vec2] => [a, corners[(i + 1) % 4]]);
   const segments = [
-    ...BORDER.map(([a, b]) => ({ a, b, name: null as string | null, assignment: 'B' as Assignment })),
+    ...border.map(([a, b]) => ({ a, b, name: null as string | null, assignment: 'B' as Assignment })),
     ...Object.entries(creases).map(([name, c]) => ({
       a: c.from,
       b: c.to,
