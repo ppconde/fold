@@ -163,7 +163,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
           {t.stepOf(state.step, state.last)}
           {reverse && <span className={styles.chip}>{t.reverseFold}</span>}
         </p>
-        <p className={styles.instruction} aria-live="polite">
+        {/* a reverse fold is said by its drawings and their captions: the sentence is for screen readers */}
+        <p className={reverse ? 'sr-only' : styles.instruction} aria-live="polite">
           {instruction}
         </p>
         {reverse ? (
