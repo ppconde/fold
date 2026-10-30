@@ -1,7 +1,10 @@
 import { type Matrix3, Vector2 } from 'three';
+import { foldedPositions, isReverseFold } from '../src/fold/fold';
+import { loadModel } from '../src/fold/load-model';
 import type { Vec2, Vec3 } from '../src/fold/types';
 import type { ModelEntry } from '../src/models/catalog';
 import { arrange, type Crease, overlap } from './arrange';
+import { crossings, tradesPlaces } from './check';
 import { motionOrders, solvePaths } from './solve';
 
 /** Keyframes on the homepage's all-at-once unfold: every crease travels far, so the solver needs small steps. */
@@ -203,7 +206,29 @@ export function buildFold(src: ModelSource) {
   solvePaths({ ...fold, file_frames: cuts.length ? [cutFirst, last] : [last] }, UNFOLD_KNOTS);
   const knots = [...(last['foldapp:path'] ?? []), ...(swung.some((a, e) => a !== end[e]) ? [swung] : [])];
   const unfold = knots.map((knot) => knot.map((a) => Math.round(a * 100) / 100));
-  return unfold.length ? { ...fold, 'foldapp:unfold': unfold } : fold;
+  return markPivots(unfold.length ? { ...fold, 'foldapp:unfold': unfold } : fold);
+}
+
+/**
+ * Marks the steps whose flaps turn about the edges they wrap (foldapp:pivot), so they keep to their hinges: each
+ * plain step (no reverse fold, tuck or path) where that changes the motion and no paper then passes through or
+ * changes places with other paper, sampled as checkModel samples. Elsewhere flaps lift clear of what they pass.
+ */
+function markPivots<F extends Parameters<typeof loadModel>[0] & { file_frames: object[] }>(fold: F): F {
+  const model = loadModel(fold);
+  const ts = Array.from({ length: 10 }, (_, i) => (i + 1) / 10);
+  for (let k = 1; k < model.steps.length; k++) {
+    const step = model.steps[k];
+    if (isReverseFold(model, k) || step.landedOrders || step.path.length) continue;
+    const tried = { ...model, steps: model.steps.map((s, i) => (i === k ? { ...s, pivot: true } : s)) };
+    const plain = foldedPositions(model, k, 0.5).flat(2);
+    const changed = foldedPositions(tried, k, 0.5)
+      .flat(2)
+      .some((x, i) => Math.abs(x - plain[i]) > 1e-9);
+    if (changed && ts.every((t) => !crossings(tried, k, t).length) && !tradesPlaces(tried, k, ts).length)
+      Object.assign(fold.file_frames[k - 1], { 'foldapp:pivot': true });
+  }
+  return fold;
 }
 
 /** The library entry for `src`, given every authored model (to find the base it builds on). */

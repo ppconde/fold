@@ -630,6 +630,29 @@ describe('sheets', () => {
   });
 });
 
+describe('pivots', () => {
+  it('keeps the crane’s wings on their hinges as they fold down', () => {
+    const crane = loadModel(
+      JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8'))
+    );
+    const k = 19;
+    expect(crane.steps[k].pivot).toBe(true);
+    const gap = (e: number, t: number) => {
+      const at = foldedPositions(crane, k, t);
+      const [p, q] = crane.edgeFaces[e].map((f) =>
+        crane.edges[e].map((v) => new Vector3(...at[f][crane.faces[f].indexOf(v)]))
+      );
+      return Math.max(p[0].distanceTo(q[0]), p[1].distanceTo(q[1]));
+    };
+    crane.edges.forEach((_, e) => {
+      if (crane.steps[k].angles[e] === crane.steps[k - 1].angles[e]) return;
+      // no wider mid-fold than at either end (lifted clear, a wing's hinge opened 15 layers)
+      for (const t of [0.25, 0.5, 0.75])
+        expect(gap(e, t)).toBeLessThanOrEqual(Math.max(gap(e, 0), gap(e, 1)) + LAYER_GAP);
+    });
+  });
+});
+
 describe('reverse folds', () => {
   const committed = (id: string) =>
     loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));

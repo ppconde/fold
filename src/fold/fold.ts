@@ -340,11 +340,8 @@ function plainPositions(model: Model, step: number, t: number): Vec3[][] {
   if (step === 0) return model.faces.map((f) => f.map((v): Vec3 => [...model.vertices[v], 0]));
 
   const cur = model.steps[step];
-  const angles = anglesAt(model, step, t);
-  const T = rootTransforms(model, angles, step);
   const s = progress(t);
   const turn = stepRotation(model, step, s);
-  const pose = anchorFor(model, step).clone().multiply(T[cur.fixedFace].clone().invert());
   // Each face is lifted along its own normal by height × facing, blended with the fold itself: a stack that
   // turns over keeps its inner order and ends at exactly its new heights, and stacks carried by a turn or an
   // opening fold stay apart. While a flap travels, the moving faces also shift together, straight up or down,
@@ -356,10 +353,15 @@ function plainPositions(model: Model, step: number, t: number): Vec3[][] {
 
   const C = treeChange(model, step);
   const reverse = isReverseFold(model, step);
-  const poses = model.faces.map((_, f) => {
-    const m = pose.clone().multiply(T[f]);
-    return C ? m.multiply(fade(C[f], s)) : m;
-  });
+  const posesAt = (at: number, eased: number) => {
+    const T = rootTransforms(model, anglesAt(model, step, at), step);
+    const pose = anchorFor(model, step).clone().multiply(T[cur.fixedFace].clone().invert());
+    return model.faces.map((_, f) => {
+      const m = pose.clone().multiply(T[f]);
+      return C ? m.multiply(fade(C[f], eased)) : m;
+    });
+  };
+  const poses = posesAt(t, s);
   // a tuck lands on the stack its motion makes, then its layers change places while the paper holds still
   const landing = reverse ? 1 : landingAt(model, step);
   const mid = cur.landedOrders && !reverse ? stackAt(model, step, true) : to;
@@ -372,6 +374,11 @@ function plainPositions(model: Model, step: number, t: number): Vec3[][] {
   const open = endsOpen(model, step);
   const roots = open ? flapRoots(model, poses, lifts, cur.fixedFace) : lifts.map(() => 0);
   const up = new Vector3(0, 0, 1).transformDirection(poses[cur.fixedFace]);
+  // a flap turning over in a fold that ends flat turns about the edges of the layers it wraps, like a page about
+  // a book's spine: about an axis lifted halfway between where its layer starts and ends. Its lift turns with it,
+  // so it keeps to its hinge and needs no lift to clear the paper it passes.
+  const turned =
+    cur.pivot && s > 0 && s < 1 ? pivotLifts(model, step, poses, posesAt(0, 0), posesAt(1, 1), from, to) : [];
   const point = new Vector3();
   const normal = new Vector3();
   const facing = new Vector3();
@@ -387,12 +394,52 @@ function plainPositions(model: Model, step: number, t: number): Vec3[][] {
       facing.set(0, 0, 1).transformDirection(m);
       normal.addScaledVector(up.clone().addScaledVector(facing, -up.dot(facing)), Math.abs(lift));
     }
-    const shift = LAYER_GAP * clearance[f] * rise;
+    const shift = turned[f] ? 0 : LAYER_GAP * clearance[f] * rise;
+    if (turned[f]) normal.copy(turned[f]);
     return face.map((v) => {
-      point.set(model.vertices[v][0], model.vertices[v][1], lift).applyMatrix4(m).add(normal);
+      point
+        .set(model.vertices[v][0], model.vertices[v][1], turned[f] ? 0 : lift)
+        .applyMatrix4(m)
+        .add(normal);
       point.z += shift;
       return point.applyMatrix4(turn).toArray() as Vec3;
     });
+  });
+}
+
+/**
+ * For each face that moves this step, its offset off the paper turned about the edges it wraps: its lift as the step
+ * starts (`poses0`, `from`) and ends (`poses1`, `to`) are the two ends of a half-turn about their midpoint, and it
+ * turns as the face has turned since the start. Undefined for faces that stay.
+ */
+function pivotLifts(
+  model: Model,
+  step: number,
+  poses: Matrix4[],
+  poses0: Matrix4[],
+  poses1: Matrix4[],
+  from: Layers,
+  to: Layers
+): (Vector3 | undefined)[] {
+  const moving = movingFaces(model, step);
+  const lift = (m: Matrix4, layers: Layers, f: number) =>
+    new Vector3(0, 0, 1).transformDirection(m).multiplyScalar(LAYER_GAP * layers.heights[f] * layers.up[f]);
+  // only a flap that turns over in one half-turn (the paper's up turned to its down) has its ends on one arc
+  const flips = [...moving].every((f) => {
+    const n0 = new Vector3(0, 0, 1).transformDirection(poses0[f]);
+    return new Vector3(0, 0, 1).transformDirection(poses1[f]).dot(n0) < -1 + EPSILON;
+  });
+  return poses.map((m, f) => {
+    if (!flips || !moving.has(f)) return undefined;
+    const start = lift(poses0[f], from, f);
+    const centre = start
+      .clone()
+      .add(lift(poses1[f], to, f))
+      .multiplyScalar(0.5);
+    const since = new Quaternion()
+      .setFromRotationMatrix(m)
+      .multiply(new Quaternion().setFromRotationMatrix(poses0[f]).invert());
+    return start.sub(centre).applyQuaternion(since).add(centre);
   });
 }
 
