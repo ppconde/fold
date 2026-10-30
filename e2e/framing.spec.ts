@@ -121,3 +121,24 @@ test('replaying a step leaves a camera the reader has moved where it is', async 
   await page.waitForTimeout(800);
   expect(await difference(page, moved, await canvas.screenshot())).toBeLessThan(0.03);
 });
+
+test('Reset view undoes a trackpad pinch as well as an orbit', async ({ page }) => {
+  await page.goto('/fold/tulip?step=3');
+  const canvas = page.locator('canvas');
+  await expect(canvas).toBeVisible();
+  await page.waitForTimeout(600); // the camera eases into place
+  const framed = await canvas.screenshot();
+
+  // a macOS trackpad pinch arrives as a wheel with ctrl held
+  const box = (await canvas.boundingBox()) as { x: number; y: number; width: number; height: number };
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.keyboard.down('Control');
+  for (let i = 0; i < 5; i++) await page.mouse.wheel(0, -60);
+  await page.keyboard.up('Control');
+  await page.waitForTimeout(800);
+  expect(await difference(page, framed, await canvas.screenshot())).toBeGreaterThan(0.05);
+
+  await page.getByRole('button', { name: 'Reset view' }).click();
+  await page.waitForTimeout(1200);
+  expect(await difference(page, framed, await canvas.screenshot())).toBeLessThan(0.01);
+});

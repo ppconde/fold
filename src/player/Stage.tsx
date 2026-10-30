@@ -80,6 +80,8 @@ function Scene({ model, step, t, playing, resetCount, frameStep, paper }: Props)
     document.documentElement.style.setProperty('--paper-to', String(stageDistance(aspect)));
     const d = reach * stageDistance(aspect);
     void c.setLookAt(cx, d * Math.cos(STAGE_POLAR), cz + d * Math.sin(STAGE_POLAR), cx, 0, cz, animate);
+    // a trackpad pinch zooms the lens (camera-controls turns ctrl+wheel into ZOOM), which setLookAt leaves alone
+    void c.zoomTo(1, animate);
   }, [cx, cz, reach, aspect, resetCount]);
 
   return (
