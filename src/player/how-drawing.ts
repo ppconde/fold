@@ -169,11 +169,11 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
   const size = 2 * reach * 1.15;
   const square = (c: Vec2): HowFrame['box'] => [c[0] - size / 2, c[1] - size / 2, size, size];
   // then centred on the paper it shows when all of it fits, as far as the flap and marks still do; a close-up of a
-  // bigger model, cut off at the frame's edge, stays centred on the flap
+  // bigger model, which can't fit, stays centred on the flap
   const boxes = centres.map((c, i) => {
-    const box = square(c);
     const ink = frameFaces[i].flatMap((f) => f.points);
-    const cut = ink.some((p) => [0, 1].some((a) => p[a] < box[a] || p[a] > box[a] + size));
+    const span = (a: 0 | 1) => Math.max(...ink.map((p) => p[a])) - Math.min(...ink.map((p) => p[a]));
+    const cut = span(0) > size || span(1) > size;
     const held = [...flaps[i], ...marksOf[i]];
     const centreOn = (axis: 0 | 1) => {
       const [lo, hi] = [Math.min(...held.map((p) => p[axis])), Math.max(...held.map((p) => p[axis]))];

@@ -140,6 +140,23 @@ describe('howDrawing', () => {
     expect(y).toBeLessThanOrEqual(Math.min(...inside.map((p) => p[1])));
   });
 
+  it('centres a drawing on the whole paper whenever it fits, like the neck’s first', () => {
+    for (const k of reverse)
+      for (const frame of draw(k).frames) {
+        const [x, y, size] = frame.box;
+        const ink = frame.faces.flatMap((f) => f.points);
+        const [xs, ys] = [ink.map((p) => p[0]), ink.map((p) => p[1])];
+        if (Math.max(...xs) - Math.min(...xs) > size || Math.max(...ys) - Math.min(...ys) > size) continue;
+        // all of it in the frame, unless a mark holds the frame off
+        const held = [...frame.spine.flatMap((s) => [s.from, s.to]), ...(frame.arrow ?? []), ...(frame.landing ?? [])];
+        const near = (v: number, edge: number) => Math.abs(v - edge) < 1e-9;
+        const pinned = held.some((p) => near(p[0], x) || near(p[0], x + size) || near(p[1], y) || near(p[1], y + size));
+        if (pinned) continue;
+        expect(Math.min(...xs) - x).toBeCloseTo(x + size - Math.max(...xs), 6);
+        expect(Math.min(...ys) - y).toBeCloseTo(y + size - Math.max(...ys), 6);
+      }
+  });
+
   it('draws no face edge-on, and the flap under the layers that cover it', () => {
     for (const k of reverse)
       for (const frame of draw(k).frames)
