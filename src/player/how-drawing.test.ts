@@ -73,7 +73,7 @@ describe('howDrawing', () => {
           })
         );
       const flap = d.frames[1].faces.filter((f) => f.subject).flatMap((f) => f.points);
-      expect(Math.min(...flap.map(toPath))).toBeLessThan(1e-3 * d.box[2]);
+      expect(Math.min(...flap.map(toPath))).toBeLessThan(1e-3 * d.frames[1].box[2]);
       // it bends, as the flap swings round on stage, rather than cutting straight across
       const [a, b] = [arrow[0], arrow[arrow.length - 1]];
       const chord = Math.hypot(b[0] - a[0], b[1] - a[1]);
@@ -104,24 +104,40 @@ describe('howDrawing', () => {
     }
   });
 
-  it('zooms onto the flap: the box holds it, and not much more', () => {
+  it('frames each drawing at one size that holds its flap and every mark, and not much more', () => {
     for (const k of reverse) {
       const d = draw(k);
-      const [x, y, w, h] = d.box;
-      const pts = [...d.flapStart, ...d.flapEnd];
-      for (const [px, py] of pts) {
-        expect(px).toBeGreaterThanOrEqual(x);
-        expect(px).toBeLessThanOrEqual(x + w);
-        expect(py).toBeGreaterThanOrEqual(y);
-        expect(py).toBeLessThanOrEqual(y + h);
+      const size = d.frames[0].box[2];
+      for (const frame of d.frames) {
+        const [x, y, w, h] = frame.box;
+        expect([w, h]).toEqual([size, size]);
+        const held = [...frame.spine.flatMap((s) => [s.from, s.to]), ...(frame.arrow ?? []), ...(frame.landing ?? [])];
+        for (const [px, py] of held) {
+          expect(px).toBeGreaterThanOrEqual(x - 1e-9);
+          expect(px).toBeLessThanOrEqual(x + size + 1e-9);
+          expect(py).toBeGreaterThanOrEqual(y - 1e-9);
+          expect(py).toBeLessThanOrEqual(y + size + 1e-9);
+        }
       }
+      const pts = [...d.flapStart, ...d.flapEnd];
       const extent = Math.max(
         Math.max(...pts.map((p) => p[0])) - Math.min(...pts.map((p) => p[0])),
         Math.max(...pts.map((p) => p[1])) - Math.min(...pts.map((p) => p[1]))
       );
-      expect(w).toBe(h);
-      expect(w).toBeLessThanOrEqual(1.6 * extent);
+      expect(size).toBeLessThanOrEqual(2.5 * extent);
     }
+  });
+
+  it('centres the tail’s finished drawing across on the paper it shows', () => {
+    const d = draw(reverse[1]);
+    const [x, y, size] = d.frames[2].box;
+    const inside = d.frames[2].faces
+      .flatMap((f) => f.points)
+      .filter(([px, py]) => px >= x && px <= x + size && py >= y && py <= y + size);
+    // across; up and down, the dotted edge where it was holds the frame where it can still show it
+    const [lo, hi] = [Math.min(...inside.map((p) => p[0])), Math.max(...inside.map((p) => p[0]))];
+    expect(Math.abs(lo - x - (x + size - hi))).toBeLessThan(0.02 * size);
+    expect(y).toBeLessThanOrEqual(Math.min(...inside.map((p) => p[1])));
   });
 
   it('draws no face edge-on, and the flap under the layers that cover it', () => {

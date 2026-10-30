@@ -27,10 +27,10 @@ export type HowFrame = {
   push: { at: Vec2; dir: Vec2 } | null;
   /** The tip's path as the 3D model takes it, to where it lands, with a filled head at its end (second frame). */
   arrow: Vec2[] | null;
+  /** A square viewBox centred on what this frame draws of the flap; every frame's is the same size, so they compare. */
+  box: [x: number, y: number, w: number, h: number];
 };
 export type HowDrawing = {
-  /** A square viewBox around the flap, as it starts and as it ends. */
-  box: [x: number, y: number, w: number, h: number];
   frames: [HowFrame, HowFrame, HowFrame];
   pivot: Vec2;
   flapStart: Vec2[];
@@ -146,12 +146,42 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
     at(foldedPositions(model, step, times[2] * (0.04 + (0.92 * j) / 32))[tf][ti])
   );
 
-  // the frame: around the flap as it starts, as the drawings pose it, and as it ends, square, with a margin
-  const all = [...flapStart, ...flapEnd, ...flaps.flat(), ...path];
-  const [x0, x1] = [Math.min(...all.map((p) => p[0])), Math.max(...all.map((p) => p[0]))];
-  const [y0, y1] = [Math.min(...all.map((p) => p[1])), Math.max(...all.map((p) => p[1]))];
-  const size = Math.max(x1 - x0, y1 - y0) * 1.45;
-  const box: HowDrawing['box'] = [(x0 + x1) / 2 - size / 2, (y0 + y1) / 2 - size / 2, size, size];
+  const spines = poses.map((pose) => marks(pose, isSpine));
+  const [spineStart, spineEnd] = [marks(fan.from, isSpine), spines[2]];
+  const folds = poses.map((pose) => marks(pose, isFold));
+
+  // one size for every frame, holding each frame's flap and marks around the flap's centre, with a margin
+  const ends = (segs: Seg[]) => segs.flatMap((g) => [g.from, g.to]);
+  const marksOf = [
+    [...ends(folds[0]), ...ends(spines[0])],
+    [...flapEnd, ...path, ...ends(folds[1]), ...ends(spines[1]), ...ends(spineEnd)],
+    [...ends(spineEnd), ...ends(spineStart)]
+  ];
+  const centres = flaps.map((flap): Vec2 => {
+    const [xs, ys] = [flap.map((p) => p[0]), flap.map((p) => p[1])];
+    return [(Math.min(...xs) + Math.max(...xs)) / 2, (Math.min(...ys) + Math.max(...ys)) / 2];
+  });
+  const reach = Math.max(
+    ...centres.flatMap((c, i) =>
+      [...flaps[i], ...marksOf[i]].flatMap((p) => [Math.abs(p[0] - c[0]), Math.abs(p[1] - c[1])])
+    )
+  );
+  const size = 2 * reach * 1.15;
+  const square = (c: Vec2): HowFrame['box'] => [c[0] - size / 2, c[1] - size / 2, size, size];
+  // then centred on the paper it shows when all of it fits, as far as the flap and marks still do; a close-up of a
+  // bigger model, cut off at the frame's edge, stays centred on the flap
+  const boxes = centres.map((c, i) => {
+    const box = square(c);
+    const ink = frameFaces[i].flatMap((f) => f.points);
+    const cut = ink.some((p) => [0, 1].some((a) => p[a] < box[a] || p[a] > box[a] + size));
+    const held = [...flaps[i], ...marksOf[i]];
+    const centreOn = (axis: 0 | 1) => {
+      const [lo, hi] = [Math.min(...held.map((p) => p[axis])), Math.max(...held.map((p) => p[axis]))];
+      const inkMid = (Math.min(...ink.map((p) => p[axis])) + Math.max(...ink.map((p) => p[axis]))) / 2;
+      return Math.min(lo + size / 2, Math.max(hi - size / 2, cut ? c[axis] : inkMid));
+    };
+    return square([centreOn(0), centreOn(1)]);
+  });
 
   // in the plane, across the pose's spine, pointing into its flap
   const across = (spine: Seg[], flap: Vec2[]): Vec2 => {
@@ -166,37 +196,36 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
     return (centre[0] - pivot[0]) * dir[0] + (centre[1] - pivot[1]) * dir[1] < 0 ? [-dir[0], -dir[1]] : dir;
   };
 
-  const spines = poses.map((pose) => marks(pose, isSpine));
-  const [spineStart, spineEnd] = [marks(fan.from, isSpine), spines[2]];
   const ghost = (segs: Seg[]) => segs.map((g) => ({ ...g, ghost: true }));
   const solid = (segs: Seg[]) => segs.map((g) => ({ ...g, ghost: false }));
   const [peekDir, pushDir] = [across(spines[0], flaps[0]), across(spines[1], flaps[1])];
   const shift = 0.03 * size;
   const none = { peek: null, landing: null, push: null, arrow: null };
   list[step] = {
-    box,
     pivot,
     flapStart,
     flapEnd,
     frames: [
       {
         ...none,
+        box: boxes[0],
         faces: frameFaces[0],
         // books draw the layers parted in the plane; on stage they part out of it, which a drawing head-on can't show
         peek: flaps[0].map((p): Vec2 => [p[0] + peekDir[0] * shift, p[1] + peekDir[1] * shift]),
-        fold: marks(poses[0], isFold),
+        fold: folds[0],
         spine: solid(spines[0])
       },
       {
         ...none,
+        box: boxes[1],
         faces: frameFaces[1],
-        fold: marks(poses[1], isFold),
+        fold: folds[1],
         spine: [...solid(spines[1]), ...ghost(spineEnd)],
         landing: flapEnd,
         push: { at: [pivot[0] - pushDir[0] * 0.04 * size, pivot[1] - pushDir[1] * 0.04 * size], dir: pushDir },
         arrow: path
       },
-      { ...none, faces: frameFaces[2], fold: [], spine: [...solid(spineEnd), ...ghost(spineStart)] }
+      { ...none, box: boxes[2], faces: frameFaces[2], fold: [], spine: [...solid(spineEnd), ...ghost(spineStart)] }
     ]
   };
   return list[step];

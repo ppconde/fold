@@ -2,7 +2,7 @@ import { useEffect, useId, useMemo, useRef } from 'react';
 import type { Model, Vec2 } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import styles from './HowSketch.module.css';
-import { type HowDrawing, type HowFrame, howDrawing } from './how-drawing';
+import { type HowFrame, howDrawing } from './how-drawing';
 
 const pts = (ps: Vec2[]) => ps.map((p) => p.join(',')).join(' ');
 const path = (segs: [Vec2, Vec2][]) => segs.map(([a, b]) => `M${a}L${b}`).join('');
@@ -79,7 +79,8 @@ function Frame({ frame, paperColor, k, head }: { frame: HowFrame; paperColor: st
 }
 
 /** One frame's drawing, with its own arrow head (ids are per page, and a frame shows in more than one place). */
-function Drawing({ box, frame, paperColor }: { box: HowDrawing['box']; frame: HowFrame; paperColor: string }) {
+function Drawing({ frame, paperColor }: { frame: HowFrame; paperColor: string }) {
+  const { box } = frame;
   const head = useId();
   // the push mark and arrow head are sized for a frame 300 units wide
   const k = box[2] / 300;
@@ -148,7 +149,7 @@ export function HowSketch({
   if (!drawing) return null;
   return (
     <figure className={styles.how}>
-      <Drawing box={drawing.box} frame={drawing.frames[frame]} paperColor={model.paperColor} />
+      <Drawing frame={drawing.frames[frame]} paperColor={model.paperColor} />
       {/* every caption in one cell, the others hidden, so the longest sets its height and nothing jumps */}
       <figcaption>
         {t.howSteps.map((caption, i) => (
@@ -174,7 +175,7 @@ export function HowSketch({
               aria-current={i === frame ? 'step' : undefined}
               onClick={() => onPick(i as 0 | 1 | 2)}
             >
-              <Drawing box={drawing.box} frame={f} paperColor={model.paperColor} />
+              <Drawing frame={f} paperColor={model.paperColor} />
             </button>
           </li>
         ))}
