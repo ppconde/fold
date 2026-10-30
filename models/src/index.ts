@@ -13,6 +13,7 @@ import pig from './pig';
 import squareBase from './square-base';
 import tulip from './tulip';
 import whale from './whale';
+import yakkoSan from './yakko-san';
 
 /** Models authored as code, in library order. */
 export const sources: ModelSource[] = [
@@ -24,6 +25,7 @@ export const sources: ModelSource[] = [
   whale,
   paperPlane,
   pig,
+  yakkoSan,
   squareBase,
   kiteBase,
   kannonBase,
