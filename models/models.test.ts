@@ -47,7 +47,7 @@ describe.each(sources.map((s) => [s.id, s] as const))('%s', (_, src) => {
 describe('models.json', () => {
   it('lists every authored model and opens a listed default', () => {
     const index = committed('models.json');
-    expect(index.models).toEqual(JSON.parse(JSON.stringify(sources.map((s) => entryOf(s, sources)))));
+    expect(index.models).toEqual(JSON.parse(JSON.stringify(sources.map(entryOf))));
     expect(index.models.map((m: { id: string }) => m.id)).toContain(DEFAULT_MODEL);
   });
 });

@@ -7,7 +7,6 @@ export default s.source({
   name: { en: 'Basic shape 2', pt: 'Forma básica 2' },
   japaneseName: 'Kihonkei 2',
   category: 'bases',
-  buildsOn: 'square-base',
   difficulty: 'medium',
   tags: ['bird base', 'base'],
   paperColor: '#9A4F6B',

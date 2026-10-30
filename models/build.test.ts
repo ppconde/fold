@@ -52,7 +52,7 @@ describe('buildFold', () => {
 
 describe('entryOf', () => {
   it('is the library entry with a thumbnail path', () => {
-    expect(entryOf(half, [half])).toEqual({
+    expect(entryOf(half)).toEqual({
       id: 'half',
       name: { en: 'Half', pt: 'Metade' },
       category: 'bases',
@@ -60,22 +60,5 @@ describe('entryOf', () => {
       tags: ['basic'],
       thumbnail: '/models/half.svg'
     });
-  });
-
-  it('opens a model that builds on a base at the end of its base', () => {
-    const quarter: ModelSource = {
-      ...half,
-      id: 'quarter',
-      category: 'objects',
-      buildsOn: 'half',
-      steps: [...half.steps, { fold: { middle: 0 }, en: 'Unfold.', pt: 'Desdobra.' }]
-    };
-    expect(entryOf(quarter, [half, quarter])).toMatchObject({ buildsOn: 'half', startStep: 1 });
-  });
-
-  it('refuses a base the model does not start with', () => {
-    const other: ModelSource = { ...half, id: 'other', buildsOn: 'half', steps: [{ ...half.steps[0], en: 'Fold.' }] };
-    expect(() => entryOf(other, [half, other])).toThrow(/half/);
-    expect(() => entryOf({ ...half, buildsOn: 'nope' }, [half])).toThrow(/nope/);
   });
 });

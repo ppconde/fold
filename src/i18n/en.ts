@@ -78,7 +78,6 @@ export const en = {
   } as Record<string, string>,
   player: {
     firstInstruction: 'Start with your sheet of paper, colored side up.',
-    startsFrom: 'Starts from:',
     stepOf: (n: number, total: number) => `Step ${n} · ${total}`,
     count: (n: number, total: number) => `${n}/${total}`,
     goToStep: 'Go to step',

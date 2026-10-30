@@ -9,8 +9,6 @@
       },
       "japaneseName": "Orizuru",
       "category": "animals",
-      "buildsOn": "basic-shape-2",
-      "startStep": 15,
       "difficulty": "medium",
       "tags": [
         "crane",
@@ -157,8 +155,6 @@
       },
       "japaneseName": "Kihonkei 1",
       "category": "bases",
-      "buildsOn": "square-base",
-      "startStep": 7,
       "difficulty": "medium",
       "tags": [
         "squashed square base",
@@ -174,8 +170,6 @@
       },
       "japaneseName": "Kihonkei 2",
       "category": "bases",
-      "buildsOn": "square-base",
-      "startStep": 7,
       "difficulty": "medium",
       "tags": [
         "bird base",
