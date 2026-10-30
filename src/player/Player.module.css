@@ -212,6 +212,13 @@
   font-family: var(--font-sans);
 }
 
+/* a bigger mark on a wide screen, where the small one gets lost */
+@media (min-width: 900px) {
+  .helpButton {
+    font-size: 1.35rem;
+  }
+}
+
 .help {
   width: min(24rem, calc(100vw - 2rem));
   max-height: 85dvh;
@@ -219,6 +226,17 @@
   padding: 1.5rem;
   color: var(--charcoal);
   font: 0.85rem / 1.4 var(--font-sans);
+}
+
+.help[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* the sheet scrolls under its close button, which stays in sight at the bottom */
+.helpBody {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .help::backdrop {
@@ -265,7 +283,8 @@
 }
 
 .help > button {
-  margin-top: 1.25rem;
+  align-self: start;
+  margin-top: 0.75rem;
   font-family: var(--font-sans);
 }
 
