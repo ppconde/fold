@@ -418,13 +418,12 @@ test.describe('a reverse fold step', () => {
     await expect.poll(shown).toBe(0);
   });
 
-  test('the tail, said by its drawings, leaves its sentence to screen readers', async ({ page }) => {
-    await page.goto(`/fold/crane?step=${NECK + 1}`);
-    const sentence = page.getByText(/make the tail/);
-    await expect(sentence).toHaveClass('sr-only');
-    await expect(page.locator('#instructions figcaption')).toBeVisible();
+  test('a reverse fold is said by its drawings: its sentence is left to screen readers', async ({ page }) => {
     await page.goto(`/fold/crane?step=${NECK}`);
-    await expect(page.getByText(/make the neck/)).toBeVisible();
+    await expect(page.getByText(/make the neck/)).toHaveClass('sr-only');
+    await expect(page.locator('#instructions figcaption')).toBeVisible();
+    await page.goto(`/fold/crane?step=${NORMAL}`);
+    await expect(page.locator('#instructions p[aria-live]')).toBeVisible();
   });
 
   test('a normal step has no toggle', async ({ page }) => {

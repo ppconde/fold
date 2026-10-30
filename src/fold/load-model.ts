@@ -165,7 +165,6 @@ export function loadModel(json: unknown): Model {
       faceOrders,
       ...(landedOrders ? { landedOrders } : {}),
       ...(frame['foldapp:pivot'] === true ? { pivot: true } : {}),
-      ...(frame['foldapp:howOnly'] === true ? { howOnly: true } : {}),
       path,
       cuts
     });
