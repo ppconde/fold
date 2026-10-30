@@ -1,3 +1,4 @@
+import { Euler, MathUtils, Quaternion, Vector3 } from 'three';
 import type { Vec2 } from '../../src/fold/types';
 import { overlap } from '../arrange';
 import { diamond, has, lacks } from '../sequence';
@@ -16,9 +17,9 @@ const [XL, XR, C, T] = [d(1 - k, 0), d(1 + k, 0), d(1, 0), d(1, 1)];
 // the long point folds behind about a fifth of the way up the kite; the fish base's side corners fold behind CORNER
 // in from the middle; each fin turns about a line from where the ear meets the back, FIN from the back's tail end:
 // nearly upright across the body, leaning toward the head enough that the ear, pointing at the head, swings down past
-// the belly toward the tail (at least 23° from upright); the tail reverse-folds up outside the body about a line from
-// TAIL on the back, leaning LEAN back from upright
-const [TIP, CORNER, FIN] = [-0.6, 0.3, (115 * Math.PI) / 180];
+// the belly toward the tail (at least 23° from upright), the fin then pointing 2 FIN − 180° down from the back; the
+// tail folds up about a line from TAIL on the back, leaning LEAN back from upright
+const [TIP, CORNER, FIN] = [-0.6, 0.3, (122 * Math.PI) / 180];
 const [TAIL, LEAN] = [0.85, (40 * Math.PI) / 180];
 
 /** Diamond coordinates of a flat-sheet point (the sheet is turned over, a corner toward you). */
@@ -130,15 +131,27 @@ s.fold('finB', fin, C, {
   en: 'Fold the ear behind the same way, for the other fin.',
   pt: 'Dobra a orelha de trás da mesma forma, para a outra barbatana.'
 });
-// outside reverse fold: the front layers' tip comes forward, the back layers' goes back, both wrapping up around the
-// body; the crease between them opens through flat on the way
+// the tail's layers fold up together to the front
 s.fold('tail', d(1, TAIL), d(1 + Math.sin(LEAN), TAIL - Math.cos(LEAN)), {
-  valley: lacks('back'),
+  valley: true,
   // the tail's layers only: past the belly the line would catch the fins
   only: (_, __, outline) => outline.some((v) => diamondOf(v)[1] > TAIL),
   hold: d(1.2, -0.3),
-  en: 'Reverse-fold the tail up around the outside of the body. Your whale is done.',
-  pt: 'Faz uma dobra invertida na cauda, para cima e por fora do corpo. A tua baleia está pronta.'
+  en: 'Fold the tail up in front.',
+  pt: 'Dobra a cauda para cima, para a frente.'
+});
+// stood up off the table on its belly, leaning 25° toward you so its side shows past the camera's height, then turned
+// to face as the dove does: head to the left, toward you
+const D = MathUtils.DEG2RAD;
+const standing = new Euler().setFromQuaternion(
+  new Quaternion()
+    .setFromAxisAngle(new Vector3(0, 0, 1), 30 * D)
+    .multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), (90 - 25) * D))
+    .multiply(new Quaternion().setFromEuler(new Euler(0, 180 * D, 135 * D)))
+);
+s.turn([standing.x / D, standing.y / D, standing.z / D], {
+  en: 'Stand the whale up on its belly. Your whale is done.',
+  pt: 'Põe a baleia de pé, assente na barriga. A tua baleia está pronta.'
 });
 
 export default s.source({
