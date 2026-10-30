@@ -97,6 +97,7 @@ export const pt: Dictionary = {
     ],
     insideOut: 'A aba vira do avesso e entra entre as camadas do corpo.',
     help: {
+      link: 'ajuda',
       open: 'Como usar',
       marks: 'As marcas',
       mountain: 'Dobra em montanha: o papel dobra para longe de ti ao longo da linha',

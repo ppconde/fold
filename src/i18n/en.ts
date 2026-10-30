@@ -94,6 +94,7 @@ export const en = {
     ],
     insideOut: "The flap turns inside out and goes in between the body's layers.",
     help: {
+      link: 'help',
       open: 'How to use',
       marks: 'The marks',
       mountain: 'Mountain fold: the paper folds away from you along the line',
