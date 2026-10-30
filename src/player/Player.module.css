@@ -221,6 +221,17 @@
   font: 0.85rem / 1.4 var(--font-sans);
 }
 
+.help[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* the sheet scrolls under its close button, which stays in sight at the bottom */
+.helpBody {
+  min-height: 0;
+  overflow-y: auto;
+}
+
 .help::backdrop {
   background: rgb(51 48 44 / 0.25);
 }
@@ -265,7 +276,8 @@
 }
 
 .help > button {
-  margin-top: 1.25rem;
+  align-self: start;
+  margin-top: 0.75rem;
   font-family: var(--font-sans);
 }
 

@@ -354,32 +354,38 @@ function HelpSheet() {
         ?
       </button>
       <dialog ref={sheet} className={`paper ${styles.help}`} aria-label={h.open} closedby="any">
-        <h2>{h.open}</h2>
-        <h3>{h.marks}</h3>
-        <dl>
-          {marks.map(([mark, name]) => (
-            <Fragment key={name}>
-              <dt>
-                <svg viewBox="0 0 40 16" aria-hidden="true">
-                  {mark}
-                </svg>
-              </dt>
-              <dd>{name}</dd>
-            </Fragment>
-          ))}
-        </dl>
-        <h3>{h.buttons}</h3>
-        <dl>
-          {buttons.map(([icon, name]) => (
-            <Fragment key={name}>
-              <dt aria-hidden="true">{icon}</dt>
-              <dd>{name}</dd>
-            </Fragment>
-          ))}
-        </dl>
-        <p>{h.keys}</p>
-        <h3>{h.view}</h3>
-        <p>{t.player.stageLabel}</p>
+        <div
+          className={styles.helpBody}
+          // biome-ignore lint/a11y/noNoninteractiveTabindex: the sheet scrolls under Close and must be keyboard reachable
+          tabIndex={0}
+        >
+          <h2>{h.open}</h2>
+          <h3>{h.marks}</h3>
+          <dl>
+            {marks.map(([mark, name]) => (
+              <Fragment key={name}>
+                <dt>
+                  <svg viewBox="0 0 40 16" aria-hidden="true">
+                    {mark}
+                  </svg>
+                </dt>
+                <dd>{name}</dd>
+              </Fragment>
+            ))}
+          </dl>
+          <h3>{h.buttons}</h3>
+          <dl>
+            {buttons.map(([icon, name]) => (
+              <Fragment key={name}>
+                <dt aria-hidden="true">{icon}</dt>
+                <dd>{name}</dd>
+              </Fragment>
+            ))}
+          </dl>
+          <p>{h.keys}</p>
+          <h3>{h.view}</h3>
+          <p>{t.player.stageLabel}</p>
+        </div>
         <button type="button" className="ink-link" onClick={() => sheet.current?.close()}>
           {t.shell.close}
         </button>
