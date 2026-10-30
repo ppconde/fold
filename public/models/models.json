@@ -117,6 +117,22 @@
       "thumbnail": "/models/paper-plane.svg"
     },
     {
+      "id": "pig",
+      "name": {
+        "en": "Pig",
+        "pt": "Porco"
+      },
+      "japaneseName": "Buta",
+      "category": "animals",
+      "difficulty": "easy",
+      "tags": [
+        "pig",
+        "animal",
+        "farm"
+      ],
+      "thumbnail": "/models/pig.svg"
+    },
+    {
       "id": "square-base",
       "name": {
         "en": "Square base",
