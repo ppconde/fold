@@ -62,13 +62,13 @@ export function kiteBase() {
   const s = diamondSequence();
   s.crease('upright', B, T, {
     valley: true,
-    hold: d(1.5, 0),
+    hold: d(1.5, 0.1),
     en: 'Fold in half from corner to corner, then unfold.',
     pt: 'Dobra ao meio de canto a canto e desdobra.'
   });
   s.fold('kiteL', B, d(k, k), {
     valley: true,
-    hold: d(1, 0),
+    hold: d(1.1, 0),
     en: 'Fold the lower left edge to the middle line.',
     pt: 'Dobra a aresta de baixo à esquerda até à linha do meio.'
   });
