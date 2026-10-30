@@ -41,6 +41,10 @@ export const writePanelOpen = (open: boolean) => writeStored(PANEL_KEY, String(o
 export const readLastModel = () => readStored(LAST_KEY);
 export const writeLastModel = (id: string) => writeStored(LAST_KEY, id);
 
+/** The step each lesson was left at: opening it again without a ?step picks up there. */
+export const readStep = (id: string) => Number(readStored(`fold:step:${id}`)) || 0;
+export const writeStep = (id: string, step: number) => writeStored(`fold:step:${id}`, String(step));
+
 /** The paper picked last, on every model. */
 export const readPaper = () => resolvePaperId(readStored(PAPER_KEY));
 export const writePaper = (id: string) => writeStored(PAPER_KEY, id);

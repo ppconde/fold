@@ -285,6 +285,13 @@ test('if the 3D view fails to load, the 2D path keeps working and Try again reco
   await expect(page.locator('main')).toHaveAttribute('data-step', '1');
 });
 
+test('a lesson opened again picks up at the step it was left at', async ({ page }) => {
+  await page.goto('/fold/tulip?step=2');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '2');
+  await page.goto('/fold/tulip');
+  await expect(page.locator('main')).toHaveAttribute('data-step', '2');
+});
+
 test('help beside hide steps explains the marks and names every dock button', async ({ page }) => {
   await page.goto('/fold/tulip?step=1');
   await page.getByRole('button', { name: 'help', exact: true }).click();
