@@ -1,7 +1,17 @@
 import { Line } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { type ComponentRef, type RefObject, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
-import { BackSide, BufferAttribute, BufferGeometry, DoubleSide, FrontSide, type Group, Vector3 } from 'three';
+import { type ComponentRef, type RefObject, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import {
+  BackSide,
+  BufferAttribute,
+  BufferGeometry,
+  type Camera,
+  DoubleSide,
+  FrontSide,
+  type Group,
+  Matrix4,
+  Vector3
+} from 'three';
 import { foldedPositions, progress } from '../fold/fold';
 import { arrowOpacity, isReverseFold, pushArrows, pushOpacity, tuckArrow } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
@@ -17,6 +27,7 @@ import {
 import { patternHooks } from './paper-material';
 import { PLAIN, paperById } from './papers';
 import { setSegments } from './segments';
+import { triangleFaces, visibleParts } from './visible-lines';
 import { createWashiTexture, softenTowardIvory } from './washi';
 
 type LineRef = ComponentRef<typeof Line>;
@@ -105,6 +116,57 @@ export function Paper({
   // a reverse fold's line is a mountain fold: dash-dot, as the crease diagram draws it
   const dashUnit = useMemo(() => (isReverseFold(model, step) ? 0.0025 * paperExtent(model).size : 0), [model, step]);
   const { center } = paperExtent(model);
+  // lines are drawn over the paper, only where nothing hides them (visible-lines.ts): copies of a crease on layers
+  // underneath would otherwise poke through the top one, and on steep faces a line would sink behind its own
+  const root = useRef<Group>(null);
+  const lines = useRef<ReturnType<typeof lineGroups>>(null);
+  /** The camera the lines were last drawn for; zeroed when they need drawing again. */
+  const seenFrom = useRef(new Matrix4());
+  const faceOf = useMemo(() => triangleFaces(model), [model]);
+  const draw = useCallback(
+    (camera: Camera) => {
+      const g = lines.current;
+      if (!g || !root.current) return;
+      root.current.updateWorldMatrix(true, false);
+      const eye = root.current.worldToLocal(camera.getWorldPosition(new Vector3()));
+      // a slit's sides are edges of their own; a crease's copies are one line
+      const seen = (k: keyof typeof g.edges) =>
+        visibleParts(
+          g[k],
+          g.edges[k],
+          model.edgeFaces,
+          geometry.getAttribute('position').array,
+          faceOf,
+          eye,
+          k !== 'borders' && k !== 'cut'
+        );
+      const bordersSeen = seen('borders');
+      const foldedSeen = seen('folded');
+      const cutSeen = seen('cut');
+      const activeSeen = seen('active');
+      setSegments(borders.current, bordersSeen);
+      setSegments(folded.current, foldedSeen);
+      setSegments(flat.current, seen('flat'));
+      const activeLines = dashUnit ? dashDot(activeSeen, dashUnit) : activeSeen;
+      setSegments(active.current, activeLines);
+      setSegments(cut.current, cutSeen);
+      setSegments(bordersHalo.current, pattern ? bordersSeen : []);
+      setSegments(foldedHalo.current, pattern ? foldedSeen : []);
+      setSegments(activeHalo.current, activeLines);
+      setSegments(cutHalo.current, pattern ? cutSeen : []);
+    },
+    [model, geometry, faceOf, dashUnit, pattern]
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: draw changing is the trigger
+  useLayoutEffect(() => {
+    seenFrom.current.makeScale(0, 0, 0);
+    invalidate();
+  }, [draw, invalidate]);
+  useFrame(({ camera }) => {
+    if (camera.matrixWorld.equals(seenFrom.current)) return;
+    seenFrom.current.copy(camera.matrixWorld);
+    draw(camera);
+  });
 
   useLayoutEffect(() => {
     const faces = foldedPositions(model, step, t);
@@ -114,19 +176,10 @@ export function Paper({
     position.needsUpdate = true;
     geometry.computeVertexNormals();
     geometry.computeBoundingSphere();
-    const groups = lineGroups(model, faces, step, t, highlight);
-    setSegments(borders.current, groups.borders);
-    setSegments(folded.current, groups.folded);
-    setSegments(flat.current, groups.flat);
-    const activeLines = dashUnit ? dashDot(groups.active, dashUnit) : groups.active;
-    setSegments(active.current, activeLines);
-    setSegments(cut.current, groups.cut);
-    setSegments(bordersHalo.current, pattern ? groups.borders : []);
-    setSegments(foldedHalo.current, pattern ? groups.folded : []);
-    setSegments(activeHalo.current, activeLines);
-    setSegments(cutHalo.current, pattern ? groups.cut : []);
+    lines.current = lineGroups(model, faces, step, t, highlight);
+    seenFrom.current.makeScale(0, 0, 0);
     invalidate();
-  }, [model, step, t, geometry, invalidate, ground, pattern, highlight, dashUnit]);
+  }, [model, step, t, geometry, invalidate, ground, highlight]);
 
   useEffect(() => () => washi.dispose(), [washi]);
 
@@ -148,7 +201,7 @@ export function Paper({
   // Paper coordinates are x/y with valley folds toward +z; turn them so the sheet lies on the table (y up).
   return (
     <group rotation={[-Math.PI / 2, 0, 0]}>
-      <group position={[-center[0], -center[1], 0]}>
+      <group ref={root} position={[-center[0], -center[1], 0]}>
         {[
           // white under a pattern: the pattern brings its own colours and the washi map still multiplies them
           { color: pattern ? '#ffffff' : softenTowardIvory(model.paperColor), side: FrontSide, hooks: pattern },
@@ -165,16 +218,13 @@ export function Paper({
               metalness={0}
               map={washi}
               side={side}
-              // pushes the paper back far enough that crease lines (flat-depth screen quads) don't sink into sloped faces
-              polygonOffset
-              polygonOffsetFactor={4}
-              polygonOffsetUnits={4}
             />
           </mesh>
         ))}
-        {/* after the paper and without depth, so the ink lines (drawn next) always sit on top of the halo */}
+        {/* after the paper and without depth (draw only gives them the parts in sight), halos first */}
         <Line
           ref={bordersHalo}
+          depthTest={false}
           points={borderPoints}
           segments
           color={BACK}
@@ -185,6 +235,7 @@ export function Paper({
         />
         <Line
           ref={foldedHalo}
+          depthTest={false}
           points={PLACEHOLDER}
           segments
           color={BACK}
@@ -193,9 +244,18 @@ export function Paper({
           depthWrite={false}
           visible={false}
         />
-        <Line ref={borders} points={borderPoints} segments color={INK} lineWidth={1.7} renderOrder={0.6} />
+        <Line
+          ref={borders}
+          depthTest={false}
+          points={borderPoints}
+          segments
+          color={INK}
+          lineWidth={1.7}
+          renderOrder={0.6}
+        />
         <Line
           ref={folded}
+          depthTest={false}
           points={PLACEHOLDER}
           segments
           color={INK}
@@ -205,6 +265,7 @@ export function Paper({
         />
         <Line
           ref={flat}
+          depthTest={false}
           points={PLACEHOLDER}
           segments
           color={INK}
@@ -215,6 +276,7 @@ export function Paper({
         />
         <Line
           ref={activeHalo}
+          depthTest={false}
           points={PLACEHOLDER}
           segments
           color={BACK}
@@ -226,6 +288,7 @@ export function Paper({
         />
         <Line
           ref={active}
+          depthTest={false}
           points={PLACEHOLDER}
           segments
           color={HIGHLIGHT}

@@ -111,36 +111,40 @@ function segment(model: Model, faces: Vec3[][], e: number, f = model.edgeFaces[e
   return [...a, ...b];
 }
 
-/** `highlight` false draws the step's creases as past ones, in ink, as a finished model shows them. */
+type Group = 'borders' | 'folded' | 'flat' | 'active' | 'cut';
+
+/** `highlight` false draws the step's creases as past ones, in ink, as a finished model shows them. `edges` holds each
+ * segment's crease (or border), in the same order as its group's segments. */
 export function lineGroups(
   model: Model,
   faces: Vec3[][],
   step: number,
   t: number,
   highlight = true
-): { borders: number[]; folded: number[]; flat: number[]; active: number[]; cut: number[] } {
+): Record<Group, number[]> & { edges: Record<Group, number[]> } {
   const creases = stepCreases(model, step);
   const active = highlight ? creases.active : [];
   const past = highlight ? creases.past : [...creases.past, ...creases.active];
   const angles = anglesAt(model, step, t);
-  const borders: number[] = [];
-  const folded: number[] = [];
-  const flat: number[] = [];
-  const highlighted: number[] = [];
+  const lines: Record<Group, number[]> = { borders: [], folded: [], flat: [], active: [], cut: [] };
+  const edges: Record<Group, number[]> = { borders: [], folded: [], flat: [], active: [], cut: [] };
+  const add = (group: Group, e: number, points: number[]) => {
+    lines[group].push(...points);
+    edges[group].push(e);
+  };
   model.assignments.forEach((a, e) => {
-    if (a === 'B') borders.push(...segment(model, faces, e));
+    if (a === 'B') add('borders', e, segment(model, faces, e));
     // once cut, a slit is an edge of the paper on each side, and the sides may have parted
     if (a === 'C' && model.cutAt[e] < step)
-      for (const f of model.edgeFaces[e]) borders.push(...segment(model, faces, e, f));
+      for (const f of model.edgeFaces[e]) add('borders', e, segment(model, faces, e, f));
   });
   // every face's copy of a crease: copies drift apart under the 178° clamp or sit on different layers, and one may hide
-  for (const e of active) for (const f of model.edgeFaces[e]) highlighted.push(...segment(model, faces, e, f));
+  for (const e of active) for (const f of model.edgeFaces[e]) add('active', e, segment(model, faces, e, f));
   for (const e of past)
     for (const f of model.edgeFaces[e])
-      (Math.abs(angles[e]) > FOLDED_DEGREES ? folded : flat).push(...segment(model, faces, e, f));
+      add(Math.abs(angles[e]) > FOLDED_DEGREES ? 'folded' : 'flat', e, segment(model, faces, e, f));
   // the slit this step cuts, from where the scissors go in to as far as they've got, on every layer
   const reach = Math.max(0, Math.min(1, t));
-  const cut: number[] = [];
   for (const { edge, from, to } of model.steps[step].cuts) {
     const [lo, hi] = from < to ? [from, to] : [to, from];
     if (reach <= lo) continue;
@@ -149,10 +153,10 @@ export function lineGroups(
       const corner = (v: number) => faces[f][model.faces[f].indexOf(v)];
       const [a, b] = model.edges[edge].map(corner);
       const [p, q] = from < to ? [a, b] : [b, a];
-      cut.push(...p, ...p.map((x, i) => x + (q[i] - x) * share));
+      add('cut', edge, [...p, ...p.map((x, i) => x + (q[i] - x) * share)]);
     }
   }
-  return { borders, folded, flat, active: highlighted, cut };
+  return { ...lines, edges };
 }
 
 /** Flat segments cut into a mountain line's dash-dot (dash 8, gap 3, dot 2, gap 3, as the crease diagram's), `unit`
