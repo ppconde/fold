@@ -377,8 +377,13 @@ function plainPositions(model: Model, step: number, t: number): Vec3[][] {
   // a flap turning over in a fold that ends flat turns about the edges of the layers it wraps, like a page about
   // a book's spine: about an axis lifted halfway between where its layer starts and ends. Its lift turns with it,
   // so it keeps to its hinge and needs no lift to clear the paper it passes.
-  const turned =
-    cur.pivot && s > 0 && s < 1 ? pivotLifts(model, step, poses, posesAt(0, 0), posesAt(1, 1), from, to) : [];
+  // a fold-and-unfold keeps the layers its flap turns away from on their hinges while it lies near flat
+  const creased = peaksAt(model, step) && s > 0 && s < 1 ? creaseLifts(model, step, poses, posesAt(0, 0), from) : [];
+  const turned = creased.length
+    ? creased
+    : cur.pivot && s > 0 && s < 1
+      ? pivotLifts(model, step, poses, posesAt(0, 0), posesAt(1, 1), from, to)
+      : [];
   const point = new Vector3();
   const normal = new Vector3();
   const facing = new Vector3();
@@ -394,7 +399,7 @@ function plainPositions(model: Model, step: number, t: number): Vec3[][] {
       facing.set(0, 0, 1).transformDirection(m);
       normal.addScaledVector(up.clone().addScaledVector(facing, -up.dot(facing)), Math.abs(lift));
     }
-    const shift = turned[f] ? 0 : LAYER_GAP * clearance[f] * rise;
+    const shift = turned[f] && !creased.length ? 0 : LAYER_GAP * clearance[f] * rise;
     if (turned[f]) normal.copy(turned[f]);
     return face.map((v) => {
       point
@@ -440,6 +445,52 @@ function pivotLifts(
       .setFromRotationMatrix(m)
       .multiply(new Quaternion().setFromRotationMatrix(poses0[f]).invert());
     return start.sub(centre).applyQuaternion(since).add(centre);
+  });
+}
+
+/** Is `step` a fold-and-unfold: it ends where it started, its flap moving only along the way? */
+function peaksAt(model: Model, step: number): boolean {
+  const cur = model.steps[step];
+  return cur.path.length > 0 && cur.angles.every((a, e) => a === model.steps[step - 1].angles[e]);
+}
+
+/**
+ * For each face a fold-and-unfold moves, its offset off the paper. A lift turned with its face swings about the
+ * unlifted hinge, so a layer lying on the far side of the hinge from where the flap rises slides outward along
+ * the paper as it lifts, by its lift times the sine of the turn: through paper that meets it edge to edge. Such a
+ * layer turns about its own hinge instead while the flap lies near flat, easing back (by cos² of half the turn) to
+ * the turned lift as the flap stands up, where layers of the flap would otherwise cross each other. Undefined for
+ * faces that stay.
+ */
+function creaseLifts(
+  model: Model,
+  step: number,
+  poses: Matrix4[],
+  poses0: Matrix4[],
+  from: Layers
+): (Vector3 | undefined)[] {
+  const moving = movedTo(model, step, model.steps[step].path[0]);
+  const lift = (f: number) =>
+    new Vector3(0, 0, 1).transformDirection(poses0[f]).multiplyScalar(LAYER_GAP * from.heights[f] * from.up[f]);
+  // which way the flap rises: its corners' heights now against the start
+  const height = (m: Matrix4, f: number) =>
+    model.faces[f].reduce((acc, v) => acc + new Vector3(...model.vertices[v], 0).applyMatrix4(m).z, 0);
+  const rises = moving.reduce((acc, m, f) => (m ? acc + height(poses[f], f) - height(poses0[f], f) : acc), 0) >= 0;
+  return poses.map((m, f) => {
+    if (!moving[f]) return undefined;
+    const z = lift(f).z;
+    const hinge = new Vector3(0, 0, (rises ? z < 0 : z > 0) ? z : 0);
+    const since = new Quaternion()
+      .setFromRotationMatrix(m)
+      .multiply(new Quaternion().setFromRotationMatrix(poses0[f]).invert());
+    return lift(f)
+      .applyQuaternion(since)
+      .add(
+        hinge
+          .clone()
+          .sub(hinge.clone().applyQuaternion(since))
+          .multiplyScalar(since.w ** 2)
+      );
   });
 }
 
@@ -745,7 +796,7 @@ function travel(model: Model, step: number): number[] {
   const start = startPose(model, step);
   const cur = model.steps[step];
   // a fold-and-unfold ends where it started: its flap is the paper that moves on the way, at the path's peak
-  const peaks = cur.path.length > 0 && cur.angles.every((a, e) => a === model.steps[step - 1].angles[e]);
+  const peaks = peaksAt(model, step);
   const moving = movedTo(model, step, peaks ? cur.path[0] : cur.angles);
   const before = stackAt(model, step - 1);
   const after = stackAt(model, step);

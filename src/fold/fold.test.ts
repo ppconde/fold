@@ -653,6 +653,34 @@ describe('pivots', () => {
   });
 });
 
+describe('fold-and-unfold', () => {
+  // fold-in-quarters' second fold made a crease instead, the top half turning behind the two-layer stack: its
+  // upper layer (face 3) lies on the far side of the hinge from where the flap goes
+  const crease = () =>
+    withSteps(quarters(), (steps) => [
+      ...steps.slice(0, 2),
+      {
+        ...steps[2],
+        angles: steps[1].angles,
+        path: [steps[2].angles.map((a, e) => (e === 10 || e === 11 ? -a * 0.97 : a))],
+        faceOrders: steps[1].faceOrders
+      }
+    ]);
+
+  it('keeps a layer on its hinge as the flap lifts, not sliding out along the paper', () => {
+    const model = crease();
+    // face 3's corners on the hinge (vertices 7 and 8)
+    const hinge = (t: number) => [0, 1].map((i) => foldedPositions(model, 2, t)[3][i]);
+    const [p0, q0] = hinge(0);
+    // while the flap lies near flat (turned with its lift, it slides out LAYER_GAP / 6 by t = 0.1)
+    for (const t of [0.05, 0.1]) {
+      const [p, q] = hinge(t);
+      expect(Math.hypot(p[0] - p0[0], p[1] - p0[1])).toBeLessThan(LAYER_GAP / 100);
+      expect(Math.hypot(q[0] - q0[0], q[1] - q0[1])).toBeLessThan(LAYER_GAP / 100);
+    }
+  });
+});
+
 describe('reverse folds', () => {
   const committed = (id: string) =>
     loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
