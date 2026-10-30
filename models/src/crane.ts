@@ -49,6 +49,8 @@ s.fold('tail', tail[0], tail[1], {
   tuck: true,
   only: rightLeg,
   hold: d(1, 0.3),
+  // "the same way" as the neck: the drawings beside their captions show it
+  howOnly: true,
   en: 'Reverse-fold the right flap up the same way to make the tail.',
   pt: 'Faz o mesmo à aba da direita para fazer a cauda.'
 });

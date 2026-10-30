@@ -91,6 +91,8 @@ type FoldOptions = Text & {
   over?: boolean;
   /** With `over`: end tucked inside as a real reverse fold does all the same, the layers changing places as it lands (see `Tuck`). */
   tuck?: boolean;
+  /** A reverse fold whose How drawings say it all: its sentence is left to screen readers (see `SourceStep`). */
+  howOnly?: boolean;
 };
 
 /**
@@ -368,6 +370,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0]) {
         pt: opts.pt,
         ...(hold ? { hold } : {}),
         ...(opts.tuck ? { tuck } : {}),
+        ...(opts.howOnly ? { howOnly: true } : {}),
         stack: pieces
       });
     },

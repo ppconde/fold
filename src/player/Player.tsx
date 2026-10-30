@@ -44,6 +44,7 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
   // the step whose slot was flipped to the crease pattern; any other reverse fold opens on "how"
   const [picked, setPicked] = useState<number | null>(null);
   const reverse = isReverseFold(model, state.step);
+  const howOnly = reverse && model.steps[state.step].howOnly;
   const slot = picked === state.step ? 'creases' : 'how';
   const instruction = state.step === 0 ? t.firstInstruction : localized(model.steps[state.step].instruction, lang);
 
@@ -168,12 +169,13 @@ export function Player({ entry, base, model, initialStep, onSettle }: Props) {
         // biome-ignore lint/a11y/noNoninteractiveTabindex: the sheet scrolls on phones and must be keyboard reachable
         tabIndex={0}
         data-slot={reverse ? slot : undefined}
+        data-how-only={howOnly || undefined}
       >
         <p className={styles.stepLabel}>
           {t.stepOf(state.step, state.last)}
           {reverse && <span className={styles.chip}>{t.reverseFold}</span>}
         </p>
-        <p className={styles.instruction} aria-live="polite">
+        <p className={howOnly ? 'sr-only' : styles.instruction} aria-live="polite">
           {instruction}
         </p>
         {reverse ? (

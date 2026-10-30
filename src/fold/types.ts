@@ -28,6 +28,8 @@ export type Step = {
   /** Flaps that turn over turn about the edges they wrap, not lifted clear of the paper they pass (set by the
    * model build where no paper then passes through paper). */
   pivot?: boolean;
+  /** The sentence is for screen readers only: the step's How drawings and their captions say it. */
+  howOnly?: boolean;
   /** Slit edges cut in this step (a step that cuts moves no crease). */
   cuts: Cut[];
 };

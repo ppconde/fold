@@ -38,6 +38,8 @@ export type SourceStep = {
   tuck?: Tuck;
   /** Slit crease name → how far along the cut its `from` and `to` ends lie (written by foldSequence's `slit`). */
   cut?: Record<string, [number, number]>;
+  /** The step's sentence is for screen readers only: its How drawings and their captions say it (foldapp:howOnly). */
+  howOnly?: boolean;
 };
 
 export type ModelSource = Omit<ModelEntry, 'thumbnail'> & {
@@ -135,6 +137,7 @@ export function buildFold(src: ModelSource) {
       ...(step.rotation ? { 'foldapp:rotation': step.rotation } : {}),
       ...(path.length ? { 'foldapp:path': path } : {}),
       ...(cut.length ? { 'foldapp:cut': cut } : {}),
+      ...(step.howOnly ? { 'foldapp:howOnly': true } : {}),
       ...(changed ? { faceOrders } : {})
     };
   });

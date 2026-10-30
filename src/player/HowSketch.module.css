@@ -134,6 +134,28 @@
   stroke-dasharray: 1 5;
 }
 
+/* a step said by its drawings alone (Player's data-how-only), on the wide sheet: the caption on the left, the drawing
+   on the right (the phone sheet has them so already) */
+@media (min-width: 900px), (orientation: landscape) and (max-height: 500px) {
+  :global([data-how-only]) .how {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: center;
+    column-gap: 0.75rem;
+  }
+
+  :global([data-how-only]) .how > svg {
+    grid-area: 1 / 2;
+  }
+
+  :global([data-how-only]) .how figcaption {
+    grid-area: 1 / 1;
+  }
+
+  :global([data-how-only]) .frames {
+    grid-column: 1 / -1;
+  }
+}
+
 /* the dots are for the phone sheet's row */
 .dots {
   display: none;
