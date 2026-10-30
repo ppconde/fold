@@ -36,21 +36,3 @@ test('focus lands on the model heading after navigating to a page that loads dat
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Tulip');
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
 });
-
-test('a model names the base it starts from and links to it', async ({ page }) => {
-  await page.goto('/fold/crane');
-  await page.getByRole('link', { name: 'Basic shape 2' }).click();
-  await expect(page).toHaveURL(/\/fold\/basic-shape-2/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Basic shape 2');
-  await page.getByRole('link', { name: 'Square base' }).click();
-  await expect(page).toHaveURL(/\/fold\/square-base/);
-  await expect(page.getByText('Starts from:')).toHaveCount(0);
-});
-
-test('a model that builds on a base opens at the end of the base, and steps back into it', async ({ page }) => {
-  await page.goto('/fold/crane');
-  await expect(page.locator('main')).toHaveAttribute('data-step', '15');
-  await expect(page).toHaveURL(/step=15/);
-  await page.getByRole('button', { name: 'Previous step' }).click();
-  await expect(page.locator('main')).toHaveAttribute('data-step', '14');
-});

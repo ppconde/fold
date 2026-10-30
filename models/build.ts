@@ -231,20 +231,14 @@ function markPivots<F extends Parameters<typeof loadModel>[0] & { file_frames: o
   return fold;
 }
 
-/** The library entry for `src`, given every authored model (to find the base it builds on). */
-export function entryOf(src: ModelSource, all: ModelSource[]): ModelEntry {
-  const { id, name, japaneseName, category, buildsOn, difficulty, tags } = src;
-  const base = all.find((m) => m.id === buildsOn);
-  if (buildsOn && !base) throw new Error(`${id} builds on ${buildsOn}, which is not a model.`);
-  if (base?.steps.some((step, k) => step.en !== src.steps[k]?.en)) {
-    throw new Error(`${id} builds on ${base.id} but does not start with its steps.`);
-  }
+/** The library entry for `src`. */
+export function entryOf(src: ModelSource): ModelEntry {
+  const { id, name, japaneseName, category, difficulty, tags } = src;
   return {
     id,
     name,
     ...(japaneseName ? { japaneseName } : {}),
     category,
-    ...(base ? { buildsOn, startStep: base.steps.length } : {}),
     difficulty,
     tags,
     thumbnail: `/models/${id}.svg`
