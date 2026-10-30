@@ -76,7 +76,7 @@ Books show the two sides of the paper by tone: the coloured side shaded or colou
 
 Marks the system doesn't have, used only where a step needs them:
 Any mark added here should look like the system's own, so a book folder doesn't need a legend.
-- **The flipping edge** on a reverse fold: the flap's folded edge (its spine), the part that turns inside out, drawn yellow (`--spine`) in every frame. It's solid where it is and dotted where it goes or was. Books pick out the part they talk about with a colour or tone, so it reads without a legend. Used by the How drawings (`src/player/how-drawing.ts`).
+- **The flipping edge** on a reverse fold: the flap's folded edge (its spine), the part that turns inside out, drawn yellow (`--spine`) in every frame. It's solid where it is and dotted where it goes or was. Books pick out the part they talk about with a colour or tone, so it reads without a legend. Used by the How drawings (`src/player/how-drawing.ts`) and on the stage, where the 3D paper draws the same edge yellow through the step, through any layers that cover it (`src/player/Paper.tsx`).
 
 Rejected (2026-10-28): fingers (a thumb in front, a dotted finger behind) and a front-and-turned-over pair to say "press both sides" on a reverse fold. The system's own picture (mountain line, push arrow, tip arrow) already means both layers turn together.
 

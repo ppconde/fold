@@ -1,5 +1,5 @@
 import { Vector3 } from 'three';
-import { movingFaces, reverseFan } from '../fold/fold';
+import { movingFaces, reverseFan, spineEdges } from '../fold/fold';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 
 export type Seg = { from: Vec2; to: Vec2 };
@@ -121,8 +121,8 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
       return [{ from: at(pose[f][model.faces[f].indexOf(a)]), to: at(pose[f][model.faces[f].indexOf(b)]) }];
     });
 
-  const isSpine = (e: number) =>
-    Math.abs(before[e]) === 180 && after[e] === -before[e] && model.edgeFaces[e].every((f) => moving.has(f));
+  const spines = new Set(spineEdges(model, step));
+  const isSpine = (e: number) => spines.has(e);
   const isFold = (e: number) => before[e] === 0 && after[e] !== 0;
 
   const startFaces = drawFaces(fan.from, before, false);
