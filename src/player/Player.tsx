@@ -186,8 +186,6 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
               ))}
             </div>
             <HowSketch
-              // a new step's sketches start at the first, wherever the last step's were swiped to
-              key={state.step}
               model={model}
               step={state.step}
               frame={sketchFrame(progress(state.t), landingAt(model, state.step))}

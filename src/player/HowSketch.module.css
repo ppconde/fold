@@ -1,45 +1,54 @@
 .how {
   display: grid;
-  gap: 0.4rem;
-}
-
-.frames {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.6rem;
+  gap: 0.5rem;
   margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
-.frames li {
-  color: var(--muted);
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  line-height: 1.35;
-  text-align: center;
-}
-
-/* each sketch shows its moment on the model */
-.frames button {
-  display: grid;
-  gap: 0.3rem;
-  align-content: start;
-  width: 100%;
-  padding: 0;
-}
-
-.frames svg {
+.how svg {
   display: block;
   width: 100%;
   aspect-ratio: 1;
   background: var(--grain), var(--ivory);
   outline: 1px solid rgb(51 48 44 / 0.15);
-  /* inside the box, so the phone's swipe row doesn't clip it */
   outline-offset: -1px;
 }
 
-.frames li[data-current="true"] svg,
+.how figcaption {
+  display: grid;
+  color: var(--charcoal);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* stacked in one cell; the hidden ones keep their room */
+.how figcaption span {
+  grid-area: 1 / 1;
+}
+
+.how figcaption span[hidden] {
+  display: block;
+  visibility: hidden;
+}
+
+/* the three moments, small: each puts the stage at its moment */
+.frames {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.frames button {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+}
+
+.frames button[aria-current] svg,
 .frames button:hover svg {
   outline-color: var(--charcoal);
 }
@@ -125,15 +134,29 @@
   stroke-dasharray: 1 5;
 }
 
-/* wide screens show all three; the dots are for the phone sheet, where one sketch shows at a time */
+/* the dots are for the phone sheet's row */
 .dots {
   display: none;
 }
 
+/* the phone sheet: the drawings a row you swipe beside the instruction, dots under it, the caption under the
+   instruction */
 @media (max-width: 899px) and (orientation: portrait), (max-width: 899px) and (min-height: 501px) {
-  /* one sketch at a time in a row you can swipe; every sketch stretches to the longest caption's height, so the
-     sheet doesn't resize (and the stage jump) as the sketches change */
+  .how {
+    display: contents;
+  }
+
+  .how > svg {
+    display: none;
+  }
+
+  .how figcaption {
+    grid-area: caption;
+    font-size: 0.8rem;
+  }
+
   .frames {
+    grid-area: diagram;
     display: flex;
     gap: 0;
     overflow-x: auto;
@@ -148,22 +171,18 @@
 
   .frames li {
     flex: 0 0 100%;
-    /* the row's width is fractional (32vw), so a snap can land a pixel short: keep the outline off the edge */
+    /* the row's width is fractional, so a snap can land a pixel short: keep the outline off the edge */
     padding-inline: 1px;
     scroll-snap-align: start;
   }
 
-  /* shorter than square, so the longest caption still fits a small phone's sheet (the drawing is square inside) */
-  .frames svg {
-    aspect-ratio: 8 / 5;
-  }
-
-  /* the phone's sketches don't follow the animation, so none is singled out */
-  .frames li[data-current] svg {
+  /* one shows at a time, so none is singled out */
+  .frames button[aria-current] svg {
     outline-color: rgb(51 48 44 / 0.15);
   }
 
   .dots {
+    grid-area: dots;
     display: flex;
     justify-content: center;
     gap: 0.3rem;

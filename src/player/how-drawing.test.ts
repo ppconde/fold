@@ -53,18 +53,34 @@ describe('howDrawing', () => {
         expect(within(s.from, d.flapStart)).toBe(true);
         expect(within(s.to, d.flapStart)).toBe(true);
       }
-      expect(d.frames[1].fold).toEqual(d.frames[0].fold);
+      expect(d.frames[1].fold.length).toBeGreaterThan(0);
       expect(d.frames[2].fold).toEqual([]);
     }
   });
 
-  it('bows the tip arrow the way the flap fans', () => {
+  it('draws the push as the stage has it: the flap where it is then, its tip on the path it takes', () => {
     for (const k of reverse) {
       const d = draw(k);
       const arrow = d.frames[1].arrow;
       if (!arrow) throw new Error('no arrow');
-      const mid: Vec2 = [(arrow.from[0] + arrow.to[0]) / 2, (arrow.from[1] + arrow.to[1]) / 2];
-      expect((arrow.control[0] - mid[0]) * d.line[0] + (arrow.control[1] - mid[1]) * d.line[1]).toBeGreaterThan(0);
+      const toPath = (p: Vec2) =>
+        Math.min(
+          ...arrow.slice(1).map((b, j) => {
+            const a = arrow[j];
+            const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+            const u = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)));
+            return Math.hypot(p[0] - a[0] - u * dx, p[1] - a[1] - u * dy);
+          })
+        );
+      const flap = d.frames[1].faces.filter((f) => f.subject).flatMap((f) => f.points);
+      expect(Math.min(...flap.map(toPath))).toBeLessThan(1e-3 * d.box[2]);
+      // it bends, as the flap swings round on stage, rather than cutting straight across
+      const [a, b] = [arrow[0], arrow[arrow.length - 1]];
+      const chord = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const off = Math.max(
+        ...arrow.map((p) => Math.abs((b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])) / chord)
+      );
+      expect(off).toBeGreaterThan(0.05 * chord);
     }
   });
 

@@ -1,6 +1,7 @@
 import { Vector3 } from 'three';
-import { movingFaces, reverseFan, spineEdges } from '../fold/fold';
+import { anglesAt, foldedPositions, landingAt, movingFaces, reverseFan, spineEdges } from '../fold/fold';
 import type { Model, Vec2, Vec3 } from '../fold/types';
+import { sketchT } from './how';
 
 export type Seg = { from: Vec2; to: Vec2 };
 /** `subject`: the paper the frame is about, at full tone; the rest is drawn lighter, as books set the subject apart. */
@@ -24,16 +25,14 @@ export type HowFrame = {
   landing: Vec2[] | null;
   /** The broad push arrow at the spine; `dir` is unit and points in (second frame). */
   push: { at: Vec2; dir: Vec2 } | null;
-  /** The tip's path, a quadratic curve with a filled head at `to` (second frame). */
-  arrow: { from: Vec2; to: Vec2; control: Vec2 } | null;
+  /** The tip's path as the 3D model takes it, to where it lands, with a filled head at its end (second frame). */
+  arrow: Vec2[] | null;
 };
 export type HowDrawing = {
   /** A square viewBox around the flap, as it starts and as it ends. */
   box: [x: number, y: number, w: number, h: number];
   frames: [HowFrame, HowFrame, HowFrame];
   pivot: Vec2;
-  /** The way the flap fans round, in the drawing's plane (unit). */
-  line: Vec2;
   flapStart: Vec2[];
   flapEnd: Vec2[];
 };
@@ -55,12 +54,11 @@ function hull(points: Vec2[]): Vec2[] {
   return [...half(ps), ...half([...ps].reverse())];
 }
 
-const lerp = (a: Vec2, b: Vec2, t: number): Vec2 => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-
 /**
  * A reverse fold's "How", as a book draws it: three frames in the body's plane, seen from the side the player's
- * camera starts on (open the layers, push the folded edge in, flatten), from the model's own faces. Null unless the
- * step is a reverse fold.
+ * camera starts on (open the layers, push the folded edge in, flatten). Each is the 3D model's own pose at the moment
+ * the stage shows that frame (`sketchT`), so a drawing and the paper on stage agree. Null unless the step is a
+ * reverse fold.
  */
 export function howDrawing(model: Model, step: number): HowDrawing | null {
   const list = drawings.get(model) ?? [];
@@ -121,80 +119,84 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
       return [{ from: at(pose[f][model.faces[f].indexOf(a)]), to: at(pose[f][model.faces[f].indexOf(b)]) }];
     });
 
-  const spines = new Set(spineEdges(model, step));
-  const isSpine = (e: number) => spines.has(e);
+  const spineSet = new Set(spineEdges(model, step));
+  const isSpine = (e: number) => spineSet.has(e);
   const isFold = (e: number) => before[e] === 0 && after[e] !== 0;
 
-  const startFaces = drawFaces(fan.from, before, false);
-  const endFaces = drawFaces(fan.to, after, true);
+  const landing = landingAt(model, step);
+  const times = ([0, 1, 2] as const).map((i) => sketchT(i, landing));
+  const poses = times.map((t) => foldedPositions(model, step, t));
+  const frameFaces = poses.map((pose, i) => drawFaces(pose, anglesAt(model, step, times[i]), i === 2));
   const corners = (pose: Vec3[][]) => [...moving].flatMap((f) => pose[f].map(at));
   const [flapStart, flapEnd] = [hull(corners(fan.from)), hull(corners(fan.to))];
+  const flaps = poses.map((pose) => hull(corners(pose)));
   const pivot = at(fan.pivot);
-  const lineRaw: Vec2 = [new Vector3(...fan.line).dot(ex), -new Vector3(...fan.line).dot(ey)];
-  const line: Vec2 = [lineRaw[0] / Math.hypot(...lineRaw), lineRaw[1] / Math.hypot(...lineRaw)];
 
-  // the frame: around the flap as it starts and ends, square, with a margin
-  const all = [...flapStart, ...flapEnd];
+  // the tip: the flap's corner that travels farthest; its path is the one it takes on stage, up to the landing
+  const [tf, ti] = [...moving]
+    .flatMap((f) =>
+      fan.from[f].map((p, i): [number, number, number] => [
+        f,
+        i,
+        new Vector3(...p).distanceTo(new Vector3(...fan.to[f][i]))
+      ])
+    )
+    .reduce((a, b) => (b[2] > a[2] ? b : a));
+  const path = Array.from({ length: 33 }, (_, j) =>
+    at(foldedPositions(model, step, times[2] * (0.04 + (0.92 * j) / 32))[tf][ti])
+  );
+
+  // the frame: around the flap as it starts, as the drawings pose it, and as it ends, square, with a margin
+  const all = [...flapStart, ...flapEnd, ...flaps.flat(), ...path];
   const [x0, x1] = [Math.min(...all.map((p) => p[0])), Math.max(...all.map((p) => p[0]))];
   const [y0, y1] = [Math.min(...all.map((p) => p[1])), Math.max(...all.map((p) => p[1]))];
   const size = Math.max(x1 - x0, y1 - y0) * 1.45;
   const box: HowDrawing['box'] = [(x0 + x1) / 2 - size / 2, (y0 + y1) / 2 - size / 2, size, size];
 
-  // in the plane, across the spine, pointing into the flap
-  const spineStart = marks(fan.from, isSpine);
-  const far = spineStart
-    .flatMap((s) => [s.from, s.to])
-    .reduce((a, b) =>
-      Math.hypot(b[0] - pivot[0], b[1] - pivot[1]) > Math.hypot(a[0] - pivot[0], a[1] - pivot[1]) ? b : a
-    );
-  const along = [far[0] - pivot[0], far[1] - pivot[1]];
-  const centre = flapStart.reduce((c, p) => [c[0] + p[0] / flapStart.length, c[1] + p[1] / flapStart.length], [0, 0]);
-  let dir: Vec2 = [-along[1] / Math.hypot(...along), along[0] / Math.hypot(...along)];
-  if ((centre[0] - pivot[0]) * dir[0] + (centre[1] - pivot[1]) * dir[1] < 0) dir = [-dir[0], -dir[1]];
+  // in the plane, across the pose's spine, pointing into its flap
+  const across = (spine: Seg[], flap: Vec2[]): Vec2 => {
+    const far = spine
+      .flatMap((g) => [g.from, g.to])
+      .reduce((a, b) =>
+        Math.hypot(b[0] - pivot[0], b[1] - pivot[1]) > Math.hypot(a[0] - pivot[0], a[1] - pivot[1]) ? b : a
+      );
+    const along = [far[0] - pivot[0], far[1] - pivot[1]];
+    const centre = flap.reduce((c, p) => [c[0] + p[0] / flap.length, c[1] + p[1] / flap.length], [0, 0]);
+    const dir: Vec2 = [-along[1] / Math.hypot(...along), along[0] / Math.hypot(...along)];
+    return (centre[0] - pivot[0]) * dir[0] + (centre[1] - pivot[1]) * dir[1] < 0 ? [-dir[0], -dir[1]] : dir;
+  };
 
-  // the tip: the flap's corner that travels farthest; its path bows the way the flap fans
-  const [tipFrom, tipTo] = [...moving]
-    .flatMap((f) => fan.from[f].map((p, i): [Vec2, Vec2] => [at(p), at(fan.to[f][i])]))
-    .reduce((a, b) =>
-      Math.hypot(b[1][0] - b[0][0], b[1][1] - b[0][1]) > Math.hypot(a[1][0] - a[0][0], a[1][1] - a[0][1]) ? b : a
-    );
-  const [from, to] = [lerp(tipFrom, tipTo, 0.08), lerp(tipTo, tipFrom, 0.08)];
-  const span = Math.hypot(to[0] - from[0], to[1] - from[1]);
-  let bow: Vec2 = [-(to[1] - from[1]) / span, (to[0] - from[0]) / span];
-  if (bow[0] * line[0] + bow[1] * line[1] < 0) bow = [-bow[0], -bow[1]];
-  const mid = lerp(from, to, 0.5);
-  const control: Vec2 = [mid[0] + bow[0] * 0.35 * span, mid[1] + bow[1] * 0.35 * span];
-
-  const fold = marks(fan.from, isFold);
-  const spineEnd = marks(fan.to, isSpine);
-  const ghost = (segs: Seg[]) => segs.map((s) => ({ ...s, ghost: true }));
-  const solid = (segs: Seg[]) => segs.map((s) => ({ ...s, ghost: false }));
+  const spines = poses.map((pose) => marks(pose, isSpine));
+  const [spineStart, spineEnd] = [marks(fan.from, isSpine), spines[2]];
+  const ghost = (segs: Seg[]) => segs.map((g) => ({ ...g, ghost: true }));
+  const solid = (segs: Seg[]) => segs.map((g) => ({ ...g, ghost: false }));
+  const [peekDir, pushDir] = [across(spines[0], flaps[0]), across(spines[1], flaps[1])];
   const shift = 0.03 * size;
   const none = { peek: null, landing: null, push: null, arrow: null };
   list[step] = {
     box,
     pivot,
-    line,
     flapStart,
     flapEnd,
     frames: [
       {
         ...none,
-        faces: startFaces,
-        peek: flapStart.map((p): Vec2 => [p[0] + dir[0] * shift, p[1] + dir[1] * shift]),
-        fold,
-        spine: solid(spineStart)
+        faces: frameFaces[0],
+        // books draw the layers parted in the plane; on stage they part out of it, which a drawing head-on can't show
+        peek: flaps[0].map((p): Vec2 => [p[0] + peekDir[0] * shift, p[1] + peekDir[1] * shift]),
+        fold: marks(poses[0], isFold),
+        spine: solid(spines[0])
       },
       {
         ...none,
-        faces: startFaces,
-        fold,
-        spine: [...solid(spineStart), ...ghost(spineEnd)],
+        faces: frameFaces[1],
+        fold: marks(poses[1], isFold),
+        spine: [...solid(spines[1]), ...ghost(spineEnd)],
         landing: flapEnd,
-        push: { at: [pivot[0] - dir[0] * 0.04 * size, pivot[1] - dir[1] * 0.04 * size], dir },
-        arrow: { from, to, control }
+        push: { at: [pivot[0] - pushDir[0] * 0.04 * size, pivot[1] - pushDir[1] * 0.04 * size], dir: pushDir },
+        arrow: path
       },
-      { ...none, faces: endFaces, fold: [], spine: [...solid(spineEnd), ...ghost(spineStart)] }
+      { ...none, faces: frameFaces[2], fold: [], spine: [...solid(spineEnd), ...ghost(spineStart)] }
     ]
   };
   return list[step];
