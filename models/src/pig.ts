@@ -1,9 +1,10 @@
+import { Euler, MathUtils, Quaternion, Vector3 } from 'three';
 import { has } from '../sequence';
 import { kannonBase } from './bases';
 
-// the legs fold about lines from the square's top corners to LEG along the belly; the snout and tail turn up POINT
-// degrees from the belly about lines through it BEND in from each point
-const [LEG, BEND, POINT] = [0.375, 0.2, 60];
+// the legs fold about lines from the square's top corners to LEG along the belly; the snout (the right point) turns
+// up HEAD degrees from the belly and the tail (the left point) TAIL, about lines through it BEND in from each point
+const [LEG, BEND, HEAD, TAIL] = [0.375, 0.2, 35, 60];
 
 const s = kannonBase();
 s.turn([0, 180, 90], {
@@ -101,7 +102,7 @@ s.together(
   legs(true)
 );
 s.together({ en: 'Do the same behind.', pt: 'Faz o mesmo atrás.' }, legs(false));
-// snout and tail: inside reverse folds turning each point up, POINT up from the belly, about a line from BEND in
+// snout and tail: inside reverse folds turning each point up from the belly, about a line from BEND in
 // along the belly (reflecting a direction about a line at φ gives 2φ minus it)
 const reverse = (at: At, from: number, to: number): [At, At] => {
   const phi = ((from + to) / 2) * (Math.PI / 180);
@@ -115,23 +116,35 @@ const end =
   (_: string[], [x, y]: At) =>
     x > 0.25 && x < 0.75 && (left ? y < 0.25 : y > 0.75);
 const tuckIn = (_: string[], [x]: At) => x < 0.5;
-s.fold('snout', ...reverse([BEND, 0.5], 180, 180 - POINT), {
-  valley: tuckIn,
-  over: false,
-  tuck: true,
-  only: end(true),
-  hold: [0.5, 0.65],
-  en: 'Reverse-fold the left point up inside to make the snout.',
-  pt: 'Faz uma dobra invertida na ponta da esquerda, para cima e por dentro, para fazer o focinho.'
-});
-s.fold('tail', ...reverse([1 - BEND, 0.5], 0, POINT), {
+s.fold('snout', ...reverse([1 - BEND, 0.5], 0, HEAD), {
   valley: tuckIn,
   over: false,
   tuck: true,
   only: end(false),
   hold: [0.5, 0.65],
-  en: 'Reverse-fold the right point up the same way to make the tail.',
-  pt: 'Faz o mesmo à ponta da direita para fazer a cauda.'
+  en: 'Reverse-fold the right point up inside to make the snout.',
+  pt: 'Faz uma dobra invertida na ponta da direita, para cima e por dentro, para fazer o focinho.'
+});
+s.fold('tail', ...reverse([BEND, 0.5], 180, 180 - TAIL), {
+  valley: tuckIn,
+  over: false,
+  tuck: true,
+  only: end(true),
+  hold: [0.5, 0.65],
+  en: 'Reverse-fold the left point up the same way, higher, to make the tail.',
+  pt: 'Faz o mesmo à ponta da esquerda, mais para cima, para fazer a cauda.'
+});
+
+// stood up off the table on its legs, leaning 25° toward you so its side shows past the camera's height
+const D = MathUtils.DEG2RAD;
+const standing = new Euler().setFromQuaternion(
+  new Quaternion()
+    .setFromAxisAngle(new Vector3(1, 0, 0), (90 - 25) * D)
+    .multiply(new Quaternion().setFromEuler(new Euler(0, 180 * D, 90 * D)))
+);
+s.turn([standing.x / D, standing.y / D, standing.z / D], {
+  en: 'Stand the pig up on its legs. Your pig is done.',
+  pt: 'Põe o porco de pé, assente nas patas. O teu porco está pronto.'
 });
 
 export default s.source({
