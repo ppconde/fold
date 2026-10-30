@@ -397,6 +397,25 @@ test.describe('a reverse fold step', () => {
     await expect(page.locator('main')).not.toHaveAttribute('data-progress', '5');
   });
 
+  test('a swipe moves the fold to that drawing, and the row and dots follow the fold', async ({ page }, info) => {
+    test.skip(info.project.name !== 'phone', 'the swipe row is the phone sheet');
+    await page.goto(`/fold/crane?step=${NECK}`);
+    const sheet = page.locator('#instructions');
+    await expect(sheet).toBeVisible();
+    const row = sheet.getByRole('list', { name: /turns inside out/ });
+    const dots = sheet.locator('[aria-hidden="true"] > i');
+    const shown = () => row.evaluate((el) => Math.round(el.scrollLeft / el.clientWidth));
+    await page.getByRole('slider').fill('5');
+    await expect(dots.nth(0)).toHaveAttribute('data-current', 'true');
+    await expect.poll(shown).toBe(0);
+    await row.evaluate((el) => el.scrollTo({ left: 2 * el.clientWidth }));
+    await expect(dots.nth(2)).toHaveAttribute('data-current', 'true');
+    await expect(page.locator('main')).not.toHaveAttribute('data-progress', '5');
+    await page.getByRole('slider').fill('5');
+    await expect(dots.nth(0)).toHaveAttribute('data-current', 'true');
+    await expect.poll(shown).toBe(0);
+  });
+
   test('a normal step has no toggle', async ({ page }) => {
     await page.goto(`/fold/crane?step=${NORMAL}`);
     await expect(page.locator('#instructions')).toBeVisible();

@@ -1,4 +1,4 @@
-import { useId, useMemo } from 'react';
+import { useEffect, useId, useMemo, useRef } from 'react';
 import type { Model, Vec2 } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import styles from './HowSketch.module.css';
@@ -106,7 +106,8 @@ function Drawing({ box, frame, paperColor }: { box: HowDrawing['box']; frame: Ho
 }
 
 /** How your hands make this reverse fold, in three drawings made from the model: `frame`, the one that goes with the
- * fold on stage, drawn large, and all three small underneath; picking one calls `onPick` with it. */
+ * fold on stage, drawn large, and all three small underneath; picking one calls `onPick` with it. On the phone sheet
+ * the three are a row you swipe through instead, with dots: a swipe picks, and the row follows the fold as it plays. */
 export function HowSketch({
   model,
   step,
@@ -120,6 +121,33 @@ export function HowSketch({
 }) {
   const t = useT().player;
   const drawing = useMemo(() => howDrawing(model, step), [model, step]);
+  const row = useRef<HTMLOListElement>(null);
+  const settle = useRef(0);
+  // the row is scrolling itself to the fold's drawing, not being swiped
+  const own = useRef(false);
+  const latest = useRef({ frame, onPick });
+  latest.current = { frame, onPick };
+  const follow = (el: HTMLOListElement) => {
+    if (Math.round(el.scrollLeft / el.clientWidth) === latest.current.frame) return;
+    own.current = true;
+    el.scrollTo({ left: latest.current.frame * el.clientWidth, behavior: 'smooth' });
+  };
+  // a no-op on wide screens, where the row doesn't scroll
+  // biome-ignore lint/correctness/useExhaustiveDependencies: frame changing is the trigger; follow reads it from latest
+  useEffect(() => {
+    if (row.current) follow(row.current);
+  }, [frame]);
+  useEffect(() => () => clearTimeout(settle.current), []);
+  // once a swipe comes to rest on another drawing, the stage goes to its moment; the row's own scrolls never pick
+  const onScroll = (el: HTMLOListElement) => {
+    // the row's own scroll is over once it reaches the fold's drawing
+    if (own.current && Math.round(el.scrollLeft / el.clientWidth) === latest.current.frame) own.current = false;
+    clearTimeout(settle.current);
+    settle.current = window.setTimeout(() => {
+      const shown = Math.round(el.scrollLeft / el.clientWidth) as 0 | 1 | 2;
+      if (!own.current && shown !== latest.current.frame) latest.current.onPick(shown);
+    }, 150);
+  };
   if (!drawing) return null;
   return (
     <figure className={styles.how}>
@@ -132,7 +160,7 @@ export function HowSketch({
           </span>
         ))}
       </figcaption>
-      <ol className={styles.frames} aria-label={t.insideOut}>
+      <ol ref={row} className={styles.frames} aria-label={t.insideOut} onScroll={(e) => onScroll(e.currentTarget)}>
         {drawing.frames.map((f, i) => (
           <li key={t.howSteps[i]}>
             <button
@@ -142,11 +170,15 @@ export function HowSketch({
               onClick={() => onPick(i as 0 | 1 | 2)}
             >
               <Drawing box={drawing.box} frame={f} paperColor={model.paperColor} />
-              <span>{i + 1}</span>
             </button>
           </li>
         ))}
       </ol>
+      <span className={styles.dots} aria-hidden="true">
+        {drawing.frames.map((_, i) => (
+          <i key={t.howSteps[i]} data-current={i === frame} />
+        ))}
+      </span>
     </figure>
   );
 }
