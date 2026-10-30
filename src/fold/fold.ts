@@ -242,7 +242,7 @@ const landedLayers = new WeakMap<Model, Layers[]>();
  * The stack at the end of `step`, before the whole-model turn. `heights[f]` is face f's place in its stack
  * (0 = bottom, along +z); `up[f]` is +1 when its front faces +z, −1 when it faces −z, 0 when it stands on edge.
  * From the step's faceOrders: [f, g, s] puts f on the side of g's normal (s = 1) or against it (s = −1);
- * a face sits one above the highest face it must cover. Contradictory orders throw a RangeError.
+ * a face sits one above the highest face its sheet must cover. Contradictory orders throw a RangeError.
  */
 function stackAt(model: Model, step: number, landed = false): Layers {
   const cache = landed ? landedLayers : layers;
@@ -256,8 +256,9 @@ function stackAt(model: Model, step: number, landed = false): Layers {
   }
   let up = model.faces.map(() => 1);
   const below = model.faces.map((): number[] => []);
+  const angles = model.steps[step].orderedAt ?? model.steps[step].angles;
   if (step > 0) {
-    const T = rootTransforms(model, model.steps[step].orderedAt ?? model.steps[step].angles, step);
+    const T = rootTransforms(model, angles, step);
     const base = anchorFor(model, step).clone().multiply(T[model.steps[step].fixedFace].clone().invert());
     up = T.map((m) => Math.sign(Math.round(base.clone().multiply(m).elements[10] * 1e6)));
     for (const [f, g, s] of (landed && model.steps[step].landedOrders) || model.steps[step].faceOrders) {
@@ -266,20 +267,54 @@ function stackAt(model: Model, step: number, landed = false): Layers {
       if (side < 0) below[g].push(f);
     }
   }
-  const heights: number[] = [];
-  const visiting = new Set<number>();
-  const visit = (f: number): number => {
-    if (heights[f] !== undefined) return heights[f];
-    if (visiting.has(f)) throw new RangeError(`Step ${step} faceOrders contradict each other at face ${f}.`);
-    visiting.add(f);
-    heights[f] = Math.max(0, ...below[f].map((g) => visit(g) + 1));
-    return heights[f];
+  // Faces joined by a flat crease are one sheet of paper: they share a height wherever the orders allow, so a
+  // layer has no steps along it. ponytail: not across a crease turned, from this stack, by a fold that ends flat
+  // (in a later step that keeps the stack, or the step after them): its flaps turn about unlifted hinges, so two
+  // lifted with their sheet and meeting at a point cross mid-turn. Lifting those hinges (as flapRoots does for
+  // steps that end open) would lift the limit.
+  const turns = (e: number) => {
+    for (let k = step + 1; model.steps[k]; k++) {
+      const [s, before] = [model.steps[k], model.steps[k - 1].angles];
+      if (!isReverseFold(model, k) && !endsOpen(model, k) && [s.angles, ...s.path].some((a) => a[e] !== before[e]))
+        return true;
+      if (s.faceOrders !== model.steps[step].faceOrders) return false;
+    }
+    return false;
   };
-  model.faces.forEach((_, f) => {
-    visit(f);
+  const group = model.faces.map((_, f) => f);
+  const find = (f: number): number => (group[f] === f ? f : find(group[f]));
+  let heights = sheetHeights(below, find, step);
+  model.edgeFaces.forEach((faces, e) => {
+    if (faces.length !== 2 || Math.abs(angles[e]) > EPSILON || model.cutAt[e] <= step || turns(e)) return;
+    const [a, b] = faces.map(find);
+    if (a === b) return;
+    group[a] = b;
+    try {
+      heights = sheetHeights(below, find, step);
+    } catch {
+      group[a] = a; // joining them would put the sheet above and below the same paper
+    }
   });
   list[step] = { heights, up };
   return list[step];
+}
+
+/** Each face's height: one above the highest face below any face of its sheet (`sheet(f)`), cycles throw. */
+function sheetHeights(below: number[][], sheet: (f: number) => number, step: number): number[] {
+  const faces = below.map((): number[] => []);
+  below.forEach((_, f) => {
+    faces[sheet(f)].push(f);
+  });
+  const heights: number[] = [];
+  const visiting = new Set<number>();
+  const visit = (r: number): number => {
+    if (heights[r] !== undefined) return heights[r];
+    if (visiting.has(r)) throw new RangeError(`Step ${step} faceOrders contradict each other at face ${r}.`);
+    visiting.add(r);
+    heights[r] = Math.max(0, ...faces[r].flatMap((f) => below[f].map((g) => visit(sheet(g)) + 1)));
+    return heights[r];
+  };
+  return below.map((_, f) => visit(sheet(f)));
 }
 
 /** Each face's place in the stack at the end of `step` (0 = bottom), along +z before the whole-model turn. */
