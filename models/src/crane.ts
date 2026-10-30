@@ -100,7 +100,6 @@ export default s.source({
   name: { en: 'Crane', pt: 'Grou' },
   japaneseName: 'Orizuru',
   category: 'animals',
-  buildsOn: 'basic-shape-2',
   difficulty: 'medium',
   tags: ['crane', 'bird', 'classic'],
   paperColor: '#B5524A',

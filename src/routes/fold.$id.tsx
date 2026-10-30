@@ -29,7 +29,7 @@ export const Route = createFileRoute('/fold/$id')({
 });
 
 function FoldPage() {
-  const { entry, model, base } = Route.useLoaderData();
+  const { entry, model } = Route.useLoaderData();
   const { step } = Route.useSearch();
   const navigate = Route.useNavigate();
   useEffect(() => writeLastModel(entry.id), [entry.id]);
@@ -39,8 +39,7 @@ function FoldPage() {
     },
     [navigate, step]
   );
-  const start = step ?? entry.startStep ?? 0;
-  return <Player key={entry.id} entry={entry} base={base} model={model} initialStep={start} onSettle={onSettle} />;
+  return <Player key={entry.id} entry={entry} model={model} initialStep={step ?? 0} onSettle={onSettle} />;
 }
 
 function ModelNotFound() {

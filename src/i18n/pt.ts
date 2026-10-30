@@ -81,7 +81,6 @@ export const pt: Dictionary = {
   },
   player: {
     firstInstruction: 'Começa com a folha de papel com o lado colorido para cima.',
-    startsFrom: 'Começa a partir de:',
     stepOf: (n, total) => `Passo ${n} · ${total}`,
     count: (n, total) => `${n}/${total}`,
     goToStep: 'Ir para o passo',
