@@ -117,6 +117,23 @@
       "thumbnail": "/models/paper-plane.svg"
     },
     {
+      "id": "yakko-san",
+      "name": {
+        "en": "Yakko-san",
+        "pt": "Yakko-san"
+      },
+      "japaneseName": "Yakko-san",
+      "category": "figures",
+      "difficulty": "easy",
+      "tags": [
+        "servant",
+        "figure",
+        "person",
+        "kimono"
+      ],
+      "thumbnail": "/models/yakko-san.svg"
+    },
+    {
       "id": "square-base",
       "name": {
         "en": "Square base",
