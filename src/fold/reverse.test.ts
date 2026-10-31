@@ -29,7 +29,10 @@ describe('reverseFold', () => {
     for (const m of ['crane', 'dove', 'pig'].map(committed)) {
       m.steps.forEach((s, k) => {
         const r = reverseFold(m, k);
-        if (s.kind !== 'reverse') return expect(r).toBeNull();
+        if (s.kind !== 'reverse') {
+          expect(r).toBeNull();
+          return;
+        }
         expect(r?.spine.length).toBeGreaterThan(0);
         expect(r?.pushes).toHaveLength(2);
         expect(r?.landing).toBeLessThan(1);
