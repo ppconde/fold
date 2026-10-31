@@ -1,6 +1,7 @@
 import { MathUtils, type Matrix4, Vector3 } from 'three';
+import { movedCreases } from '../src/fold/creases';
 import { cornerKeys } from '../src/fold/cuts';
-import { pathAngles, rootTransforms, treeEdges } from '../src/fold/fold';
+import { endsOpen, pathAngles, rootTransforms, treeEdges } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import type { FaceOrder, Model, Vec2 } from '../src/fold/types';
 import { overlap } from './arrange';
@@ -167,7 +168,7 @@ export function solvePaths(fold: Fold, knots = KNOTS): void {
     const lerp = (s: number) => prev.map((a, e) => a + (end[e] - a) * s);
     if ([0.25, 0.5, 0.75].every((s) => worstGap(model, lerp(s), k) < 1e-9)) continue;
     // only the creases the step changes move; the rest of the paper stays as it was
-    const vars = model.edges.flatMap((_, e) => (end[e] !== prev[e] ? [e] : []));
+    const vars = [...movedCreases(model, k)];
     const path: number[][] = [];
     let guess = prev;
     for (let i = 1; i <= knots; i++) {
@@ -235,7 +236,7 @@ export function motionOrders(fold: Fold, tucks: (Tuck<number> | undefined)[] = [
   for (let k = 1; k < model.steps.length; k++) {
     const E = rootTransforms(model, model.steps[k].angles, k);
     // a step that doesn't end flat (opening out) keeps the order it was given
-    if (E.some((m) => Math.abs(Math.abs(m.elements[10]) - 1) > 1e-9)) {
+    if (endsOpen(model, k)) {
       delete fold.file_frames[k - 1].faceOrders;
       before = E;
       continue;
