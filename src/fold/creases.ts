@@ -20,9 +20,8 @@ export function movedCreases(model: Model, step: number): ReadonlySet<number> {
 export function stepCreases(model: Model, step: number): { active: number[]; past: number[] } {
   assertStep(model, step);
   const isActive = movedCreases(model, step);
-  const active = [...isActive];
   const past = model.edges.flatMap((_, e) =>
     !isActive.has(e) && model.steps.slice(1, step).some((s) => [...s.path, s.angles].some((a) => a[e] !== 0)) ? [e] : []
   );
-  return { active, past };
+  return { active: [...isActive], past };
 }
