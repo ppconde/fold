@@ -43,7 +43,9 @@ export const en = {
     noMatch: 'No folds match.',
     clear: 'Clear filters',
     pages: 'Pages',
-    page: (n: number) => `Page ${n}`
+    page: (n: number) => `Page ${n}`,
+    previous: 'Previous page',
+    next: 'Next page'
   },
   about: {
     title: 'About',
