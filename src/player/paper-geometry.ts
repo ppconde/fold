@@ -1,6 +1,7 @@
 import { MathUtils, Vector3 } from 'three';
 import { stepCreases } from '../fold/creases';
-import { anglesAt, foldedPositions, spineEdges } from '../fold/fold';
+import { anglesAt, foldedPositions } from '../fold/fold';
+import { reverseFold } from '../fold/reverse';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 
 type Extent = {
@@ -158,7 +159,9 @@ export function lineGroups(
     }
   }
   const spine = highlight
-    ? spineEdges(model, step).flatMap((e) => model.edgeFaces[e].flatMap((f) => segment(model, faces, e, f)))
+    ? (reverseFold(model, step)?.spine ?? []).flatMap((e) =>
+        model.edgeFaces[e].flatMap((f) => segment(model, faces, e, f))
+      )
     : [];
   return { ...lines, edges, spine };
 }

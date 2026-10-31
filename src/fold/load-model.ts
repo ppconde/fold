@@ -167,6 +167,7 @@ export function loadModel(json: unknown): Model {
       rotation: [...rotation] as Vec3,
       faceOrders,
       ordersFrom,
+      ...(turnsInsideOut(prev.angles, angles) ? { kind: 'reverse' as const } : {}),
       ...(landedOrders ? { landedOrders } : {}),
       ...(frame['foldapp:pivot'] === true ? { pivot: true } : {}),
       path,
@@ -199,6 +200,16 @@ export function loadModel(json: unknown): Model {
     steps,
     unfold: readPath(json['foldapp:unfold'], edges.length, 'foldapp:unfold')
   });
+}
+
+/**
+ * Is the step from `before` to `after` a reverse fold? It turns a flap's spine inside out: a crease already folded
+ * flat flips sign (+180 to −180 or back), while new creases appear along one line. On a flap of two layers they share
+ * a sign (the spine's two halves are already one valley and one mountain); a thicker flap has both.
+ */
+function turnsInsideOut(before: number[], after: number[]): boolean {
+  const flips = after.some((a, e) => Math.abs(before[e]) === 180 && a === -before[e]);
+  return flips && after.some((a, e) => before[e] === 0 && a !== 0);
 }
 
 function readFaceOrders(raw: unknown, n: number, faceCount: number): FaceOrder[] {

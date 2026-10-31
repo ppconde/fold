@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { cornerKeys } from '../src/fold/cuts';
-import { foldedPositions, isReverseFold, reverseFan } from '../src/fold/fold';
+import { foldedPositions, reverseFan } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import { unfoldAll } from '../src/home/unfold';
 import { buildFold, entryOf } from './build';
@@ -95,7 +95,7 @@ describe('crane', () => {
 
   describe('reverse folds', () => {
     const model = loadModel(committed('crane.fold'));
-    const reverse = model.steps.flatMap((_, k) => (isReverseFold(model, k) ? [k] : []));
+    const reverse = model.steps.flatMap((s, k) => (s.kind === 'reverse' ? [k] : []));
 
     it("the crane's reverse folds pass no paper through paper", () => {
       for (const k of reverse) for (let i = 0; i <= 40; i++) expect(crossings(model, k, i / 40)).toEqual([]);

@@ -1,5 +1,6 @@
 import { Vector3 } from 'three';
-import { anglesAt, foldedPositions, landingAt, movingFaces, reverseFan, spineEdges } from '../fold/fold';
+import { anglesAt, foldedPositions, movingFaces } from '../fold/fold';
+import { reverseFold } from '../fold/reverse';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 import { sketchT } from './how';
 
@@ -65,8 +66,9 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
   drawings.set(model, list);
   if (list[step] !== undefined) return list[step];
   list[step] = null;
-  const fan = step > 0 ? reverseFan(model, step) : null;
-  if (!fan) return null;
+  const reverse = reverseFold(model, step);
+  if (!reverse) return null;
+  const { fan, landing } = reverse;
 
   const moving = movingFaces(model, step);
   const before = model.steps[step - 1].angles;
@@ -119,11 +121,10 @@ export function howDrawing(model: Model, step: number): HowDrawing | null {
       return [{ from: at(pose[f][model.faces[f].indexOf(a)]), to: at(pose[f][model.faces[f].indexOf(b)]) }];
     });
 
-  const spineSet = new Set(spineEdges(model, step));
+  const spineSet = new Set(reverse.spine);
   const isSpine = (e: number) => spineSet.has(e);
   const isFold = (e: number) => before[e] === 0 && after[e] !== 0;
 
-  const landing = landingAt(model, step);
   const times = ([0, 1, 2] as const).map((i) => sketchT(i, landing));
   const poses = times.map((t) => foldedPositions(model, step, t));
   const frameFaces = poses.map((pose, i) => drawFaces(pose, anglesAt(model, step, times[i]), i === 2));

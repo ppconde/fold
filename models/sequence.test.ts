@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { foldedPositions, isReverseFold, layerHeights } from '../src/fold/fold';
+import { foldedPositions, layerHeights } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import type { Vec2 } from '../src/fold/types';
 import { buildFold } from './build';
@@ -123,6 +123,15 @@ describe('foldSequence', () => {
     expect(senses(pre)).toEqual(senses(plain));
   });
 
+  it('refuses a reverse fold that swings over without tucking in, and a tuck in a model the solver skips', () => {
+    const s = foldSequence();
+    s.fold('half', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
+    const tip = { valley: (_: string[], [x]: Vec2) => x > 0.5, over: true, hold: [0.75, 0.3] as Vec2, ...text };
+    expect(() => s.fold('tip', [0.5, 0.6], [0.9, 1], tip)).toThrow(/swings over \(over\) without tucking in/);
+    s.fold('tip', [0.5, 0.6], [0.9, 1], { ...tip, tuck: true });
+    expect(() => buildFold(s.source({ ...entry, tags: [] }))).toThrow(/test step 2 tucks, which needs solve: true/);
+  });
+
   it('makes a reverse fold of a two-layer flap one the player knows (its new creases share a sign)', () => {
     const s = foldSequence();
     s.fold('half', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
@@ -133,9 +142,9 @@ describe('foldSequence', () => {
       hold: [0.75, 0.3],
       ...text
     });
-    const model = loadModel(buildFold(s.source({ ...entry, tags: [] })));
+    const model = loadModel(buildFold(s.source({ ...entry, tags: [], solve: true })));
     expect(Object.values(model.steps[2].angles).filter((a, e) => a && !model.steps[1].angles[e])).toEqual([180, 180]);
-    expect([1, 2].map((k) => isReverseFold(model, k))).toEqual([false, true]);
+    expect([1, 2].map((k) => model.steps[k].kind === 'reverse')).toEqual([false, true]);
   });
 
   it('turns a two-layer flap back over both its hinges', () => {
