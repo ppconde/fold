@@ -6,8 +6,8 @@ import { paperExtent } from '../fold/fold';
 import type { Model } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import { prefersReducedMotion } from './browser';
+import { endCentre, frameReach, STAGE_FOV, STAGE_POLAR, stageDistance } from './framing';
 import { Paper } from './Paper';
-import { endCentre, frameReach, STAGE_FOV, STAGE_POLAR, stageDistance } from './paper-geometry';
 
 /** Zoom per wheel notch or pinch, against camera-controls' default of 1. */
 const ZOOM_SPEED = 2;
