@@ -15,3 +15,7 @@
 **Fold-and-unfold**: a step whose path folds a crease and opens it again, so it ends where it started (a pre-crease). Its flap still counts as moving.
 
 **Moved creases / moving faces**: what a step changes: `movedCreases` (creases.ts) are the creases whose angle differs anywhere along the path or at the end; `movingFaces` (fold.ts) are the faces that leave their place on the way.
+
+**Model file**: a `.fold` file holding one model: the built model (standard FOLD plus `foldapp:` fields) that playback reads, and its source. See ADR 2.
+
+**Source** (`foldapp:source`): the fold sequence as data, the folds a person makes in order, which an editor edits and the build turns into the built model. Today's sources are TypeScript in `models/src`.
