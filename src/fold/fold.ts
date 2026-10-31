@@ -410,7 +410,7 @@ function plainPositions(model: Model, step: number, t: number): Vec3[][] {
 /**
  * For each face that moves this step, its offset off the paper turned about the edges it wraps: its lift as the step
  * starts (`poses0`, `from`) and ends (`poses1`, `to`) are the two ends of a half-turn about their midpoint, and it
- * turns as the face has turned since the start. Undefined for faces that stay.
+ * turns as the face has turned since the start. Undefined for faces that stay or don't turn over.
  */
 function pivotLifts(
   model: Model,
@@ -424,13 +424,12 @@ function pivotLifts(
   const moving = movingFaces(model, step);
   const lift = (m: Matrix4, layers: Layers, f: number) =>
     new Vector3(0, 0, 1).transformDirection(m).multiplyScalar(LAYER_GAP * layers.heights[f] * layers.up[f]);
-  // only a flap that turns over in one half-turn (the paper's up turned to its down) has its ends on one arc
-  const flips = [...moving].every((f) => {
-    const n0 = new Vector3(0, 0, 1).transformDirection(poses0[f]);
-    return new Vector3(0, 0, 1).transformDirection(poses1[f]).dot(n0) < -1 + EPSILON;
-  });
+  // only a face that turns over in one half-turn (the paper's up turned to its down) has its ends on one arc
+  const flips = (f: number) =>
+    new Vector3(0, 0, 1).transformDirection(poses1[f]).dot(new Vector3(0, 0, 1).transformDirection(poses0[f])) <
+    -1 + EPSILON;
   return poses.map((m, f) => {
-    if (!flips || !moving.has(f)) return undefined;
+    if (!moving.has(f) || !flips(f)) return undefined;
     const start = lift(poses0[f], from, f);
     const centre = start
       .clone()

@@ -213,7 +213,7 @@ export function buildFold(src: ModelSource) {
 
 /**
  * Marks the steps whose flaps turn about the edges they wrap (foldapp:pivot), so they keep to their hinges: each
- * plain step (no reverse fold, tuck or path) where that changes the motion and no paper then passes through or
+ * step that isn't a reverse fold or tuck where that changes the motion and no paper then passes through or
  * changes places with other paper, sampled as checkModel samples. Elsewhere flaps lift clear of what they pass.
  */
 function markPivots<F extends Parameters<typeof loadModel>[0] & { file_frames: object[] }>(fold: F): F {
@@ -221,7 +221,7 @@ function markPivots<F extends Parameters<typeof loadModel>[0] & { file_frames: o
   const ts = Array.from({ length: 10 }, (_, i) => (i + 1) / 10);
   for (let k = 1; k < model.steps.length; k++) {
     const step = model.steps[k];
-    if (isReverseFold(model, k) || step.landedOrders || step.path.length) continue;
+    if (isReverseFold(model, k) || step.landedOrders) continue;
     const tried = { ...model, steps: model.steps.map((s, i) => (i === k ? { ...s, pivot: true } : s)) };
     const plain = foldedPositions(model, k, 0.5).flat(2);
     const changed = foldedPositions(tried, k, 0.5)
