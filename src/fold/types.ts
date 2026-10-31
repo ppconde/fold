@@ -19,6 +19,12 @@ export type Step = {
   rotation: Vec3;
   /** How overlapping faces stack at the end of the step (FOLD faceOrders, unknown orders dropped). */
   faceOrders: FaceOrder[];
+  /** The step whose faceOrders these are: this step when it gave its own, else the earlier step it keeps the
+   * stack of (a turn, or opening out, gives none). */
+  ordersFrom: number;
+  /** What sort of move this is, where the motion treats it apart. 'unfold': the homepage's one step from the flat
+   * sheet to the finished model, every crease at once. */
+  kind?: 'unfold';
   /** A tuck's stack as the paper lands, before its layers change places in the step's last stretch. */
   landedOrders?: FaceOrder[];
   /** Angles the faceOrders were given at, when not the step's own (the homepage's unfold ends with flaps on edge). */

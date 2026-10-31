@@ -106,6 +106,7 @@ export function loadModel(json: unknown): Model {
       fixedFace: nearestToCenter,
       rotation: [0, 0, 0],
       faceOrders: [],
+      ordersFrom: 0,
       path: [],
       cuts: []
     }
@@ -145,8 +146,10 @@ export function loadModel(json: unknown): Model {
       throw new FoldError(`Step ${n} rotation must be three numbers.`);
     }
 
-    const faceOrders =
-      frame.faceOrders === undefined ? prev.faceOrders : readFaceOrders(frame.faceOrders, n, faces.length);
+    // a frame without faceOrders keeps the stack of the step that last gave them
+    const kept = frame.faceOrders === undefined;
+    const faceOrders = kept ? prev.faceOrders : readFaceOrders(frame.faceOrders, n, faces.length);
+    const ordersFrom = kept ? prev.ordersFrom : n;
 
     const landed = frame['foldapp:landedOrders'];
     const landedOrders = landed === undefined ? undefined : readFaceOrders(landed, n, faces.length);
@@ -163,6 +166,7 @@ export function loadModel(json: unknown): Model {
       fixedFace,
       rotation: [...rotation] as Vec3,
       faceOrders,
+      ordersFrom,
       ...(landedOrders ? { landedOrders } : {}),
       ...(frame['foldapp:pivot'] === true ? { pivot: true } : {}),
       path,
