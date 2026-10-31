@@ -148,6 +148,8 @@ function Library() {
               key={n}
               from={Route.fullPath}
               search={(prev) => ({ ...prev, page: n > 1 ? n : undefined })}
+              // the whole search must match: page 1's link (no page) would otherwise match every page
+              activeOptions={{ exact: true }}
               aria-current={n === page ? 'page' : undefined}
               aria-label={t.page(n)}
             >
