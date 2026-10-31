@@ -4,9 +4,9 @@ import { reverseFold } from '../fold/reverse';
 import type { Model, Vec2, Vec3 } from '../fold/types';
 import { sketchT } from './how';
 
-export type Seg = { from: Vec2; to: Vec2 };
+type Seg = { from: Vec2; to: Vec2 };
 /** `subject`: the paper the frame is about, at full tone; the rest is drawn lighter, as books set the subject apart. */
-export type HowFace = {
+type HowFace = {
   points: Vec2[];
   side: 'front' | 'back';
   edges: [Vec2, Vec2][];
@@ -31,7 +31,7 @@ export type HowFrame = {
   /** A square viewBox centred on what this frame draws of the flap; every frame's is the same size, so they compare. */
   box: [x: number, y: number, w: number, h: number];
 };
-export type HowDrawing = {
+type HowDrawing = {
   frames: [HowFrame, HowFrame, HowFrame];
   pivot: Vec2;
   flapStart: Vec2[];

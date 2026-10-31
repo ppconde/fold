@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from '../fold/fixtures';
-import { foldedPositions, LAYER_GAP } from '../fold/fold';
+import { foldedPositions, LAYER_GAP, paperExtent } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import {
   dashDot,
@@ -10,7 +10,6 @@ import {
   fillUVs,
   frameReach,
   lineGroups,
-  paperExtent,
   triangleCount
 } from './paper-geometry';
 

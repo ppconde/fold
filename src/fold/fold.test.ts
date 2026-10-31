@@ -1,7 +1,6 @@
-import { readFileSync } from 'node:fs';
 import { Euler, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
-import { fixture, slitFixture } from './fixtures';
+import { committed, fixture, slitFixture } from './fixtures';
 import { anglesAt, checkConsistency, foldedPositions, LAYER_GAP, layerHeights, movingFaces, reverseFan } from './fold';
 import { loadModel } from './load-model';
 import { tuckArrow } from './reverse';
@@ -608,9 +607,7 @@ describe('slits', () => {
 
 describe('sheets', () => {
   it('lifts faces joined by a flat crease as one sheet, so the crane has no steps along a layer', () => {
-    const crane = loadModel(
-      JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8'))
-    );
+    const crane = committed('crane');
     // step 18's wing creases stay seams: step 19 folds the wings down on them (see stackAt)
     for (const k of [16, 17, 19, 20, 21]) {
       const h = layerHeights(crane, k);
@@ -623,9 +620,7 @@ describe('sheets', () => {
 
 describe('pivots', () => {
   it('keeps the crane’s wings on their hinges as they fold down', () => {
-    const crane = loadModel(
-      JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8'))
-    );
+    const crane = committed('crane');
     const k = 19;
     expect(crane.steps[k].pivot).toBe(true);
     const gap = (e: number, t: number) => {
@@ -674,9 +669,7 @@ describe('fold-and-unfold', () => {
 
 describe('movingFaces', () => {
   it("counts a fold-and-unfold's flap, though it ends where it started", () => {
-    const crane = loadModel(
-      JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8'))
-    );
+    const crane = committed('crane');
     const unfolds = crane.steps.flatMap((s, k) =>
       k && s.path.length && s.angles.every((a, e) => a === crane.steps[k - 1].angles[e]) ? [k] : []
     );
@@ -689,8 +682,6 @@ describe('movingFaces', () => {
 });
 
 describe('reverse folds', () => {
-  const committed = (id: string) =>
-    loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
   const crane = committed('crane');
   const reverse = crane.steps.flatMap((s, k) => (s.kind === 'reverse' ? [k] : []));
 

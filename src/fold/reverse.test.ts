@@ -1,12 +1,9 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { fixture } from './fixtures';
+import { committed, fixture } from './fixtures';
 import { foldedPositions, movingFaces } from './fold';
 import { loadModel } from './load-model';
 import { arrowOpacity, pushArrows, pushOpacity, pushSides, reverseFold, tuckArrow } from './reverse';
 
-const committed = (id: string) =>
-  loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
 const crane = committed('crane');
 const neck = crane.steps.findIndex((s) => s.instruction.en.startsWith('Reverse-fold the left flap'));
 

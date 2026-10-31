@@ -1,19 +1,40 @@
 import { Box3, Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
 import { assertStep } from './assert-step';
 import { movedCreases } from './creases';
-import type { Model, Vec3 } from './types';
+import type { Model, Vec2, Vec3 } from './types';
 
 const DEG = MathUtils.DEG2RAD;
+
+type Extent = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  width: number;
+  height: number;
+  size: number;
+  center: Vec2;
+};
+
+/** The flat sheet's bounding box, and its longer side (`size`). */
+export function paperExtent(model: Model): Extent {
+  const xs = model.vertices.map((v) => v[0]);
+  const ys = model.vertices.map((v) => v[1]);
+  const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+  const width = maxX - minX;
+  const height = maxY - minY;
+  return { minX, minY, maxX, maxY, width, height, size: Math.max(width, height), center: model.center };
+}
 const EPSILON = 1e-6;
 /** Rise per layer of a stack, as a fraction of the paper's side. */
 export const LAYER_GAP = 0.001;
 /** Degrees a reverse fold's body opens at its peak, mid-step: each side turns half of it about the far edge. */
-export const REVERSE_OPEN_DEG = 28;
+const REVERSE_OPEN_DEG = 28;
 /** Share of a step at each end in which a travelling flap rises off, and settles back onto, the stack. */
 const LIFT_SPAN = 0.15;
 
 const ease = (t: number) => t * t * (3 - 2 * t);
-export const progress = (t: number) => ease(Number.isFinite(t) ? Math.max(0, Math.min(1, t)) : 0);
+export const progress = (t: number) => ease(Number.isFinite(t) ? MathUtils.clamp(t, 0, 1) : 0);
 
 /** Rotation of face `g` about edge `e` by `angle` degrees, in flat-paper coordinates. */
 function hinge(model: Model, e: number, g: number, angle: number): Matrix4 {
@@ -171,7 +192,7 @@ export function anglesAt(model: Model, step: number, t: number): number[] {
 /** Angles at un-eased progress `s`: straight from the previous step's angles to this one's, through its path. */
 export function pathAngles(model: Model, step: number, s: number): number[] {
   const knots = [model.steps[step - 1].angles, ...model.steps[step].path, model.steps[step].angles];
-  const x = Math.max(0, Math.min(1, s)) * (knots.length - 1);
+  const x = MathUtils.clamp(s, 0, 1) * (knots.length - 1);
   const i = Math.min(knots.length - 2, Math.floor(x));
   const [a, b] = [knots[i], knots[i + 1]];
   // +180° and −180° are one pose: a crease going from one to the other stays put, only its layers change sides

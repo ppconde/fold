@@ -1,13 +1,10 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { fixture, slitFixture } from '../fold/fixtures';
+import { committed, fixture, slitFixture } from '../fold/fixtures';
 import { loadModel } from '../fold/load-model';
 import { diagramLines } from './diagram';
 
 const half = () => loadModel(fixture('fold-in-half'));
 const quarters = () => loadModel(fixture('fold-in-quarters'));
-const committed = (id: string) =>
-  loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
 const close = (a: number, b: number) => Math.abs(a - b) < 1e-9;
 
 describe('diagramLines', () => {
