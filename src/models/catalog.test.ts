@@ -32,6 +32,7 @@ describe('fetchIndex', () => {
       'cicada',
       'dove',
       'whale',
+      'paper-plane',
       'square-base',
       'kite-base',
       'kannon-base',

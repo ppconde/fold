@@ -8,6 +8,7 @@ import dogFace from './dog-face';
 import dove from './dove';
 import kannonBase from './kannon-base';
 import kiteBase from './kite-base';
+import paperPlane from './paper-plane';
 import squareBase from './square-base';
 import tulip from './tulip';
 import whale from './whale';
@@ -20,6 +21,7 @@ export const sources: ModelSource[] = [
   cicada,
   dove,
   whale,
+  paperPlane,
   squareBase,
   kiteBase,
   kannonBase,
