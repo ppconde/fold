@@ -6,7 +6,7 @@ export type LibrarySearch = { q?: string; cat?: Category; diff?: Difficulty; pag
 
 export const CATEGORIES: Category[] = ['animals', 'flowers', 'objects', 'figures', 'bases'];
 export const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard'];
-export const PAGE_SIZE = 12;
+export const PAGE_SIZE = 10;
 
 /**
  * Search params from the URL; anything unknown or empty becomes undefined, never an error.
