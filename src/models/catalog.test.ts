@@ -33,6 +33,7 @@ describe('fetchIndex', () => {
       'dove',
       'whale',
       'paper-plane',
+      'pig',
       'square-base',
       'kite-base',
       'kannon-base',

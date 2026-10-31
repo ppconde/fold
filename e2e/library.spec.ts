@@ -15,11 +15,11 @@ test('home leads through the library to a model', async ({ page }) => {
     /Dove/,
     /Whale/,
     /Paper plane/,
+    /Pig/,
     /Square base/,
     /Kite base/,
     /Kannon fold/,
-    /Blintz base/,
-    /Basic shape 1/
+    /Blintz base/
   ]);
 
   await page.getByRole('link', { name: /Tulip/ }).click();
@@ -141,7 +141,7 @@ test('one button clears the search and both filters', async ({ page }) => {
 });
 
 test('a long library splits into pages, and a new filter starts on the first', async ({ page }) => {
-  // the real models run one onto a second page; add a few more there
+  // the real models run two onto a second page; add a few more there
   await page.route('/models/models.json', async (route) => {
     const index = await (await route.fetch()).json();
     for (const n of [1, 2, 3]) {
@@ -157,10 +157,10 @@ test('a long library splits into pages, and a new filter starts on the first', a
 
   await pages.getByRole('link', { name: 'Page 2' }).click();
   await expect(page).toHaveURL(/page=2/);
-  await expect(models).toHaveText([/Basic shape 2/, /Extra 1/, /Extra 2/, /Extra 3/]);
+  await expect(models).toHaveText([/Basic shape 1/, /Basic shape 2/, /Extra 1/, /Extra 2/, /Extra 3/]);
 
   await page.reload();
-  await expect(models).toHaveCount(4);
+  await expect(models).toHaveCount(5);
 
   await page.getByRole('button', { name: 'Animals' }).click();
   await expect(page).not.toHaveURL(/page=/);
@@ -169,7 +169,10 @@ test('a long library splits into pages, and a new filter starts on the first', a
 
 test('a page past the end shows the last one, and one page needs no pager', async ({ page }) => {
   await page.goto('/library?page=9');
-  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveText([/Basic shape 2/]);
+  await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveText([
+    /Basic shape 1/,
+    /Basic shape 2/
+  ]);
   await page.goto('/library?cat=animals&page=9');
   await expect(page.getByRole('navigation', { name: 'Pages' })).toHaveCount(0);
 });
