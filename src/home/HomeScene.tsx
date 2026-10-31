@@ -5,8 +5,8 @@ import { type Group, MathUtils } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
 import { readPaper } from '../player/browser';
+import { frameReach, STAGE_FOV, STAGE_POLAR, stageDistance } from '../player/framing';
 import { Paper } from '../player/Paper';
-import { frameReach, STAGE_FOV, STAGE_POLAR, stageDistance } from '../player/paper-geometry';
 
 /** Pitch toward the viewer and yaw of the model at rest, in radians. */
 const REST = [0.3, 0.1];
