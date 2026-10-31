@@ -1,12 +1,6 @@
 import { cornerKeys } from '../src/fold/cuts';
-import {
-  checkConsistency,
-  foldedPositions,
-  isReverseFold,
-  layerHeights,
-  movingFaces,
-  reverseFan
-} from '../src/fold/fold';
+import { checkConsistency, foldedPositions, layerHeights, movingFaces, reverseFan } from '../src/fold/fold';
+import { reverseFold } from '../src/fold/reverse';
 import type { Model, Vec2, Vec3 } from '../src/fold/types';
 import { overlap } from './arrange';
 
@@ -317,8 +311,10 @@ export function checkModel(model: Model, budget = SEAM_BUDGET): string[] {
           : `Step ${k}: the folds at edges ${a} and ${b} interleave in the stack (paper can only nest them).`
       );
     }
+    if (model.steps[k].kind === 'reverse' && !reverseFold(model, k))
+      problems.push(`Step ${k} is a reverse fold, but its fan, tuck arrow or push marks can't be found.`);
     // a reverse fold's flap fans through the body: sample it finely
-    const n = isReverseFold(model, k) ? 40 : 10;
+    const n = model.steps[k].kind === 'reverse' ? 40 : 10;
     const ts = Array.from({ length: n }, (_, i) => (i + 1) / n);
     const at = (t: number) => `Step ${k} at ${Math.round(t * 100)}%`;
     for (const t of ts) {

@@ -22,9 +22,10 @@ export type Step = {
   /** The step whose faceOrders these are: this step when it gave its own, else the earlier step it keeps the
    * stack of (a turn, or opening out, gives none). */
   ordersFrom: number;
-  /** What sort of move this is, where the motion treats it apart. 'unfold': the homepage's one step from the flat
-   * sheet to the finished model, every crease at once. */
-  kind?: 'unfold';
+  /** What sort of move this is, where the engine or player treats it apart. 'reverse': a reverse fold, found by the
+   * loader from the angles (`turnsInsideOut`). 'unfold': the homepage's one step from the flat sheet to the finished
+   * model, every crease at once. */
+  kind?: 'reverse' | 'unfold';
   /** A tuck's stack as the paper lands, before its layers change places in the step's last stretch. */
   landedOrders?: FaceOrder[];
   /** Angles the faceOrders were given at, when not the step's own (the homepage's unfold ends with flaps on edge). */

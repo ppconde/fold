@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from '../src/fold/fixtures';
-import { foldedPositions, isReverseFold, LAYER_GAP, layerHeights } from '../src/fold/fold';
+import { foldedPositions, LAYER_GAP, layerHeights } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import type { Vec3 } from '../src/fold/types';
 import { buildFold } from './build';
@@ -26,6 +26,12 @@ describe('checkModel', () => {
     const json = fixture('fold-in-quarters') as { file_frames: { edges_foldAngle: number[] }[] };
     json.file_frames[1].edges_foldAngle[11] = 90; // half of the second crease line
     expect(checkModel(loadModel(json))).toContainEqual(expect.stringMatching(/^Step 2 does not fold flat/));
+  });
+
+  it("reports a reverse fold whose fan can't be found", () => {
+    const half = loadModel(fixture('fold-in-half'));
+    const claimed = { ...half, steps: [half.steps[0], { ...half.steps[1], kind: 'reverse' as const }] };
+    expect(checkModel(claimed)).toContainEqual(expect.stringMatching(/^Step 1 is a reverse fold, but its fan/));
   });
 });
 
@@ -107,7 +113,7 @@ describe('tradesPlaces', () => {
   it("finds no layers changing places in the crane's reverse folds", () => {
     const model = crane();
     for (let k = 1; k < model.steps.length; k++)
-      if (isReverseFold(model, k)) expect(tradesPlaces(model, k, ts)).toEqual([]);
+      if (model.steps[k].kind === 'reverse') expect(tradesPlaces(model, k, ts)).toEqual([]);
   });
 });
 

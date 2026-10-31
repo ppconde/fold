@@ -13,7 +13,7 @@ import {
   Vector3
 } from 'three';
 import { foldedPositions, progress } from '../fold/fold';
-import { arrowOpacity, isReverseFold, pushArrows, pushOpacity, tuckArrow } from '../fold/reverse';
+import { arrowOpacity, pushOpacity, reverseFold } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
 import {
   dashDot,
@@ -92,13 +92,14 @@ export function Paper({
   const cutHalo = useRef<LineRef>(null);
   const pattern = paperById(paper);
   // which flap a reverse fold moves and where it tucks in, an ink arrow with a filled head, as a diagram's
-  const tuck = useMemo(() => tuckArrow(model, step), [model, step]);
+  const reverse = useMemo(() => reverseFold(model, step), [model, step]);
+  const tuck = reverse?.tuck ?? null;
   const tuckStrength = tuck ? arrowOpacity(progress(t)) : 0;
   const head = useMemo(
     () => tuck && new Float32Array([...tuck.head[0], ...tuck.shaft[tuck.shaft.length - 1], ...tuck.head[1]]),
     [tuck]
   );
-  const pushes = useMemo(() => pushArrows(model, step) ?? [], [model, step]);
+  const pushes = useMemo(() => reverse?.pushes ?? [], [reverse]);
   const pushStrength = pushes.length ? pushOpacity(progress(t)) : 0;
   // only the push mark on the camera's side of the paper, as a diagram draws one
   const pushMarks = useRef<(Group | null)[]>([]);
@@ -117,7 +118,7 @@ export function Paper({
     [pushes]
   );
   // a reverse fold's line is a mountain fold: dash-dot, as the crease diagram draws it
-  const dashUnit = useMemo(() => (isReverseFold(model, step) ? 0.0025 * paperExtent(model).size : 0), [model, step]);
+  const dashUnit = useMemo(() => (reverse ? 0.0025 * paperExtent(model).size : 0), [reverse, model]);
   const { center } = paperExtent(model);
   // lines are drawn over the paper, only where nothing hides them (visible-lines.ts): copies of a crease on layers
   // underneath would otherwise poke through the top one, and on steep faces a line would sink behind its own

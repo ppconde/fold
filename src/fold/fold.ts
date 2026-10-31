@@ -275,7 +275,7 @@ function stackAt(model: Model, step: number, landed = false): Layers {
   const turns = (e: number) => {
     for (let k = step + 1; model.steps[k]; k++) {
       const [s, before] = [model.steps[k], model.steps[k - 1].angles];
-      if (!isReverseFold(model, k) && !endsOpen(model, k) && [s.angles, ...s.path].some((a) => a[e] !== before[e]))
+      if (s.kind !== 'reverse' && !endsOpen(model, k) && [s.angles, ...s.path].some((a) => a[e] !== before[e]))
         return true;
       if (s.ordersFrom !== model.steps[step].ordersFrom) return false;
     }
@@ -352,7 +352,7 @@ function plainPositions(model: Model, step: number, t: number): Vec3[][] {
   const rise = progress(t / LIFT_SPAN) * progress((1 - t) / LIFT_SPAN);
 
   const C = treeChange(model, step);
-  const reverse = isReverseFold(model, step);
+  const reverse = model.steps[step].kind === 'reverse';
   const posesAt = (at: number, eased: number) => {
     const T = rootTransforms(model, anglesAt(model, step, at), step);
     const pose = anchorFor(model, step).clone().multiply(T[cur.fixedFace].clone().invert());
@@ -555,23 +555,9 @@ export function movingFaces(model: Model, step: number): ReadonlySet<number> {
   return list[step];
 }
 
-/**
- * A reverse fold turns a flap's spine inside out: a crease already folded flat flips sign (+180 to −180 or
- * back), while new creases appear along one line. On a flap of two layers they share a sign (the spine's two
- * halves are already one valley and one mountain); a thicker flap has both.
- */
-export function isReverseFold(model: Model, step: number): boolean {
-  if (step === 0) return false;
-  const before = model.steps[step - 1].angles;
-  const after = model.steps[step].angles;
-  const flips = after.some((a, e) => Math.abs(before[e]) === 180 && a === -before[e]);
-  const made = after.filter((a, e) => before[e] === 0 && a !== 0);
-  return flips && made.length > 0;
-}
-
-/** A reverse fold's spine: the flap's folded edges that turn inside out. None unless `isReverseFold`. */
+/** A reverse fold's spine: the flap's folded edges that turn inside out. None outside a reverse fold. */
 export function spineEdges(model: Model, step: number): number[] {
-  if (!isReverseFold(model, step)) return [];
+  if (model.steps[step].kind !== 'reverse') return [];
   const moving = movingFaces(model, step);
   const before = model.steps[step - 1].angles;
   return model.steps[step].angles.flatMap((a, e) =>
@@ -608,14 +594,14 @@ const fans = new WeakMap<Model, (ReverseFan | null)[]>();
 /**
  * A reverse fold's fan: its flap swings round the pivot, across the fold line that mirrors it onto where it ends,
  * through the side away from the body's middle, shortened halfway just enough to stay inside the body; the body
- * opens like a book to take it. Null unless `isReverseFold`.
+ * opens like a book to take it. Null outside a reverse fold.
  */
 export function reverseFan(model: Model, step: number): ReverseFan | null {
   const list = fans.get(model) ?? [];
   fans.set(model, list);
   if (list[step] !== undefined) return list[step];
   list[step] = null;
-  if (!isReverseFold(model, step)) return null;
+  if (model.steps[step].kind !== 'reverse') return null;
   // ponytail: the fan works in world coordinates from the plain start and end, so it assumes the whole model doesn't
   // turn during the step (the crane's reverse folds don't); blend the turn in here if a model ever needs that
   const moving = movingFaces(model, step);
@@ -789,7 +775,7 @@ function travel(model: Model, step: number): number[] {
   travels.set(model, list);
   if (list[step]) return list[step];
   // a reverse fold's body opens about its far edge instead (see fanned)
-  if (isReverseFold(model, step)) {
+  if (model.steps[step].kind === 'reverse') {
     list[step] = model.faces.map(() => 0);
     return list[step];
   }

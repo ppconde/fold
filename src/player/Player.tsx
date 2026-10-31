@@ -1,6 +1,6 @@
 import { Fragment, lazy, Suspense, useEffect, useRef, useState } from 'react';
-import { landingAt, progress } from '../fold/fold';
-import { isReverseFold } from '../fold/reverse';
+import { progress } from '../fold/fold';
+import { reverseFold } from '../fold/reverse';
 import type { Model } from '../fold/types';
 import { useLang, useT } from '../i18n/LanguageProvider';
 import { localized } from '../i18n/lang';
@@ -41,7 +41,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
   const showPanel = panelOpen || !webgl || stageFailed;
   // the step whose slot was flipped to the crease pattern; any other reverse fold opens on "how"
   const [picked, setPicked] = useState<number | null>(null);
-  const reverse = isReverseFold(model, state.step);
+  // a reverse fold the engine can't fan is shown as a plain step, its sentence in words
+  const reverse = reverseFold(model, state.step);
   const slot = picked === state.step ? 'creases' : 'how';
   const instruction = state.step === 0 ? t.firstInstruction : localized(model.steps[state.step].instruction, lang);
 
@@ -191,8 +192,8 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
             <HowSketch
               model={model}
               step={state.step}
-              frame={sketchFrame(progress(state.t), landingAt(model, state.step))}
-              onPick={(i) => dispatch({ type: 'scrub', t: sketchT(i, landingAt(model, state.step)) })}
+              frame={sketchFrame(progress(state.t), reverse.landing)}
+              onPick={(i) => dispatch({ type: 'scrub', t: sketchT(i, reverse.landing) })}
             />
             <p className={styles.insideOut}>{t.insideOut}</p>
             <CreaseDiagram model={model} step={state.step} />

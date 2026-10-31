@@ -85,8 +85,8 @@ type FoldOptions = Text & {
   /** A point (view coordinates) on paper that stays still in this step. */
   hold?: Vec2;
   /**
-   * With `valley` a function (a reverse fold): true swings the flap over toward the viewer as one stack,
-   * false behind, and lands there: rigid paper can't tuck it inside without opening the body flat.
+   * With `valley` a function (a reverse fold) and `tuck`: true swings the flap over toward the viewer as one
+   * stack, false behind, before it tucks in.
    */
   over?: boolean;
   /** With `over`: end tucked inside as a real reverse fold does all the same, the layers changing places as it lands (see `Tuck`). */
@@ -259,6 +259,9 @@ export function foldSequence(start: Vec3 = [0, 0, 0], size: Vec2 = [1, 1]) {
       );
     },
     fold(name: string, p: Vec2, q: Vec2, opts: FoldOptions) {
+      // swung over and left there, the flap's spine never turns inside out: the player wouldn't see a reverse fold
+      if (opts.over !== undefined && !opts.tuck)
+        throw new Error(`Fold ${name} swings over (over) without tucking in (tuck).`);
       const fold: Record<string, number> = {};
       /** The angles the flap swings through as one stack (a reverse fold's animation). */
       const swing: Record<string, number> = {};
@@ -357,7 +360,7 @@ export function foldSequence(start: Vec3 = [0, 0, 0], size: Vec2 = [1, 1]) {
             )
           );
       push({
-        fold: opts.over !== undefined && !opts.tuck ? swing : fold,
+        fold,
         ...(path.length ? { path } : {}),
         en: opts.en,
         pt: opts.pt,

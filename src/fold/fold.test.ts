@@ -2,16 +2,7 @@ import { readFileSync } from 'node:fs';
 import { Euler, Quaternion, Vector3 } from 'three';
 import { describe, expect, it } from 'vitest';
 import { fixture, slitFixture } from './fixtures';
-import {
-  anglesAt,
-  checkConsistency,
-  foldedPositions,
-  isReverseFold,
-  LAYER_GAP,
-  layerHeights,
-  movingFaces,
-  reverseFan
-} from './fold';
+import { anglesAt, checkConsistency, foldedPositions, LAYER_GAP, layerHeights, movingFaces, reverseFan } from './fold';
 import { loadModel } from './load-model';
 import { tuckArrow } from './reverse';
 import type { Model, Step, Vec3 } from './types';
@@ -685,7 +676,7 @@ describe('reverse folds', () => {
   const committed = (id: string) =>
     loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
   const crane = committed('crane');
-  const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
+  const reverse = crane.steps.flatMap((s, k) => (s.kind === 'reverse' ? [k] : []));
 
   const sub = (a: Vec3, b: Vec3) => new Vector3(...a).sub(new Vector3(...b));
   const moving = (k: number) => [...movingFaces(crane, k)];

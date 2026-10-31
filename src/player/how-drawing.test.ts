@@ -1,13 +1,13 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { foldedPositions, isReverseFold, movingFaces, reverseFan } from '../fold/fold';
+import { foldedPositions, movingFaces, reverseFan } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import type { Vec2 } from '../fold/types';
 import { howDrawing } from './how-drawing';
 import { lineGroups } from './paper-geometry';
 
 const crane = loadModel(JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8')));
-const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
+const reverse = crane.steps.flatMap((s, k) => (s.kind === 'reverse' ? [k] : []));
 const [neck] = reverse;
 
 const draw = (k: number) => {

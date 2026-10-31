@@ -3,24 +3,44 @@ import { describe, expect, it } from 'vitest';
 import { fixture } from './fixtures';
 import { foldedPositions, movingFaces } from './fold';
 import { loadModel } from './load-model';
-import { arrowOpacity, isReverseFold, pushArrows, pushOpacity, pushSides, tuckArrow } from './reverse';
+import { arrowOpacity, pushArrows, pushOpacity, pushSides, reverseFold, tuckArrow } from './reverse';
 
 const committed = (id: string) =>
   loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
 const crane = committed('crane');
 const neck = crane.steps.findIndex((s) => s.instruction.en.startsWith('Reverse-fold the left flap'));
 
-describe('isReverseFold', () => {
+describe("a reverse fold's kind", () => {
   it('finds exactly the neck, tail and head', () => {
-    const found = crane.steps.map((_, k) => k).filter((k) => isReverseFold(crane, k));
+    const found = crane.steps.map((_, k) => k).filter((k) => crane.steps[k].kind === 'reverse');
     expect(found.map((k) => crane.steps[k].instruction.en.slice(0, 13))).toEqual(Array(3).fill('Reverse-fold '));
   });
 
   it('finds no reverse fold in models without one', () => {
     for (const m of [loadModel(fixture('fold-in-quarters')), committed('tulip'), committed('dog-face')]) {
-      expect(m.steps.some((_, k) => isReverseFold(m, k))).toBe(false);
+      expect(m.steps.some((s) => s.kind === 'reverse')).toBe(false);
     }
-    expect(isReverseFold(crane, 0)).toBe(false);
+    expect(crane.steps[0].kind).toBeUndefined();
+  });
+});
+
+describe('reverseFold', () => {
+  it('finds all of every reverse fold in the library, and nothing on other steps', () => {
+    for (const m of ['crane', 'dove', 'pig'].map(committed)) {
+      m.steps.forEach((s, k) => {
+        const r = reverseFold(m, k);
+        if (s.kind !== 'reverse') return expect(r).toBeNull();
+        expect(r?.spine.length).toBeGreaterThan(0);
+        expect(r?.pushes).toHaveLength(2);
+        expect(r?.landing).toBeLessThan(1);
+      });
+    }
+  });
+
+  it("is null on a step that says it is a reverse fold but can't be fanned, so the player shows it as a plain step", () => {
+    const half = loadModel(fixture('fold-in-half'));
+    const claimed = { ...half, steps: [half.steps[0], { ...half.steps[1], kind: 'reverse' as const }] };
+    expect(reverseFold(claimed, 1)).toBeNull();
   });
 });
 
@@ -67,7 +87,7 @@ describe('arrowOpacity', () => {
 });
 
 describe('pushArrows', () => {
-  const reverse = crane.steps.flatMap((_, k) => (isReverseFold(crane, k) ? [k] : []));
+  const reverse = crane.steps.flatMap((s, k) => (s.kind === 'reverse' ? [k] : []));
   const sub = (p: number[], q: number[]) => p.map((x, i) => x - q[i]);
   const len = (p: number[]) => Math.hypot(...p);
   const dot = (x: number[], y: number[]) => x.reduce((acc, c, i) => acc + c * y[i], 0);

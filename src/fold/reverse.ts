@@ -1,8 +1,36 @@
 import { Vector3 } from 'three';
-import { foldedPositions, isReverseFold, movingFaces, tuckBow } from './fold';
+import { foldedPositions, landingAt, movingFaces, type ReverseFan, reverseFan, spineEdges, tuckBow } from './fold';
 import type { Model, Vec3 } from './types';
 
-export { isReverseFold };
+/** Everything the player draws for a reverse fold, all of it found or none. */
+export type ReverseFold = {
+  fan: ReverseFan;
+  /** The flap's folded edges that turn inside out. */
+  spine: number[];
+  /** Progress at which the paper lands, before its layers change places (`landingAt`). */
+  landing: number;
+  tuck: NonNullable<ReturnType<typeof tuckArrow>>;
+  pushes: NonNullable<ReturnType<typeof pushArrows>>;
+};
+const found = new WeakMap<Model, (ReverseFold | null)[]>();
+
+/**
+ * Step `step` as a reverse fold, or null: outside one, and on one the engine can't fan (a step from someone's file
+ * that only looks like one), which the player then shows as a plain step, its sentence in words.
+ */
+export function reverseFold(model: Model, step: number): ReverseFold | null {
+  const list = found.get(model) ?? [];
+  found.set(model, list);
+  if (list[step] !== undefined) return list[step];
+  const fan = reverseFan(model, step);
+  const tuck = fan && tuckArrow(model, step);
+  const pushes = fan && pushArrows(model, step);
+  list[step] =
+    fan && tuck && pushes
+      ? { fan, spine: spineEdges(model, step), landing: landingAt(model, step), tuck, pushes }
+      : null;
+  return list[step];
+}
 
 /**
  * A tuck arrow for a reverse fold, like a diagram's: from the flap's tip where it is to where that tip ends up
@@ -10,7 +38,7 @@ export { isReverseFold };
  * head at its end. Null outside a reverse fold.
  */
 export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [Vec3, Vec3] } | null {
-  if (!isReverseFold(model, step)) return null;
+  if (model.steps[step]?.kind !== 'reverse') return null;
   // from the flap as the last step left it: at t = 0 it is already tucked
   const { tip, landed, out } = tuckBow(
     model,
@@ -51,7 +79,7 @@ export const arrowOpacity = (s: number): number => Math.max(0, Math.min(1, (1 - 
  * a reverse fold.
  */
 export function pushArrows(model: Model, step: number): { outline: Vec3[]; facing: Vec3 }[] | null {
-  if (!isReverseFold(model, step)) return null;
+  if (model.steps[step]?.kind !== 'reverse') return null;
   const [start, end] = [foldedPositions(model, step - 1, 1), foldedPositions(model, step, 1)];
   const corners = [...movingFaces(model, step)].flatMap((f) =>
     start[f].map((p, i) => [new Vector3(...p), new Vector3(...end[f][i])])

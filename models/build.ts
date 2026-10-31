@@ -1,5 +1,5 @@
 import { type Matrix3, Vector2 } from 'three';
-import { foldedPositions, isReverseFold } from '../src/fold/fold';
+import { foldedPositions } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import type { Vec2, Vec3 } from '../src/fold/types';
 import type { ModelEntry } from '../src/models/catalog';
@@ -94,6 +94,10 @@ function faceOrdersOf(stack: StackPiece[], vertices: Vec2[], faces: number[][]):
 
 /** The FOLD file for `src`, in the shape `loadModel` reads. */
 export function buildFold(src: ModelSource) {
+  // only the solver reads a tuck's layer order off its motion (landedOrders); without it the layers end on the wrong
+  // sides of their creases
+  const tucked = src.steps.findIndex((st) => st.tuck);
+  if (tucked !== -1 && !src.solve) throw new Error(`${src.id} step ${tucked + 1} tucks, which needs solve: true.`);
   const { vertices, edges, assignments, edgeCrease, faces } = arrange(src.creases, src.size);
   const angles: Record<string, number> = {};
   let orders = '[]';
@@ -221,7 +225,7 @@ function markPivots<F extends Parameters<typeof loadModel>[0] & { file_frames: o
   const ts = Array.from({ length: 10 }, (_, i) => (i + 1) / 10);
   for (let k = 1; k < model.steps.length; k++) {
     const step = model.steps[k];
-    if (isReverseFold(model, k) || step.landedOrders || step.path.length) continue;
+    if (step.kind === 'reverse' || step.landedOrders || step.path.length) continue;
     const tried = { ...model, steps: model.steps.map((s, i) => (i === k ? { ...s, pivot: true } : s)) };
     const plain = foldedPositions(model, k, 0.5).flat(2);
     const changed = foldedPositions(tried, k, 0.5)
