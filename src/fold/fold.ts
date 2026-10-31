@@ -496,7 +496,7 @@ function creaseLifts(
 const opens = new WeakMap<Model, boolean[]>();
 
 /** Does `step` end with some face out of the stack's plane (e.g. wings opened out)? */
-function endsOpen(model: Model, step: number): boolean {
+export function endsOpen(model: Model, step: number): boolean {
   const list = opens.get(model) ?? [];
   opens.set(model, list);
   list[step] ??= rootTransforms(model, model.steps[step].angles, step).some(

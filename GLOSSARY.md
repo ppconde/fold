@@ -11,3 +11,7 @@
 **Step kind**: what sort of move a step is, as `Step.kind`, named only when something reads it. `'unfold'`: the homepage's single step from the flat sheet to the finished model, every crease at once. `'reverse'`: a reverse fold, found by the loader from the angles (not stored in the file).
 
 **Reverse fold**: a flap's spine turns inside out: a crease already folded flat flips sign while new creases appear along one line, and the flap tucks between the body's layers. Its **fan** is how the flap swings round while the body opens; its **spine** is the flap's folded edges that flip. `reverseFold(model, step)` gives everything the player draws for one, or null.
+
+**Fold-and-unfold**: a step whose path folds a crease and opens it again, so it ends where it started (a pre-crease). Its flap still counts as moving.
+
+**Moved creases / moving faces**: what a step changes: `movedCreases` (creases.ts) are the creases whose angle differs anywhere along the path or at the end; `movingFaces` (fold.ts) are the faces that leave their place on the way.

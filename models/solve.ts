@@ -1,7 +1,7 @@
 import { MathUtils, type Matrix4, Vector3 } from 'three';
 import { movedCreases } from '../src/fold/creases';
 import { cornerKeys } from '../src/fold/cuts';
-import { pathAngles, rootTransforms, treeEdges } from '../src/fold/fold';
+import { endsOpen, pathAngles, rootTransforms, treeEdges } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import type { FaceOrder, Model, Vec2 } from '../src/fold/types';
 import { overlap } from './arrange';
@@ -236,7 +236,7 @@ export function motionOrders(fold: Fold, tucks: (Tuck<number> | undefined)[] = [
   for (let k = 1; k < model.steps.length; k++) {
     const E = rootTransforms(model, model.steps[k].angles, k);
     // a step that doesn't end flat (opening out) keeps the order it was given
-    if (E.some((m) => Math.abs(Math.abs(m.elements[10]) - 1) > 1e-9)) {
+    if (endsOpen(model, k)) {
       delete fold.file_frames[k - 1].faceOrders;
       before = E;
       continue;
