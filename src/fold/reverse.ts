@@ -1,9 +1,18 @@
-import { Vector3 } from 'three';
-import { foldedPositions, landingAt, movingFaces, type ReverseFan, reverseFan, spineEdges, tuckBow } from './fold';
+import { MathUtils, Vector3 } from 'three';
+import {
+  foldedPositions,
+  landingAt,
+  movingFaces,
+  paperExtent,
+  type ReverseFan,
+  reverseFan,
+  spineEdges,
+  tuckBow
+} from './fold';
 import type { Model, Vec3 } from './types';
 
 /** Everything the player draws for a reverse fold, all of it found or none. */
-export type ReverseFold = {
+type ReverseFold = {
   fan: ReverseFan;
   /** The flap's folded edges that turn inside out. */
   spine: number[];
@@ -59,7 +68,7 @@ export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [V
   const shaft = Array.from({ length: 17 }, (_, i) => at(i / 16));
   const back = at(0.9).sub(end).normalize();
   const side = out.clone().addScaledVector(back, -out.dot(back)).normalize();
-  const wing = 0.035 * sheetSize(model);
+  const wing = 0.035 * paperExtent(model).size;
   const barb = (s: 1 | -1) =>
     end
       .clone()
@@ -70,7 +79,7 @@ export function tuckArrow(model: Model, step: number): { shaft: Vec3[]; head: [V
 }
 
 /** The tuck arrow's strength at eased progress `s`: full until three quarters through, gone as the step ends. */
-export const arrowOpacity = (s: number): number => Math.max(0, Math.min(1, (1 - s) * 4));
+export const arrowOpacity = (s: number): number => MathUtils.clamp((1 - s) * 4, 0, 1);
 
 /**
  * Push marks for a reverse fold, as a diagram's: a broad hollow arrow each side of the body, flat in the paper's plane
@@ -106,7 +115,7 @@ export function pushArrows(model: Model, step: number): { outline: Vec3[]; facin
   const middle = corners.reduce((sum, [c]) => sum.add(c), new Vector3()).divideScalar(corners.length);
   if (middle.sub(spine).dot(out) > 0) out.negate();
   // sized by the sheet, as the tuck arrow's head is, so a short flap's mark still reads
-  const [reach, half] = [0.1 * sheetSize(model), 0.017 * sheetSize(model)];
+  const [reach, half] = [0.1 * paperExtent(model).size, 0.017 * paperExtent(model).size];
   return pushSides(depths).map(([d, side]) => {
     const at = spine.clone().addScaledVector(n, d + side * 0.04 * length);
     const point = (u: number, v: number) =>
@@ -138,11 +147,4 @@ export const pushSides = (depths: number[]): [number, 1 | -1][] => [
 
 /** The push marks' strength at eased progress `s`: full from the first frame, gone by the first sixth of the step,
  * before the flap has narrowed much. */
-export const pushOpacity = (s: number): number => Math.max(0, Math.min(1, (1 / 6 - s) * 12));
-
-/** The flat sheet's longer side. */
-function sheetSize(model: Model): number {
-  const xs = model.vertices.map((p) => p[0]);
-  const ys = model.vertices.map((p) => p[1]);
-  return Math.max(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-}
+export const pushOpacity = (s: number): number => MathUtils.clamp((1 / 6 - s) * 12, 0, 1);

@@ -12,18 +12,10 @@ import {
   Matrix4,
   Vector3
 } from 'three';
-import { foldedPositions, progress } from '../fold/fold';
+import { foldedPositions, paperExtent, progress } from '../fold/fold';
 import { arrowOpacity, pushOpacity, reverseFold } from '../fold/reverse';
 import type { Model, Vec3 } from '../fold/types';
-import {
-  dashDot,
-  depthBelowTable,
-  fillTriangles,
-  fillUVs,
-  lineGroups,
-  paperExtent,
-  triangleCount
-} from './paper-geometry';
+import { dashDot, depthBelowTable, fillTriangles, fillUVs, lineGroups, triangleCount } from './paper-geometry';
 import { patternHooks } from './paper-material';
 import { PLAIN, paperById } from './papers';
 import { setSegments } from './segments';

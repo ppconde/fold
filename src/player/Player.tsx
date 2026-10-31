@@ -1,4 +1,5 @@
 import { Fragment, lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { ChunkBoundary } from '../ChunkBoundary';
 import { progress } from '../fold/fold';
 import { reverseFold } from '../fold/reverse';
 import type { Model } from '../fold/types';
@@ -14,7 +15,6 @@ import { loadStage } from './load-stage';
 import { PaperPicker } from './PaperPicker';
 import styles from './Player.module.css';
 import { playerStatus } from './player-state';
-import { StageBoundary } from './StageBoundary';
 import { usePlayer } from './use-player';
 import { softenTowardIvory } from './washi';
 
@@ -115,7 +115,18 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
 
       <div className={styles.stage}>
         {webgl ? (
-          <StageBoundary onError={() => setStageFailed(true)} message={t.stageFailed} retryLabel={t.tryAgain}>
+          <ChunkBoundary
+            onError={() => setStageFailed(true)}
+            fallback={
+              // "Try again" reloads: browsers cache a failed dynamic import of the same URL, so re-importing can't recover
+              <div className={styles.fallback}>
+                <p className={styles.noWebgl}>{t.stageFailed}</p>
+                <button type="button" className="ink-link" onClick={() => location.reload()}>
+                  {t.tryAgain}
+                </button>
+              </div>
+            }
+          >
             <Suspense fallback={<div className={styles.stagePlaceholder} aria-hidden="true" />}>
               <LazyStage
                 model={model}
@@ -127,7 +138,7 @@ export function Player({ entry, model, initialStep, onSettle }: Props) {
                 paper={paper}
               />
             </Suspense>
-          </StageBoundary>
+          </ChunkBoundary>
         ) : (
           <p className={styles.noWebgl}>{t.noWebgl}</p>
         )}

@@ -1,4 +1,4 @@
-import { Euler, Matrix4, Vector3 } from 'three';
+import { Euler, MathUtils, Matrix4, Vector3 } from 'three';
 import { foldedPositions } from '../fold/fold';
 import type { Model, Vec3 } from '../fold/types';
 
@@ -50,7 +50,7 @@ export function evenPace(model: Model): (u: number) => number {
     run.push(run[i - 1] + at[i].reduce((s, p, k) => s + Math.hypot(...p.map((x, c) => x - at[i - 1][k][c])), 0));
   }
   return (u) => {
-    const goal = Math.max(0, Math.min(1, u)) * run[N];
+    const goal = MathUtils.clamp(u, 0, 1) * run[N];
     const i = Math.max(
       1,
       run.findIndex((r) => r >= goal)

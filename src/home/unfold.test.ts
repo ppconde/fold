@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { fixture, slitFixture } from '../fold/fixtures';
+import { committed, fixture, slitFixture } from '../fold/fixtures';
 import { checkConsistency, foldedPositions } from '../fold/fold';
 import { loadModel } from '../fold/load-model';
 import { evenPace, unfoldAll } from './unfold';
@@ -15,7 +14,7 @@ describe('unfoldAll', () => {
   });
 
   it("ends with the lesson's layers, even where flaps end on edge", () => {
-    const model = loadModel(JSON.parse(readFileSync('public/models/crane.fold', 'utf8')));
+    const model = committed('crane');
     const [a, b] = [foldedPositions(model, model.steps.length - 1, 1), foldedPositions(unfoldAll(model), 1, 1)];
     // the same shape up to the turn: every corner the same distance from the first
     const reach = (P: number[][][]) => P.flat().map((p) => Math.hypot(...p.map((x, i) => x - P[0][0][i])));

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { ChunkBoundary } from '../ChunkBoundary';
 import styles from '../home/Home.module.css';
-import { SceneBoundary } from '../home/SceneBoundary';
 import { evenPace, UNFOLD_SECONDS, unfoldAll } from '../home/unfold';
 import { useLang, useT } from '../i18n/LanguageProvider';
 import { localized, titles } from '../i18n/lang';
@@ -113,8 +113,9 @@ function Home() {
         <span className={styles.mark} aria-hidden="true">
           折
         </span>
+        {/* a failed 3D chunk just drops the decoration; the homepage stays usable */}
         {found && model && (
-          <SceneBoundary>
+          <ChunkBoundary>
             <Suspense fallback={null}>
               <LazyScene
                 model={model}
@@ -125,7 +126,7 @@ function Home() {
                 label={t.home.modelLabel(localized(found.entry.name, lang))}
               />
             </Suspense>
-          </SceneBoundary>
+          </ChunkBoundary>
         )}
       </div>
     </main>

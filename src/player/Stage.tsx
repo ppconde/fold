@@ -2,11 +2,12 @@ import { CameraControls, CameraControlsImpl, ContactShadows } from '@react-three
 import { Canvas, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
 import { type Group, Quaternion, type Spherical, Vector3 } from 'three';
+import { paperExtent } from '../fold/fold';
 import type { Model } from '../fold/types';
 import { useT } from '../i18n/LanguageProvider';
 import { prefersReducedMotion } from './browser';
 import { Paper } from './Paper';
-import { endCentre, frameReach, paperExtent, STAGE_FOV, STAGE_POLAR, stageDistance } from './paper-geometry';
+import { endCentre, frameReach, STAGE_FOV, STAGE_POLAR, stageDistance } from './paper-geometry';
 
 /** Zoom per wheel notch or pinch, against camera-controls' default of 1. */
 const ZOOM_SPEED = 2;

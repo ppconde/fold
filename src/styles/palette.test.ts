@@ -1,5 +1,23 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { PALETTE, TEXT_PAIRS } from './palette';
+
+/** The palette's custom properties, read from global.css (`--plaster: #e6dccb;` → plaster: #e6dccb). */
+const PALETTE = Object.fromEntries(
+  [...readFileSync(new URL('./global.css', import.meta.url), 'utf8').matchAll(/--(\w+):\s*(#[0-9a-f]{6});/gi)].map(
+    ([, name, hex]) => [name, hex]
+  )
+);
+
+/** Every foreground/background pair the UI uses for text. */
+const TEXT_PAIRS = [
+  ['charcoal', 'plaster'],
+  ['charcoal', 'ivory'],
+  ['muted', 'plaster'],
+  ['muted', 'ivory'],
+  ['indigo', 'plaster'],
+  ['indigo', 'ivory'],
+  ['ivory', 'charcoal']
+];
 
 const luminance = (hex: string) => {
   const [r, g, b] = [1, 3, 5].map((i) => {
@@ -19,7 +37,7 @@ describe('palette', () => {
   });
 
   it('keeps non-text accents at 3:1 or more on plaster', () => {
-    for (const mark of ['clay', 'moss'] as const) {
+    for (const mark of ['clay', 'moss']) {
       expect(contrast(PALETTE[mark], PALETTE.plaster)).toBeGreaterThanOrEqual(3);
     }
   });

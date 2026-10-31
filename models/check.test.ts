@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { fixture, slitFixture } from '../src/fold/fixtures';
+import { committed, fixture, slitFixture } from '../src/fold/fixtures';
 import { foldedPositions, LAYER_GAP, layerHeights } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
 import type { Vec3 } from '../src/fold/types';
@@ -9,8 +8,7 @@ import { checkModel, crossings, flapFlips, interleaved, spread, tradesPlaces, wr
 import { diamond as d, diamondSequence, has, lacks } from './sequence';
 
 const quarters = () => loadModel(fixture('fold-in-quarters'));
-const crane = () =>
-  loadModel(JSON.parse(readFileSync(new URL('../public/models/crane.fold', import.meta.url), 'utf8')));
+const crane = () => committed('crane');
 
 describe('checkModel', () => {
   it('passes both hand-written fixtures', () => {

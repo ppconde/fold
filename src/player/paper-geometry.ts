@@ -1,31 +1,11 @@
 import { MathUtils, Vector3 } from 'three';
 import { stepCreases } from '../fold/creases';
-import { anglesAt, foldedPositions } from '../fold/fold';
+import { anglesAt, foldedPositions, paperExtent } from '../fold/fold';
 import { reverseFold } from '../fold/reverse';
-import type { Model, Vec2, Vec3 } from '../fold/types';
-
-type Extent = {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-  width: number;
-  height: number;
-  size: number;
-  center: Vec2;
-};
+import type { Model, Vec3 } from '../fold/types';
 
 /** A crease is drawn as folded once it has moved more than this many degrees. */
 const FOLDED_DEGREES = 0.5;
-
-export function paperExtent(model: Model): Extent {
-  const xs = model.vertices.map((v) => v[0]);
-  const ys = model.vertices.map((v) => v[1]);
-  const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
-  const width = maxX - minX;
-  const height = maxY - minY;
-  return { minX, minY, maxX, maxY, width, height, size: Math.max(width, height), center: model.center };
-}
 
 /** The lesson stage's camera: vertical field of view in degrees, and its angle from straight down in radians. */
 export const STAGE_FOV = 35;
@@ -146,7 +126,7 @@ export function lineGroups(
     for (const f of model.edgeFaces[e])
       add(Math.abs(angles[e]) > FOLDED_DEGREES ? 'folded' : 'flat', e, segment(model, faces, e, f));
   // the slit this step cuts, from where the scissors go in to as far as they've got, on every layer
-  const reach = Math.max(0, Math.min(1, t));
+  const reach = MathUtils.clamp(t, 0, 1);
   for (const { edge, from, to } of model.steps[step].cuts) {
     const [lo, hi] = from < to ? [from, to] : [to, from];
     if (reach <= lo) continue;

@@ -1,4 +1,11 @@
 import { readFileSync } from 'node:fs';
+import { loadModel } from './load-model';
+import type { Model } from './types';
+
+/** Test helper: a library model as the app loads it, from its committed file in public/models (see ADR 1). */
+export function committed(id: string): Model {
+  return loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));
+}
 
 /** Test helper: raw JSON of a hand-written test model next to this file (not in the library). */
 export function fixture(name: 'fold-in-half' | 'fold-in-quarters'): unknown {
