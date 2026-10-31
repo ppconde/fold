@@ -17,6 +17,23 @@ const entry = {
 const text = { en: 'Fold.', pt: 'Dobra.' };
 
 describe('foldSequence', () => {
+  it('folds a sheet that is not square: a letter sheet halved, then its top corner to the middle', () => {
+    const w = 8.5 / 11;
+    const s = foldSequence([0, 0, 0], [w, 1]);
+    s.crease('middle', [w / 2, 0], [w / 2, 1], { valley: true, hold: [0.75 * w, 0.5], ...text });
+    s.fold('corner', [0, 1 - w / 2], [w / 2, 1], { valley: true, hold: [0.75 * w, 0.5], ...text });
+    const src = s.source({ ...entry, tags: [] });
+    expect(src.size).toEqual([w, 1]);
+    const model = loadModel(buildFold(src));
+    expect(checkModel(model)).toEqual([]);
+    // the corner lands on the middle line
+    const corner = model.vertices.findIndex(([x, y]) => x === 0 && y === 1);
+    const f = model.faces.findIndex((face) => face.includes(corner));
+    const [cx, cy] = foldedPositions(model, model.steps.length - 1, 1)[f][model.faces[f].indexOf(corner)];
+    expect(cx).toBeCloseTo(w / 2);
+    expect(cy).toBeCloseTo(1 - w / 2);
+  });
+
   it('turns one valley fold into one valley crease and a held point', () => {
     const s = foldSequence();
     s.fold('middle', [0.5, 0], [0.5, 1], { valley: true, hold: [0.75, 0.5], ...text });
