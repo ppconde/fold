@@ -250,7 +250,7 @@ function stackAt(model: Model, step: number, landed = false): Layers {
   cache.set(model, list);
   if (list[step]) return list[step];
   // a step that inherits its faceOrders (a turn, or opening out) keeps the stack it was given
-  if (!landed && step > 1 && model.steps[step].faceOrders === model.steps[step - 1].faceOrders) {
+  if (!landed && step > 1 && model.steps[step].ordersFrom !== step) {
     list[step] = stackAt(model, step - 1);
     return list[step];
   }
@@ -277,7 +277,7 @@ function stackAt(model: Model, step: number, landed = false): Layers {
       const [s, before] = [model.steps[k], model.steps[k - 1].angles];
       if (!isReverseFold(model, k) && !endsOpen(model, k) && [s.angles, ...s.path].some((a) => a[e] !== before[e]))
         return true;
-      if (s.faceOrders !== model.steps[step].faceOrders) return false;
+      if (s.ordersFrom !== model.steps[step].ordersFrom) return false;
     }
     return false;
   };
@@ -838,7 +838,7 @@ function travel(model: Model, step: number): number[] {
   // a step that keeps the stacking (a turn, or opening a model out) has no flap to carry over the stack, nor
   // has the homepage's unfold, every crease moving at once
   const restack =
-    model.steps[step].path !== model.unfold && (peaks || to.some((h, f) => h !== from[f])) && moving.includes(false);
+    model.steps[step].kind !== 'unfold' && (peaks || to.some((h, f) => h !== from[f])) && moving.includes(false);
   list[step] = moving.map((m, f) =>
     !restack || !m ? 0 : over[f] ? Math.max(0, stay.max + 1 - up.min) : -Math.max(0, down.max + 1 - stay.min)
   );

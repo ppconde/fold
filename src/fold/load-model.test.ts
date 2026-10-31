@@ -82,6 +82,16 @@ describe('loadModel', () => {
     expect(model.steps[0].faceOrders).toEqual([]);
     expect(model.steps[1].faceOrders).toEqual([[0, 1, 1]]);
     expect(model.steps[2].faceOrders).toEqual([[0, 1, 1]]);
+    expect(model.steps.map((s) => s.ordersFrom)).toEqual([0, 1, 1]);
+  });
+
+  it('keeps the stack only for a step without faceOrders, not one that gives the same orders again', () => {
+    const json = fixture('fold-in-quarters') as Json;
+    json.file_frames[1].faceOrders = json.file_frames[0].faceOrders;
+    expect(loadModel(json).steps.map((s) => s.ordersFrom)).toEqual([0, 1, 2]);
+    delete json.file_frames[0].faceOrders;
+    delete json.file_frames[1].faceOrders;
+    expect(loadModel(json).steps.map((s) => s.ordersFrom)).toEqual([0, 0, 0]);
   });
 
   it("reads a tuck's landed orders for its step only", () => {
