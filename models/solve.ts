@@ -1,4 +1,5 @@
 import { MathUtils, type Matrix4, Vector3 } from 'three';
+import { movedCreases } from '../src/fold/creases';
 import { cornerKeys } from '../src/fold/cuts';
 import { pathAngles, rootTransforms, treeEdges } from '../src/fold/fold';
 import { loadModel } from '../src/fold/load-model';
@@ -167,7 +168,7 @@ export function solvePaths(fold: Fold, knots = KNOTS): void {
     const lerp = (s: number) => prev.map((a, e) => a + (end[e] - a) * s);
     if ([0.25, 0.5, 0.75].every((s) => worstGap(model, lerp(s), k) < 1e-9)) continue;
     // only the creases the step changes move; the rest of the paper stays as it was
-    const vars = model.edges.flatMap((_, e) => (end[e] !== prev[e] ? [e] : []));
+    const vars = [...movedCreases(model, k)];
     const path: number[][] = [];
     let guess = prev;
     for (let i = 1; i <= knots; i++) {

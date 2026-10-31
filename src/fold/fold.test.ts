@@ -672,6 +672,22 @@ describe('fold-and-unfold', () => {
   });
 });
 
+describe('movingFaces', () => {
+  it("counts a fold-and-unfold's flap, though it ends where it started", () => {
+    const crane = loadModel(
+      JSON.parse(readFileSync(new URL('../../public/models/crane.fold', import.meta.url), 'utf8'))
+    );
+    const unfolds = crane.steps.flatMap((s, k) =>
+      k && s.path.length && s.angles.every((a, e) => a === crane.steps[k - 1].angles[e]) ? [k] : []
+    );
+    expect(unfolds.length).toBeGreaterThan(0);
+    for (const k of unfolds) {
+      expect(movingFaces(crane, k).size).toBeGreaterThan(0);
+      expect(movingFaces(crane, k).size).toBeLessThan(crane.faces.length);
+    }
+  });
+});
+
 describe('reverse folds', () => {
   const committed = (id: string) =>
     loadModel(JSON.parse(readFileSync(new URL(`../../public/models/${id}.fold`, import.meta.url), 'utf8')));

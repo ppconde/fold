@@ -1,5 +1,6 @@
 import { Box3, Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
 import { assertStep } from './assert-step';
+import { movedCreases } from './creases';
 import type { Model, Vec3 } from './types';
 
 const DEG = MathUtils.DEG2RAD;
@@ -50,8 +51,7 @@ function tree(model: Model, step: number): Tree {
   const list = trees.get(model) ?? [];
   trees.set(model, list);
   if (list[step]) return list[step];
-  const moves = (k: number, e: number) =>
-    k > 0 && [...model.steps[k].path, model.steps[k].angles].some((a) => a[e] !== model.steps[k - 1].angles[e]);
+  const moves = (k: number, e: number) => movedCreases(model, k).has(e);
   // a step that moves no crease (a turn, a new held face) keeps the previous tree, so it joins exactly; one that
   // cuts gets its own, without the slit
   let from = step;
@@ -274,9 +274,8 @@ function stackAt(model: Model, step: number, landed = false): Layers {
   // steps that end open) would lift the limit.
   const turns = (e: number) => {
     for (let k = step + 1; model.steps[k]; k++) {
-      const [s, before] = [model.steps[k], model.steps[k - 1].angles];
-      if (s.kind !== 'reverse' && !endsOpen(model, k) && [s.angles, ...s.path].some((a) => a[e] !== before[e]))
-        return true;
+      const s = model.steps[k];
+      if (s.kind !== 'reverse' && !endsOpen(model, k) && movedCreases(model, k).has(e)) return true;
       if (s.ordersFrom !== model.steps[step].ordersFrom) return false;
     }
     return false;
@@ -469,15 +468,15 @@ function creaseLifts(
   poses0: Matrix4[],
   from: Layers
 ): (Vector3 | undefined)[] {
-  const moving = movedTo(model, step, model.steps[step].path[0]);
+  const moving = movingFaces(model, step);
   const lift = (f: number) =>
     new Vector3(0, 0, 1).transformDirection(poses0[f]).multiplyScalar(LAYER_GAP * from.heights[f] * from.up[f]);
   // which way the flap rises: its corners' heights now against the start
   const height = (m: Matrix4, f: number) =>
     model.faces[f].reduce((acc, v) => acc + new Vector3(...model.vertices[v], 0).applyMatrix4(m).z, 0);
-  const rises = moving.reduce((acc, m, f) => (m ? acc + height(poses[f], f) - height(poses0[f], f) : acc), 0) >= 0;
+  const rises = [...moving].reduce((acc, f) => acc + height(poses[f], f) - height(poses0[f], f), 0) >= 0;
   return poses.map((m, f) => {
-    if (!moving[f]) return undefined;
+    if (!moving.has(f)) return undefined;
     const z = lift(f).z;
     const hinge = new Vector3(0, 0, (rises ? z < 0 : z > 0) ? z : 0);
     const since = new Quaternion()
@@ -547,11 +546,16 @@ function movedTo(model: Model, step: number, angles: number[]): boolean[] {
 
 const movers = new WeakMap<Model, ReadonlySet<number>[]>();
 
-/** Faces that end `step` elsewhere than they start it, relative to its fixed face (none at step 0). */
+/** Faces that leave where they start `step`, anywhere along its path or at its end, relative to its fixed face: a
+ * fold-and-unfold's flap too, though it ends where it started (none at step 0). */
 export function movingFaces(model: Model, step: number): ReadonlySet<number> {
   const list = movers.get(model) ?? [new Set()];
   movers.set(model, list);
-  list[step] ??= new Set(movedTo(model, step, model.steps[step].angles).flatMap((m, f) => (m ? [f] : [])));
+  list[step] ??= new Set(
+    [...model.steps[step].path, model.steps[step].angles].flatMap((a) =>
+      movedTo(model, step, a).flatMap((m, f) => (m ? [f] : []))
+    )
+  );
   return list[step];
 }
 
@@ -781,9 +785,9 @@ function travel(model: Model, step: number): number[] {
   }
   const start = startPose(model, step);
   const cur = model.steps[step];
-  // a fold-and-unfold ends where it started: its flap is the paper that moves on the way, at the path's peak
   const peaks = peaksAt(model, step);
-  const moving = movedTo(model, step, peaks ? cur.path[0] : cur.angles);
+  const movers = movingFaces(model, step);
+  const moving = model.faces.map((_, f) => movers.has(f));
   const before = stackAt(model, step - 1);
   const after = stackAt(model, step);
   const [from, to] = [before.heights, after.heights];
