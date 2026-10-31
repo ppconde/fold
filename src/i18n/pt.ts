@@ -46,9 +46,7 @@ export const pt: Dictionary = {
     noMatch: 'Nenhuma dobra corresponde.',
     clear: 'Limpar filtros',
     pages: 'Páginas',
-    page: (n) => `Página ${n}`,
-    previous: 'Página anterior',
-    next: 'Página seguinte'
+    page: (n) => `Página ${n}`
   },
   about: {
     title: 'Sobre',

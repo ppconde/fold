@@ -189,8 +189,7 @@
   font-family: var(--font-sans);
 }
 
-.pages a,
-.pages span {
+.pages a {
   display: inline-grid;
   place-items: center;
   min-width: 44px;

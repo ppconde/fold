@@ -153,13 +153,10 @@ test('a long library splits into pages, and a new filter starts on the first', a
   await expect(models).toHaveCount(10);
   await expect(pages.getByRole('link', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
 
-  await expect(pages.getByRole('link', { name: 'Previous page' })).toHaveCount(0);
-  await pages.getByRole('link', { name: 'Next page' }).click();
+  await pages.getByRole('link', { name: 'Page 2' }).click();
   await expect(page).toHaveURL(/page=2/);
   await expect(pages.getByRole('link', { name: 'Page 2' })).toHaveAttribute('aria-current', 'page');
   await expect(pages.getByRole('link', { name: 'Page 1' })).not.toHaveAttribute('aria-current');
-  await expect(pages.getByRole('link', { name: 'Previous page' })).not.toHaveAttribute('aria-current');
-  await expect(pages.getByRole('link', { name: 'Next page' })).toHaveCount(0);
   await expect(models).toHaveText([
     /Kannon fold/,
     /Blintz base/,
@@ -172,7 +169,7 @@ test('a long library splits into pages, and a new filter starts on the first', a
 
   await page.reload();
   await expect(models).toHaveCount(7);
-  await pages.getByRole('link', { name: 'Previous page' }).click();
+  await pages.getByRole('link', { name: 'Page 1' }).click();
   await expect(page).not.toHaveURL(/page=/);
   await expect(pages.getByRole('link', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
 

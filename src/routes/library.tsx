@@ -54,7 +54,6 @@ function Library() {
   // a page past the end (an old link, a shorter catalog) shows the last one
   const page = Math.max(1, Math.min(search.page ?? 1, pageCount));
   const shown = found.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-  const to = (n: number) => (prev: LibrarySearch) => ({ ...prev, page: n > 1 ? n : undefined });
 
   return (
     <main className={`page ${pages.page}`}>
@@ -142,26 +141,13 @@ function Library() {
         <p className={styles.empty}>{t.noMatch}</p>
       )}
       {pageCount > 1 && (
-        // ponytail: one link per page between previous and next, add ellipses once the catalog runs past a dozen pages
+        // ponytail: one link per page, add prev/next and ellipses once the catalog runs past a dozen pages
         <nav className={styles.pages} aria-label={t.pages}>
-          {page > 1 ? (
-            <Link
-              from={Route.fullPath}
-              search={to(page - 1)}
-              activeOptions={{ exact: true }}
-              rel="prev"
-              aria-label={t.previous}
-            >
-              ‹
-            </Link>
-          ) : (
-            <span />
-          )}
           {Array.from({ length: pageCount }, (_, i) => i + 1).map((n) => (
             <Link
               key={n}
               from={Route.fullPath}
-              search={to(n)}
+              search={(prev) => ({ ...prev, page: n > 1 ? n : undefined })}
               // the whole search must match: page 1's link (no page) would otherwise match every page
               activeOptions={{ exact: true }}
               aria-current={n === page ? 'page' : undefined}
@@ -170,19 +156,6 @@ function Library() {
               {n}
             </Link>
           ))}
-          {page < pageCount ? (
-            <Link
-              from={Route.fullPath}
-              search={to(page + 1)}
-              activeOptions={{ exact: true }}
-              rel="next"
-              aria-label={t.next}
-            >
-              ›
-            </Link>
-          ) : (
-            <span />
-          )}
         </nav>
       )}
     </main>
