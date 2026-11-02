@@ -1,4 +1,5 @@
 ---
+
 name: r3f-geometry
 description: Build React Three Fiber geometry, custom buffers, instanced meshes, points, and lines. Use for shape construction and geometry draw-call optimization, rather than material appearance.
 ---
@@ -20,7 +21,7 @@ Inspect installed Three.js, Fiber, and Drei versions before copying constructor 
 Mount below Canvas with lighting. Each Instance belongs to its nearest Instances provider.
 
 ```tsx
-import { Instance, Instances } from '@react-three/drei'
+import { Instance, Instances } from '@react-three/drei';
 
 export default function Example() {
   return (
@@ -31,7 +32,7 @@ export default function Example() {
       <Instance position={[0, 0, 0]} color="skyblue" />
       <Instance position={[1.2, 0, 0]} color="gold" />
     </Instances>
-  )
+  );
 }
 ```
 

@@ -7,25 +7,27 @@ Use this only when choosing or changing the renderer. Inspect the installed Fibe
 - Do not add Fiber 10 alpha hooks or `@react-three/fiber/webgpu` imports to a Fiber 9 project. Check stable release notes before adopting experimental examples.
 
 ```tsx
-import { Canvas } from '@react-three/fiber'
-import { WebGPURenderer } from 'three/webgpu'
+import { Canvas } from '@react-three/fiber';
+import { WebGPURenderer } from 'three/webgpu';
 
 export default function WebGPUExample() {
   return (
-    <Canvas gl={async (props) => {
-      if (!(props.canvas instanceof HTMLCanvasElement)) {
-        throw new Error('This example requires a browser canvas')
-      }
-      const renderer = new WebGPURenderer({ canvas: props.canvas, antialias: true })
-      await renderer.init()
-      return renderer
-    }}>
+    <Canvas
+      gl={async (props) => {
+        if (!(props.canvas instanceof HTMLCanvasElement)) {
+          throw new Error('This example requires a browser canvas');
+        }
+        const renderer = new WebGPURenderer({ canvas: props.canvas, antialias: true });
+        await renderer.init();
+        return renderer;
+      }}
+    >
       <mesh>
         <boxGeometry />
         <meshBasicMaterial color="coral" />
       </mesh>
     </Canvas>
-  )
+  );
 }
 ```
 

@@ -3,29 +3,29 @@
 Use for large sets where per-instance components or updates are too expensive. Mount below Canvas with lighting. This small example shows buffer initialization; profile at the real instance count.
 
 ```tsx
-import { useLayoutEffect, useRef } from 'react'
-import { InstancedMesh, Object3D } from 'three'
+import { useLayoutEffect, useRef } from 'react';
+import { InstancedMesh, Object3D } from 'three';
 
 export default function NativeInstances() {
-  const mesh = useRef<InstancedMesh>(null)
+  const mesh = useRef<InstancedMesh>(null);
   useLayoutEffect(() => {
-    if (!mesh.current) return
-    const transform = new Object3D()
+    if (!mesh.current) return;
+    const transform = new Object3D();
     for (let i = 0; i < 100; i++) {
-      transform.position.set((i % 10) - 4.5, Math.floor(i / 10) - 4.5, 0)
-      transform.updateMatrix()
-      mesh.current.setMatrixAt(i, transform.matrix)
+      transform.position.set((i % 10) - 4.5, Math.floor(i / 10) - 4.5, 0);
+      transform.updateMatrix();
+      mesh.current.setMatrixAt(i, transform.matrix);
     }
-    mesh.current.instanceMatrix.needsUpdate = true
-    mesh.current.computeBoundingBox()
-    mesh.current.computeBoundingSphere()
-  }, [])
+    mesh.current.instanceMatrix.needsUpdate = true;
+    mesh.current.computeBoundingBox();
+    mesh.current.computeBoundingSphere();
+  }, []);
   return (
     <instancedMesh ref={mesh} args={[undefined, undefined, 100]}>
       <boxGeometry args={[0.5, 0.5, 0.5]} />
       <meshStandardMaterial color="coral" />
     </instancedMesh>
-  )
+  );
 }
 ```
 

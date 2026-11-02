@@ -5,6 +5,9 @@ import type { Model, Vec2, Vec3 } from './types';
 
 const DEG = MathUtils.DEG2RAD;
 
+/** A `Vec3` as a three.js `Vector3`. */
+const V = (p: Vec3) => new Vector3(...p);
+
 type Extent = {
   minX: number;
   minY: number;
@@ -639,7 +642,6 @@ export function reverseFan(model: Model, step: number): ReverseFan | null {
   if (at === undefined) return null;
   const from = plainPositions(model, step, 0);
   const to = plainPositions(model, step, 1);
-  const V = (p: Vec3) => new Vector3(...p);
   const corners = (faces: Vec3[][], pick: (f: number) => boolean) =>
     faces.flatMap((face, f) => (pick(f) ? face.map(V) : []));
   const mean = (ps: Vector3[]) => ps.reduce((c, p) => c.addScaledVector(p, 1 / ps.length), new Vector3());

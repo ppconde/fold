@@ -47,10 +47,7 @@ The saved file contains:
   "origins": [
     {
       "origin": "https://example.com",
-      "localStorage": [
-        { "name": "theme", "value": "dark" },
-        { "name": "user_id", "value": "12345" }
-      ]
+      "localStorage": [{ "name": "theme", "value": "dark" }, { "name": "user_id", "value": "12345" }]
     }
   ]
 }

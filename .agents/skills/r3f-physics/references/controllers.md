@@ -7,16 +7,16 @@ These components belong inside Physics (and Canvas). They target Rapier 2.2; che
 Advance the target on simulation ticks, not render frames. Position-kinematic targets allow Rapier to derive the velocity that affects contacting bodies.
 
 ```tsx
-import { useRef } from 'react'
-import { RigidBody, useBeforePhysicsStep, type RapierRigidBody } from '@react-three/rapier'
+import { useRef } from 'react';
+import { RigidBody, useBeforePhysicsStep, type RapierRigidBody } from '@react-three/rapier';
 
 export default function MovingPlatform() {
-  const body = useRef<RapierRigidBody>(null)
-  const elapsed = useRef(0)
+  const body = useRef<RapierRigidBody>(null);
+  const elapsed = useRef(0);
   useBeforePhysicsStep((world) => {
-    elapsed.current += world.timestep
-    body.current?.setNextKinematicTranslation({ x: Math.sin(elapsed.current), y: 0, z: 0 })
-  })
+    elapsed.current += world.timestep;
+    body.current?.setNextKinematicTranslation({ x: Math.sin(elapsed.current), y: 0, z: 0 });
+  });
   return (
     <RigidBody ref={body} type="kinematicPosition">
       <mesh>
@@ -24,7 +24,7 @@ export default function MovingPlatform() {
         <meshStandardMaterial color="coral" />
       </mesh>
     </RigidBody>
-  )
+  );
 }
 ```
 
@@ -33,14 +33,18 @@ export default function MovingPlatform() {
 The two local anchors below meet at the same initial world position. Mismatched anchors produce an initial solver correction that can look like instability.
 
 ```tsx
-import { useRef } from 'react'
-import { RigidBody, useRevoluteJoint, type RapierRigidBody } from '@react-three/rapier'
+import { useRef } from 'react';
+import { RigidBody, useRevoluteJoint, type RapierRigidBody } from '@react-three/rapier';
 
 export default function Hinge() {
   // Rapier 2.2's joint types require non-null refs; the hook waits for attachment.
-  const frame = useRef<RapierRigidBody>(null!)
-  const door = useRef<RapierRigidBody>(null!)
-  useRevoluteJoint(frame, door, [[0, 0, 0], [-0.5, 0, 0], [0, 1, 0]])
+  const frame = useRef<RapierRigidBody>(null!);
+  const door = useRef<RapierRigidBody>(null!);
+  useRevoluteJoint(frame, door, [
+    [0, 0, 0],
+    [-0.5, 0, 0],
+    [0, 1, 0]
+  ]);
   return (
     <>
       <RigidBody ref={frame} type="fixed" colliders={false} />
@@ -51,7 +55,7 @@ export default function Hinge() {
         </mesh>
       </RigidBody>
     </>
-  )
+  );
 }
 ```
 

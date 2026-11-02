@@ -1,4 +1,5 @@
 ---
+
 name: r3f-materials
 description: Choose and configure React Three Fiber surface materials, PBR, transparency, and transmission. Use for mesh appearance and material cost; use shader guidance for custom GLSL or TSL code.
 ---
@@ -9,21 +10,21 @@ Inspect the installed renderer, Three.js, Fiber, and Drei versions first. Exampl
 
 ## Choose the least complex material that fits
 
-| Need | Starting point | Constraint |
-| --- | --- | --- |
-| Unlit artwork or UI surface | `meshBasicMaterial` | Still participates in output color/tone-mapping policy |
-| Ordinary PBR surface | `meshStandardMaterial` | Metals especially need an environment or suitable lights |
-| Clearcoat, transmission, sheen | `meshPhysicalMaterial` | Enable only needed features; more shader work |
-| Stylized lighting | `meshToonMaterial` | Needs lights; gradient maps need appropriate filtering |
-| Normal debugging | `meshNormalMaterial` | Useful for geometry/normal inspection |
-| Custom shading | ShaderMaterial or node material | Match WebGL/GLSL versus WebGPU/TSL |
+| Need                           | Starting point                  | Constraint                                               |
+| ------------------------------ | ------------------------------- | -------------------------------------------------------- |
+| Unlit artwork or UI surface    | `meshBasicMaterial`             | Still participates in output color/tone-mapping policy   |
+| Ordinary PBR surface           | `meshStandardMaterial`          | Metals especially need an environment or suitable lights |
+| Clearcoat, transmission, sheen | `meshPhysicalMaterial`          | Enable only needed features; more shader work            |
+| Stylized lighting              | `meshToonMaterial`              | Needs lights; gradient maps need appropriate filtering   |
+| Normal debugging               | `meshNormalMaterial`            | Useful for geometry/normal inspection                    |
+| Custom shading                 | ShaderMaterial or node material | Match WebGL/GLSL versus WebGPU/TSL                       |
 
 ## PBR surface with environment lighting
 
 Mount below Canvas. This small procedural environment avoids a remote preset dependency.
 
 ```tsx
-import { Environment, Lightformer } from '@react-three/drei'
+import { Environment, Lightformer } from '@react-three/drei';
 
 export default function Example() {
   return (
@@ -36,7 +37,7 @@ export default function Example() {
         <meshStandardMaterial color="goldenrod" metalness={1} roughness={0.3} />
       </mesh>
     </>
-  )
+  );
 }
 ```
 

@@ -1,4 +1,5 @@
 ---
+
 name: r3f-lighting
 description: Light React Three Fiber scenes with direct lights, environment maps, and shadows. Use for light placement, image-based lighting, shadow artifacts, and lighting performance.
 ---
@@ -45,7 +46,7 @@ export default function Example() {
         <meshStandardMaterial color="silver" />
       </mesh>
     </>
-  )
+  );
 }
 ```
 

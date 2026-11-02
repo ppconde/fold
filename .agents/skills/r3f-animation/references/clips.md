@@ -3,21 +3,23 @@
 Use when animating an authored asset. Mount below Suspense inside Canvas, provide the asset, and choose a clip name that actually exists. The cloned root owns its pose; geometry/materials remain shared.
 
 ```tsx
-import { useEffect, useMemo } from 'react'
-import { useAnimations, useGLTF } from '@react-three/drei'
-import { clone } from 'three/addons/utils/SkeletonUtils.js'
+import { useEffect, useMemo } from 'react';
+import { useAnimations, useGLTF } from '@react-three/drei';
+import { clone } from 'three/addons/utils/SkeletonUtils.js';
 
 export default function AnimatedModel({ url = '/models/robot.glb', clip = 'Idle' }) {
-  const { scene, animations } = useGLTF(url)
-  const root = useMemo(() => clone(scene), [scene])
-  const { actions } = useAnimations(animations, root)
+  const { scene, animations } = useGLTF(url);
+  const root = useMemo(() => clone(scene), [scene]);
+  const { actions } = useAnimations(animations, root);
   useEffect(() => {
-    const action = actions[clip]
-    if (!action) return
-    action.reset().play()
-    return () => { action.stop() }
-  }, [actions, clip])
-  return <primitive object={root} />
+    const action = actions[clip];
+    if (!action) return;
+    action.reset().play();
+    return () => {
+      action.stop();
+    };
+  }, [actions, clip]);
+  return <primitive object={root} />;
 }
 ```
 
