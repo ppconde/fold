@@ -3,24 +3,24 @@
 Use with an already initialized WebGPURenderer. This example targets Fiber 9.7 / Three.js r185, not Fiber 10 alpha.
 
 ```tsx
-import { useMemo } from 'react'
-import { extend } from '@react-three/fiber'
-import { MeshBasicNodeMaterial } from 'three/webgpu'
-import { color, mix, sin, time, uv } from 'three/tsl'
+import { useMemo } from 'react';
+import { extend } from '@react-three/fiber';
+import { MeshBasicNodeMaterial } from 'three/webgpu';
+import { color, mix, sin, time, uv } from 'three/tsl';
 
-const BasicNode = extend(MeshBasicNodeMaterial)
+const BasicNode = extend(MeshBasicNodeMaterial);
 
 export default function NodeGradient() {
   const colorNode = useMemo(() => {
-    const factor = sin(uv().y.mul(6).add(time)).mul(0.5).add(0.5)
-    return mix(color('navy'), color('coral'), factor)
-  }, [])
+    const factor = sin(uv().y.mul(6).add(time)).mul(0.5).add(0.5);
+    return mix(color('navy'), color('coral'), factor);
+  }, []);
   return (
     <mesh>
       <planeGeometry args={[3, 3]} />
       <BasicNode colorNode={colorNode} />
     </mesh>
-  )
+  );
 }
 ```
 

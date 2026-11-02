@@ -50,14 +50,14 @@ When you start tracing, Playwright creates a `.playwright-cli/traces/` directory
 
 ## What Traces Capture
 
-| Category | Details |
-|----------|---------|
-| **Actions** | Clicks, fills, hovers, keyboard input, navigations |
-| **DOM** | Full DOM snapshot before/after each action |
-| **Screenshots** | Visual state at each step |
-| **Network** | All requests, responses, headers, bodies, timing |
-| **Console** | All console.log, warn, error messages |
-| **Timing** | Precise timing for each operation |
+| Category        | Details                                            |
+| --------------- | -------------------------------------------------- |
+| **Actions**     | Clicks, fills, hovers, keyboard input, navigations |
+| **DOM**         | Full DOM snapshot before/after each action         |
+| **Screenshots** | Visual state at each step                          |
+| **Network**     | All requests, responses, headers, bodies, timing   |
+| **Console**     | All console.log, warn, error messages              |
+| **Timing**      | Precise timing for each operation                  |
 
 ## Use Cases
 
@@ -102,14 +102,14 @@ playwright-cli tracing-stop
 
 ## Trace vs Video vs Screenshot
 
-| Feature | Trace | Video | Screenshot |
-|---------|-------|-------|------------|
-| **Format** | .trace file | .webm video | .png/.jpeg image |
-| **DOM inspection** | Yes | No | No |
-| **Network details** | Yes | No | No |
-| **Step-by-step replay** | Yes | Continuous | Single frame |
-| **File size** | Medium | Large | Small |
-| **Best for** | Debugging | Demos | Quick capture |
+| Feature                 | Trace       | Video       | Screenshot       |
+| ----------------------- | ----------- | ----------- | ---------------- |
+| **Format**              | .trace file | .webm video | .png/.jpeg image |
+| **DOM inspection**      | Yes         | No          | No               |
+| **Network details**     | Yes         | No          | No               |
+| **Step-by-step replay** | Yes         | Continuous  | Single frame     |
+| **File size**           | Medium      | Large       | Small            |
+| **Best for**            | Debugging   | Demos       | Quick capture    |
 
 ## Best Practices
 

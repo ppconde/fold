@@ -5,7 +5,7 @@ Use when displaying another scene or rendering intermediate data. This is a WebG
 Prefer `RenderTexture` for an isolated scene displayed on a material. It manages its portal and render-target lifecycle. Mount this component beneath Canvas.
 
 ```tsx
-import { PerspectiveCamera, RenderTexture } from '@react-three/drei'
+import { PerspectiveCamera, RenderTexture } from '@react-three/drei';
 
 export default function SceneOnScreen() {
   return (
@@ -22,7 +22,7 @@ export default function SceneOnScreen() {
         </RenderTexture>
       </meshBasicMaterial>
     </mesh>
-  )
+  );
 }
 ```
 

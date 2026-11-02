@@ -1,4 +1,5 @@
 ---
+
 name: r3f-textures
 description: Configure textures in React Three Fiber, including color spaces, UV channels, sampling, video, and render targets. Use for texture appearance or memory issues; use loader guidance for model-loading workflows.
 ---
@@ -9,11 +10,11 @@ Inspect installed Three.js, Fiber, Drei, and renderer versions first. Examples t
 
 ## Color versus data
 
-| Texture content | Color-space annotation |
-| --- | --- |
-| PNG/JPEG base color or emissive color | `SRGBColorSpace` |
-| Roughness, metalness, normal, AO, alpha/masks | `NoColorSpace` |
-| Linear HDR/EXR lighting data | Preserve loader-provided linear metadata |
+| Texture content                               | Color-space annotation                   |
+| --------------------------------------------- | ---------------------------------------- |
+| PNG/JPEG base color or emissive color         | `SRGBColorSpace`                         |
+| Roughness, metalness, normal, AO, alpha/masks | `NoColorSpace`                           |
+| Linear HDR/EXR lighting data                  | Preserve loader-provided linear metadata |
 
 `NoColorSpace` is not another name for `LinearSRGBColorSpace`: scalar/vector data has no color space. Do not blanket-convert every map to sRGB.
 
@@ -22,21 +23,21 @@ Inspect installed Three.js, Fiber, Drei, and renderer versions first. Examples t
 Mount under Suspense inside Canvas. The file path is an application asset, not a file provided by this skill.
 
 ```tsx
-import { useTexture } from '@react-three/drei'
-import { SRGBColorSpace } from 'three'
+import { useTexture } from '@react-three/drei';
+import { SRGBColorSpace } from 'three';
 
 export default function Example() {
   const map = useTexture('/textures/checker.png', (texture) => {
     // This URL is consistently used as a color texture by all consumers.
-    texture.colorSpace = SRGBColorSpace
-    texture.needsUpdate = true
-  })
+    texture.colorSpace = SRGBColorSpace;
+    texture.needsUpdate = true;
+  });
   return (
     <mesh>
       <planeGeometry args={[3, 3]} />
       <meshStandardMaterial map={map} roughness={1} />
     </mesh>
-  )
+  );
 }
 ```
 

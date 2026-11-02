@@ -1,4 +1,5 @@
 ---
+
 name: r3f-postprocessing
 description: Configure React Three Fiber postprocessing, bloom, selection effects, ambient occlusion, and depth of field. Use for composer pipelines and screen-space effects, rather than mesh material shaders.
 ---
@@ -18,15 +19,15 @@ Check the actual renderer and package peer dependencies first. This example targ
 Mount beneath Canvas. Click the left box to toggle selection. Both boxes are bright, but only the selected object contributes to this bloom pass.
 
 ```tsx
-import { useMemo, useRef, useState } from 'react'
-import { EffectComposer, Select, Selection, SelectiveBloom, ToneMapping } from '@react-three/postprocessing'
-import { ToneMappingMode } from 'postprocessing'
-import type { DirectionalLight } from 'three'
+import { useMemo, useRef, useState } from 'react';
+import { EffectComposer, Select, Selection, SelectiveBloom, ToneMapping } from '@react-three/postprocessing';
+import { ToneMappingMode } from 'postprocessing';
+import type { DirectionalLight } from 'three';
 
 export default function Example() {
-  const light = useRef<DirectionalLight>(null)
-  const lights = useMemo(() => [light], [])
-  const [selected, setSelected] = useState(true)
+  const light = useRef<DirectionalLight>(null);
+  const lights = useMemo(() => [light], []);
+  const [selected, setSelected] = useState(true);
   return (
     <Selection>
       <directionalLight ref={light} position={[0, 3, 5]} intensity={2} />
@@ -45,7 +46,7 @@ export default function Example() {
         <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
       </EffectComposer>
     </Selection>
-  )
+  );
 }
 ```
 

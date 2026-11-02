@@ -1,4 +1,5 @@
 ---
+
 name: r3f-shaders
 description: Implement custom GLSL or TSL materials in React Three Fiber, including uniforms and vertex deformation. Use for shader code and shader debugging, rather than ordinary PBR settings or composer effects.
 ---
@@ -18,10 +19,10 @@ Inspect installed Fiber, Drei, Three.js, and renderer versions first. The exampl
 Mount beneath Canvas. Keep the material class and `extend` call outside render; the local component avoids global JSX augmentation.
 
 ```tsx
-import { useRef } from 'react'
-import { extend, useFrame } from '@react-three/fiber'
-import { shaderMaterial } from '@react-three/drei'
-import { Color } from 'three'
+import { useRef } from 'react';
+import { extend, useFrame } from '@react-three/fiber';
+import { shaderMaterial } from '@react-three/drei';
+import { Color } from 'three';
 
 const WaveMaterial = shaderMaterial(
   { uTime: 0, uColor: new Color('coral') },
@@ -39,21 +40,21 @@ const WaveMaterial = shaderMaterial(
      gl_FragColor = vec4(uColor * (0.4 + 0.6 * vUv.y), 1.0);
      #include <tonemapping_fragment>
      #include <colorspace_fragment>
-   }`,
-)
-const Wave = extend(WaveMaterial)
+   }`
+);
+const Wave = extend(WaveMaterial);
 
 export default function Example() {
-  const material = useRef<InstanceType<typeof WaveMaterial>>(null)
+  const material = useRef<InstanceType<typeof WaveMaterial>>(null);
   useFrame((_, delta) => {
-    if (material.current) material.current.uTime += delta
-  })
+    if (material.current) material.current.uTime += delta;
+  });
   return (
     <mesh>
       <planeGeometry args={[3, 3, 32, 32]} />
       <Wave ref={material} key={WaveMaterial.key} />
     </mesh>
-  )
+  );
 }
 ```
 

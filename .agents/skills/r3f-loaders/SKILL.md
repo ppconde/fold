@@ -1,4 +1,5 @@
 ---
+
 name: r3f-loaders
 description: Load and reuse 3D assets in React Three Fiber with useGLTF, useLoader, Suspense, and preloading. Use for model loading, decoder setup, caching, cloning, or loading/error UI.
 ---
@@ -12,17 +13,17 @@ Inspect installed Fiber, Drei, Three.js, and React versions first. Examples use 
 Mount below Canvas. Supply `/models/robot.glb` in the application. These clones have separate object transforms but intentionally share cached geometry/materials.
 
 ```tsx
-import { Suspense } from 'react'
-import { Clone, useGLTF } from '@react-three/drei'
+import { Suspense } from 'react';
+import { Clone, useGLTF } from '@react-three/drei';
 
 function Models() {
-  const { scene } = useGLTF('/models/robot.glb')
+  const { scene } = useGLTF('/models/robot.glb');
   return (
     <group dispose={null}>
       <Clone object={scene} position={[-1.2, 0, 0]} />
       <Clone object={scene} position={[1.2, 0, 0]} />
     </group>
-  )
+  );
 }
 
 export default function Example() {
@@ -30,7 +31,7 @@ export default function Example() {
     <Suspense fallback={null}>
       <Models />
     </Suspense>
-  )
+  );
 }
 ```
 

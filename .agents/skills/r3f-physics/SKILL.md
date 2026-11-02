@@ -1,4 +1,5 @@
 ---
+
 name: r3f-physics
 description: Add Rapier rigid bodies, colliders, forces, sensors, and joints to React Three Fiber. Use for collision-driven movement and simulation; use animation guidance for purely visual motion.
 ---
@@ -12,11 +13,11 @@ Check installed Fiber, React, and Rapier versions. Rapier 2 targets Fiber 9 / Re
 Mount beneath Canvas with lighting. Physics loads WASM asynchronously; include Suspense. Cuboid collider arguments are half-extents, unlike BoxGeometry's full dimensions.
 
 ```tsx
-import { Suspense, useRef } from 'react'
-import { CuboidCollider, Physics, RigidBody, type RapierRigidBody } from '@react-three/rapier'
+import { Suspense, useRef } from 'react';
+import { CuboidCollider, Physics, RigidBody, type RapierRigidBody } from '@react-three/rapier';
 
 function FallingBox() {
-  const body = useRef<RapierRigidBody>(null)
+  const body = useRef<RapierRigidBody>(null);
   return (
     <RigidBody ref={body} position={[0, 2, 0]} colliders="cuboid" restitution={0.2}>
       <mesh name="physics-box" onClick={() => body.current?.applyImpulse({ x: 0, y: 3, z: 0 }, true)}>
@@ -24,7 +25,7 @@ function FallingBox() {
         <meshStandardMaterial color="coral" />
       </mesh>
     </RigidBody>
-  )
+  );
 }
 
 export default function Example() {
@@ -41,7 +42,7 @@ export default function Example() {
         </RigidBody>
       </Physics>
     </Suspense>
-  )
+  );
 }
 ```
 

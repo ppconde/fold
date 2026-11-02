@@ -1,4 +1,5 @@
 ---
+
 name: r3f-animation
 description: Animate React Three Fiber objects with useFrame, damping, and GLTF clips. Use for procedural motion, animation transitions, or demand-loop animation; use physics guidance for collision-driven movement.
 ---
@@ -19,32 +20,34 @@ Check installed Fiber, Drei, and React versions first. These examples target Fib
 Mount below Canvas; this also works with `frameloop="demand"`. Click the box to change its target.
 
 ```tsx
-import { useEffect, useRef, useState } from 'react'
-import { useFrame, useThree } from '@react-three/fiber'
-import { MathUtils, type Mesh } from 'three'
+import { useEffect, useRef, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
+import { MathUtils, type Mesh } from 'three';
 
 export default function Example() {
-  const mesh = useRef<Mesh>(null)
-  const [active, setActive] = useState(false)
-  const invalidate = useThree((state) => state.invalidate)
-  const target = active ? 1 : -1
-  useEffect(() => { invalidate() }, [target, invalidate])
+  const mesh = useRef<Mesh>(null);
+  const [active, setActive] = useState(false);
+  const invalidate = useThree((state) => state.invalidate);
+  const target = active ? 1 : -1;
+  useEffect(() => {
+    invalidate();
+  }, [target, invalidate]);
 
   useFrame((_, delta) => {
-    if (!mesh.current) return
+    if (!mesh.current) return;
     // Cap a visual transition's resume jump, not a physics simulation step.
-    const x = MathUtils.damp(mesh.current.position.x, target, 6, Math.min(delta, 0.1))
-    const moving = Math.abs(x - target) > 0.001
-    mesh.current.position.x = moving ? x : target
-    if (moving) invalidate()
-  })
+    const x = MathUtils.damp(mesh.current.position.x, target, 6, Math.min(delta, 0.1));
+    const moving = Math.abs(x - target) > 0.001;
+    mesh.current.position.x = moving ? x : target;
+    if (moving) invalidate();
+  });
 
   return (
     <mesh ref={mesh} name="moving-box" onClick={() => setActive((value) => !value)}>
       <boxGeometry />
       <meshStandardMaterial color={active ? 'orange' : 'coral'} />
     </mesh>
-  )
+  );
 }
 ```
 

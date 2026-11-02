@@ -1,4 +1,5 @@
 ---
+
 name: r3f-fundamentals
 description: Set up React Three Fiber scenes, Canvas, typed JSX, hooks, and resource ownership. Use for scene architecture and render-loop setup, rather than detailed materials or effects.
 ---
@@ -16,21 +17,21 @@ description: Set up React Three Fiber scenes, Canvas, typed JSX, hooks, and reso
 This example owns its Canvas. Its parent must have a nonzero height.
 
 ```tsx
-import { useRef } from 'react'
-import { Canvas, useFrame, type ThreeElements } from '@react-three/fiber'
-import type { Mesh } from 'three'
+import { useRef } from 'react';
+import { Canvas, useFrame, type ThreeElements } from '@react-three/fiber';
+import type { Mesh } from 'three';
 
 function RotatingBox(props: ThreeElements['mesh']) {
-  const mesh = useRef<Mesh>(null)
+  const mesh = useRef<Mesh>(null);
   useFrame((_, delta) => {
-    if (mesh.current) mesh.current.rotation.y += delta * 0.5
-  })
+    if (mesh.current) mesh.current.rotation.y += delta * 0.5;
+  });
   return (
     <mesh {...props} ref={mesh}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial color="coral" />
     </mesh>
-  )
+  );
 }
 
 export default function Example() {
@@ -40,7 +41,7 @@ export default function Example() {
       <directionalLight position={[3, 4, 5]} intensity={2} />
       <RotatingBox />
     </Canvas>
-  )
+  );
 }
 ```
 

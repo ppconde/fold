@@ -1,4 +1,5 @@
 ---
+
 name: r3f-interaction
 description: Implement React Three Fiber pointer events, picking, dragging, keyboard input, and camera controls. Use for scene interaction and event propagation, rather than animation or physics simulation itself.
 ---
@@ -12,18 +13,18 @@ Check installed Fiber, Drei, and input-library versions first. Examples target F
 Mount beneath Canvas. Keep accessible DOM controls outside Canvas for important actions; mesh pointer handlers alone do not provide keyboard access.
 
 ```tsx
-import { useState } from 'react'
-import { OrbitControls } from '@react-three/drei'
+import { useState } from 'react';
+import { OrbitControls } from '@react-three/drei';
 
 export default function Example() {
-  const [selected, setSelected] = useState(false)
+  const [selected, setSelected] = useState(false);
   return (
     <>
       <mesh
         name="selectable-box"
         onClick={(event) => {
-          event.stopPropagation()
-          setSelected((value) => !value)
+          event.stopPropagation();
+          setSelected((value) => !value);
         }}
       >
         <boxGeometry />
@@ -31,7 +32,7 @@ export default function Example() {
       </mesh>
       <OrbitControls makeDefault />
     </>
-  )
+  );
 }
 ```
 
