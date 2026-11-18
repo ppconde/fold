@@ -12,12 +12,14 @@ import { thumbnail } from './thumbnail';
 const committed = (path: string) =>
   JSON.parse(readFileSync(new URL(`../public/models/${path}`, import.meta.url), 'utf8'));
 
-/** A committed file with every number matched within 0.05: the solver's last digits differ between CPUs (CI is
- * x64), and can tip an unfold angle rounded to 0.01. */
-const near = (path: string) =>
-  JSON.parse(readFileSync(new URL(`../public/models/${path}`, import.meta.url), 'utf8'), (_, v) =>
-    typeof v === 'number' ? expect.closeTo(v, 1) : v
-  );
+/** A fold with every number matched within 0.05: the solver's last digits differ between CPUs (CI is x64), and
+ * can tip an angle rounded to 0.01. */
+const near = (fold: object) =>
+  JSON.parse(JSON.stringify(fold), (_, v) => (typeof v === 'number' ? expect.closeTo(v, 1) : v));
+
+/** Degrees the homepage unfold may land apart on two CPUs: where the paper can't close rigidly the solver has no
+ * one answer, and the Yakko-san's keyframes build 0.7° apart on x64 and macOS. */
+const UNFOLD_SLACK = 2;
 
 describe.each(sources.map((s) => [s.id, s] as const))('%s', (_, src) => {
   const built = buildFold(src);
@@ -33,7 +35,12 @@ describe.each(sources.map((s) => [s.id, s] as const))('%s', (_, src) => {
   });
 
   it('is committed as built (run pnpm models)', () => {
-    expect(JSON.parse(JSON.stringify(built))).toEqual(near(`${src.id}.fold`));
+    const { 'foldapp:unfold': unfold = [], ...rest } = JSON.parse(JSON.stringify(built));
+    const { 'foldapp:unfold': was = [], ...wasRest } = committed(`${src.id}.fold`);
+    expect(rest).toEqual(near(wasRest));
+    expect(unfold.length).toBe(was.length);
+    const drift = unfold.flat().map((x: number, i: number) => Math.abs(x - was.flat()[i]));
+    expect(Math.max(0, ...drift)).toBeLessThan(UNFOLD_SLACK);
     const svg = readFileSync(new URL(`../public/models/${src.id}.svg`, import.meta.url), 'utf8');
     expect(svg).toBe(thumbnail(loadModel(built)));
   });
