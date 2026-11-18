@@ -16,8 +16,8 @@ test('home leads through the library to a model', async ({ page }) => {
     /Whale/,
     /Paper plane/,
     /Pig/,
-    /Square base/,
-    /Kite base/
+    /Yakko-san/,
+    /Square base/
   ]);
 
   await page.getByRole('link', { name: /Tulip/ }).click();
@@ -139,7 +139,7 @@ test('one button clears the search and both filters', async ({ page }) => {
 });
 
 test('a long library splits into pages, and a new filter starts on the first', async ({ page }) => {
-  // the real models run four onto a second page; add a few more there
+  // the real models run five onto a second page; add a few more there
   await page.route('/models/models.json', async (route) => {
     const index = await (await route.fetch()).json();
     for (const n of [1, 2, 3]) {
@@ -158,6 +158,7 @@ test('a long library splits into pages, and a new filter starts on the first', a
   await expect(pages.getByRole('link', { name: 'Page 2' })).toHaveAttribute('aria-current', 'page');
   await expect(pages.getByRole('link', { name: 'Page 1' })).not.toHaveAttribute('aria-current');
   await expect(models).toHaveText([
+    /Kite base/,
     /Kannon fold/,
     /Blintz base/,
     /Basic shape 1/,
@@ -168,7 +169,7 @@ test('a long library splits into pages, and a new filter starts on the first', a
   ]);
 
   await page.reload();
-  await expect(models).toHaveCount(7);
+  await expect(models).toHaveCount(8);
   await pages.getByRole('link', { name: 'Page 1' }).click();
   await expect(page).not.toHaveURL(/page=/);
   await expect(pages.getByRole('link', { name: 'Page 1' })).toHaveAttribute('aria-current', 'page');
@@ -181,6 +182,7 @@ test('a long library splits into pages, and a new filter starts on the first', a
 test('a page past the end shows the last one, and one page needs no pager', async ({ page }) => {
   await page.goto('/library?page=9');
   await expect(page.getByRole('list', { name: 'Models' }).getByRole('link')).toHaveText([
+    /Kite base/,
     /Kannon fold/,
     /Blintz base/,
     /Basic shape 1/,
