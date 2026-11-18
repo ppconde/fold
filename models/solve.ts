@@ -102,16 +102,22 @@ function project(model: Model, step: number, vars: number[], straight: number[],
     });
     const JTJ = free.map((_, i) => free.map((_, j) => J[i].reduce((s, x, k) => s + x * J[j][k], 0)));
     const JTr = free.map((_, i) => J[i].reduce((s, x, k) => s + x * r[k], 0));
+    // a crease flat at ±180 that the descent would push further out stays put: left in, its clamped step
+    // undoes the rest of the step, and the solve crawls without settling
+    const open = free.flatMap((e, i) =>
+      (angles[e] >= 180 && JTr[i] < 0) || (angles[e] <= -180 && JTr[i] > 0) ? [] : [i]
+    );
     let improved = false;
     while (damping < 1e6) {
-      const A = JTJ.map((row, i) => row.map((x, j) => (i === j ? x * (1 + damping) + 1e-12 : x)));
+      const A = open.map((i) => open.map((j) => (i === j ? JTJ[i][j] * (1 + damping) + 1e-12 : JTJ[i][j])));
       const dx = solveLinear(
         A,
-        JTr.map((x) => -x)
+        open.map((i) => -JTr[i])
       );
       const next = [...angles];
-      free.forEach((e, i) => {
-        next[e] = Math.max(-180, Math.min(180, next[e] + dx[i] / DEG));
+      open.forEach((i, k) => {
+        const e = free[i];
+        next[e] = Math.max(-180, Math.min(180, next[e] + dx[k] / DEG));
       });
       const nr = residual(next);
       if (cost(nr) < cost(r)) {
