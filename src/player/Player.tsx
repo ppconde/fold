@@ -9,7 +9,7 @@ import type { ModelEntry } from '../models/catalog';
 import { hasWebGL, readPanelOpen, readPaper, writePanelOpen, writePaper } from './browser';
 import { CreaseDiagram } from './CreaseDiagram';
 import { HowSketch } from './HowSketch';
-import { sketchFrame, sketchT } from './how';
+import { sketchFrame, sketchT } from './how-drawing';
 import { AgainIcon, BackIcon, NextIcon, StartIcon, ViewIcon } from './icons';
 import { loadStage } from './load-stage';
 import { PaperPicker } from './PaperPicker';
