@@ -1,6 +1,5 @@
 import { Box3, Euler, MathUtils, Matrix4, Quaternion, Vector3 } from 'three';
-import { assertStep } from './assert-step';
-import { movedCreases } from './creases';
+import { assertStep, movedCreases } from './creases';
 import type { Model, Vec2, Vec3 } from './types';
 
 const DEG = MathUtils.DEG2RAD;
